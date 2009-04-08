@@ -24,13 +24,14 @@
 
 #define nodestr(n) (n == eth ? "eth" : "can")
 
+
 struct mbn_node_info this_node = {
   0x00000000, 0x00, /* MambaNet Addr + Services */
   "Axum CAN Gateway",
   "YorHels Gateway",
   0xFFFF, 0x0002, 0x0001,   /* UniqueMediaAccessId */
   0, 0,          /* Hardware revision */
-  0, 0,          /* Firmware revision */
+  0, 1,          /* Firmware revision */
   0, 0,          /* FPGAFirmware revision */
   0,             /* NumberOfObjects */
   0,             /* DefaultEngineAddr */
@@ -57,14 +58,27 @@ void Error(struct mbn_handler *mbn, int code, char *msg) {
 
 
 int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
+  struct mbn_handler *dest = NULL;
   int i;
 
   /* don't forward anything that's targeted to us */
   if(msg->AddressTo == this_node.MambaNetAddr)
     return 0;
 
-  /* filter out address reservation packets from ethernet */
-  if(mbn == eth && msg->MessageType == MBN_MSGTYPE_ADDRESS && msg->Message.Address.Action == MBN_ADDR_ACTION_INFO)
+  /* figure out to which interface we need to send */
+  if(msg->AddressTo != MBN_BROADCAST_ADDRESS) {
+    if(mbnNodeStatus(can, msg->AddressTo) != NULL)
+      dest = can;
+    else if(mbnNodeStatus(eth, msg->AddressTo) != NULL)
+      dest = eth;
+
+    /* don't forward if we haven't found the destination node */
+    if(dest == NULL)
+      return 0;
+  }
+
+  /* filter out address reservation packets to can */
+  if(dest == NULL && msg->MessageType == MBN_MSGTYPE_ADDRESS && msg->Message.Address.Action == MBN_ADDR_ACTION_INFO)
     return 0;
 
   /* print out what's happening */
@@ -76,7 +90,14 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
   fflush(stdout);
 
   /* forward message */
-  mbnSendMessage(mbn == can ? eth : can, msg, MBN_SEND_IGNOREVALID | MBN_SEND_FORCEADDR | MBN_SEND_NOCREATE | MBN_SEND_FORCEID);
+#define fwd(m) mbnSendMessage(m, msg, MBN_SEND_IGNOREVALID | MBN_SEND_FORCEADDR | MBN_SEND_NOCREATE | MBN_SEND_FORCEID)
+  if(dest != NULL)
+    fwd(dest);
+  else {
+    if(mbn != eth) fwd(eth);
+    if(mbn != can) fwd(can);
+  }
+#undef fwd
   return 0;
 }
 
