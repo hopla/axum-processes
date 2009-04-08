@@ -17,10 +17,12 @@
 #include "mbn.h"
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
 
+
+#define nodestr(n) (n == eth ? "eth" : "can")
 
 struct mbn_node_info this_node = {
   0x00000000, 0x00, /* MambaNet Addr + Services */
@@ -40,23 +42,22 @@ struct mbn_handler *eth, *can;
 
 
 void OnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid) {
-  printf("OnlineStatus: %08lX %s\n", addr, valid ? "validated" : "invalid");
-  if(valid)
-    mbnForceAddress(mbn == can ? eth : can, addr);
+  printf("OnlineStatus on %s: %08lX %s\n", nodestr(mbn), addr, valid ? "validated" : "invalid");
+  if(valid) {
+    if(mbn != can) mbnForceAddress(can, addr);
+    if(mbn != eth) mbnForceAddress(eth, addr);
+  }
   this_node.MambaNetAddr = addr;
 }
 
 
 void Error(struct mbn_handler *mbn, int code, char *msg) {
-  printf("Error(%s, %d, \"%s\")\n", mbn == can ? "can" : "eth", code, msg);
+  printf("Error(%s, %d, \"%s\")\n", nodestr(mbn), code, msg);
 }
 
 
 int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
   int i;
-
-  /*printf("ReceiveMessage on %s from %08lX to %08lX type %d\n",
-    mbn == can ? "can" : "eth", msg->AddressFrom, msg->AddressTo, msg->MessageType);*/
 
   /* don't forward anything that's targeted to us */
   if(msg->AddressTo == this_node.MambaNetAddr)
@@ -80,38 +81,60 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
 }
 
 
-int main(void) {
+int main(int argc, char **argv) {
   struct mbn_interface *itf = NULL;
   char err[MBN_ERRSIZE];
+  int c;
 
-  /* can node */
-  if((itf = mbnCANOpen("can0", err)) == NULL) {
-    printf("mbnCANOpen: %s\n", err);
-    return 1;
-  }
-  if((can = mbnInit(&this_node, NULL, itf, err)) == NULL) {
-    printf("mbnInit(can): %s", err);
-    return 1;
-  }
-  mbnSetErrorCallback(can, Error);
-  mbnSetReceiveMessageCallback(can, ReceiveMessage);
+  can = eth = NULL;
 
-  /* ethernet node */
-  if((itf = mbnEthernetOpen("eth0", err)) == NULL) {
-    printf("mbnEthernetOpen: %s\n", err);
-    return 1;
+  while((c = getopt(argc, argv, "c:e:")) != -1) {
+    switch(c) {
+      /* can interface */
+      case 'c':
+        if((itf = mbnCANOpen("can0", err)) == NULL) {
+          printf("mbnCANOpen: %s\n", err);
+          return 1;
+        }
+        if((can = mbnInit(&this_node, NULL, itf, err)) == NULL) {
+          printf("mbnInit(can): %s", err);
+          return 1;
+        }
+        mbnSetErrorCallback(can, Error);
+        mbnSetReceiveMessageCallback(can, ReceiveMessage);
+        break;
+      /* ethernet interface */
+      case 'e':
+        if((itf = mbnEthernetOpen("eth0", err)) == NULL) {
+          printf("mbnEthernetOpen: %s\n", err);
+          return 1;
+        }
+        if((eth = mbnInit(&this_node, NULL, itf, err)) == NULL) {
+          printf("mbnInit(eth): %s", err);
+          return 1;
+        }
+        mbnSetErrorCallback(eth, Error);
+        mbnSetOnlineStatusCallback(eth, OnlineStatus);
+        mbnSetReceiveMessageCallback(eth, ReceiveMessage);
+        break;
+      /* wrong option */
+      default:
+        return 1;
+    }
   }
-  if((eth = mbnInit(&this_node, NULL, itf, err)) == NULL) {
-    printf("mbnInit(eth): %s", err);
-    return 1;
-  }
-  mbnSetErrorCallback(eth, Error);
-  mbnSetOnlineStatusCallback(eth, OnlineStatus);
-  mbnSetReceiveMessageCallback(eth, ReceiveMessage);
 
-  getchar();
-  mbnFree(can);
-  mbnFree(eth);
+  if(!can || !eth) {
+    printf("Need at least two interfaces to function as a gateway!\n");
+    return 1;
+  }
+
+  while(getchar() != 'q')
+    continue;
+
+  if(can)
+    mbnFree(can);
+  if(eth)
+    mbnFree(eth);
 
   return 0;
 }
