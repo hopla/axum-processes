@@ -14,16 +14,19 @@
 **
 ****************************************************************************/
 
-#include "mbn.h"
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
 
+#define MBN_VARARG
+#include "mbn.h"
 
 #define nodestr(n) (n == eth ? "eth" : "can")
 
+#define OBJ_CANNODES 0
+#define OBJ_ETHNODES 1
 
 struct mbn_node_info this_node = {
   0x00000000, 0x00, /* MambaNet Addr + Services */
@@ -33,7 +36,7 @@ struct mbn_node_info this_node = {
   0, 0,          /* Hardware revision */
   0, 1,          /* Firmware revision */
   0, 0,          /* FPGAFirmware revision */
-  0,             /* NumberOfObjects */
+  2,             /* NumberOfObjects */
   0,             /* DefaultEngineAddr */
   {0,0,0,0,0,0}, /* Hardwareparent */
   0              /* Service request */
@@ -77,10 +80,6 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
       return 0;
   }
 
-  /* filter out address reservation packets to can */
-  if(dest == NULL && msg->MessageType == MBN_MSGTYPE_ADDRESS && msg->Message.Address.Action == MBN_ADDR_ACTION_INFO)
-    return 0;
-
   /* print out what's happening */
   printf(" %s %1X %08lX %08lX %03X %1X:", mbn == can ? "<" : ">",
     msg->AcknowledgeReply, msg->AddressTo, msg->AddressFrom, msg->MessageID, msg->MessageType);
@@ -95,19 +94,53 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
     fwd(dest);
   else {
     if(mbn != eth) fwd(eth);
-    if(mbn != can) fwd(can);
+    if(mbn != can) {
+      /* filter out address reservation packets to can */
+      if(!(dest == NULL && msg->MessageType == MBN_MSGTYPE_ADDRESS && msg->Message.Address.Action == MBN_ADDR_ACTION_INFO))
+        fwd(can);
+    }
   }
 #undef fwd
   return 0;
 }
 
 
+void AddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old, struct mbn_address_node *new) {
+  struct mbn_address_node *n = NULL;
+  union mbn_data count;
+  int obj;
+  count.UInt = 0;
+
+  if(old && new)
+    return;
+
+  while((n = mbnNextNode(mbn, n)) != NULL)
+    count.UInt++;
+
+  obj = mbn == can ? OBJ_CANNODES : OBJ_ETHNODES;
+  obj += 1024;
+  mbnUpdateSensorData(can, obj, count);
+  mbnUpdateSensorData(eth, obj, count);
+}
+
+
+void setcallbacks(struct mbn_handler *mbn) {
+  mbnSetErrorCallback(mbn, Error);
+  mbnSetOnlineStatusCallback(mbn, OnlineStatus);
+  mbnSetReceiveMessageCallback(mbn, ReceiveMessage);
+  mbnSetAddressTableChangeCallback(mbn, AddressTableChange);
+}
+
+
 int main(int argc, char **argv) {
   struct mbn_interface *itf = NULL;
+  struct mbn_object obj[2];
   char err[MBN_ERRSIZE];
   int c;
 
   can = eth = NULL;
+  obj[OBJ_CANNODES] = MBN_OBJ("CAN Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
+  obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
 
   while((c = getopt(argc, argv, "c:e:")) != -1) {
     switch(c) {
@@ -117,12 +150,11 @@ int main(int argc, char **argv) {
           printf("mbnCANOpen: %s\n", err);
           return 1;
         }
-        if((can = mbnInit(&this_node, NULL, itf, err)) == NULL) {
+        if((can = mbnInit(&this_node, obj, itf, err)) == NULL) {
           printf("mbnInit(can): %s", err);
           return 1;
         }
-        mbnSetErrorCallback(can, Error);
-        mbnSetReceiveMessageCallback(can, ReceiveMessage);
+        setcallbacks(can);
         break;
       /* ethernet interface */
       case 'e':
@@ -130,13 +162,11 @@ int main(int argc, char **argv) {
           printf("mbnEthernetOpen: %s\n", err);
           return 1;
         }
-        if((eth = mbnInit(&this_node, NULL, itf, err)) == NULL) {
+        if((eth = mbnInit(&this_node, obj, itf, err)) == NULL) {
           printf("mbnInit(eth): %s", err);
           return 1;
         }
-        mbnSetErrorCallback(eth, Error);
-        mbnSetOnlineStatusCallback(eth, OnlineStatus);
-        mbnSetReceiveMessageCallback(eth, ReceiveMessage);
+        setcallbacks(eth);
         break;
       /* wrong option */
       default:
