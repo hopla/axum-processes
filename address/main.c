@@ -6,6 +6,7 @@
 #include <errno.h>
 
 #include <unistd.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -41,6 +42,7 @@ struct mbn_node_info this_node = {
 struct mbn_handler *mbn;
 struct sockaddr_un unix_path;
 int listensock;
+volatile int main_quit;
 struct s_conn {
   int sock;
   int buflen;
@@ -57,7 +59,7 @@ void init(int argc, char **argv) {
 
   unix_path.sun_family = AF_UNIX;
   strcpy(unix_path.sun_path, DEFAULT_UNIX_PATH);
-  Memset((void *)connections, 0, sizeof(struct s_conn)*MAX_CONNECTIONS);
+  memset((void *)connections, 0, sizeof(struct s_conn)*MAX_CONNECTIONS);
   strcpy(ethdev, DEFAULT_ETH_DEV);
 
   /* parse options */
@@ -162,11 +164,23 @@ int mainloop() {
 }
 
 
+void trapsig(int sig) {
+  main_quit = sig;
+}
+
+
 int main(int argc, char **argv) {
+  struct sigaction act;
   int i;
 
+  act.sa_handler = trapsig;
+  act.sa_flags = 0;
+  sigaction(SIGTERM, &act, NULL);
+  sigaction(SIGINT, &act, NULL);
+  main_quit = 0;
+
   init(argc, argv);
-  while(!mainloop())
+  while(!main_quit && !mainloop())
     ;
 
   /* free */
