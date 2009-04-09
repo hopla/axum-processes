@@ -1,5 +1,7 @@
+CFLAGS=-pedantic -Wall -Wextra -g
+LFLAGS=-lmbn
+OUTPUT=axum-gateway
 
-
-all:
-	gcc gateway.c -lmbn -o gateway
+$OUTPUT:
+	gcc ${CFLAGS} gateway.c ${LFLAGS} -o ${OUTPUT}
 
