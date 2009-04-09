@@ -1,9 +1,11 @@
 
-#include <mbn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
+#include <mbn.h>
+#include <sqlite3.h>
 
 #include <unistd.h>
 #include <signal.h>
@@ -14,6 +16,7 @@
 
 #define DEFAULT_UNIX_PATH "/tmp/axum-address"
 #define DEFAULT_ETH_DEV   "eth0"
+#define DEFAULT_DB_PATH   "/var/lib/axum/axum-address.sqlite3"
 #define MAX_CONNECTIONS   10
 #define UNIX_SOCK_BUFFER  2048
 
@@ -38,32 +41,39 @@ struct mbn_node_info this_node = {
 };
 
 
-/* global variables */
-struct mbn_handler *mbn;
-struct sockaddr_un unix_path;
-int listensock;
-volatile int main_quit;
+/* structs */
 struct s_conn {
   int sock;
   int buflen;
   char state; /* 0=unused, 1=read, 2=write */
   char *buf[UNIX_SOCK_BUFFER];
-} connections[MAX_CONNECTIONS];
+};
+
+
+/* global variables */
+struct mbn_handler *mbn;
+struct sockaddr_un unix_path;
+int listensock;
+volatile int main_quit;
+struct s_conn connections[MAX_CONNECTIONS];
+sqlite3 *sqldb;
 
 
 void init(int argc, char **argv) {
   struct mbn_interface *itf;
-  char err[MBN_ERRSIZE];
+  char err[MBN_ERRSIZE], *dberr;
   char ethdev[50];
+  char dbpath[256];
   int c;
 
   unix_path.sun_family = AF_UNIX;
   strcpy(unix_path.sun_path, DEFAULT_UNIX_PATH);
   memset((void *)connections, 0, sizeof(struct s_conn)*MAX_CONNECTIONS);
   strcpy(ethdev, DEFAULT_ETH_DEV);
+  strcpy(dbpath, DEFAULT_DB_PATH);
 
   /* parse options */
-  while((c = getopt(argc, argv, "e:u:")) != -1) {
+  while((c = getopt(argc, argv, "e:u:d:")) != -1) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
@@ -78,6 +88,13 @@ void init(int argc, char **argv) {
           exit(1);
         }
         strcpy(unix_path.sun_path, optarg);
+        break;
+      case 'd':
+        if(strlen(optarg) > 256) {
+          fprintf(stderr, "Too long path to sqlite3 DB!");
+          exit(1);
+        }
+        strcpy(dbpath, optarg);
         break;
       default:
         exit(1);
@@ -109,6 +126,35 @@ void init(int argc, char **argv) {
   if(listen(listensock, 5) < 0) {
     perror("Listening on socket");
     fprintf(stderr, "Are you sure no other address server is running?\n");
+    close(listensock);
+    mbnFree(mbn);
+    exit(1);
+  }
+
+  /* open database */
+  if(sqlite3_open(dbpath, &sqldb) != SQLITE_OK) {
+    fprintf(stderr, "Opening database: %s\n", sqlite3_errmsg(sqldb));
+    sqlite3_close(sqldb);
+    close(listensock);
+    mbnFree(mbn);
+    exit(1);
+  }
+  if(sqlite3_exec(sqldb, "\
+    CREATE TABLE IF NOT EXISTS address_table (\
+      Name VARCHAR(32),\
+      ManufacturerID INT,\
+      ProductID INT,\
+      UniqueIDPerProduct INT,\
+      MambaNetAddress INT,\
+      DefaultEngineMambaNetAddress INT,\
+      NodeServices INT,\
+      Active INT,\
+      HardwareParent VARCHAR(14) DEFAULT '0000:0000:0000'\
+    );", NULL, NULL, &dberr
+  ) != SQLITE_OK) {
+    fprintf(stderr, "Creating table: %s\n", dberr);
+    sqlite3_free(dberr);
+    sqlite3_close(sqldb);
     close(listensock);
     mbnFree(mbn);
     exit(1);
@@ -159,6 +205,8 @@ int mainloop() {
       connections[i].buflen = 0;
     }
   }
+
+  /* TODO: handle I/O */
 
   return 0;
 }
