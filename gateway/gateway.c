@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
     switch(c) {
       /* can interface */
       case 'c':
-        if((itf = mbnCANOpen("can0", err)) == NULL) {
+        if((itf = mbnCANOpen(optarg, err)) == NULL) {
           printf("mbnCANOpen: %s\n", err);
           return 1;
         }
@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
         break;
       /* ethernet interface */
       case 'e':
-        if((itf = mbnEthernetOpen("eth0", err)) == NULL) {
+        if((itf = mbnEthernetOpen(optarg, err)) == NULL) {
           printf("mbnEthernetOpen: %s\n", err);
           return 1;
         }
