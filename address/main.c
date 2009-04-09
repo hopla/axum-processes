@@ -85,15 +85,20 @@ void init(int argc, char **argv) {
   /* initialize UNIX listen socket */
   if((unix_socks[0] = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
     perror("Opening socket");
+    mbnFree(mbn);
     exit(1);
   }
   if(bind(unix_socks[0], (struct sockaddr *)&unix_path, sizeof(struct sockaddr_un)) < 0) {
     perror("Binding to path");
+    close(unix_socks[0]);
+    mbnFree(mbn);
     exit(1);
   }
   if(listen(unix_socks[0], 5) < 0) {
     perror("Listening on socket");
     fprintf(stderr, "Are you sure no other address server is running?\n");
+    close(unix_socks[0]);
+    mbnFree(mbn);
     exit(1);
   }
 }
