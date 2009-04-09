@@ -1,11 +1,12 @@
 
+#include "db.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
 #include <mbn.h>
-#include <sqlite3.h>
 
 #include <unistd.h>
 #include <signal.h>
@@ -56,12 +57,11 @@ struct sockaddr_un unix_path;
 int listensock;
 volatile int main_quit;
 struct s_conn connections[MAX_CONNECTIONS];
-sqlite3 *sqldb;
 
 
 void init(int argc, char **argv) {
   struct mbn_interface *itf;
-  char err[MBN_ERRSIZE], *dberr;
+  char err[MBN_ERRSIZE];
   char ethdev[50];
   char dbpath[256];
   int c;
@@ -132,29 +132,8 @@ void init(int argc, char **argv) {
   }
 
   /* open database */
-  if(sqlite3_open(dbpath, &sqldb) != SQLITE_OK) {
-    fprintf(stderr, "Opening database: %s\n", sqlite3_errmsg(sqldb));
-    sqlite3_close(sqldb);
-    close(listensock);
-    mbnFree(mbn);
-    exit(1);
-  }
-  if(sqlite3_exec(sqldb, "\
-    CREATE TABLE IF NOT EXISTS address_table (\
-      Name VARCHAR(32),\
-      ManufacturerID INT,\
-      ProductID INT,\
-      UniqueIDPerProduct INT,\
-      MambaNetAddress INT,\
-      DefaultEngineMambaNetAddress INT,\
-      NodeServices INT,\
-      Active INT,\
-      HardwareParent VARCHAR(14) DEFAULT '0000:0000:0000'\
-    );", NULL, NULL, &dberr
-  ) != SQLITE_OK) {
-    fprintf(stderr, "Creating table: %s\n", dberr);
-    sqlite3_free(dberr);
-    sqlite3_close(sqldb);
+  if(db_init(dbpath, err)) {
+    fprintf(stderr, "%s", err);
     close(listensock);
     mbnFree(mbn);
     exit(1);
@@ -238,6 +217,7 @@ int main(int argc, char **argv) {
   close(listensock);
   unlink(unix_path.sun_path);
   mbnFree(mbn);
+  db_free();
   return 0;
 }
 
