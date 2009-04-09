@@ -9,11 +9,13 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+#define DEFAULT_UNIX_PATH "/tmp/axum-address"
+#define DEFAULT_ETH_DEV   "eth0"
+#define MAX_CONNECTIONS   10
+
 #ifndef UNIX_PATH_MAX
 # define UNIX_PATH_MAX 108
 #endif
-
-#define MAX_CONNECTIONS 10
 
 
 /* node info */
@@ -44,9 +46,9 @@ void init(int argc, char **argv) {
   int c;
 
   unix_path.sun_family = AF_UNIX;
-  strcpy(unix_path.sun_path, "/tmp/axum-address.unix");
+  strcpy(unix_path.sun_path, DEFAULT_UNIX_PATH);
   memset((void *)unix_socks, 0, sizeof(int)*(MAX_CONNECTIONS+1));
-  strcpy(ethdev, "eth0");
+  strcpy(ethdev, DEFAULT_ETH_DEV);
 
   /* parse options */
   while((c = getopt(argc, argv, "e:u:")) != -1) {
