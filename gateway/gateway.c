@@ -33,13 +33,13 @@ struct mbn_node_info this_node = {
   "Axum CAN Gateway",
   "YorHels Gateway",
   0xFFFF, 0x0002, 0x0001,   /* UniqueMediaAccessId */
-  0, 0,          /* Hardware revision */
-  0, 1,          /* Firmware revision */
-  0, 0,          /* FPGAFirmware revision */
-  2,             /* NumberOfObjects */
-  0,             /* DefaultEngineAddr */
-  {0,0,0,0,0,0}, /* Hardwareparent */
-  0              /* Service request */
+  0, 0,    /* Hardware revision */
+  0, 1,    /* Firmware revision */
+  0, 0,    /* FPGAFirmware revision */
+  2,       /* NumberOfObjects */
+  0,       /* DefaultEngineAddr */
+  {0,0,0}, /* Hardwareparent */
+  0        /* Service request */
 };
 
 struct mbn_handler *eth, *can;
