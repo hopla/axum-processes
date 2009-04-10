@@ -133,7 +133,7 @@ void init(int argc, char **argv) {
   char err[MBN_ERRSIZE];
   char ethdev[50];
   char dbpath[256];
-  int c;
+  int c, forcelisten = 0;
 
   unix_path.sun_family = AF_UNIX;
   strcpy(unix_path.sun_path, DEFAULT_UNIX_PATH);
@@ -142,7 +142,7 @@ void init(int argc, char **argv) {
   strcpy(dbpath, DEFAULT_DB_PATH);
 
   /* parse options */
-  while((c = getopt(argc, argv, "e:u:d:")) != -1) {
+  while((c = getopt(argc, argv, "e:u:d:f")) != -1) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
@@ -158,6 +158,9 @@ void init(int argc, char **argv) {
         }
         strcpy(unix_path.sun_path, optarg);
         break;
+      case 'f':
+        forcelisten = 1;
+        break;
       case 'd':
         if(strlen(optarg) > 256) {
           fprintf(stderr, "Too long path to sqlite3 DB!");
@@ -166,6 +169,11 @@ void init(int argc, char **argv) {
         strcpy(dbpath, optarg);
         break;
       default:
+        fprintf(stderr, "Usage: %s [-f] [-e dev] [-u path] [-d path]\n", argv[0]);
+        fprintf(stderr, "  -f       Force listen on UNIX socket.\n");
+        fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
+        fprintf(stderr, "  -u path  Path to UNIX socket.\n");
+        fprintf(stderr, "  -d path  Path to SQLite3 database file.\n");
         exit(1);
     }
   }
@@ -184,6 +192,8 @@ void init(int argc, char **argv) {
   mbnSetActuatorDataResponseCallback(mbn, mActuatorDataResponse);
 
   /* initialize UNIX listen socket */
+  if(forcelisten)
+    unlink(unix_path.sun_path);
   if((listensock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
     perror("Opening socket");
     mbnFree(mbn);
@@ -191,13 +201,14 @@ void init(int argc, char **argv) {
   }
   if(bind(listensock, (struct sockaddr *)&unix_path, sizeof(struct sockaddr_un)) < 0) {
     perror("Binding to path");
+    fprintf(stderr, "Are you sure no other address server is running?\n");
+    fprintf(stderr, "Use -f to ignore this error and open the socket anyway.\n");
     close(listensock);
     mbnFree(mbn);
     exit(1);
   }
   if(listen(listensock, 5) < 0) {
     perror("Listening on socket");
-    fprintf(stderr, "Are you sure no other address server is running?\n");
     close(listensock);
     mbnFree(mbn);
     exit(1);
