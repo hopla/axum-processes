@@ -23,7 +23,7 @@ int db_init(char *dbpath, char *err) {
       ManufacturerID INT,\
       ProductID INT,\
       UniqueIDPerProduct INT,\
-      MambaNetAddress INT,\
+      MambaNetAddress INT PRIMARY KEY,\
       DefaultEngineMambaNetAddress INT,\
       NodeServices INT,\
       Active INT,\
@@ -66,6 +66,8 @@ int db_parserow(sqlite3_stmt *st, struct db_node *res) {
   n = sqlite3_step(st);
   if(n != SQLITE_ROW)
     return 0;
+  if(res == NULL)
+    return 1;
 
   if((str = sqlite3_column_text(st, 0)) == NULL || strlen((char *)str) > 32)
     res->Name[0] = 0;
@@ -79,14 +81,11 @@ int db_parserow(sqlite3_stmt *st, struct db_node *res) {
   res->Services           =          (char)sqlite3_column_int(st, 6);
   res->Active             =          (char)sqlite3_column_int(st, 7);
   if((str = sqlite3_column_text(st, 8)) == NULL || strlen((char *)str) != 14)
-    memset((void *)res->Parent, 0, 14);
+    memset((void *)res->Parent, 0, 6);
   else {
-    res->Parent[0] = hex2int((char *)(&(str[ 0])), 2);
-    res->Parent[1] = hex2int((char *)(&(str[ 2])), 2);
-    res->Parent[2] = hex2int((char *)(&(str[ 5])), 2);
-    res->Parent[3] = hex2int((char *)(&(str[ 7])), 2);
-    res->Parent[4] = hex2int((char *)(&(str[10])), 2);
-    res->Parent[5] = hex2int((char *)(&(str[12])), 2);
+    res->Parent[0] = hex2int((char *)(&(str[ 0])), 4);
+    res->Parent[1] = hex2int((char *)(&(str[ 2])), 4);
+    res->Parent[2] = hex2int((char *)(&(str[ 5])), 4);
   }
   return 1;
 }
@@ -103,4 +102,47 @@ int db_getnode(struct db_node *res, unsigned long addr) {
   sqlite3_finalize(stmt);
   return n;
 }
+
+
+int db_setnode(unsigned long addr, struct db_node *node) {
+  char *q, *qf, *err;
+  char par_storage[15], *par = NULL;
+
+  sprintf(par_storage, "%04X:%04X:%04X",
+    node->Parent[0], node->Parent[1], node->Parent[2]);
+  if(strcmp(par_storage, "0000:0000:0000") != 0)
+    par = par_storage;
+
+  if(db_getnode(NULL, addr))
+    qf = "UPDATE address_table\
+      SET\
+        Name = %Q,\
+        ManufacturerID = %d,\
+        ProductID = %d,\
+        UniqueIDPerProduct = %d,\
+        MambaNetAddress = %ld,\
+        DefaultEngineMambaNetAddress = %ld,\
+        NodeServices = %d,\
+        Active = %d,\
+        HardwareParent = %Q\
+      WHERE MambaNetAddress = %d";
+  else
+    qf = "INSERT INTO address_table\
+      VALUES(%Q, %d, %d, %d, %ld, %ld, %d, %d, %Q)";
+
+  q = sqlite3_mprintf(qf,
+    node->Name[0] == 0 ? NULL : node->Name,
+    (int)node->ManufacturerID, (int)node->ProductID, node->UniqueIDPerProduct,
+    node->MambaNetAddr, node->EngineAddr,
+    node->Services, node->Active, par
+  );
+  if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {
+    sqlite3_free(err);
+    sqlite3_free(q);
+    return 0;
+  }
+  sqlite3_free(q);
+  return 1;
+}
+
 
