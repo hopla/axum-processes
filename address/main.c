@@ -37,7 +37,7 @@ struct mbn_node_info this_node = {
   0, 1, /* FW */
   0, 0, /* FPGA */
   0, 0, /* objects, engine */
-  {0,0,0,0,0,0}, /* parent */
+  {0,0,0}, /* parent */
   0 /* service */
 };
 
@@ -57,6 +57,75 @@ struct sockaddr_un unix_path;
 int listensock;
 volatile int main_quit;
 struct s_conn connections[MAX_CONNECTIONS];
+
+
+void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, struct mbn_address_node *new) {
+  struct db_node dnew, dold;
+  int n, o;
+
+  o = old ? db_getnode(&dold, old->MambaNetAddr) : 0;
+  n = new ? db_getnode(&dnew, new->MambaNetAddr) : 0;
+
+  /* new node online, check with the DB */
+  if(!old && new) {
+    /* not in the DB? add it! */
+    if(!n) {
+      printf("New node found: %08lX\n", new->MambaNetAddr);
+      dnew.Name[0] = 0;
+      dnew.Parent[0] = dnew.Parent[1] = dnew.Parent[2] = 0;
+      dnew.ManufacturerID = new->ManufacturerID;
+      dnew.ProductID = new->ProductID;
+      dnew.UniqueIDPerProduct = new->UniqueIDPerProduct;
+      dnew.MambaNetAddr = new->MambaNetAddr;
+      dnew.EngineAddr = new->EngineAddr;
+      dnew.Services = new->Services;
+      db_setnode(0, &dnew);
+    }
+    /* we don't have its name? get it! */
+    if(dnew.Name[0] == 0) {
+      mbnGetActuatorData(m, new->MambaNetAddr, MBN_NODEOBJ_NAME, 1);
+      mbnGetSensorData(m, new->MambaNetAddr, MBN_NODEOBJ_HWPARENT, 1);
+    }
+    /* TODO: check UniqueMediaAccessID with the address */
+  }
+  m++;
+}
+
+
+int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned short obj, unsigned char type, union mbn_data dat) {
+  struct db_node node;
+  unsigned char *p = dat.Octets;
+
+  if(obj != MBN_NODEOBJ_HWPARENT || type != MBN_DATATYPE_OCTETS)
+    return 1;
+  if(!db_getnode(&node, msg->AddressFrom))
+    return 1;
+
+  node.Parent[0] = (unsigned short)(p[0]<<8) + p[1];
+  node.Parent[1] = (unsigned short)(p[2]<<8) + p[3];
+  node.Parent[2] = (unsigned short)(p[4]<<8) + p[5];
+  printf("Got hardware parent of %08lX: %04X:%04X:%04X\n",
+    msg->AddressFrom, node.Parent[0], node.Parent[1], node.Parent[2]);
+  db_setnode(msg->AddressFrom, &node);
+  return 0;
+  m++;
+}
+
+
+int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned short obj, unsigned char type, union mbn_data dat) {
+  struct db_node node;
+
+  if(obj != MBN_NODEOBJ_NAME || type != MBN_DATATYPE_OCTETS)
+    return 1;
+  if(!db_getnode(&node, msg->AddressFrom))
+    return 1;
+
+  strncpy(node.Name, (char *)dat.Octets, 32);
+  printf("Got name of %08lX: %s\n", msg->AddressFrom, node.Name);
+  db_setnode(msg->AddressFrom, &node);
+  return 0;
+  m++;
+}
 
 
 void init(int argc, char **argv) {
@@ -110,6 +179,9 @@ void init(int argc, char **argv) {
     fprintf(stderr, "mbnInit: %s\n", err);
     exit(1);
   }
+  mbnSetAddressTableChangeCallback(mbn, mAddressTableChange);
+  mbnSetSensorDataResponseCallback(mbn, mSensorDataResponse);
+  mbnSetActuatorDataResponseCallback(mbn, mActuatorDataResponse);
 
   /* initialize UNIX listen socket */
   if((listensock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {

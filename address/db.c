@@ -89,7 +89,7 @@ int db_getnode(struct db_node *res, unsigned long addr) {
 int db_setnode(unsigned long addr, struct db_node *node) {
   char *q, *qf, *err;
 
-  if(db_getnode(NULL, addr))
+  if(addr != 0 && db_getnode(NULL, addr))
     qf = "UPDATE nodes\
       SET\
         MambaNetAddress = %ld,\
