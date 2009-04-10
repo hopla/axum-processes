@@ -18,17 +18,16 @@ int db_init(char *dbpath, char *err) {
     return 0;
   }
   if(sqlite3_exec(sqldb, "\
-    CREATE TABLE IF NOT EXISTS address_table (\
-      Name VARCHAR(32),\
-      ManufacturerID INT,\
-      ProductID INT,\
-      UniqueIDPerProduct INT,\
-      MambaNetAddress INT PRIMARY KEY,\
-      DefaultEngineMambaNetAddress INT,\
-      NodeServices INT,\
-      Active INT,\
-      HardwareParent VARCHAR(14) DEFAULT '0000:0000:0000'\
-    );", NULL, NULL, &dberr
+    CREATE TABLE IF NOT EXISTS nodes (\
+      MambaNetAddress    INT NOT NULL PRIMARY KEY,\
+      Name               VARCHAR(32),\
+      ManufacturerID     INT NOT NULL,\
+      ProductID          INT NOT NULL,\
+      UniqueIDPerProduct INT NOT NULL,\
+      EngineAddr         INT NOT NULL,\
+      Services           INT NOT NULL,\
+      HardwareParent     BLOB(6) NOT NULL DEFAULT X'000000000000'\
+    )", NULL, NULL, &dberr
   ) != SQLITE_OK) {
     sprintf(err, "Creating table: %s\n", dberr);
     sqlite3_free(dberr);
@@ -44,21 +43,6 @@ void db_free() {
 }
 
 
-int hex2int(const char *hex, int len) {
-  int i, r = 0;
-  for(i=0; i<len; i++) {
-    r <<= 4;
-    if(hex[i] >= '0' && hex[i] <= '9')
-      r += hex[i]-'0';
-    else if(hex[i] >= 'a' && hex[i] <= 'f')
-      r += hex[i]-'a'+10;
-    else if(hex[i] >= 'A' && hex[i] <= 'F')
-      r = hex[i]-'A'+10;
-  }
-  return r;
-}
-
-
 int db_parserow(sqlite3_stmt *st, struct db_node *res) {
   int n;
   const unsigned char *str;
@@ -69,23 +53,21 @@ int db_parserow(sqlite3_stmt *st, struct db_node *res) {
   if(res == NULL)
     return 1;
 
-  if((str = sqlite3_column_text(st, 0)) == NULL || strlen((char *)str) > 32)
+  res->MambaNetAddr       =  (unsigned long)sqlite3_column_int(st, 0);
+  if((str = sqlite3_column_text(st, 1)) == NULL || strlen((char *)str) > 32)
     res->Name[0] = 0;
   else
     strcpy(res->Name, (char *)str);
-  res->ManufacturerID     =         (short)sqlite3_column_int(st, 1);
-  res->ProductID          =         (short)sqlite3_column_int(st, 2);
-  res->UniqueIDPerProduct =         (short)sqlite3_column_int(st, 3);
-  res->MambaNetAddr       = (unsigned long)sqlite3_column_int(st, 4);
-  res->EngineAddr         = (unsigned long)sqlite3_column_int(st, 5);
-  res->Services           =          (char)sqlite3_column_int(st, 6);
-  res->Active             =          (char)sqlite3_column_int(st, 7);
-  if((str = sqlite3_column_text(st, 8)) == NULL || strlen((char *)str) != 14)
-    memset((void *)res->Parent, 0, 6);
-  else {
-    res->Parent[0] = hex2int((char *)(&(str[ 0])), 4);
-    res->Parent[1] = hex2int((char *)(&(str[ 2])), 4);
-    res->Parent[2] = hex2int((char *)(&(str[ 5])), 4);
+  res->ManufacturerID     = (unsigned short)sqlite3_column_int(st, 2);
+  res->ProductID          = (unsigned short)sqlite3_column_int(st, 3);
+  res->UniqueIDPerProduct = (unsigned short)sqlite3_column_int(st, 4);
+  res->EngineAddr         =  (unsigned long)sqlite3_column_int(st, 5);
+  res->Services           =  (unsigned char)sqlite3_column_int(st, 6);
+  res->Parent[0] = res->Parent[1] = res->Parent[2] = 0;
+  if((str = (unsigned char *)sqlite3_column_blob(st, 7)) != NULL) {
+    res->Parent[0] = (unsigned short)(str[0]<<8) + str[1];
+    res->Parent[1] = (unsigned short)(str[2]<<8) + str[3];
+    res->Parent[2] = (unsigned short)(str[4]<<8) + str[5];
   }
   return 1;
 }
@@ -96,7 +78,7 @@ int db_getnode(struct db_node *res, unsigned long addr) {
   char q[100];
   int n;
 
-  sprintf(q, "SELECT * FROM address_table WHERE MambaNetAddress = %ld", addr);
+  sprintf(q, "SELECT * FROM nodes WHERE MambaNetAddress = %ld", addr);
   sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL);
   n = db_parserow(stmt, res);
   sqlite3_finalize(stmt);
@@ -106,35 +88,28 @@ int db_getnode(struct db_node *res, unsigned long addr) {
 
 int db_setnode(unsigned long addr, struct db_node *node) {
   char *q, *qf, *err;
-  char par_storage[15], *par = NULL;
-
-  sprintf(par_storage, "%04X:%04X:%04X",
-    node->Parent[0], node->Parent[1], node->Parent[2]);
-  if(strcmp(par_storage, "0000:0000:0000") != 0)
-    par = par_storage;
 
   if(db_getnode(NULL, addr))
-    qf = "UPDATE address_table\
+    qf = "UPDATE nodes\
       SET\
+        MambaNetAddress = %ld,\
         Name = %Q,\
         ManufacturerID = %d,\
         ProductID = %d,\
         UniqueIDPerProduct = %d,\
-        MambaNetAddress = %ld,\
-        DefaultEngineMambaNetAddress = %ld,\
-        NodeServices = %d,\
-        Active = %d,\
-        HardwareParent = %Q\
+        EngineAddr = %ld,\
+        Services = %d,\
+        HardwareParent = X'%04X%04X%04X'\
       WHERE MambaNetAddress = %d";
   else
-    qf = "INSERT INTO address_table\
-      VALUES(%Q, %d, %d, %d, %ld, %ld, %d, %d, %Q)";
+    qf = "INSERT INTO nodes\
+      VALUES(%ld, %Q, %d, %d, %d, %ld, %d, X'%04X%04X%04X')";
 
   q = sqlite3_mprintf(qf,
-    node->Name[0] == 0 ? NULL : node->Name,
-    (int)node->ManufacturerID, (int)node->ProductID, node->UniqueIDPerProduct,
-    node->MambaNetAddr, node->EngineAddr,
-    node->Services, node->Active, par
+    node->MambaNetAddr, node->Name[0] == 0 ? NULL : node->Name,
+    node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct,
+    node->EngineAddr, node->Services,
+    node->Parent[0], node->Parent[1], node->Parent[2], addr
   );
   if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {
     sqlite3_free(err);
