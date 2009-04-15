@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/select.h>
+#include <json.h>
 
 #define MAX_CONNECTIONS   10
 #define READBUFSIZE      256 /* should be large enough to store one command */
