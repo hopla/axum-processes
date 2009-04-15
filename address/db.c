@@ -26,10 +26,16 @@ int db_init(char *dbpath, char *err) {
       UniqueIDPerProduct INT NOT NULL,\
       EngineAddr         INT NOT NULL,\
       Services           INT NOT NULL,\
+      Active             INT NOT NULL,\
       HardwareParent     BLOB(6) NOT NULL DEFAULT X'000000000000'\
     )", NULL, NULL, &dberr
   ) != SQLITE_OK) {
     sprintf(err, "Creating table: %s\n", dberr);
+    sqlite3_free(dberr);
+    sqlite3_close(sqldb);
+    return 1;
+  }
+  if(sqlite3_exec(sqldb, "UPDATE nodes SET Active = 0", NULL, NULL, &dberr) != SQLITE_OK) {
     sqlite3_free(dberr);
     sqlite3_close(sqldb);
     return 1;
@@ -63,8 +69,9 @@ int db_parserow(sqlite3_stmt *st, struct db_node *res) {
   res->UniqueIDPerProduct = (unsigned short)sqlite3_column_int(st, 4);
   res->EngineAddr         =  (unsigned long)sqlite3_column_int(st, 5);
   res->Services           =  (unsigned char)sqlite3_column_int(st, 6);
+  res->Active             =  sqlite3_column_int(st, 7) ? 1 : 0;
   res->Parent[0] = res->Parent[1] = res->Parent[2] = 0;
-  if((str = (unsigned char *)sqlite3_column_blob(st, 7)) != NULL) {
+  if((str = (unsigned char *)sqlite3_column_blob(st, 8)) != NULL) {
     res->Parent[0] = (unsigned short)(str[0]<<8) + str[1];
     res->Parent[1] = (unsigned short)(str[2]<<8) + str[3];
     res->Parent[2] = (unsigned short)(str[4]<<8) + str[5];
@@ -106,6 +113,8 @@ int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset
     sqlite3_snprintf(32, &(q[strlen(q)]), " AND EngineAddr = %ld", match->EngineAddr);
   if(matchfields & DB_SERVICES)
     sqlite3_snprintf(32, &(q[strlen(q)]), " AND Services = %d", match->Services);
+  if(matchfields & DB_ACTIVE)
+    sqlite3_snprintf(32, &(q[strlen(q)]), " AND Active = %d", match->Active);
   if(matchfields & DB_PARENT)
     sqlite3_snprintf(50, &(q[strlen(q)]), " AND HardwareParent = X'%04X%04X%04X'",
        match->Parent[0], match->Parent[1], match->Parent[2]);
@@ -114,11 +123,11 @@ int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset
     order |= DB_MAMBANETADDR;
   sqlite3_snprintf(100, &(q[strlen(q)]), " ORDER BY %s%s LIMIT %d OFFSET %d",
     order & DB_NAME           ? "Name"               : order & DB_MAMBANETADDR ? "MambaNetAddress" :
-    order & DB_MANUFACTURERID ? "ManufacturerID"     : order & DB_PRODUCTID    ? "ProductID"    :
-    order & DB_UNIQUEID       ? "UniqueIDPerProduct" : order & DB_SERVICES     ? "Services" : "HardwareParent",
+      order & DB_MANUFACTURERID ? "ManufacturerID"     : order & DB_PRODUCTID    ? "ProductID"       :
+      order & DB_UNIQUEID       ? "UniqueIDPerProduct" : order & DB_SERVICES     ? "Services"        :
+      order & DB_ACTIVE         ? "Active"             : "HardwareParent",
     order & DB_DESC ? " DESC" : " ASC", limit, offset
   );
-  printf("Q: %s\n", q);
   sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL);
   for(i=0; db_parserow(stmt, &(res[i])) == 1; i++)
     ;
@@ -140,16 +149,17 @@ int db_setnode(unsigned long addr, struct db_node *node) {
         UniqueIDPerProduct = %d,\
         EngineAddr = %ld,\
         Services = %d,\
+        Active = %d,\
         HardwareParent = X'%04X%04X%04X'\
       WHERE MambaNetAddress = %d";
   else
     qf = "INSERT INTO nodes\
-      VALUES(%ld, %Q, %d, %d, %d, %ld, %d, X'%04X%04X%04X')";
+      VALUES(%ld, %Q, %d, %d, %d, %ld, %d, %d, X'%04X%04X%04X')";
 
   q = sqlite3_mprintf(qf,
     node->MambaNetAddr, node->Name[0] == 0 ? NULL : node->Name,
     node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct,
-    node->EngineAddr, node->Services,
+    node->EngineAddr, node->Services, node->Active ? 1 : 0,
     node->Parent[0], node->Parent[1], node->Parent[2], addr
   );
   if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {

@@ -60,6 +60,7 @@ void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, st
       dnew.MambaNetAddr = new->MambaNetAddr;
       dnew.EngineAddr = new->EngineAddr;
       dnew.Services = new->Services;
+      dnew.Active = 1;
       db_setnode(0, &dnew);
     }
     /* we don't have its name? get it! */
@@ -67,7 +68,20 @@ void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, st
       mbnGetActuatorData(m, new->MambaNetAddr, MBN_NODEOBJ_NAME, 1);
       mbnGetSensorData(m, new->MambaNetAddr, MBN_NODEOBJ_HWPARENT, 1);
     }
+    /* not active? update! */
+    if(!dnew.Active) {
+      dnew.Active = 1;
+      db_setnode(new->MambaNetAddr, &dnew);
+    }
     /* TODO: check UniqueMediaAccessID with the address */
+  }
+
+  /* node went offline, update status */
+  if(old && !new) {
+    if(o && dold.Active) {
+      dold.Active = 0;
+      db_setnode(old->MambaNetAddr, &dold);
+    }
   }
   m++;
 }
