@@ -11,8 +11,8 @@
 #include <json.h>
 
 #define MAX_CONNECTIONS   10
-#define READBUFSIZE      256 /* should be large enough to store one command */
-#define WRITEBUFSIZE    4096 /* should be large enough to store several replies */
+#define READBUFSIZE     1024 /* should be large enough to store one command */
+#define WRITEBUFSIZE    8192 /* should be large enough to store several replies */
  /* required memory for buffers = MAX_CONNECTIONS * (READBUFSIZE + WRITEBUFSIZE) */
 
 #define MAX(x, y) ((x)>(y)?(x):(y))
@@ -21,7 +21,7 @@ struct s_conn {
   int sock;
   int rdlen;
   int wrstart, wrend;
-  char state; /* 0=unused, 1=read, 2=write */
+  char state; /* 0=unused, 1=active */
   char rd[READBUFSIZE];
   char wr[WRITEBUFSIZE]; /* circular */
 };
@@ -54,7 +54,26 @@ int conn_init(char *upath, int force, char *err) {
     close(listensock);
     return 1;
   }
+
   return 0;
+}
+
+
+void conn_send(int client, char *cmd) {
+  int i, len;
+  len = strlen(cmd);
+  /* buffer overflow simply overwrites previous commands at the moment */
+  for(i=0; i<=len; i++) {
+    conn[client].wr[conn[client].wrend] = i==len ? '\n' : cmd[i];
+    if(++conn[client].wrend >= WRITEBUFSIZE)
+      conn[client].wrend = 0;
+  }
+}
+
+
+void conn_receive(int client, char *cmd) {
+  printf("Received \"%s\", echo'ing...\n", cmd);
+  conn_send(client, cmd);
 }
 
 
@@ -70,11 +89,12 @@ int conn_loop() {
   x = MAX(x, listensock);
   for(i=0;i<MAX_CONNECTIONS;i++)
     if(conn[i].state > 0) {
-      /*if(conn[i].state == 2)
-        FS_SET(conn[i].sock, &wr);*/
       /* always check read */
       FD_SET(conn[i].sock, &rd);
       x = MAX(x, conn[i].sock);
+      /* only check send if we have data to send */
+      if(conn[i].wrstart != conn[i].wrend)
+        FD_SET(conn[i].sock, &wr);
     }
 
   /* select() */
@@ -107,11 +127,8 @@ int conn_loop() {
   }
 
   for(i=0;i<MAX_CONNECTIONS;i++) {
-    if(conn[i].state == 0)
-      continue;
-
     /* read data */
-    if(FD_ISSET(conn[i].sock, &rd)) {
+    if(conn[i].state > 0 && FD_ISSET(conn[i].sock, &rd)) {
       if((n = read(conn[i].sock, buf, READBUFSIZE)) < 0 && errno != EINTR) {
         perror("Read");
         return 1;
@@ -127,8 +144,7 @@ int conn_loop() {
           continue;
         if(buf[x] == '\n') {
           conn[i].rd[conn[i].rdlen] = 0;
-          printf("COM: %s\n", conn[i].rd);
-          /* TODO: handle command */
+          conn_receive(i, conn[i].rd);
           conn[i].rdlen = 0;
           continue;
         }
@@ -136,6 +152,21 @@ int conn_loop() {
         if(conn[i].rdlen >= READBUFSIZE)
           conn[i].rdlen = 0;
       }
+    }
+
+    /* write data */
+    if(conn[i].state > 0 && conn[i].wrstart != conn[i].wrend && FD_ISSET(conn[i].sock, &wr)) {
+      n = conn[i].wrend - conn[i].wrstart;
+      if(n < 0)
+        n = WRITEBUFSIZE-n;
+      n = n > WRITEBUFSIZE-conn[i].wrstart ? WRITEBUFSIZE-conn[i].wrstart : n;
+      if((n = write(conn[i].sock, &(conn[i].wr[conn[i].wrstart]), n)) < 0 && errno != EINTR) {
+        perror("write");
+        return 1;
+      }
+      conn[i].wrstart += n;
+      if(conn[i].wrstart >= WRITEBUFSIZE)
+        conn[i].wrstart -= WRITEBUFSIZE;
     }
   }
 
