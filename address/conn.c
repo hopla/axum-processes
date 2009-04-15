@@ -1,5 +1,8 @@
 
+#include "db.h"
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
@@ -11,9 +14,9 @@
 #include <json.h>
 
 #define MAX_CONNECTIONS   10
-#define READBUFSIZE     1024 /* should be large enough to store one command */
-#define WRITEBUFSIZE    8192 /* should be large enough to store several replies */
- /* required memory for buffers = MAX_CONNECTIONS * (READBUFSIZE + WRITEBUFSIZE) */
+#define READBUFSIZE     2048 /* should be large enough to store one command */
+#define WRITEBUFSIZE   16384 /* should be large enough to store several replies */
+ /* required memory for buffers = (MAX_CONNECTIONS+1) * (READBUFSIZE + WRITEBUFSIZE) */
 
 #define MAX(x, y) ((x)>(y)?(x):(y))
 
@@ -71,9 +74,149 @@ void conn_send(int client, char *cmd) {
 }
 
 
-void conn_receive(int client, char *cmd) {
-  printf("Received \"%s\", echo'ing...\n", cmd);
-  conn_send(client, cmd);
+int hex2int(const char *hex, int len) {
+  int i, r = 0;
+  for(i=0; i<len; i++) {
+    r <<= 4;
+    if(hex[i] >= '0' && hex[i] <= '9')
+      r += hex[i]-'0';
+    else if(hex[i] >= 'a' && hex[i] <= 'f')
+      r += hex[i]-'a'+10;
+    else if(hex[i] >= 'A' && hex[i] <= 'F')
+      r = hex[i]-'A'+10;
+  }
+  return r;
+}
+
+
+void conn_cmd_get(int client, struct json_object *arg) {
+  struct json_object *obj, *arr;
+  struct db_node match, *res;
+  char tmp[WRITEBUFSIZE], *str;
+  int i, n,
+      limit = 1,
+      offset = 0,
+      fields = 0,
+      order = 0;
+
+  /* basic options */
+  if((obj = json_object_object_get(arg, "limit")) != NULL)
+    limit = json_object_get_int(obj);
+  if((obj = json_object_object_get(arg, "offset")) != NULL)
+    offset = json_object_get_int(obj);
+  if((obj = json_object_object_get(arg, "order")) != NULL) {
+    str = json_object_get_string(obj);
+    if(strstr(str, " DESC"))        order |= DB_DESC;
+    if(strstr(str, "Name"))         order |= DB_NAME;
+    if(strstr(str, "UniqueID"))     order |= DB_MANUFACTURERID | DB_PRODUCTID | DB_UNIQUEID;
+    if(strstr(str, "MambaNetAddr")) order |= DB_MAMBANETADDR;
+    if(strstr(str, "Services"))     order |= DB_SERVICES;
+    if(strstr(str, "Parent"))       order |= DB_PARENT;
+    if(strstr(str, "Active"))       order |= DB_ACTIVE;
+    if(strstr(str, "EngineAddr"))   order |= DB_ENGINEADDR;
+  }
+
+  /* filters */
+  if((obj = json_object_object_get(arg, "Name")) != NULL) {
+    strcpy(match.Name, json_object_get_string(obj));
+    fields |= DB_NAME;
+  }
+  if((obj = json_object_object_get(arg, "UniqueID")) != NULL) {
+    str = json_object_get_string(obj);
+    if(strlen(str) != 14)
+      return conn_send(client, "ERROR {\"msg\":\"Incorrect UniqueID\"}");
+    match.ManufacturerID     = hex2int(&(str[ 0]), 4);
+    match.ProductID          = hex2int(&(str[ 5]), 4);
+    match.UniqueIDPerProduct = hex2int(&(str[10]), 4);
+    if(match.ManufacturerID)     fields |= DB_MANUFACTURERID;
+    if(match.ProductID)          fields |= DB_PRODUCTID;
+    if(match.UniqueIDPerProduct) fields |= DB_UNIQUEID;
+  }
+  if((obj = json_object_object_get(arg, "Services")) != NULL) {
+    match.Services = json_object_get_int(obj);
+    fields |= DB_SERVICES;
+  }
+  if((obj = json_object_object_get(arg, "Active")) != NULL) {
+    match.Active = json_object_get_boolean(obj);
+    fields |= DB_ACTIVE;
+  }
+  if((obj = json_object_object_get(arg, "MambaNetAddr")) != NULL) {
+    str = json_object_get_string(obj);
+    if(strlen(str) != 8)
+      return conn_send(client, "ERROR {\"msg\":\"Incorrect MambaNetAddr\"}");
+    match.MambaNetAddr = hex2int(str, 8);
+    fields |= DB_MAMBANETADDR;
+  }
+  if((obj = json_object_object_get(arg, "EngineAddr")) != NULL) {
+    str = json_object_get_string(obj);
+    if(strlen(str) != 8)
+      return conn_send(client, "ERROR {\"msg\":\"Incorrect EngineAddr\"}");
+    match.EngineAddr = hex2int(str, 8);
+    fields |= DB_ENGINEADDR;
+  }
+  if((obj = json_object_object_get(arg, "Parent")) != NULL) {
+    str = json_object_get_string(obj);
+    if(strlen(str) != 14)
+      return conn_send(client, "ERROR {\"msg\":\"Incorrect Parent ID\"}");
+    match.Parent[0] = hex2int(&(str[ 0]), 4);
+    match.Parent[1] = hex2int(&(str[ 5]), 4);
+    match.Parent[2] = hex2int(&(str[10]), 4);
+    fields |= DB_PARENT;
+  }
+
+  /* perform search */
+  if(limit <= 0 || limit > 100)
+    limit = 1;
+  res = malloc(sizeof(struct db_node)*(limit+1));
+  n = db_searchnodes(&match, fields, limit, offset, order, res);
+
+  /* convert to JSON */
+  arg = json_object_new_object();
+  arr = json_object_new_array();
+  json_object_object_add(arg, "result", arr);
+  for(i=0; i<n; i++) {
+    obj = json_object_new_object();
+    json_object_object_add(obj, "Name", json_object_new_string(res[i].Name));
+    sprintf(tmp, "%08lX", res[i].MambaNetAddr);
+    json_object_object_add(obj, "MambaNetAddr", json_object_new_string(tmp));
+    sprintf(tmp, "%04X:%04X:%04X", res[i].ManufacturerID, res[i].ProductID, res[i].UniqueIDPerProduct);
+    json_object_object_add(obj, "UniqueID", json_object_new_string(tmp));
+    sprintf(tmp, "%04X:%04X:%04X", res[i].Parent[0], res[i].Parent[1], res[i].Parent[2]);
+    json_object_object_add(obj, "Parent", json_object_new_string(tmp));
+    sprintf(tmp, "%08lX", res[i].EngineAddr);
+    json_object_object_add(obj, "EngineAddr", json_object_new_string(tmp));
+    json_object_object_add(obj, "Services", json_object_new_int(res[i].Services));
+    json_object_object_add(obj, "Active", json_object_new_boolean(res[i].Active));
+    json_object_array_add(arr, obj);
+  }
+
+  /* serialize & send */
+  snprintf(tmp, WRITEBUFSIZE, "NODES %s", json_object_to_json_string(arg));
+  conn_send(client, tmp);
+  json_object_put(arg);
+}
+
+
+void conn_receive(int client, char *line) {
+  struct json_object *arg;
+  char cmd[10];
+  int i;
+
+  for(i=0; i<10 && line[i] && line[i] != ' '; i++)
+    cmd[i] = line[i];
+  if(i == 10 || line[i] != ' ' || !line[i+1])
+    return conn_send(client, "ERROR {\"msg\":\"Couldn't parse command\"}");
+  cmd[i] = 0;
+  arg = json_tokener_parse(&(line[i+1]));
+  if(is_error(arg))
+    return conn_send(client, "ERROR {\"msg\":\"Couldn't parse argument\"}");
+
+  if(strcmp(cmd, "GET") == 0)
+    conn_cmd_get(client, arg);
+  else
+    conn_send(client, "ERROR {\"msg\":\"Unknown command\"}");
+
+  json_object_put(arg);
 }
 
 
