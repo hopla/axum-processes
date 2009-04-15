@@ -86,6 +86,47 @@ int db_getnode(struct db_node *res, unsigned long addr) {
 }
 
 
+int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset, int order, struct db_node *res) {
+  sqlite3_stmt *stmt;
+  char q[500];
+  int i;
+
+  strcpy(q, "SELECT * FROM nodes WHERE 1");
+  if(matchfields & DB_NAME)
+    sqlite3_snprintf(50, &(q[strlen(q)]), " AND Name = %Q", match->Name);
+  if(matchfields & DB_MAMBANETADDR)
+    sqlite3_snprintf(32, &(q[strlen(q)]), " AND MambaNetAddress = %ld", match->MambaNetAddr);
+  if(matchfields & DB_MANUFACTURERID)
+    sqlite3_snprintf(32, &(q[strlen(q)]), " AND ManufacturerID = %d", match->ManufacturerID);
+  if(matchfields & DB_PRODUCTID)
+    sqlite3_snprintf(32, &(q[strlen(q)]), " AND ProductID = %d", match->ProductID);
+  if(matchfields & DB_UNIQUEID)
+    sqlite3_snprintf(40, &(q[strlen(q)]), " AND UniqueIDPerProduct = %d", match->UniqueIDPerProduct);
+  if(matchfields & DB_ENGINEADDR)
+    sqlite3_snprintf(32, &(q[strlen(q)]), " AND EngineAddr = %ld", match->EngineAddr);
+  if(matchfields & DB_SERVICES)
+    sqlite3_snprintf(32, &(q[strlen(q)]), " AND Services = %d", match->Services);
+  if(matchfields & DB_PARENT)
+    sqlite3_snprintf(50, &(q[strlen(q)]), " AND HardwareParent = X'%04X%04X%04X'",
+       match->Parent[0], match->Parent[1], match->Parent[2]);
+
+  if(!order || order == DB_DESC)
+    order |= DB_MAMBANETADDR;
+  sqlite3_snprintf(100, &(q[strlen(q)]), " ORDER BY %s%s LIMIT %d OFFSET %d",
+    order & DB_NAME           ? "Name"               : order & DB_MAMBANETADDR ? "MambaNetAddress" :
+    order & DB_MANUFACTURERID ? "ManufacturerID"     : order & DB_PRODUCTID    ? "ProductID"    :
+    order & DB_UNIQUEID       ? "UniqueIDPerProduct" : order & DB_SERVICES     ? "Services" : "HardwareParent",
+    order & DB_DESC ? " DESC" : " ASC", limit, offset
+  );
+  printf("Q: %s\n", q);
+  sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL);
+  for(i=0; db_parserow(stmt, &(res[i])) == 1; i++)
+    ;
+  sqlite3_finalize(stmt);
+  return i;
+}
+
+
 int db_setnode(unsigned long addr, struct db_node *node) {
   char *q, *qf, *err;
 
