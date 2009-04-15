@@ -1,0 +1,34 @@
+
+                   Protocol for IPC with the address server.
+
+
+Each message ("command") consists of an uppercase command name followed by a JSON
+object representing the arguments and ends with a single newline character (\n).
+
+
+Formats:
+  - A MambaNet address is formatted as a string of 8 hexadecimal digits
+  - A UniqueMediaAccessID is formatted as "MMMM:PPPP:UUUU", where M=ManufacturerID,
+    P=ProductID and U=UniqueIDPerProduct. Each represented in 4 hexadecimal digits.
+
+
+Client->Server (requests)
+  GET {}
+    Fetch a list of nodes from the database. The following JSON fields are handled:
+      limit   Maximum number of nodes to return, default 1, max. 50
+      offset  Node number to start with, default 0
+      order   Field name to order by, optionally followed by ' DESC' for reverse order
+    Additionally, the following fields can be used to filter on the list:
+      Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr
+    This command will be replied to with a NODES response.
+
+
+Server->Client (responses)
+  NODES {}
+    Reply to a GET command. The returned nodes are available in the 'result' JSON field
+    as a list of objects with the following fields:
+      Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr
+
+  ERROR {}
+    This reply indicates that something went wrong. An error message is supplied in
+    the 'msg' JSON field.
