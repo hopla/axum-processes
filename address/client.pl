@@ -35,8 +35,9 @@ while(defined ($_ = $t->readline("addr > "))) {
       print $O "No result.\n";
       next;
     }
-    print " Address   UniqueID        Parent          S   Engine    Name\n";      
-    printf $O " %s  %s  %s  %02X  %s  %s\n", @{$_}{qw| MambaNetAddr UniqueID Parent Services EngineAddr Name|}
+    print " Address    UniqueID        Parent          S   Engine    Name\n";
+    printf $O " %s%s  %s  %s  %02X  %s  %s\n", $_->{Active} ? '*' : ' ',
+      @{$_}{qw| MambaNetAddr UniqueID Parent Services EngineAddr Name|}
       for (@{$re->{result}});
   } else {
     print $O "Uknown command\n";
