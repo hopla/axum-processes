@@ -122,10 +122,10 @@ int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset
   if(!order || order == DB_DESC)
     order |= DB_MAMBANETADDR;
   sqlite3_snprintf(100, &(q[strlen(q)]), " ORDER BY %s%s LIMIT %d OFFSET %d",
-    order & DB_NAME           ? "Name"               : order & DB_MAMBANETADDR ? "MambaNetAddress" :
-      order & DB_MANUFACTURERID ? "ManufacturerID"     : order & DB_PRODUCTID    ? "ProductID"       :
-      order & DB_UNIQUEID       ? "UniqueIDPerProduct" : order & DB_SERVICES     ? "Services"        :
-      order & DB_ACTIVE         ? "Active"             : "HardwareParent",
+    order & DB_NAME       ? "Name"     : order & DB_MAMBANETADDR ? "MambaNetAddress" :
+      order & DB_SERVICES ? "Services" : order & DB_ACTIVE       ? "Active"          :
+      order & DB_MANUFACTURERID || order & DB_PRODUCTID || order & DB_UNIQUEID ?
+        "(ManufacturerID<<32)+(ProductID<<16)+UniqueIDPerProduct" : "HardwareParent",
     order & DB_DESC ? " DESC" : " ASC", limit, offset
   );
   sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL);
