@@ -225,6 +225,7 @@ void init(int argc, char **argv) {
     fprintf(stderr, "mbnInit: %s\n", err);
     exit(1);
   }
+  mbnForceAddress(mbn, 0x0001FFFF);
   mbnSetAddressTableChangeCallback(mbn, mAddressTableChange);
   mbnSetSensorDataResponseCallback(mbn, mSensorDataResponse);
   mbnSetActuatorDataResponseCallback(mbn, mActuatorDataResponse);
