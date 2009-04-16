@@ -72,7 +72,8 @@ void node_online(struct db_node *node) {
   id_f = db_searchnodes(node, DB_MANUFACTURERID|DB_PRODUCTID|DB_UNIQUEID, 1, 0, 0, &id);
 
   /* Reset node address when the previous search didn't return the exact same node */
-  if(!addr_f || !id_f || memcmp((void *)&addr, (void *)&id, sizeof(struct db_node)) != 0) {
+  if((addr_f && !id_f) || (!addr_f && id_f)
+      || (addr_f && id_f && memcmp((void *)&addr, (void *)&id, sizeof(struct db_node)) != 0)) {
     writelog("Address mismatch for %04X:%04X:%04X (%08lX), resetting valid bit",
       node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct, node->MambaNetAddr);
     reply.MessageType = MBN_MSGTYPE_ADDRESS;
