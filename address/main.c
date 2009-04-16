@@ -324,7 +324,13 @@ void init(int argc, char **argv) {
 
 
 void trapsig(int sig) {
-  main_quit = sig;
+  if(sig != SIGHUP) {
+    main_quit = sig;
+    return;
+  }
+  writelog("SIGHUP received, re-opening log file");
+  fclose(logfd);
+  logfd = fopen(logfile, "a");
 }
 
 
@@ -335,6 +341,7 @@ int main(int argc, char **argv) {
   act.sa_flags = 0;
   sigaction(SIGTERM, &act, NULL);
   sigaction(SIGINT, &act, NULL);
+  sigaction(SIGHUP, &act, NULL);
   main_quit = 0;
 
   init(argc, argv);
