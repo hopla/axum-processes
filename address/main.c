@@ -60,48 +60,75 @@ void writelog(char *fmt, ...) {
 }
 
 
-void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, struct mbn_address_node *new) {
-  struct db_node dnew, dold;
-  int n, o;
+void node_online(struct db_node *node) {
+  struct db_node addr, id;
+  struct mbn_message reply;
+  int addr_f, id_f;
 
-  o = old ? db_getnode(&dold, old->MambaNetAddr) : 0;
-  n = new ? db_getnode(&dnew, new->MambaNetAddr) : 0;
+  /* check DB for MambaNet Address and UniqueID */
+  memset((void *)&addr, 0, sizeof(struct db_node));
+  memset((void *)&id, 0, sizeof(struct db_node));
+  addr_f = db_getnode(&addr, node->MambaNetAddr);
+  id_f = db_searchnodes(node, DB_MANUFACTURERID|DB_PRODUCTID|DB_UNIQUEID, 1, 0, 0, &id);
+
+  /* Reset node address when the previous search didn't return the exact same node */
+  if(!addr_f || !id_f || memcmp((void *)&addr, (void *)&id, sizeof(struct db_node)) != 0) {
+    writelog("Address mismatch for %04X:%04X:%04X (%08lX), resetting valid bit",
+      node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct, node->MambaNetAddr);
+    reply.MessageType = MBN_MSGTYPE_ADDRESS;
+    reply.AddressTo = MBN_BROADCAST_ADDRESS;
+    reply.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
+    reply.Message.Address.ManufacturerID = node->ManufacturerID;
+    reply.Message.Address.ProductID = node->ProductID;
+    reply.Message.Address.UniqueIDPerProduct = node->UniqueIDPerProduct;
+    reply.Message.Address.Services = node->Services & ~MBN_ADDR_SERVICES_VALID;
+    reply.Message.Address.MambaNetAddr = 0;
+    reply.Message.Address.EngineAddr = node->EngineAddr;
+    mbnSendMessage(mbn, &reply, MBN_SEND_IGNOREVALID);
+    return;
+  }
+
+  /* not in the DB at all? Add it. */
+  if(!addr_f) {
+    writelog("New validated node found on the network but not in DB: %08lX (%04X:%04X:%04X)",
+      node->MambaNetAddr, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
+    db_setnode(0, node);
+  }
+  /* we don't have its name? get it! */
+  if(!addr_f || addr.Name[0] == 0) {
+    mbnGetActuatorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_NAME, 1);
+    mbnGetSensorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_HWPARENT, 1);
+  }
+  /* not active? update! */
+  if(addr_f && !addr.Active) {
+    addr.Active = 1;
+    db_setnode(node->MambaNetAddr, &addr);
+  }
+}
+
+
+void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, struct mbn_address_node *new) {
+  struct db_node node;
 
   /* new node online, check with the DB */
   if(!old && new) {
-    /* not in the DB? add it! */
-    if(!n) {
-      writelog("Found node on network but not in DB: %08lX (%04X:%04X:%04X)",
-        new->MambaNetAddr, new->ManufacturerID, new->ProductID, new->UniqueIDPerProduct);
-      dnew.Name[0] = 0;
-      dnew.Parent[0] = dnew.Parent[1] = dnew.Parent[2] = 0;
-      dnew.ManufacturerID = new->ManufacturerID;
-      dnew.ProductID = new->ProductID;
-      dnew.UniqueIDPerProduct = new->UniqueIDPerProduct;
-      dnew.MambaNetAddr = new->MambaNetAddr;
-      dnew.EngineAddr = new->EngineAddr;
-      dnew.Services = new->Services;
-      dnew.Active = 1;
-      db_setnode(0, &dnew);
-    }
-    /* we don't have its name? get it! */
-    if(dnew.Name[0] == 0) {
-      mbnGetActuatorData(m, new->MambaNetAddr, MBN_NODEOBJ_NAME, 1);
-      mbnGetSensorData(m, new->MambaNetAddr, MBN_NODEOBJ_HWPARENT, 1);
-    }
-    /* not active? update! */
-    if(!dnew.Active) {
-      dnew.Active = 1;
-      db_setnode(new->MambaNetAddr, &dnew);
-    }
-    /* TODO: check UniqueMediaAccessID with the address */
+    node.Name[0] = 0;
+    node.Parent[0] = node.Parent[1] = node.Parent[2] = 0;
+    node.ManufacturerID = new->ManufacturerID;
+    node.ProductID = new->ProductID;
+    node.UniqueIDPerProduct = new->UniqueIDPerProduct;
+    node.MambaNetAddr = new->MambaNetAddr;
+    node.EngineAddr = new->EngineAddr;
+    node.Services = new->Services;
+    node.Active = 1;
+    node_online(&node);
   }
 
   /* node went offline, update status */
   if(old && !new) {
-    if(o && dold.Active) {
-      dold.Active = 0;
-      db_setnode(old->MambaNetAddr, &dold);
+    if(db_getnode(&node, old->MambaNetAddr) && node.Active) {
+      node.Active = 0;
+      db_setnode(old->MambaNetAddr, &node);
     }
   }
   m++;
