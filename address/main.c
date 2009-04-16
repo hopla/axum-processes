@@ -172,7 +172,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
     reply.Message.Address.MambaNetAddr = res.MambaNetAddr;
     reply.Message.Address.EngineAddr = res.EngineAddr;
     writelog("Address request of %04X:%04X:%04X, sent %08lX",
-      res.MambaNetAddr, node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct);
+      node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct, res.MambaNetAddr);
   } else {
     /* not found, get new address and insert into the DB */
     node.MambaNetAddr = db_newaddress();
