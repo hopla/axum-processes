@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
+#include <time.h>
 #include <errno.h>
 
 #include <mbn.h>
@@ -14,6 +16,7 @@
 #define DEFAULT_UNIX_PATH "/tmp/axum-address"
 #define DEFAULT_ETH_DEV   "eth0"
 #define DEFAULT_DB_PATH   "/var/lib/axum/axum-address.sqlite3"
+#define DEFAULT_LOG_FILE  "/var/log/axum-address.log"
 
 #ifndef UNIX_PATH_MAX
 # define UNIX_PATH_MAX 108
@@ -37,7 +40,24 @@ struct mbn_node_info this_node = {
 
 /* global variables */
 struct mbn_handler *mbn;
+char logfile[256];
+FILE *logfd;
 volatile int main_quit;
+
+
+void writelog(char *fmt, ...) {
+  va_list ap;
+  char buf[400], tm[20];
+  time_t t = time(NULL);
+  if(logfd == NULL)
+    return;
+  va_start(ap, fmt);
+  vsnprintf(buf, 400, fmt, ap);
+  va_end(ap);
+  strftime(tm, 20, "%Y-%m-%d %H:%M:%S", gmtime(&t));
+  fprintf(logfd, "[%s] %s\n", tm, buf);
+  fflush(logfd);
+}
 
 
 void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, struct mbn_address_node *new) {
@@ -51,7 +71,8 @@ void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, st
   if(!old && new) {
     /* not in the DB? add it! */
     if(!n) {
-      printf("New node found: %08lX\n", new->MambaNetAddr);
+      writelog("Found node on network but not in DB: %08lX (%04X:%04X:%04X)",
+        new->MambaNetAddr, new->ManufacturerID, new->ProductID, new->UniqueIDPerProduct);
       dnew.Name[0] = 0;
       dnew.Parent[0] = dnew.Parent[1] = dnew.Parent[2] = 0;
       dnew.ManufacturerID = new->ManufacturerID;
@@ -99,7 +120,7 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
   node.Parent[0] = (unsigned short)(p[0]<<8) + p[1];
   node.Parent[1] = (unsigned short)(p[2]<<8) + p[3];
   node.Parent[2] = (unsigned short)(p[4]<<8) + p[5];
-  printf("Got hardware parent of %08lX: %04X:%04X:%04X\n",
+  writelog("Received hardware parent of %08lX: %04X:%04X:%04X",
     msg->AddressFrom, node.Parent[0], node.Parent[1], node.Parent[2]);
   db_setnode(msg->AddressFrom, &node);
   return 0;
@@ -116,7 +137,7 @@ int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsign
     return 1;
 
   strncpy(node.Name, (char *)dat.Octets, 32);
-  printf("Got name of %08lX: %s\n", msg->AddressFrom, node.Name);
+  writelog("Received name of %08lX: %s", msg->AddressFrom, node.Name);
   db_setnode(msg->AddressFrom, &node);
   return 0;
   m++;
@@ -150,6 +171,8 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
   if(db_searchnodes(&node, DB_MANUFACTURERID | DB_PRODUCTID | DB_UNIQUEID, 1, 0, 0, &res)) {
     reply.Message.Address.MambaNetAddr = res.MambaNetAddr;
     reply.Message.Address.EngineAddr = res.EngineAddr;
+    writelog("Address request of %04X:%04X:%04X, sent %08lX",
+      res.MambaNetAddr, node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct);
   } else {
     /* not found, get new address and insert into the DB */
     node.MambaNetAddr = db_newaddress();
@@ -159,6 +182,8 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
     db_setnode(0, &node);
     reply.Message.Address.MambaNetAddr = node.MambaNetAddr;
     reply.Message.Address.EngineAddr = node.EngineAddr;
+    writelog("New node added to the network: %08lX (%04X:%04X:%04X)",
+      node.MambaNetAddr, node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct);
   }
 
   /* send the reply */
@@ -178,9 +203,10 @@ void init(int argc, char **argv) {
   strcpy(upath, DEFAULT_UNIX_PATH);
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbpath, DEFAULT_DB_PATH);
+  strcpy(logfile, DEFAULT_LOG_FILE);
 
   /* parse options */
-  while((c = getopt(argc, argv, "e:u:d:f")) != -1) {
+  while((c = getopt(argc, argv, "e:u:d:l:f")) != -1) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
@@ -206,11 +232,19 @@ void init(int argc, char **argv) {
         }
         strcpy(dbpath, optarg);
         break;
+      case 'l':
+        if(strlen(optarg) > 256) {
+          fprintf(stderr, "Too long path to log file!");
+          exit(1);
+        }
+        strcpy(logfile, optarg);
+        break;
       default:
         fprintf(stderr, "Usage: %s [-f] [-e dev] [-u path] [-d path]\n", argv[0]);
         fprintf(stderr, "  -f       Force listen on UNIX socket.\n");
         fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
         fprintf(stderr, "  -u path  Path to UNIX socket.\n");
+        fprintf(stderr, "  -l path  Path to log file.\n");
         fprintf(stderr, "  -d path  Path to SQLite3 database file.\n");
         exit(1);
     }
@@ -247,6 +281,17 @@ void init(int argc, char **argv) {
     mbnFree(mbn);
     exit(1);
   }
+
+  /* open log file */
+  if((logfd = fopen(logfile, "a")) == NULL) {
+    perror("Opening log file");
+    conn_free();
+    mbnFree(mbn);
+    db_free();
+    exit(1);
+  }
+  writelog("-------------------------------");
+  writelog("Axum Address Server Initialized");
 }
 
 
@@ -269,9 +314,11 @@ int main(int argc, char **argv) {
     ;
 
   /* free */
+  writelog("Closing Address Server");
   conn_free();
   mbnFree(mbn);
   db_free();
+  fclose(logfd);
   return 0;
 }
 
