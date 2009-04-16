@@ -78,6 +78,10 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
     /* don't forward if we haven't found the destination node */
     if(dest == NULL)
       return 0;
+
+    /* don't forward if the destination is on the same network */
+    if(dest == mbn)
+      return 0;
   }
 
   /* print out what's happening */
