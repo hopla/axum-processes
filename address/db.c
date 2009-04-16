@@ -172,3 +172,11 @@ int db_setnode(unsigned long addr, struct db_node *node) {
 }
 
 
+unsigned long db_newaddress() {
+  unsigned long addr;
+  /* this isn't the most efficient method... */
+  for(addr=1; db_getnode(NULL, addr); addr++)
+    ;
+  return addr;
+}
+
