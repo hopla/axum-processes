@@ -123,6 +123,50 @@ int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsign
 }
 
 
+int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
+  struct mbn_message_address *nfo = &(msg->Message.Address);
+  struct db_node node, res;
+  struct mbn_message reply;
+
+  /* ignore everything but address information messages without validated address */
+  if(msg->MessageType != MBN_MSGTYPE_ADDRESS || nfo->Action != MBN_ADDR_ACTION_INFO || nfo->Services & MBN_ADDR_SERVICES_VALID)
+    return 0;
+
+  /* create a default reply message, MambaNetAddr and EngineAddr will need to be filled in */
+  reply.MessageType = MBN_MSGTYPE_ADDRESS;
+  reply.AddressTo = MBN_BROADCAST_ADDRESS;
+  reply.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
+  reply.Message.Address.ManufacturerID = nfo->ManufacturerID;
+  reply.Message.Address.ProductID = nfo->ProductID;
+  reply.Message.Address.UniqueIDPerProduct = nfo->UniqueIDPerProduct;
+  reply.Message.Address.Services = nfo->Services | MBN_ADDR_SERVICES_VALID;
+
+  /* search for UniqueMediaAccessID in the DB */
+  node.ManufacturerID = nfo->ManufacturerID;
+  node.ProductID = nfo->ProductID;
+  node.UniqueIDPerProduct = nfo->UniqueIDPerProduct;
+
+  /* found it? reply with its old address */
+  if(db_searchnodes(&node, DB_MANUFACTURERID | DB_PRODUCTID | DB_UNIQUEID, 1, 0, 0, &res)) {
+    reply.Message.Address.MambaNetAddr = res.MambaNetAddr;
+    reply.Message.Address.EngineAddr = res.EngineAddr;
+  } else {
+    /* not found, get new address and insert into the DB */
+    node.MambaNetAddr = db_newaddress();
+    node.Services = nfo->Services;
+    node.Name[0] = node.Active = node.EngineAddr = 0;
+    node.Parent[0] = node.Parent[1] = node.Parent[2] = 0;
+    db_setnode(0, &node);
+    reply.Message.Address.MambaNetAddr = node.MambaNetAddr;
+    reply.Message.Address.EngineAddr = node.EngineAddr;
+  }
+
+  /* send the reply */
+  mbnSendMessage(m, &reply, MBN_SEND_IGNOREVALID);
+  return 0;
+}
+
+
 void init(int argc, char **argv) {
   struct mbn_interface *itf;
   char err[MBN_ERRSIZE];
@@ -184,6 +228,7 @@ void init(int argc, char **argv) {
   mbnSetAddressTableChangeCallback(mbn, mAddressTableChange);
   mbnSetSensorDataResponseCallback(mbn, mSensorDataResponse);
   mbnSetActuatorDataResponseCallback(mbn, mActuatorDataResponse);
+  mbnSetReceiveMessageCallback(mbn, mReceiveMessage);
 
   /* initialize UNIX listen socket */
   if(conn_init(upath, forcelisten, err)) {
