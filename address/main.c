@@ -177,7 +177,8 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
   struct mbn_message reply;
 
   /* ignore everything but address information messages without validated address */
-  if(msg->MessageType != MBN_MSGTYPE_ADDRESS || nfo->Action != MBN_ADDR_ACTION_INFO || nfo->Services & MBN_ADDR_SERVICES_VALID)
+  if(!(msg->MessageType == MBN_MSGTYPE_ADDRESS && nfo->Action != MBN_ADDR_ACTION_INFO &&
+       (nfo->MambaNetAddr == 0 || !(nfo->Services & MBN_ADDR_SERVICES_VALID))))
     return 0;
 
   /* create a default reply message, MambaNetAddr and EngineAddr will need to be filled in */
@@ -215,7 +216,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
 
   /* send the reply */
   mbnSendMessage(m, &reply, MBN_SEND_IGNOREVALID);
-  return 0;
+  return 1;
 }
 
 
