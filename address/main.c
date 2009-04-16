@@ -221,6 +221,12 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
 }
 
 
+void mError(struct mbn_handler *m, int code, char *str) {
+  writelog("MambaNet Error: %s (%d)", str, code);
+  m++;
+}
+
+
 void init(int argc, char **argv) {
   struct mbn_interface *itf;
   char err[MBN_ERRSIZE];
@@ -293,6 +299,7 @@ void init(int argc, char **argv) {
   mbnSetSensorDataResponseCallback(mbn, mSensorDataResponse);
   mbnSetActuatorDataResponseCallback(mbn, mActuatorDataResponse);
   mbnSetReceiveMessageCallback(mbn, mReceiveMessage);
+  mbnSetErrorCallback(mbn, mError);
 
   /* initialize UNIX listen socket */
   if(conn_init(upath, forcelisten, err)) {
