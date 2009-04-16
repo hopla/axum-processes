@@ -178,7 +178,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
   struct mbn_message reply;
 
   /* ignore everything but address information messages without validated address */
-  if(!(msg->MessageType == MBN_MSGTYPE_ADDRESS && nfo->Action != MBN_ADDR_ACTION_INFO &&
+  if(!(msg->MessageType == MBN_MSGTYPE_ADDRESS && nfo->Action == MBN_ADDR_ACTION_INFO &&
        (nfo->MambaNetAddr == 0 || !(nfo->Services & MBN_ADDR_SERVICES_VALID))))
     return 0;
 
@@ -223,6 +223,12 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
 
 void mError(struct mbn_handler *m, int code, char *str) {
   writelog("MambaNet Error: %s (%d)", str, code);
+  m++;
+}
+
+
+void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
+  writelog("Acknowledge timeout for message to %08lX", msg->AddressTo);
   m++;
 }
 
@@ -300,6 +306,7 @@ void init(int argc, char **argv) {
   mbnSetActuatorDataResponseCallback(mbn, mActuatorDataResponse);
   mbnSetReceiveMessageCallback(mbn, mReceiveMessage);
   mbnSetErrorCallback(mbn, mError);
+  mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
 
   /* initialize UNIX listen socket */
   if(conn_init(upath, forcelisten, err)) {
