@@ -40,11 +40,8 @@ Server->Client (responses)
     as a list of objects with the following fields:
       Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr
 
-  NAMESET {}
-    Reply to a successfull SETNAME command. JSON argument is currently empty.
-
-  ENGINESET {}
-    Reply to a successfull SETENGINE command. JSON argument is currently empty.
+  OK {}
+    Reply to a successfull SETNAME or SETENGINE command. JSON argument is currently empty.
 
   ERROR {}
     This reply indicates that something went wrong. An error message is supplied in

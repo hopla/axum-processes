@@ -231,7 +231,7 @@ void conn_cmd_setname(int client, struct json_object *arg) {
   else
     node.flags |= DB_FLAGS_SETNAME;
   db_setnode(addr, &node);
-  conn_send(client, "NAMESET {}");
+  conn_send(client, "OK {}");
 }
 
 
@@ -264,7 +264,7 @@ void conn_cmd_setengine(int client, struct json_object *arg) {
   if(node.Active)
     mbnSetActuatorData(mbn, addr, MBN_NODEOBJ_ENGINEADDRESS, MBN_DATATYPE_UINT, 4, dat, 1);
   db_setnode(addr, &node);
-  conn_send(client, "ENGINESET {}");
+  conn_send(client, "OK {}");
 }
 
 
