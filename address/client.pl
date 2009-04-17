@@ -19,8 +19,11 @@ my $O = $t->OUT || \*STDOUT;
 
 printf $O "Connected to %s\n", $s->peerpath;
 
-while(defined ($_ = $t->readline("addr > "))) {
+while(defined ($_ = $t->readline("addr> "))) {
   exit if /^(q|quit|exit)$/;
+  die "Connection closed.\n" if !$s->connected;
+
+  # GET
   if(/^(?:get|list)( .+)?$/) {
     my %o = $1 ? eval $1 : ();
     $o{limit} = 50 if !defined $o{limit};
@@ -39,6 +42,13 @@ while(defined ($_ = $t->readline("addr > "))) {
     printf $O " %s%s  %s  %s  %02X  %s  %s\n", $_->{Active} ? '*' : ' ',
       @{$_}{qw| MambaNetAddr UniqueID Parent Services EngineAddr Name|}
       for (@{$re->{result}});
+
+  # SETNAME
+  } elsif(/^(?:setname) ([0-9a-zA-Z]{8}) (.+)$/) {
+    printf $s "SETNAME %s\n", encode_json({MambaNetAddr => $1, Name => $2});
+    print $O scalar <$s>;
+
+  # ERROR
   } else {
     print $O "Uknown command\n";
   }
