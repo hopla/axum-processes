@@ -100,9 +100,11 @@ void node_online(struct db_node *node) {
     mbnGetActuatorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_NAME, 1);
     mbnGetSensorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_HWPARENT, 1);
   }
-  /* not active? update! */
-  if(addr_f && !addr.Active) {
+  /* not active or something changed? update! */
+  if(addr_f && (!addr.Active || addr.Services != node->Services || addr.EngineAddr != node->EngineAddr)) {
     addr.Active = 1;
+    addr.Services = node->Services;
+    addr.EngineAddr = node->EngineAddr;
     db_setnode(node->MambaNetAddr, &addr);
   }
 }
