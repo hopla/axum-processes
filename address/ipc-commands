@@ -28,6 +28,11 @@ Client->Server (requests)
       MambaNetAddr  The address of the node to change the name of, as known in the DB
       Name          The new name of the node.
 
+  SETENGINE {}
+    Set the engine of a node. JSON arguments:
+      MambaNetAddr  The address of the node to change the default engine address of
+      EngineAddr    The address of the engine to use
+
 
 Server->Client (responses)
   NODES {}
@@ -37,6 +42,9 @@ Server->Client (responses)
 
   NAMESET {}
     Reply to a successfull SETNAME command. JSON argument is currently empty.
+
+  ENGINESET {}
+    Reply to a successfull SETENGINE command. JSON argument is currently empty.
 
   ERROR {}
     This reply indicates that something went wrong. An error message is supplied in

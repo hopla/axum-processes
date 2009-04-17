@@ -48,6 +48,11 @@ while(defined ($_ = $t->readline("addr> "))) {
     printf $s "SETNAME %s\n", encode_json({MambaNetAddr => $1, Name => $2});
     print $O scalar <$s>;
 
+  # SETENGINE
+  } elsif(/^(?:setengine) ([0-9a-zA-Z]{8}) ([0-9a-zA-Z]{8})$/) {
+    printf $s "SETENGINE %s\n", encode_json({MambaNetAddr => $1, EngineAddr => $2});
+    print $O scalar <$s>;
+
   # ERROR
   } else {
     print $O "Uknown command\n";

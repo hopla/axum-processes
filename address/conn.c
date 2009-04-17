@@ -235,6 +235,39 @@ void conn_cmd_setname(int client, struct json_object *arg) {
 }
 
 
+void conn_cmd_setengine(int client, struct json_object *arg) {
+  struct json_object *obj;
+  struct db_node node;
+  union mbn_data dat;
+  char *str;
+  unsigned long addr;
+
+  if((obj = json_object_object_get(arg, "MambaNetAddr")) == NULL)
+    return conn_send(client, "ERROR {\"msg\":\"No MambaNetAddr specified\"}");
+  str = json_object_get_string(obj);
+  if(strlen(str) != 8)
+    return conn_send(client, "ERROR {\"msg\":\"Incorrect MambaNetAddr\"}");
+  addr = hex2int(str, 8);
+
+  if(!db_getnode(&node, addr))
+    return conn_send(client, "ERROR {\"msg\":\"Node not found\"}");
+
+  if((obj = json_object_object_get(arg, "EngineAddr")) == NULL)
+    return conn_send(client, "ERROR {\"msg\":\"No engine address specified\"}");
+  str = json_object_get_string(obj);
+  if(strlen(str) != 8)
+    return conn_send(client, "ERROR {\"msg\":\"Incorrect engine address\"}");
+  node.EngineAddr = hex2int(str, 8);
+
+  writelog("Setting engine address of %08lX to %08lX", addr, node.EngineAddr);
+  dat.UInt = node.EngineAddr;
+  if(node.Active)
+    mbnSetActuatorData(mbn, addr, MBN_NODEOBJ_ENGINEADDRESS, MBN_DATATYPE_UINT, 4, dat, 1);
+  db_setnode(addr, &node);
+  conn_send(client, "ENGINESET {}");
+}
+
+
 void conn_receive(int client, char *line) {
   struct json_object *arg;
   char cmd[10];
@@ -253,6 +286,8 @@ void conn_receive(int client, char *line) {
     conn_cmd_get(client, arg);
   else if(strcmp(cmd, "SETNAME") == 0)
     conn_cmd_setname(client, arg);
+  else if(strcmp(cmd, "SETENGINE") == 0)
+    conn_cmd_setengine(client, arg);
   else
     conn_send(client, "ERROR {\"msg\":\"Unknown command\"}");
 
