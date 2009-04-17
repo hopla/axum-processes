@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
+#include <mbn.h>
 
 sqlite3 *sqldb;
 
@@ -159,7 +160,7 @@ int db_setnode(unsigned long addr, struct db_node *node) {
   q = sqlite3_mprintf(qf,
     node->MambaNetAddr, node->Name[0] == 0 ? NULL : node->Name,
     node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct,
-    node->EngineAddr, node->Services, node->Active ? 1 : 0,
+    node->EngineAddr, node->Services & ~MBN_ADDR_SERVICES_VALID, node->Active ? 1 : 0,
     node->Parent[0], node->Parent[1], node->Parent[2], addr
   );
   if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {
