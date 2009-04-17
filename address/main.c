@@ -44,6 +44,7 @@ struct mbn_handler *mbn;
 char logfile[256];
 FILE *logfd;
 volatile int main_quit;
+pthread_mutex_t lock;
 
 
 void writelog(char *fmt, ...) {
@@ -122,6 +123,7 @@ void node_online(struct db_node *node) {
 void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, struct mbn_address_node *new) {
   struct db_node node;
 
+  pthread_mutex_lock(&lock);
   /* new node online, check with the DB */
   if(!old && new) {
     node.Name[0] = 0;
@@ -143,6 +145,8 @@ void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, st
       db_setnode(old->MambaNetAddr, &node);
     }
   }
+
+  pthread_mutex_unlock(&lock);
   m++;
 }
 
@@ -153,15 +157,17 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
 
   if(obj != MBN_NODEOBJ_HWPARENT || type != MBN_DATATYPE_OCTETS)
     return 1;
-  if(!db_getnode(&node, msg->AddressFrom))
-    return 1;
 
-  node.Parent[0] = (unsigned short)(p[0]<<8) + p[1];
-  node.Parent[1] = (unsigned short)(p[2]<<8) + p[3];
-  node.Parent[2] = (unsigned short)(p[4]<<8) + p[5];
-  writelog("Received hardware parent of %08lX: %04X:%04X:%04X",
-    msg->AddressFrom, node.Parent[0], node.Parent[1], node.Parent[2]);
-  db_setnode(msg->AddressFrom, &node);
+  pthread_mutex_lock(&lock);
+  if(db_getnode(&node, msg->AddressFrom)) {
+    node.Parent[0] = (unsigned short)(p[0]<<8) + p[1];
+    node.Parent[1] = (unsigned short)(p[2]<<8) + p[3];
+    node.Parent[2] = (unsigned short)(p[4]<<8) + p[5];
+    writelog("Received hardware parent of %08lX: %04X:%04X:%04X",
+      msg->AddressFrom, node.Parent[0], node.Parent[1], node.Parent[2]);
+    db_setnode(msg->AddressFrom, &node);
+  }
+  pthread_mutex_unlock(&lock);
   return 0;
   m++;
 }
@@ -172,12 +178,14 @@ int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsign
 
   if(obj != MBN_NODEOBJ_NAME || type != MBN_DATATYPE_OCTETS)
     return 1;
-  if(!db_getnode(&node, msg->AddressFrom))
-    return 1;
 
-  strncpy(node.Name, (char *)dat.Octets, 32);
-  writelog("Received name of %08lX: %s", msg->AddressFrom, node.Name);
-  db_setnode(msg->AddressFrom, &node);
+  pthread_mutex_lock(&lock);
+  if(db_getnode(&node, msg->AddressFrom)) {
+    strncpy(node.Name, (char *)dat.Octets, 32);
+    writelog("Received name of %08lX: %s", msg->AddressFrom, node.Name);
+    db_setnode(msg->AddressFrom, &node);
+  }
+  pthread_mutex_unlock(&lock);
   return 0;
   m++;
 }
@@ -193,6 +201,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
        (nfo->MambaNetAddr == 0 || !(nfo->Services & MBN_ADDR_SERVICES_VALID))))
     return 0;
 
+  pthread_mutex_lock(&lock);
   /* create a default reply message, MambaNetAddr and EngineAddr will need to be filled in */
   reply.MessageType = MBN_MSGTYPE_ADDRESS;
   reply.AddressTo = MBN_BROADCAST_ADDRESS;
@@ -226,6 +235,8 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
       node.MambaNetAddr, node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct);
   }
 
+  pthread_mutex_unlock(&lock);
+
   /* send the reply */
   mbnSendMessage(m, &reply, MBN_SEND_IGNOREVALID);
   return 0;
@@ -241,6 +252,7 @@ void mError(struct mbn_handler *m, int code, char *str) {
 void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
   struct db_node node;
 
+  pthread_mutex_lock(&lock);
   /* retry a SETNAME action when the node comes online again */
   if(msg->MessageType == MBN_MSGTYPE_OBJECT && msg->Message.Object.Action == MBN_OBJ_ACTION_SET_ACTUATOR
       && msg->Message.Object.Number == MBN_NODEOBJ_NAME) {
@@ -251,6 +263,8 @@ void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
     }
   } else
     writelog("Acknowledge timeout for message to %08lX", msg->AddressTo);
+
+  pthread_mutex_unlock(&lock);
   m++;
 }
 
@@ -267,6 +281,7 @@ void init(int argc, char **argv) {
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbpath, DEFAULT_DB_PATH);
   strcpy(logfile, DEFAULT_LOG_FILE);
+  pthread_mutex_init(&lock, NULL);
 
   /* parse options */
   while((c = getopt(argc, argv, "e:u:d:l:f")) != -1) {
@@ -365,9 +380,11 @@ void trapsig(int sig) {
     main_quit = sig;
     return;
   }
+  pthread_mutex_lock(&lock);
   writelog("SIGHUP received, re-opening log file");
   fclose(logfd);
   logfd = fopen(logfile, "a");
+  pthread_mutex_unlock(&lock);
 }
 
 
