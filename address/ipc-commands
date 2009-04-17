@@ -22,6 +22,12 @@ Client->Server (requests)
       Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr
     This command will be replied to with a NODES response.
 
+  SETNAME {}
+    Set the name of a node. The database will be updated immediately, and the actual
+    node will be updated as soon as it is online. JSON arguments:
+      MambaNetAddr  The address of the node to change the name of, as known in the DB
+      Name          The new name of the node.
+
 
 Server->Client (responses)
   NODES {}
@@ -29,6 +35,10 @@ Server->Client (responses)
     as a list of objects with the following fields:
       Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr
 
+  NAMESET {}
+    Reply to a successfull SETNAME command. JSON argument is currently empty.
+
   ERROR {}
     This reply indicates that something went wrong. An error message is supplied in
     the 'msg' JSON field.
+

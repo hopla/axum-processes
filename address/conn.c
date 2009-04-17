@@ -1,4 +1,5 @@
 
+#include "main.h"
 #include "db.h"
 
 #include <stdio.h>
@@ -12,6 +13,7 @@
 #include <sys/un.h>
 #include <sys/select.h>
 #include <json.h>
+#include <mbn.h>
 
 #define MAX_CONNECTIONS   10
 #define READBUFSIZE     2048 /* should be large enough to store one command */
@@ -197,6 +199,42 @@ void conn_cmd_get(int client, struct json_object *arg) {
 }
 
 
+void conn_cmd_setname(int client, struct json_object *arg) {
+  struct json_object *obj;
+  struct db_node node;
+  union mbn_data dat;
+  char *str;
+  unsigned long addr;
+
+  if((obj = json_object_object_get(arg, "MambaNetAddr")) == NULL)
+    return conn_send(client, "ERROR {\"msg\":\"No MambaNetAddr specified\"}");
+  str = json_object_get_string(obj);
+  if(strlen(str) != 8)
+    return conn_send(client, "ERROR {\"msg\":\"Incorrect MambaNetAddr\"}");
+  addr = hex2int(str, 8);
+
+  if(!db_getnode(&node, addr))
+    return conn_send(client, "ERROR {\"msg\":\"Node not found\"}");
+
+  if((obj = json_object_object_get(arg, "Name")) == NULL)
+    return conn_send(client, "ERROR {\"msg\":\"No name specified\"}");
+  str = json_object_get_string(obj);
+  if(strlen(str) > 31)
+    return conn_send(client, "ERROR {\"msg\":\"Name too long\"}");
+
+  writelog("Renaming node %08lX to \"%s\"", addr, str);
+  memset((void *)node.Name, 0, 32);
+  strcpy(node.Name, str);
+  dat.Octets = (unsigned char *)str;
+  if(node.Active)
+    mbnSetActuatorData(mbn, addr, MBN_NODEOBJ_NAME, MBN_DATATYPE_OCTETS, 32, dat, 1);
+  else
+    node.flags |= DB_FLAGS_SETNAME;
+  db_setnode(addr, &node);
+  conn_send(client, "NAMESET {}");
+}
+
+
 void conn_receive(int client, char *line) {
   struct json_object *arg;
   char cmd[10];
@@ -213,6 +251,8 @@ void conn_receive(int client, char *line) {
 
   if(strcmp(cmd, "GET") == 0)
     conn_cmd_get(client, arg);
+  else if(strcmp(cmd, "SETNAME") == 0)
+    conn_cmd_setname(client, arg);
   else
     conn_send(client, "ERROR {\"msg\":\"Unknown command\"}");
 

@@ -28,7 +28,8 @@ int db_init(char *dbpath, char *err) {
       EngineAddr         INT NOT NULL,\
       Services           INT NOT NULL,\
       Active             INT NOT NULL,\
-      HardwareParent     BLOB(6) NOT NULL DEFAULT X'000000000000'\
+      HardwareParent     BLOB(6) NOT NULL DEFAULT X'000000000000',\
+      flags              INT NOT NULL\
     )", NULL, NULL, &dberr
   ) != SQLITE_OK) {
     sprintf(err, "Creating table: %s\n", dberr);
@@ -60,6 +61,7 @@ int db_parserow(sqlite3_stmt *st, struct db_node *res) {
   if(res == NULL)
     return 1;
 
+  memset((void *)res, 0, sizeof(struct db_node));
   res->MambaNetAddr       =  (unsigned long)sqlite3_column_int(st, 0);
   if((str = sqlite3_column_text(st, 1)) == NULL || strlen((char *)str) > 32)
     res->Name[0] = 0;
@@ -77,6 +79,7 @@ int db_parserow(sqlite3_stmt *st, struct db_node *res) {
     res->Parent[1] = (unsigned short)(str[2]<<8) + str[3];
     res->Parent[2] = (unsigned short)(str[4]<<8) + str[5];
   }
+  res->flags              =  (unsigned char)sqlite3_column_int(st, 9);
   return 1;
 }
 
@@ -151,17 +154,18 @@ int db_setnode(unsigned long addr, struct db_node *node) {
         EngineAddr = %ld,\
         Services = %d,\
         Active = %d,\
-        HardwareParent = X'%04X%04X%04X'\
+        HardwareParent = X'%04X%04X%04X',\
+        flags = %d\
       WHERE MambaNetAddress = %d";
   else
     qf = "INSERT INTO nodes\
-      VALUES(%ld, %Q, %d, %d, %d, %ld, %d, %d, X'%04X%04X%04X')";
+      VALUES(%ld, %Q, %d, %d, %d, %ld, %d, %d, X'%04X%04X%04X', %d)";
 
   q = sqlite3_mprintf(qf,
     node->MambaNetAddr, node->Name[0] == 0 ? NULL : node->Name,
     node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct,
     node->EngineAddr, node->Services & ~MBN_ADDR_SERVICES_VALID, node->Active ? 1 : 0,
-    node->Parent[0], node->Parent[1], node->Parent[2], addr
+    node->Parent[0], node->Parent[1], node->Parent[2], node->flags, addr
   );
   if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {
     sqlite3_free(err);

@@ -13,6 +13,9 @@
 #define DB_PARENT         0x100
 #define DB_DESC           0x200 /* descending order */
 
+#define DB_FLAGS_SETNAME  0x01
+
+
 struct db_node {
   char Name[32];
   unsigned short ManufacturerID, ProductID, UniqueIDPerProduct;
@@ -21,6 +24,7 @@ struct db_node {
   unsigned char Services;
   unsigned char Active;
   unsigned short Parent[3];
+  unsigned char flags; /* for internal use */
 };
 
 int  db_init(char *, char *);

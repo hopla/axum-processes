@@ -1,4 +1,5 @@
 
+#include "main.h"
 #include "conn.h"
 #include "db.h"
 
@@ -64,6 +65,7 @@ void node_online(struct db_node *node) {
   struct db_node addr, id;
   struct mbn_message reply;
   int addr_f, id_f;
+  union mbn_data dat;
 
   /* check DB for MambaNet Address and UniqueID */
   memset((void *)&addr, 0, sizeof(struct db_node));
@@ -105,6 +107,13 @@ void node_online(struct db_node *node) {
     addr.Active = 1;
     addr.Services = node->Services;
     addr.EngineAddr = node->EngineAddr;
+    db_setnode(node->MambaNetAddr, &addr);
+  }
+  /* name was changed in the DB? send it to the node */
+  if(addr_f && addr.flags & DB_FLAGS_SETNAME) {
+    addr.flags &= ~DB_FLAGS_SETNAME;
+    dat.Octets = (unsigned char *)addr.Name;
+    mbnSetActuatorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_NAME, MBN_DATATYPE_OCTETS, 32, dat, 1);
     db_setnode(node->MambaNetAddr, &addr);
   }
 }
@@ -219,7 +228,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
 
   /* send the reply */
   mbnSendMessage(m, &reply, MBN_SEND_IGNOREVALID);
-  return 1;
+  return 0;
 }
 
 
@@ -230,7 +239,18 @@ void mError(struct mbn_handler *m, int code, char *str) {
 
 
 void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
-  writelog("Acknowledge timeout for message to %08lX", msg->AddressTo);
+  struct db_node node;
+
+  /* retry a SETNAME action when the node comes online again */
+  if(msg->MessageType == MBN_MSGTYPE_OBJECT && msg->Message.Object.Action == MBN_OBJ_ACTION_SET_ACTUATOR
+      && msg->Message.Object.Number == MBN_NODEOBJ_NAME) {
+    writelog("Acknowledge timeout for SETNAME for %08lX", msg->AddressTo);
+    if(db_getnode(&node, msg->AddressTo)) {
+      node.flags |= DB_FLAGS_SETNAME;
+      db_setnode(msg->AddressTo, &node);
+    }
+  } else
+    writelog("Acknowledge timeout for message to %08lX", msg->AddressTo);
   m++;
 }
 
