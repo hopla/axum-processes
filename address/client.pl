@@ -53,6 +53,11 @@ while(defined ($_ = $t->readline("addr> "))) {
     printf $s "SETENGINE %s\n", encode_json({MambaNetAddr => $1, EngineAddr => $2});
     print $O scalar <$s>;
 
+  # PING
+  } elsif(/^ping$/) {
+    printf $s "PING {}\n";
+    print $O scalar <$s>;
+
   # ERROR
   } else {
     print $O "Uknown command\n";

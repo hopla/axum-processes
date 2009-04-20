@@ -289,7 +289,10 @@ void conn_receive(int client, char *line) {
     conn_cmd_setname(client, arg);
   else if(strcmp(cmd, "SETENGINE") == 0)
     conn_cmd_setengine(client, arg);
-  else
+  else if(strcmp(cmd, "PING") == 0) {
+    mbnSendPingRequest(mbn, MBN_BROADCAST_ADDRESS);
+    conn_send(client, "OK {}");
+  } else
     conn_send(client, "ERROR {\"msg\":\"Unknown command\"}");
   pthread_mutex_unlock(&lock);
 

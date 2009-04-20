@@ -33,6 +33,10 @@ Client->Server (requests)
       MambaNetAddr  The address of the node to change the default engine address of
       EngineAddr    The address of the engine to use
 
+  PING {}
+    Send a broadcast ping request. This will make sure that all nodes on the network
+    are detected as being online in the database.
+
 
 Server->Client (responses)
   NODES {}
