@@ -76,8 +76,9 @@ void conn_send(int client, char *cmd) {
 }
 
 
-int hex2int(const char *hex, int len) {
-  int i, r = 0;
+unsigned long hex2int(const char *hex, int len) {
+  int i;
+  unsigned long r = 0;
   for(i=0; i<len; i++) {
     r <<= 4;
     if(hex[i] >= '0' && hex[i] <= '9')
