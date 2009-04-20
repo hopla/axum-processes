@@ -334,13 +334,42 @@ void init(int argc, char **argv) {
     }
   }
 
+  /* initialize UNIX listen socket */
+  if(conn_init(upath, forcelisten, err)) {
+    fprintf(stderr, "%s", err);
+    fprintf(stderr, "Are you sure no other address server is running?\n");
+    fprintf(stderr, "Use -f to ignore this error and open the socket anyway.\n");
+    exit(1);
+  }
+
+  /* open database */
+  if(db_init(dbpath, err)) {
+    fprintf(stderr, "%s", err);
+    conn_free();
+    exit(1);
+  }
+
+  /* open log file */
+  if((logfd = fopen(logfile, "a")) == NULL) {
+    perror("Opening log file");
+    conn_free();
+    db_free();
+    exit(1);
+  }
+
   /* initialize the MambaNet node */
   if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
     fprintf(stderr, "Opening %s: %s\n", ethdev, err);
+    close(logfd);
+    conn_free();
+    db_free();
     exit(1);
   }
   if((mbn = mbnInit(&this_node, NULL, itf, err)) == NULL) {
     fprintf(stderr, "mbnInit: %s\n", err);
+    close(logfd);
+    conn_free();
+    db_free();
     exit(1);
   }
   mbnForceAddress(mbn, 0x0001FFFF);
@@ -351,31 +380,6 @@ void init(int argc, char **argv) {
   mbnSetErrorCallback(mbn, mError);
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
 
-  /* initialize UNIX listen socket */
-  if(conn_init(upath, forcelisten, err)) {
-    fprintf(stderr, "%s", err);
-    fprintf(stderr, "Are you sure no other address server is running?\n");
-    fprintf(stderr, "Use -f to ignore this error and open the socket anyway.\n");
-    mbnFree(mbn);
-    exit(1);
-  }
-
-  /* open database */
-  if(db_init(dbpath, err)) {
-    fprintf(stderr, "%s", err);
-    conn_free();
-    mbnFree(mbn);
-    exit(1);
-  }
-
-  /* open log file */
-  if((logfd = fopen(logfile, "a")) == NULL) {
-    perror("Opening log file");
-    conn_free();
-    mbnFree(mbn);
-    db_free();
-    exit(1);
-  }
   writelog("-------------------------------");
   writelog("Axum Address Server Initialized");
 }
