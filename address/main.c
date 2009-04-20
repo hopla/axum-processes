@@ -96,10 +96,11 @@ void node_online(struct db_node *node) {
   if(!addr_f) {
     writelog("New validated node found on the network but not in DB: %08lX (%04X:%04X:%04X)",
       node->MambaNetAddr, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
+    node->flags |= DB_FLAGS_REFRESH;
     db_setnode(0, node);
   }
   /* we don't have its name? get it! */
-  if(!addr_f || addr.Name[0] == 0) {
+  if(!addr_f || addr.flags & DB_FLAGS_REFRESH) {
     mbnGetActuatorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_NAME, 1);
     mbnGetSensorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_HWPARENT, 1);
   }
@@ -182,6 +183,7 @@ int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsign
   pthread_mutex_lock(&lock);
   if(db_getnode(&node, msg->AddressFrom)) {
     strncpy(node.Name, (char *)dat.Octets, 32);
+    node.flags &= ~DB_FLAGS_REFRESH;
     writelog("Received name of %08lX: %s", msg->AddressFrom, node.Name);
     db_setnode(msg->AddressFrom, &node);
   }
@@ -228,6 +230,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
     node.Services = nfo->Services;
     node.Name[0] = node.Active = node.EngineAddr = 0;
     node.Parent[0] = node.Parent[1] = node.Parent[2] = 0;
+    node.flags = DB_FLAGS_REFRESH;
     db_setnode(0, &node);
     reply.Message.Address.MambaNetAddr = node.MambaNetAddr;
     reply.Message.Address.EngineAddr = node.EngineAddr;

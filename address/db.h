@@ -14,6 +14,7 @@
 #define DB_DESC           0x200 /* descending order */
 
 #define DB_FLAGS_SETNAME  0x01
+#define DB_FLAGS_REFRESH  0x02
 
 
 struct db_node {

@@ -91,14 +91,76 @@ int hex2int(const char *hex, int len) {
 }
 
 
+int conn_parsefilter(struct json_object *arg, int client, struct db_node *match, int *fields) {
+  struct json_object *obj;
+  char *str;
+
+  *fields = 0;
+  if((obj = json_object_object_get(arg, "Name")) != NULL) {
+    strcpy(match->Name, json_object_get_string(obj));
+    *fields |= DB_NAME;
+  }
+  if((obj = json_object_object_get(arg, "UniqueID")) != NULL) {
+    str = json_object_get_string(obj);
+    if(strlen(str) != 14) {
+      conn_send(client, "ERROR {\"msg\":\"Incorrect UniqueID\"}");
+      return 1;
+    }
+    match->ManufacturerID     = hex2int(&(str[ 0]), 4);
+    match->ProductID          = hex2int(&(str[ 5]), 4);
+    match->UniqueIDPerProduct = hex2int(&(str[10]), 4);
+    if(match->ManufacturerID)     *fields |= DB_MANUFACTURERID;
+    if(match->ProductID)          *fields |= DB_PRODUCTID;
+    if(match->UniqueIDPerProduct) *fields |= DB_UNIQUEID;
+  }
+  if((obj = json_object_object_get(arg, "Services")) != NULL) {
+    match->Services = json_object_get_int(obj);
+    *fields |= DB_SERVICES;
+  }
+  if((obj = json_object_object_get(arg, "Active")) != NULL) {
+    match->Active = json_object_get_boolean(obj);
+    *fields |= DB_ACTIVE;
+  }
+  if((obj = json_object_object_get(arg, "MambaNetAddr")) != NULL) {
+    str = json_object_get_string(obj);
+    if(strlen(str) != 8) {
+      conn_send(client, "ERROR {\"msg\":\"Incorrect MambaNetAddr\"}");
+      return 1;
+    }
+    match->MambaNetAddr = hex2int(str, 8);
+    *fields |= DB_MAMBANETADDR;
+  }
+  if((obj = json_object_object_get(arg, "EngineAddr")) != NULL) {
+    str = json_object_get_string(obj);
+    if(strlen(str) != 8) {
+      conn_send(client, "ERROR {\"msg\":\"Incorrect EngineAddr\"}");
+      return 1;
+    }
+    match->EngineAddr = hex2int(str, 8);
+    *fields |= DB_ENGINEADDR;
+  }
+  if((obj = json_object_object_get(arg, "Parent")) != NULL) {
+    str = json_object_get_string(obj);
+    if(strlen(str) != 14) {
+      conn_send(client, "ERROR {\"msg\":\"Incorrect Parent ID\"}");
+      return 1;
+    }
+    match->Parent[0] = hex2int(&(str[ 0]), 4);
+    match->Parent[1] = hex2int(&(str[ 5]), 4);
+    match->Parent[2] = hex2int(&(str[10]), 4);
+    *fields |= DB_PARENT;
+  }
+  return 0;
+}
+
+
 void conn_cmd_get(int client, struct json_object *arg) {
   struct json_object *obj, *arr;
   struct db_node match, *res;
   char tmp[WRITEBUFSIZE], *str;
-  int i, n,
+  int i, n, fields,
       limit = 1,
       offset = 0,
-      fields = 0,
       order = 0;
 
   /* basic options */
@@ -119,52 +181,8 @@ void conn_cmd_get(int client, struct json_object *arg) {
   }
 
   /* filters */
-  if((obj = json_object_object_get(arg, "Name")) != NULL) {
-    strcpy(match.Name, json_object_get_string(obj));
-    fields |= DB_NAME;
-  }
-  if((obj = json_object_object_get(arg, "UniqueID")) != NULL) {
-    str = json_object_get_string(obj);
-    if(strlen(str) != 14)
-      return conn_send(client, "ERROR {\"msg\":\"Incorrect UniqueID\"}");
-    match.ManufacturerID     = hex2int(&(str[ 0]), 4);
-    match.ProductID          = hex2int(&(str[ 5]), 4);
-    match.UniqueIDPerProduct = hex2int(&(str[10]), 4);
-    if(match.ManufacturerID)     fields |= DB_MANUFACTURERID;
-    if(match.ProductID)          fields |= DB_PRODUCTID;
-    if(match.UniqueIDPerProduct) fields |= DB_UNIQUEID;
-  }
-  if((obj = json_object_object_get(arg, "Services")) != NULL) {
-    match.Services = json_object_get_int(obj);
-    fields |= DB_SERVICES;
-  }
-  if((obj = json_object_object_get(arg, "Active")) != NULL) {
-    match.Active = json_object_get_boolean(obj);
-    fields |= DB_ACTIVE;
-  }
-  if((obj = json_object_object_get(arg, "MambaNetAddr")) != NULL) {
-    str = json_object_get_string(obj);
-    if(strlen(str) != 8)
-      return conn_send(client, "ERROR {\"msg\":\"Incorrect MambaNetAddr\"}");
-    match.MambaNetAddr = hex2int(str, 8);
-    fields |= DB_MAMBANETADDR;
-  }
-  if((obj = json_object_object_get(arg, "EngineAddr")) != NULL) {
-    str = json_object_get_string(obj);
-    if(strlen(str) != 8)
-      return conn_send(client, "ERROR {\"msg\":\"Incorrect EngineAddr\"}");
-    match.EngineAddr = hex2int(str, 8);
-    fields |= DB_ENGINEADDR;
-  }
-  if((obj = json_object_object_get(arg, "Parent")) != NULL) {
-    str = json_object_get_string(obj);
-    if(strlen(str) != 14)
-      return conn_send(client, "ERROR {\"msg\":\"Incorrect Parent ID\"}");
-    match.Parent[0] = hex2int(&(str[ 0]), 4);
-    match.Parent[1] = hex2int(&(str[ 5]), 4);
-    match.Parent[2] = hex2int(&(str[10]), 4);
-    fields |= DB_PARENT;
-  }
+  if(conn_parsefilter(arg, client, &match, &fields))
+    return;
 
   /* perform search */
   if(limit <= 0 || limit > 100)
@@ -268,6 +286,25 @@ void conn_cmd_setengine(int client, struct json_object *arg) {
 }
 
 
+void conn_cmd_refresh(int client, struct json_object *arg) {
+  struct db_node match, res[200];
+  int fields, i, n;
+  if(conn_parsefilter(arg, client, &match, &fields))
+    return;
+  if((n = db_searchnodes(&match, fields, 200, 0, 0, res)) < 1)
+    return conn_send(client, "ERROR {\"msg\":\"No nodes found\"}");
+  for(i=0; i<n; i++) {
+    if(res[i].Active) {
+      mbnGetActuatorData(mbn, res[i].MambaNetAddr, MBN_NODEOBJ_NAME, 1);
+      mbnGetSensorData(mbn, res[i].MambaNetAddr, MBN_NODEOBJ_HWPARENT, 1);
+    }
+    res[i].flags |= DB_FLAGS_REFRESH;
+    db_setnode(res[i].MambaNetAddr, &(res[i]));
+  }
+  conn_send(client, "OK {}");
+}
+
+
 void conn_receive(int client, char *line) {
   struct json_object *arg;
   char cmd[10];
@@ -292,7 +329,9 @@ void conn_receive(int client, char *line) {
   else if(strcmp(cmd, "PING") == 0) {
     mbnSendPingRequest(mbn, MBN_BROADCAST_ADDRESS);
     conn_send(client, "OK {}");
-  } else
+  } else if(strcmp(cmd, "REFRESH") == 0)
+    conn_cmd_refresh(client, arg);
+  else
     conn_send(client, "ERROR {\"msg\":\"Unknown command\"}");
   pthread_mutex_unlock(&lock);
 

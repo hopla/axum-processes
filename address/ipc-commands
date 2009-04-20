@@ -37,6 +37,12 @@ Client->Server (requests)
     Send a broadcast ping request. This will make sure that all nodes on the network
     are detected as being online in the database.
 
+  REFRESH {}
+    Whenever the name or hardware parent of a node changes without involving the address
+    server, synchronisation issues can occur. This command will re-fetch the name and
+    hardware parent of the nodes matched by the JSON argument. The same matching rules
+    apply as with the GET command, minus the limit, offset and order fields.
+
 
 Server->Client (responses)
   NODES {}
@@ -45,7 +51,8 @@ Server->Client (responses)
       Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr
 
   OK {}
-    Reply to a successfull SETNAME or SETENGINE command. JSON argument is currently empty.
+    Reply to a successfull SETNAME, SETENGINE, PING or REFRESH command. JSON argument is
+    currently left empty, but might in the future be used for additional information.
 
   ERROR {}
     This reply indicates that something went wrong. An error message is supplied in
