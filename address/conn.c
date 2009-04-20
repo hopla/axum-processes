@@ -85,7 +85,7 @@ int hex2int(const char *hex, int len) {
     else if(hex[i] >= 'a' && hex[i] <= 'f')
       r += hex[i]-'a'+10;
     else if(hex[i] >= 'A' && hex[i] <= 'F')
-      r = hex[i]-'A'+10;
+      r += hex[i]-'A'+10;
   }
   return r;
 }
