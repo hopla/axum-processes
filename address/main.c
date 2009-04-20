@@ -360,14 +360,14 @@ void init(int argc, char **argv) {
   /* initialize the MambaNet node */
   if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
     fprintf(stderr, "Opening %s: %s\n", ethdev, err);
-    close(logfd);
+    fclose(logfd);
     conn_free();
     db_free();
     exit(1);
   }
   if((mbn = mbnInit(&this_node, NULL, itf, err)) == NULL) {
     fprintf(stderr, "mbnInit: %s\n", err);
-    close(logfd);
+    fclose(logfd);
     conn_free();
     db_free();
     exit(1);
