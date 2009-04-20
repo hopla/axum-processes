@@ -305,6 +305,29 @@ void conn_cmd_refresh(int client, struct json_object *arg) {
 }
 
 
+void conn_cmd_remove(int client, struct json_object *arg) {
+  struct json_object *obj;
+  struct db_node node;
+  char *str;
+  unsigned long addr;
+
+  if((obj = json_object_object_get(arg, "MambaNetAddr")) == NULL)
+    return conn_send(client, "ERROR {\"msg\":\"No MambaNetAddr specified\"}");
+  str = json_object_get_string(obj);
+  if(strlen(str) != 8)
+    return conn_send(client, "ERROR {\"msg\":\"Incorrect MambaNetAddr\"}");
+  addr = hex2int(str, 8);
+
+  if(!db_getnode(&node, addr))
+    return conn_send(client, "ERROR {\"msg\":\"Address not found in the database\"}");
+  if(node.Active)
+    return conn_send(client, "ERROR {\"msg\":\"Node is currently online\"}");
+  db_rmnode(addr);
+  writelog("Removing reservation for address %08lX", addr);
+  conn_send(client, "OK {}");
+}
+
+
 void conn_receive(int client, char *line) {
   struct json_object *arg;
   char cmd[10];
@@ -331,6 +354,8 @@ void conn_receive(int client, char *line) {
     conn_send(client, "OK {}");
   } else if(strcmp(cmd, "REFRESH") == 0)
     conn_cmd_refresh(client, arg);
+  else if(strcmp(cmd, "REMOVE") == 0)
+    conn_cmd_remove(client, arg);
   else
     conn_send(client, "ERROR {\"msg\":\"Unknown command\"}");
   pthread_mutex_unlock(&lock);

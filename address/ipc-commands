@@ -43,6 +43,12 @@ Client->Server (requests)
     hardware parent of the nodes matched by the JSON argument. The same matching rules
     apply as with the GET command, minus the limit, offset and order fields.
 
+  REMOVE {}
+    Remove a MambaNet address from the database, so it can be re-assigned later for
+    another node. This command should only be used if you are absolutely sure that the
+    node for which the address is reserved won't be attached to the network again, or
+    that when it does, its previous address doesn't have to be restored.
+
 
 Server->Client (responses)
   NODES {}
@@ -51,8 +57,8 @@ Server->Client (responses)
       Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr
 
   OK {}
-    Reply to a successfull SETNAME, SETENGINE, PING or REFRESH command. JSON argument is
-    currently left empty, but might in the future be used for additional information.
+    Reply to a successfull SETNAME, SETENGINE, PING, REFRESH or REMOVE command. JSON
+    argument is currently left empty, but might in the future be used for additional information.
 
   ERROR {}
     This reply indicates that something went wrong. An error message is supplied in

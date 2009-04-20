@@ -177,6 +177,15 @@ int db_setnode(unsigned long addr, struct db_node *node) {
 }
 
 
+void db_rmnode(unsigned long addr) {
+  char *err, *q;
+  q = sqlite3_mprintf("DELETE FROM nodes WHERE MambaNetAddress = %ld", addr);
+  if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK)
+    sqlite3_free(err);
+  sqlite3_free(q);
+}
+
+
 unsigned long db_newaddress() {
   unsigned long addr;
   /* this isn't the most efficient method... */

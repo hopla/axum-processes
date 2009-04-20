@@ -64,6 +64,11 @@ while(defined ($_ = $t->readline("addr> "))) {
     printf $s "PING {}\n";
     print $O scalar <$s>;
 
+  # REMOVE
+  } elsif(/^(?:remove) ([0-9a-zA-Z]{8})$/) {
+    printf $s "REMOVE %s\n", encode_json({MambaNetAddr => $1});
+    print $O scalar <$s>;
+
   # ERROR
   } else {
     print $O "Uknown command\n";
