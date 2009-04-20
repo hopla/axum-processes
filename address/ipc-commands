@@ -49,6 +49,14 @@ Client->Server (requests)
     node for which the address is reserved won't be attached to the network again, or
     that when it does, its previous address doesn't have to be restored.
 
+  REASSIGN {}
+    Give a MambaNet node a different address and remove the reservation for the node
+    that previously had that address. JSON arguments:
+      old   The current MambaNet address of the node that should use the new address,
+            this address will become available for other nodes after a successful reassign
+      new   The new address to use. If this address is already reserved for an other
+            node in the database, this reservation will be removed.
+
 
 Server->Client (responses)
   NODES {}
@@ -57,8 +65,9 @@ Server->Client (responses)
       Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr
 
   OK {}
-    Reply to a successfull SETNAME, SETENGINE, PING, REFRESH or REMOVE command. JSON
-    argument is currently left empty, but might in the future be used for additional information.
+    Reply to a successfull SETNAME, SETENGINE, PING, REFRESH, REMOVE or REASSIGN command.
+    JSON argument is currently left empty, but might in the future be used for additional
+    information.
 
   ERROR {}
     This reply indicates that something went wrong. An error message is supplied in

@@ -329,6 +329,62 @@ void conn_cmd_remove(int client, struct json_object *arg) {
 }
 
 
+void conn_cmd_reassign(int client, struct json_object *arg) {
+  unsigned long old, new;
+  struct json_object *obj;
+  struct db_node nold, nnew;
+  struct mbn_message msg;
+  char *str;
+
+  if((obj = json_object_object_get(arg, "old")) == NULL)
+    return conn_send(client, "ERROR {\"msg\":\"'old' field is required\"}");
+  str = json_object_get_string(obj);
+  if(strlen(str) != 8)
+    return conn_send(client, "ERROR {\"msg\":\"Incorrect old MambaNetAddr\"}");
+  old = hex2int(str, 8);
+
+  if((obj = json_object_object_get(arg, "new")) == NULL)
+    return conn_send(client, "ERROR {\"msg\":\"'new' field is required\"}");
+  str = json_object_get_string(obj);
+  if(strlen(str) != 8)
+    return conn_send(client, "ERROR {\"msg\":\"Incorrect new MambaNetAddr\"}");
+  new = hex2int(str, 8);
+
+  if(!db_getnode(&nold, old))
+    return conn_send(client, "ERROR {\"msg\":\"Node not found in database\"}");
+
+  msg.MessageType = MBN_MSGTYPE_ADDRESS;
+  msg.AddressTo = MBN_BROADCAST_ADDRESS;
+  msg.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
+  msg.Message.Address.MambaNetAddr = 0;
+
+  /* remove new node, if exists */
+  if(db_getnode(&nnew, new)) {
+    if(nnew.Active) {
+      msg.Message.Address.ManufacturerID = nnew.ManufacturerID;
+      msg.Message.Address.ProductID = nnew.ProductID;
+      msg.Message.Address.UniqueIDPerProduct = nnew.UniqueIDPerProduct;
+      msg.Message.Address.Services = nnew.Services & ~MBN_ADDR_SERVICES_VALID;
+      msg.Message.Address.EngineAddr = nnew.EngineAddr;
+      mbnSendMessage(mbn, &msg, MBN_SEND_IGNOREVALID);
+    }
+    db_rmnode(new);
+  }
+
+  /* update old node */
+  nold.MambaNetAddr = new;
+  db_setnode(old, &nold);
+  msg.Message.Address.ManufacturerID = nold.ManufacturerID;
+  msg.Message.Address.ProductID = nold.ProductID;
+  msg.Message.Address.UniqueIDPerProduct = nold.UniqueIDPerProduct;
+  msg.Message.Address.Services = nold.Services & ~MBN_ADDR_SERVICES_VALID;
+  msg.Message.Address.EngineAddr = nold.EngineAddr;
+  mbnSendMessage(mbn, &msg, MBN_SEND_IGNOREVALID);
+  writelog("Reassigned %08lX address %08lX", old, new);
+  conn_send(client, "OK {}");
+}
+
+
 void conn_receive(int client, char *line) {
   struct json_object *arg;
   char cmd[10];
@@ -357,6 +413,8 @@ void conn_receive(int client, char *line) {
     conn_cmd_refresh(client, arg);
   else if(strcmp(cmd, "REMOVE") == 0)
     conn_cmd_remove(client, arg);
+  else if(strcmp(cmd, "REASSIGN") == 0)
+    conn_cmd_reassign(client, arg);
   else
     conn_send(client, "ERROR {\"msg\":\"Unknown command\"}");
   pthread_mutex_unlock(&lock);

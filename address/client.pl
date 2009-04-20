@@ -44,12 +44,12 @@ while(defined ($_ = $t->readline("addr> "))) {
       for (@{$re->{result}});
 
   # SETNAME
-  } elsif(/^(?:setname) ([0-9a-zA-Z]{8}) (.+)$/) {
+  } elsif(/^setname ([0-9a-fA-F]{8}) (.+)$/) {
     printf $s "SETNAME %s\n", encode_json({MambaNetAddr => $1, Name => $2});
     print $O scalar <$s>;
 
   # SETENGINE
-  } elsif(/^(?:setengine) ([0-9a-zA-Z]{8}) ([0-9a-zA-Z]{8})$/) {
+  } elsif(/^setengine ([0-9a-fA-F]{8}) ([0-9a-fA-F]{8})$/) {
     printf $s "SETENGINE %s\n", encode_json({MambaNetAddr => $1, EngineAddr => $2});
     print $O scalar <$s>;
 
@@ -65,8 +65,13 @@ while(defined ($_ = $t->readline("addr> "))) {
     print $O scalar <$s>;
 
   # REMOVE
-  } elsif(/^(?:remove) ([0-9a-zA-Z]{8})$/) {
+  } elsif(/^remove ([0-9a-fA-F]{8})$/) {
     printf $s "REMOVE %s\n", encode_json({MambaNetAddr => $1});
+    print $O scalar <$s>;
+
+  # REASSIGN
+  } elsif(/^reassign ([0-9a-fA-F]{8}) ([0-9a-fA-F]{8})$/) {
+    printf $s "REASSIGN %s\n", encode_json({old => $1, new => $2});
     print $O scalar <$s>;
 
   # ERROR
