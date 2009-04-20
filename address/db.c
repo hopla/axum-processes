@@ -1,4 +1,5 @@
 
+#include "main.h"
 #include "db.h"
 
 #include <stdio.h>
@@ -38,6 +39,7 @@ int db_init(char *dbpath, char *err) {
     return 1;
   }
   if(sqlite3_exec(sqldb, "UPDATE nodes SET Active = 0", NULL, NULL, &dberr) != SQLITE_OK) {
+    sprintf(err, "Clearing active bit: %s\n", dberr);
     sqlite3_free(dberr);
     sqlite3_close(sqldb);
     return 1;
@@ -56,8 +58,12 @@ int db_parserow(sqlite3_stmt *st, struct db_node *res) {
   const unsigned char *str;
 
   n = sqlite3_step(st);
-  if(n != SQLITE_ROW)
+  if(n == SQLITE_DONE)
     return 0;
+  if(n != SQLITE_ROW) {
+    writelog("SQL Error: %s", sqlite3_errmsg(sqldb));
+    return 0;
+  }
   if(res == NULL)
     return 1;
 
@@ -90,7 +96,10 @@ int db_getnode(struct db_node *res, unsigned long addr) {
   int n;
 
   sprintf(q, "SELECT * FROM nodes WHERE MambaNetAddress = %ld", addr);
-  sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL);
+  if(sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL) != SQLITE_OK) {
+    writelog("SQL Error for \"%s\": %s", q, sqlite3_errmsg(sqldb));
+    return 0;
+  }
   n = db_parserow(stmt, res);
   sqlite3_finalize(stmt);
   return n;
@@ -134,7 +143,10 @@ int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset
         "(ManufacturerID<<32)+(ProductID<<16)+UniqueIDPerProduct" : "HardwareParent",
     order & DB_DESC ? " DESC" : " ASC", limit, offset
   );
-  sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL);
+  if(sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL) != SQLITE_OK) {
+    writelog("SQL Error for \"%s\": %s", q, sqlite3_errmsg(sqldb));
+    return 0;
+  }
 
   s = 5*sizeof(struct db_node);
   *res = malloc(s);
@@ -180,6 +192,7 @@ int db_setnode(unsigned long addr, struct db_node *node) {
     node->Parent[0], node->Parent[1], node->Parent[2], node->flags, addr
   );
   if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {
+    writelog("SQL Error for \"%s\": %s", q, err);
     sqlite3_free(err);
     sqlite3_free(q);
     return 0;
@@ -192,8 +205,10 @@ int db_setnode(unsigned long addr, struct db_node *node) {
 void db_rmnode(unsigned long addr) {
   char *err, *q;
   q = sqlite3_mprintf("DELETE FROM nodes WHERE MambaNetAddress = %ld", addr);
-  if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK)
+  if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {
+    writelog("SQL Error for \"%s\": %s", q, err);
     sqlite3_free(err);
+  }
   sqlite3_free(q);
 }
 
