@@ -221,3 +221,11 @@ unsigned long db_newaddress() {
   return addr;
 }
 
+
+void db_lock(int l) {
+  if(l)
+    sqlite3_mutex_enter(sqlite3_db_mutex(sqldb));
+  else
+    sqlite3_mutex_leave(sqlite3_db_mutex(sqldb));
+}
+

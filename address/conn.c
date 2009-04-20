@@ -401,7 +401,7 @@ void conn_receive(int client, char *line) {
   if(is_error(arg))
     return conn_send(client, "ERROR {\"msg\":\"Couldn't parse argument\"}");
 
-  pthread_mutex_lock(&lock);
+  db_lock(1);
   if(strcmp(cmd, "GET") == 0)
     conn_cmd_get(client, arg);
   else if(strcmp(cmd, "SETNAME") == 0)
@@ -419,7 +419,7 @@ void conn_receive(int client, char *line) {
     conn_cmd_reassign(client, arg);
   else
     conn_send(client, "ERROR {\"msg\":\"Unknown command\"}");
-  pthread_mutex_unlock(&lock);
+  db_lock(0);
 
   json_object_put(arg);
 }

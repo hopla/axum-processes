@@ -1,7 +1,7 @@
 CFLAGS=-Wall -Wextra -g `pkg-config --cflags json`
 LFLAGS=-lmbn -lsqlite3 `pkg-config --libs json`
 OBJECTS=conn.o db.o main.o
-HEADERS=conn.h db.h
+HEADERS=conn.h db.h main.h
 OUTPUT=axum-address
 
 all: ${OUTPUT}
