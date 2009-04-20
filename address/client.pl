@@ -74,6 +74,12 @@ while(defined ($_ = $t->readline("addr> "))) {
     printf $s "REASSIGN %s\n", encode_json({old => $1, new => $2});
     print $O scalar <$s>;
 
+  # NOTIFY
+  } elsif(/^notify( .+)?$/) {
+    my %o = $1 ? eval $1 : ();
+    printf $s "NOTIFY %s\n", encode_json(\%o);
+    print $O scalar <$s>;
+
   # ERROR
   } else {
     print $O "Uknown command\n";

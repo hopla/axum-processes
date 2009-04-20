@@ -57,6 +57,13 @@ Client->Server (requests)
       new   The new address to use. If this address is already reserved for an other
             node in the database, this reservation will be removed.
 
+  NOTIFY {}
+    Enable or disable notifications. The JSON argument 'enable' is an array of actions
+    that the application wishes to receive, and 'disable' an array of actions that should
+    be disabled. By default, all actions are disabled and no notifications will be sent.
+    Currently the only valid action is 'RELEASED'. Example to enable this action:
+      NOTIFY {"enable":["RELEASED"]}
+
 
 Server->Client (responses)
   NODES {}
@@ -65,11 +72,17 @@ Server->Client (responses)
       Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr
 
   OK {}
-    Reply to a successfull SETNAME, SETENGINE, PING, REFRESH, REMOVE or REASSIGN command.
-    JSON argument is currently left empty, but might in the future be used for additional
-    information.
+    Reply to a successfull SETNAME, SETENGINE, PING, REFRESH, REMOVE, REASSIGN or NOTIFY
+    command. JSON argument is currently left empty, but might in the future be used for
+    additional information.
 
   ERROR {}
     This reply indicates that something went wrong. An error message is supplied in
     the 'msg' JSON field.
+
+  RELEASED {}
+    Sent when a MambaNet address that was previously reserved for one node has been removed
+    from the database, and can thus be re-assigned for other nodes. Any application that
+    links node-specific data to addresses should consider this data to be invalid after
+    receiving this action.
 

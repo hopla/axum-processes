@@ -22,11 +22,14 @@
 
 #define MAX(x, y) ((x)>(y)?(x):(y))
 
+#define ACT_RELEASED  0x01
+
 struct s_conn {
   int sock;
   int rdlen;
   int wrstart, wrend;
   char state; /* 0=unused, 1=active */
+  char actions;
   char rd[READBUFSIZE];
   char wr[WRITEBUFSIZE]; /* circular */
 };
@@ -387,6 +390,40 @@ void conn_cmd_reassign(int client, struct json_object *arg) {
 }
 
 
+void conn_cmd_notify(int client, struct json_object *arg) {
+  struct json_object *obj;
+  int i, newact = conn[client].actions;
+  char *str;
+
+  /* enable actions */
+  if((obj = json_object_object_get(arg, "enable")) != NULL) {
+    if(json_object_get_type(obj) != json_type_array)
+      return conn_send(client, "ERROR {\"msg\":\"enable should be an array\"}");
+    for(i=json_object_array_length(obj); --i>=0; ) {
+      str = json_object_get_string(json_object_array_get_idx(obj, i));
+      if(strcmp(str, "RELEASED") != 0)
+        return conn_send(client, "ERROR {\"msg\":\"Unknown action\"}");
+      newact |= ACT_RELEASED;
+    }
+  }
+
+  /* disable actions */
+  if((obj = json_object_object_get(arg, "disable")) != NULL) {
+    if(json_object_get_type(obj) != json_type_array)
+      return conn_send(client, "ERROR {\"msg\":\"enable should be an array\"}");
+    for(i=json_object_array_length(obj); --i>=0; ) {
+      str = json_object_get_string(json_object_array_get_idx(obj, i));
+      if(strcmp(str, "RELEASED") != 0)
+        return conn_send(client, "ERROR {\"msg\":\"Unknown action\"}");
+      newact &= ~ACT_RELEASED;
+    }
+  }
+
+  conn[client].actions = newact;
+  conn_send(client, "OK {}");
+}
+
+
 void conn_receive(int client, char *line) {
   struct json_object *arg;
   char cmd[10];
@@ -417,6 +454,8 @@ void conn_receive(int client, char *line) {
     conn_cmd_remove(client, arg);
   else if(strcmp(cmd, "REASSIGN") == 0)
     conn_cmd_reassign(client, arg);
+  else if(strcmp(cmd, "NOTIFY") == 0)
+    conn_cmd_notify(client, arg);
   else
     conn_send(client, "ERROR {\"msg\":\"Unknown command\"}");
   db_lock(0);
@@ -471,6 +510,7 @@ int conn_loop() {
       conn[i].rdlen = 0;
       conn[i].wrstart = 0;
       conn[i].wrend = 0;
+      conn[i].actions = 0;
     }
   }
 
