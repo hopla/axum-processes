@@ -63,7 +63,7 @@ void writelog(char *fmt, ...) {
 
 
 void node_online(struct db_node *node) {
-  struct db_node addr, id;
+  struct db_node addr, *id;
   struct mbn_message reply;
   int addr_f, id_f;
   union mbn_data dat;
@@ -76,7 +76,7 @@ void node_online(struct db_node *node) {
 
   /* Reset node address when the previous search didn't return the exact same node */
   if((addr_f && !id_f) || (!addr_f && id_f)
-      || (addr_f && id_f && memcmp((void *)&addr, (void *)&id, sizeof(struct db_node)) != 0)) {
+      || (addr_f && id_f && memcmp((void *)&addr, (void *)id, sizeof(struct db_node)) != 0)) {
     writelog("Address mismatch for %04X:%04X:%04X (%08lX), resetting valid bit",
       node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct, node->MambaNetAddr);
     reply.MessageType = MBN_MSGTYPE_ADDRESS;
@@ -89,8 +89,12 @@ void node_online(struct db_node *node) {
     reply.Message.Address.MambaNetAddr = 0;
     reply.Message.Address.EngineAddr = node->EngineAddr;
     mbnSendMessage(mbn, &reply, MBN_SEND_IGNOREVALID);
+    if(id_f)
+      free(id);
     return;
   }
+  if(id_f)
+    free(id);
 
   /* not in the DB at all? Add it. */
   if(!addr_f) {
@@ -195,7 +199,7 @@ int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsign
 
 int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
   struct mbn_message_address *nfo = &(msg->Message.Address);
-  struct db_node node, res;
+  struct db_node node, *res;
   struct mbn_message reply;
 
   /* ignore everything but address information messages without validated address */
@@ -220,10 +224,11 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
 
   /* found it? reply with its old address */
   if(db_searchnodes(&node, DB_MANUFACTURERID | DB_PRODUCTID | DB_UNIQUEID, 1, 0, 0, &res)) {
-    reply.Message.Address.MambaNetAddr = res.MambaNetAddr;
-    reply.Message.Address.EngineAddr = res.EngineAddr;
+    reply.Message.Address.MambaNetAddr = res->MambaNetAddr;
+    reply.Message.Address.EngineAddr = res->EngineAddr;
     writelog("Address request of %04X:%04X:%04X, sent %08lX",
-      node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct, res.MambaNetAddr);
+      node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct, res->MambaNetAddr);
+    free(res);
   } else {
     /* not found, get new address and insert into the DB */
     node.MambaNetAddr = db_newaddress();

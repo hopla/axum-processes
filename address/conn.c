@@ -188,8 +188,7 @@ void conn_cmd_get(int client, struct json_object *arg) {
   /* perform search */
   if(limit <= 0 || limit > 100)
     limit = 1;
-  res = malloc(sizeof(struct db_node)*(limit+1));
-  n = db_searchnodes(&match, fields, limit, offset, order, res);
+  n = db_searchnodes(&match, fields, limit, offset, order, &res);
 
   /* convert to JSON */
   arg = json_object_new_object();
@@ -215,6 +214,8 @@ void conn_cmd_get(int client, struct json_object *arg) {
   snprintf(tmp, WRITEBUFSIZE, "NODES %s", json_object_to_json_string(arg));
   conn_send(client, tmp);
   json_object_put(arg);
+  if(n)
+    free(res);
 }
 
 
@@ -288,11 +289,11 @@ void conn_cmd_setengine(int client, struct json_object *arg) {
 
 
 void conn_cmd_refresh(int client, struct json_object *arg) {
-  struct db_node match, res[200];
+  struct db_node match, *res;
   int fields, i, n;
   if(conn_parsefilter(arg, client, &match, &fields))
     return;
-  if((n = db_searchnodes(&match, fields, 200, 0, 0, res)) < 1)
+  if((n = db_searchnodes(&match, fields, 0, 0, 0, &res)) < 1)
     return conn_send(client, "ERROR {\"msg\":\"No nodes found\"}");
   for(i=0; i<n; i++) {
     if(res[i].Active) {
@@ -303,6 +304,7 @@ void conn_cmd_refresh(int client, struct json_object *arg) {
     db_setnode(res[i].MambaNetAddr, &(res[i]));
   }
   conn_send(client, "OK {}");
+  free(res);
 }
 
 

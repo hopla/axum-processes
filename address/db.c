@@ -97,10 +97,10 @@ int db_getnode(struct db_node *res, unsigned long addr) {
 }
 
 
-int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset, int order, struct db_node *res) {
+int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset, int order, struct db_node **res) {
   sqlite3_stmt *stmt;
   char q[500];
-  int i;
+  int i, s;
 
   strcpy(q, "SELECT * FROM nodes WHERE 1");
   if(matchfields & DB_NAME)
@@ -125,6 +125,8 @@ int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset
 
   if(!order || order == DB_DESC)
     order |= DB_MAMBANETADDR;
+  if(!limit)
+    limit = 99999;
   sqlite3_snprintf(100, &(q[strlen(q)]), " ORDER BY %s%s LIMIT %d OFFSET %d",
     order & DB_NAME       ? "Name"     : order & DB_MAMBANETADDR ? "MambaNetAddress" :
       order & DB_SERVICES ? "Services" : order & DB_ACTIVE       ? "Active"          :
@@ -133,8 +135,18 @@ int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset
     order & DB_DESC ? " DESC" : " ASC", limit, offset
   );
   sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL);
-  for(i=0; db_parserow(stmt, &(res[i])) == 1; i++)
-    ;
+
+  s = 5*sizeof(struct db_node);
+  *res = malloc(s);
+  for(i=0; db_parserow(stmt, &((*res)[i])) == 1; i++)
+    if((i+2)*sizeof(struct db_node) > (unsigned int)s) {
+      s *= 2;
+      *res = realloc(*res, s);
+    }
+  if(!i) {
+    free(*res);
+    *res = NULL;
+  }
   sqlite3_finalize(stmt);
   return i;
 }
