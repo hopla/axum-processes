@@ -28,6 +28,7 @@ struct db_node {
   unsigned char Active;
   unsigned short Parent[3];
   time_t FirstSeen, LastSeen;
+  int AddressRequests;
   unsigned char flags; /* for internal use */
 };
 

@@ -32,7 +32,8 @@ int db_init(char *dbpath, char *err) {
       HardwareParent     BLOB(6) NOT NULL DEFAULT X'000000000000',\
       flags              INT NOT NULL,\
       FirstSeen          INT NOT NULL,\
-      LastSeen           INT NOT NULL\
+      LastSeen           INT NOT NULL,\
+      AddressRequests    INT NOT NULL\
     )", NULL, NULL, &dberr
   ) != SQLITE_OK) {
     sprintf(err, "Creating table: %s\n", dberr);
@@ -90,6 +91,7 @@ int db_parserow(sqlite3_stmt *st, struct db_node *res) {
   res->flags              =  (unsigned char)sqlite3_column_int(st, 9);
   res->FirstSeen          =         (time_t)sqlite3_column_int64(st, 10);
   res->LastSeen           =         (time_t)sqlite3_column_int64(st, 11);
+  res->AddressRequests    =                 sqlite3_column_int(st, 12);
   return 1;
 }
 
@@ -185,18 +187,19 @@ int db_setnode(unsigned long addr, struct db_node *node) {
         HardwareParent = X'%04X%04X%04X',\
         flags = %d,\
         FirstSeen = %lld,\
-        LastSeen = %lld\
+        LastSeen = %lld,\
+        AddressRequests = %d\
       WHERE MambaNetAddress = %d";
   else
     qf = "INSERT INTO nodes\
-      VALUES(%ld, %Q, %d, %d, %d, %ld, %d, %d, X'%04X%04X%04X', %d, %lld, %lld)";
+      VALUES(%ld, %Q, %d, %d, %d, %ld, %d, %d, X'%04X%04X%04X', %d, %lld, %lld, %d)";
 
   q = sqlite3_mprintf(qf,
     node->MambaNetAddr, node->Name[0] == 0 ? NULL : node->Name,
     node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct,
     node->EngineAddr, node->Services & ~MBN_ADDR_SERVICES_VALID, node->Active ? 1 : 0,
     node->Parent[0], node->Parent[1], node->Parent[2], node->flags,
-    (long long)node->FirstSeen, (long long)node->LastSeen, addr
+    (long long)node->FirstSeen, (long long)node->LastSeen, node->AddressRequests, addr
   );
   if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {
     writelog("SQL Error for \"%s\": %s", q, err);

@@ -239,6 +239,8 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
     reply.Message.Address.EngineAddr = res->EngineAddr;
     writelog("Address request of %04X:%04X:%04X, sent %08lX",
       node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct, res->MambaNetAddr);
+    res->AddressRequests++;
+    db_setnode(res->MambaNetAddr, res);
     free(res);
   } else {
     /* not found, get new address and insert into the DB */
@@ -248,6 +250,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
     node.Parent[0] = node.Parent[1] = node.Parent[2] = 0;
     node.flags = DB_FLAGS_REFRESH;
     node.FirstSeen = node.LastSeen = time(NULL);
+    node.AddressRequests = 1;
     db_setnode(0, &node);
     reply.Message.Address.MambaNetAddr = node.MambaNetAddr;
     reply.Message.Address.EngineAddr = node.EngineAddr;
