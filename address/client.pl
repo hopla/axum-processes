@@ -10,6 +10,7 @@ use warnings;
 use IO::Socket::UNIX;
 use Term::ReadLine;
 use JSON::XS;
+use POSIX 'strftime';
 
 my $s = IO::Socket::UNIX->new("/tmp/axum-address");
 die "Couldn't connect: $!\n" if !$s || !$s->connected;
@@ -38,10 +39,12 @@ while(defined ($_ = $t->readline("addr> "))) {
       print $O "No result.\n";
       next;
     }
-    print " Address    UniqueID        Parent          S   Engine    Name\n";
-    printf $O " %s%s  %s  %s  %02X  %s  %s\n", $_->{Active} ? '*' : ' ',
-      @{$_}{qw| MambaNetAddr UniqueID Parent Services EngineAddr Name|}
-      for (@{$re->{result}});
+    print $O " Address    UniqueID        Parent          S   Engine    FirstSeen      LastSeen       #AR  Name\n";
+    for my $i (@{$re->{result}}) {
+      $i->{$_} = !$i->{$_} ? '-' : strftime '%Y%m%d %H%M', gmtime $i->{$_} for (qw|FirstSeen LastSeen|);
+      printf $O " %s%s  %s  %s  %02X  %s  %-13s  %-13s  %3d  %s\n", $i->{Active} ? '*' : ' ',
+        @{$i}{qw| MambaNetAddr UniqueID Parent Services EngineAddr FirstSeen LastSeen AddressRequests Name|};
+    }
 
   # SETNAME
   } elsif(/^setname ([0-9a-fA-F]{8}) (.+)$/) {

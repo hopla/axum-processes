@@ -220,6 +220,9 @@ void conn_cmd_get(int client, struct json_object *arg) {
     json_object_object_add(obj, "EngineAddr", json_object_new_string(tmp));
     json_object_object_add(obj, "Services", json_object_new_int(res[i].Services));
     json_object_object_add(obj, "Active", json_object_new_boolean(res[i].Active));
+    json_object_object_add(obj, "FirstSeen", json_object_new_int(res[i].FirstSeen));
+    json_object_object_add(obj, "LastSeen", json_object_new_int(res[i].LastSeen));
+    json_object_object_add(obj, "AddressRequests", json_object_new_int(res[i].AddressRequests));
     json_object_array_add(arr, obj);
   }
 

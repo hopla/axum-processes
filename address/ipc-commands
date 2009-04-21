@@ -10,6 +10,7 @@ Formats:
   - A MambaNet address is formatted as a string of 8 hexadecimal digits
   - A UniqueMediaAccessID is formatted as "MMMM:PPPP:UUUU", where M=ManufacturerID,
     P=ProductID and U=UniqueIDPerProduct. Each represented in 4 hexadecimal digits.
+  - Timestamps are formatted as a number to be interpreted as a UNIX timestamp.
 
 
 Client->Server (requests)
@@ -69,7 +70,8 @@ Server->Client (responses)
   NODES {}
     Reply to a GET command. The returned nodes are available in the 'result' JSON field
     as a list of objects with the following fields:
-      Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr
+      Name, MambaNetAddr, UniqueID, Services, Parent, Active, EngineAddr, FirstSeen,
+      LastSeen, AddressRequests
 
   OK {}
     Reply to a successfull SETNAME, SETENGINE, PING, REFRESH, REMOVE, REASSIGN or NOTIFY
