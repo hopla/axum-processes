@@ -140,6 +140,7 @@ int main(int argc, char **argv) {
   struct mbn_interface *itf = NULL;
   struct mbn_object obj[2];
   char err[MBN_ERRSIZE];
+  unsigned short parent[3] = {0,0,0};
   int c;
 
   can = eth = NULL;
@@ -150,10 +151,14 @@ int main(int argc, char **argv) {
     switch(c) {
       /* can interface */
       case 'c':
-        if((itf = mbnCANOpen(optarg, err)) == NULL) {
+        if((itf = mbnCANOpen(optarg, parent, err)) == NULL) {
           printf("mbnCANOpen: %s\n", err);
           return 1;
         }
+        this_node.HardwareParent[0] = parent[0];
+        this_node.HardwareParent[1] = parent[1];
+        this_node.HardwareParent[2] = parent[2];
+        printf("Received hardware parent: %04X:%04X:%04X\n", parent[0], parent[1], parent[2]);
         if((can = mbnInit(&this_node, obj, itf, err)) == NULL) {
           printf("mbnInit(can): %s", err);
           return 1;
