@@ -100,7 +100,7 @@ void node_online(struct db_node *node) {
     writelog("New validated node found on the network but not in DB: %08lX (%04X:%04X:%04X)",
       node->MambaNetAddr, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
     node->flags |= DB_FLAGS_REFRESH;
-    node->FirstSeen = time(NULL);
+    node->FirstSeen = node->LastSeen = time(NULL);
     db_setnode(0, node);
   }
   /* we don't have its name? get it! */
@@ -202,11 +202,22 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
   struct db_node node, *res;
   struct mbn_message reply;
 
-  /* ignore everything but address information messages without validated address */
-  if(!(msg->MessageType == MBN_MSGTYPE_ADDRESS && nfo->Action == MBN_ADDR_ACTION_INFO &&
-       (nfo->MambaNetAddr == 0 || !(nfo->Services & MBN_ADDR_SERVICES_VALID))))
+  /* ignore everything but address information messages */
+  if(!(msg->MessageType == MBN_MSGTYPE_ADDRESS && nfo->Action == MBN_ADDR_ACTION_INFO))
     return 0;
 
+  /* valid node, update LastSeen */
+  if(nfo->MambaNetAddr > 0 && nfo->Services & MBN_ADDR_SERVICES_VALID) {
+    db_lock(1);
+    if(db_getnode(&node, nfo->MambaNetAddr)) {
+      node.LastSeen = time(NULL);
+      db_setnode(node.MambaNetAddr, &node);
+    }
+    db_lock(0);
+    return 0;
+  }
+
+  /* invalid, update its address status */
   db_lock(1);
   /* create a default reply message, MambaNetAddr and EngineAddr will need to be filled in */
   reply.MessageType = MBN_MSGTYPE_ADDRESS;
@@ -236,7 +247,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
     node.Name[0] = node.Active = node.EngineAddr = 0;
     node.Parent[0] = node.Parent[1] = node.Parent[2] = 0;
     node.flags = DB_FLAGS_REFRESH;
-    node.FirstSeen = time(NULL);
+    node.FirstSeen = node.LastSeen = time(NULL);
     db_setnode(0, &node);
     reply.Message.Address.MambaNetAddr = node.MambaNetAddr;
     reply.Message.Address.EngineAddr = node.EngineAddr;

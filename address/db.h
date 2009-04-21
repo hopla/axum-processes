@@ -27,7 +27,7 @@ struct db_node {
   unsigned char Services;
   unsigned char Active;
   unsigned short Parent[3];
-  time_t FirstSeen;
+  time_t FirstSeen, LastSeen;
   unsigned char flags; /* for internal use */
 };
 
