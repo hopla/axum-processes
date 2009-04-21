@@ -89,22 +89,6 @@ void conn_notify_released(unsigned long addr) {
 }
 
 
-unsigned long hex2int(const char *hex, int len) {
-  int i;
-  unsigned long r = 0;
-  for(i=0; i<len; i++) {
-    r <<= 4;
-    if(hex[i] >= '0' && hex[i] <= '9')
-      r += hex[i]-'0';
-    else if(hex[i] >= 'a' && hex[i] <= 'f')
-      r += hex[i]-'a'+10;
-    else if(hex[i] >= 'A' && hex[i] <= 'F')
-      r += hex[i]-'A'+10;
-  }
-  return r;
-}
-
-
 int conn_parsefilter(struct json_object *arg, int client, struct db_node *match, int *fields) {
   struct json_object *obj;
   char *str;

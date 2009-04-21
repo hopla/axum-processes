@@ -13,8 +13,13 @@
 #include <mbn.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <sys/select.h>
 
 #define DEFAULT_UNIX_PATH "/tmp/axum-address"
+#define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
 #define DEFAULT_ETH_DEV   "eth0"
 #define DEFAULT_DB_PATH   "/var/lib/axum/axum-address.sqlite3"
 #define DEFAULT_LOG_FILE  "/var/log/axum-address.log"
@@ -58,6 +63,22 @@ void writelog(char *fmt, ...) {
   strftime(tm, 20, "%Y-%m-%d %H:%M:%S", gmtime(&t));
   fprintf(logfd, "[%s] %s\n", tm, buf);
   fflush(logfd);
+}
+
+
+unsigned long hex2int(const char *hex, int len) {
+  int i;
+  unsigned long r = 0;
+  for(i=0; i<len; i++) {
+    r <<= 4;
+    if(hex[i] >= '0' && hex[i] <= '9')
+      r += hex[i]-'0';
+    else if(hex[i] >= 'a' && hex[i] <= 'f')
+      r += hex[i]-'a'+10;
+    else if(hex[i] >= 'A' && hex[i] <= 'F')
+      r += hex[i]-'A'+10;
+  }
+  return r;
 }
 
 
@@ -292,21 +313,57 @@ void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
 }
 
 
+int hwparent(char *path, char *err) {
+  struct sockaddr_un p;
+  char msg[14];
+  int sock;
+
+  /* if path is a hardware parent, use that */
+  if(strlen(path) == 14 && path[0] != '/' && path[4] == ':' && path[9] == ':') {
+    this_node.HardwareParent[0] = hex2int(&(path[ 0]), 4);
+    this_node.HardwareParent[1] = hex2int(&(path[ 5]), 4);
+    this_node.HardwareParent[2] = hex2int(&(path[10]), 4);
+    return 0;
+  }
+  /* otherwise, connect to unix socket */
+  p.sun_family = AF_UNIX;
+  strcpy(p.sun_path, path);
+  if((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
+    sprintf(err, "Opening UNIX socket: %s", strerror(errno));
+    return 1;
+  }
+  if(connect(sock, (struct sockaddr *)&p, sizeof(struct sockaddr_un)) < 0) {
+    sprintf(err, "Connecting to gateway: %s", strerror(errno));
+    return 1;
+  }
+  /* TODO: check readability (select(), nonblock)? time-out? */
+  if(read(sock, msg, 14) < 14) {
+    sprintf(err, "Reading from socket: %s", strerror(errno));
+    return 1;
+  }
+  this_node.HardwareParent[0] = hex2int(&(msg[ 0]), 4);
+  this_node.HardwareParent[1] = hex2int(&(msg[ 5]), 4);
+  this_node.HardwareParent[2] = hex2int(&(msg[10]), 4);
+  return 0;
+}
+
+
 void init(int argc, char **argv) {
   struct mbn_interface *itf;
   char err[MBN_ERRSIZE];
   char ethdev[50];
   char dbpath[256];
-  char upath[UNIX_PATH_MAX];
+  char upath[UNIX_PATH_MAX], gwpath[UNIX_PATH_MAX];
   int c, forcelisten = 0;
 
   strcpy(upath, DEFAULT_UNIX_PATH);
+  strcpy(gwpath, DEFAULT_GTW_PATH);
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbpath, DEFAULT_DB_PATH);
   strcpy(logfile, DEFAULT_LOG_FILE);
 
   /* parse options */
-  while((c = getopt(argc, argv, "e:u:d:l:f")) != -1) {
+  while((c = getopt(argc, argv, "e:u:d:l:g:f")) != -1) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
@@ -332,6 +389,13 @@ void init(int argc, char **argv) {
         }
         strcpy(dbpath, optarg);
         break;
+      case 'g':
+        if(strlen(optarg) > UNIX_PATH_MAX) {
+          fprintf(stderr, "Too long path to UNIX socket!");
+          exit(1);
+        }
+        strcpy(gwpath, optarg);
+        break;
       case 'l':
         if(strlen(optarg) > 256) {
           fprintf(stderr, "Too long path to log file!");
@@ -344,10 +408,17 @@ void init(int argc, char **argv) {
         fprintf(stderr, "  -f       Force listen on UNIX socket.\n");
         fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
         fprintf(stderr, "  -u path  Path to UNIX socket.\n");
+        fprintf(stderr, "  -g path  Hardware parent or path to gateway socket.\n");
         fprintf(stderr, "  -l path  Path to log file.\n");
         fprintf(stderr, "  -d path  Path to SQLite3 database file.\n");
         exit(1);
     }
+  }
+
+  /* get and set hardware parent */
+  if(hwparent(gwpath, err)) {
+    fprintf(stderr, "Couldn't get hardware parent: %s", err);
+    exit(1);
   }
 
   /* initialize UNIX listen socket */
