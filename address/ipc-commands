@@ -84,5 +84,6 @@ Server->Client (responses)
     Sent when a MambaNet address that was previously reserved for one node has been removed
     from the database, and can thus be re-assigned for other nodes. Any application that
     links node-specific data to addresses should consider this data to be invalid after
-    receiving this action.
+    receiving this action. The address that has been released is available in the MambaNetAddr
+    JSON field.
 

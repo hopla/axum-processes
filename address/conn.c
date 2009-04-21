@@ -79,6 +79,16 @@ void conn_send(int client, char *cmd) {
 }
 
 
+void conn_notify_released(unsigned long addr) {
+  int i;
+  char msg[100];
+  sprintf(msg, "RELEASED {\"MambaNetAddr\":\"%08lX\"}", addr);
+  for(i=0; i<MAX_CONNECTIONS; i++)
+    if(conn[i].state == 1 && conn[i].actions & ACT_RELEASED)
+      conn_send(i, msg);
+}
+
+
 unsigned long hex2int(const char *hex, int len) {
   int i;
   unsigned long r = 0;
@@ -331,6 +341,7 @@ void conn_cmd_remove(int client, struct json_object *arg) {
   db_rmnode(addr);
   writelog("Removing reservation for address %08lX", addr);
   conn_send(client, "OK {}");
+  conn_notify_released(addr);
 }
 
 
@@ -387,6 +398,7 @@ void conn_cmd_reassign(int client, struct json_object *arg) {
   mbnSendMessage(mbn, &msg, MBN_SEND_IGNOREVALID);
   writelog("Reassigned %08lX address %08lX", old, new);
   conn_send(client, "OK {}");
+  conn_notify_released(old);
 }
 
 
