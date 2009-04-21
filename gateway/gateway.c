@@ -20,8 +20,20 @@
 #include <pthread.h>
 #include <stdlib.h>
 
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <sys/select.h>
+
 #define MBN_VARARG
 #include "mbn.h"
+
+#define DEFAULT_UNIX_PATH "/tmp/axum-gateway"
+
+#ifndef UNIX_PATH_MAX
+# define UNIX_PATH_MAX 108
+#endif
 
 #define nodestr(n) (n == eth ? "eth" : "can")
 
@@ -128,6 +140,42 @@ void AddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old, s
 }
 
 
+void process_unix(char *path) {
+  struct sockaddr_un p;
+  int sock, client;
+  char msg[15];
+
+  p.sun_family = AF_UNIX;
+  strcpy(p.sun_path, path);
+  unlink(path);
+
+  if((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
+    perror("Opening UNIX socket");
+    return;
+  }
+  if(bind(sock, (struct sockaddr *)&p, sizeof(struct sockaddr_un)) < 0) {
+    perror("Binding to path");
+    close(sock);
+    return;
+  }
+  if(listen(sock, 5) < 0) {
+    perror("Listening on UNIX socket");
+    close(sock);
+    return;
+  }
+
+  sprintf(msg, "%04X:%04X:%04X", this_node.HardwareParent[0], this_node.HardwareParent[1], this_node.HardwareParent[2]);
+  while((client = accept(sock, NULL, NULL)) >= 0) {
+    if(write(client, msg, 14) < 14) {
+      perror("Writing to client");
+      return;
+    }
+    close(client);
+  }
+  perror("Accepting connections on UNIX socket");
+}
+
+
 void setcallbacks(struct mbn_handler *mbn) {
   mbnSetErrorCallback(mbn, Error);
   mbnSetOnlineStatusCallback(mbn, OnlineStatus);
@@ -139,13 +187,15 @@ void setcallbacks(struct mbn_handler *mbn) {
 int main(int argc, char **argv) {
   struct mbn_interface *itf = NULL;
   struct mbn_object obj[2];
-  char err[MBN_ERRSIZE];
+  char err[MBN_ERRSIZE], upath[UNIX_PATH_MAX];
   unsigned short parent[3] = {0,0,0};
   int c;
 
   can = eth = NULL;
   obj[OBJ_CANNODES] = MBN_OBJ("CAN Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
+
+  strcpy(upath, DEFAULT_UNIX_PATH);
 
   while((c = getopt(argc, argv, "c:e:")) != -1) {
     switch(c) {
@@ -177,6 +227,14 @@ int main(int argc, char **argv) {
         }
         setcallbacks(eth);
         break;
+      /* UNIX socket */
+      case 'u':
+        if(strlen(optarg) > UNIX_PATH_MAX) {
+          fprintf(stderr, "Too long path to UNIX socket!");
+          exit(1);
+        }
+        strcpy(upath, optarg);
+        break;
       /* wrong option */
       default:
         return 1;
@@ -188,8 +246,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  while(getchar() != 'q')
-    continue;
+  process_unix(upath);
 
   if(can)
     mbnFree(can);
