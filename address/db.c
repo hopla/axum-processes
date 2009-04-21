@@ -171,7 +171,7 @@ int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset
 int db_setnode(unsigned long addr, struct db_node *node) {
   char *q, *qf, *err;
 
-  if(addr != 0 && db_getnode(NULL, addr))
+  if(addr)
     qf = "UPDATE nodes\
       SET\
         MambaNetAddress = %ld,\
