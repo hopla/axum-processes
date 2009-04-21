@@ -30,7 +30,8 @@ int db_init(char *dbpath, char *err) {
       Services           INT NOT NULL,\
       Active             INT NOT NULL,\
       HardwareParent     BLOB(6) NOT NULL DEFAULT X'000000000000',\
-      flags              INT NOT NULL\
+      flags              INT NOT NULL,\
+      FirstSeen          INT NOT NULL\
     )", NULL, NULL, &dberr
   ) != SQLITE_OK) {
     sprintf(err, "Creating table: %s\n", dberr);
@@ -86,6 +87,7 @@ int db_parserow(sqlite3_stmt *st, struct db_node *res) {
     res->Parent[2] = (unsigned short)(str[4]<<8) + str[5];
   }
   res->flags              =  (unsigned char)sqlite3_column_int(st, 9);
+  res->FirstSeen          =         (time_t)sqlite3_column_int64(st, 10);
   return 1;
 }
 
@@ -179,17 +181,19 @@ int db_setnode(unsigned long addr, struct db_node *node) {
         Services = %d,\
         Active = %d,\
         HardwareParent = X'%04X%04X%04X',\
-        flags = %d\
+        flags = %d,\
+        FirstSeen = %lld\
       WHERE MambaNetAddress = %d";
   else
     qf = "INSERT INTO nodes\
-      VALUES(%ld, %Q, %d, %d, %d, %ld, %d, %d, X'%04X%04X%04X', %d)";
+      VALUES(%ld, %Q, %d, %d, %d, %ld, %d, %d, X'%04X%04X%04X', %d, %lld)";
 
   q = sqlite3_mprintf(qf,
     node->MambaNetAddr, node->Name[0] == 0 ? NULL : node->Name,
     node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct,
     node->EngineAddr, node->Services & ~MBN_ADDR_SERVICES_VALID, node->Active ? 1 : 0,
-    node->Parent[0], node->Parent[1], node->Parent[2], node->flags, addr
+    node->Parent[0], node->Parent[1], node->Parent[2], node->flags,
+    (long long)node->FirstSeen, addr
   );
   if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {
     writelog("SQL Error for \"%s\": %s", q, err);

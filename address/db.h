@@ -2,6 +2,8 @@
 
 #ifndef _db_h
 
+#include <time.h>
+
 #define DB_NAME           0x001
 #define DB_MANUFACTURERID 0x002
 #define DB_PRODUCTID      0x004
@@ -25,6 +27,7 @@ struct db_node {
   unsigned char Services;
   unsigned char Active;
   unsigned short Parent[3];
+  time_t FirstSeen;
   unsigned char flags; /* for internal use */
 };
 
