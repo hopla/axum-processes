@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
 
   strcpy(upath, DEFAULT_UNIX_PATH);
 
-  while((c = getopt(argc, argv, "c:e:")) != -1) {
+  while((c = getopt(argc, argv, "c:e:u:")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
