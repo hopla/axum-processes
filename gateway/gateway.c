@@ -35,10 +35,12 @@
 # define UNIX_PATH_MAX 108
 #endif
 
-#define nodestr(n) (n == eth ? "eth" : "can")
+#define nodestr(n) (n == eth ? "eth" : n == can ? "can" : "tcp")
 
 #define OBJ_CANNODES 0
 #define OBJ_ETHNODES 1
+#define OBJ_TCPNODES 2
+
 
 struct mbn_node_info this_node = {
   0x00000000, 0x00, /* MambaNet Addr + Services */
@@ -46,7 +48,7 @@ struct mbn_node_info this_node = {
   "YorHels Gateway",
   0xFFFF, 0x0002, 0x0001,   /* UniqueMediaAccessId */
   0, 0,    /* Hardware revision */
-  0, 1,    /* Firmware revision */
+  1, 1,    /* Firmware revision */
   0, 0,    /* FPGAFirmware revision */
   2,       /* NumberOfObjects */
   0,       /* DefaultEngineAddr */
@@ -54,7 +56,7 @@ struct mbn_node_info this_node = {
   0        /* Service request */
 };
 
-struct mbn_handler *eth, *can;
+struct mbn_handler *eth, *can, *tcp;
 
 
 void OnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid) {
@@ -62,6 +64,7 @@ void OnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid) {
   if(valid) {
     if(mbn != can) mbnForceAddress(can, addr);
     if(mbn != eth) mbnForceAddress(eth, addr);
+    if(mbn != tcp) mbnForceAddress(tcp, addr);
   }
   this_node.MambaNetAddr = addr;
 }
@@ -86,6 +89,8 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
       dest = can;
     else if(mbnNodeStatus(eth, msg->AddressTo) != NULL)
       dest = eth;
+    else if(mbnNodeStatus(tcp, msg->AddressTo) != NULL)
+      dest = tcp;
 
     /* don't forward if we haven't found the destination node */
     if(dest == NULL)
@@ -110,6 +115,7 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
     fwd(dest);
   else {
     if(mbn != eth) fwd(eth);
+    if(mbn != tcp) fwd(tcp);
     if(mbn != can) {
       /* filter out address reservation packets to can */
       if(!(dest == NULL && msg->MessageType == MBN_MSGTYPE_ADDRESS && msg->Message.Address.Action == MBN_ADDR_ACTION_INFO))
@@ -133,10 +139,11 @@ void AddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old, s
   while((n = mbnNextNode(mbn, n)) != NULL)
     count.UInt++;
 
-  obj = mbn == can ? OBJ_CANNODES : OBJ_ETHNODES;
+  obj = mbn == can ? OBJ_CANNODES : mbn == eth ? OBJ_ETHNODES : OBJ_TCPNODES;
   obj += 1024;
   mbnUpdateSensorData(can, obj, count);
   mbnUpdateSensorData(eth, obj, count);
+  mbnUpdateSensorData(tcp, obj, count);
 }
 
 
@@ -186,19 +193,20 @@ void setcallbacks(struct mbn_handler *mbn) {
 
 void init(int argc, char **argv, char *upath) {
   struct mbn_interface *itf = NULL;
-  struct mbn_object obj[2];
-  char err[MBN_ERRSIZE], ican[50], ieth[50];
+  struct mbn_object obj[3];
+  char err[MBN_ERRSIZE], ican[50], ieth[50], tport[10];
   unsigned short parent[3] = {0,0,0};
-  int c;
+  int c, itfcount = 0;
 
   strcpy(upath, DEFAULT_UNIX_PATH);
-  ican[0] = ieth[0] = 0;
-  can = eth = NULL;
+  ican[0] = ieth[0] = tport[0] = 0;
+  can = eth = tcp = NULL;
 
   obj[OBJ_CANNODES] = MBN_OBJ("CAN Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
+  obj[OBJ_TCPNODES] = MBN_OBJ("TCP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
 
-  while((c = getopt(argc, argv, "c:e:u:")) != -1) {
+  while((c = getopt(argc, argv, "c:e:u:t:")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
@@ -207,6 +215,7 @@ void init(int argc, char **argv, char *upath) {
           exit(1);
         }
         strcpy(ican, optarg);
+        itfcount++;
         break;
       /* ethernet interface */
       case 'e':
@@ -215,6 +224,16 @@ void init(int argc, char **argv, char *upath) {
           exit(1);
         }
         strcpy(ieth, optarg);
+        itfcount++;
+        break;
+      /* TCP port */
+      case 't':
+        if(strlen(optarg) > 9) {
+          fprintf(stderr, "TCP port too long\n");
+          exit(1);
+        }
+        strcpy(tport, optarg);
+        itfcount++;
         break;
       /* UNIX socket */
       case 'u':
@@ -229,12 +248,13 @@ void init(int argc, char **argv, char *upath) {
         fprintf(stderr, "Usage: %s [-c dev] [-e dev] [-u path]\n", argv[0]);
         fprintf(stderr, "  -c dev   CAN device\n");
         fprintf(stderr, "  -e dev   Ethernet device\n");
+        fprintf(stderr, "  -t port  TCP port (0 = use default)\n");
         fprintf(stderr, "  -u path  Path to UNIX socket\n");
         exit(1);
     }
   }
 
-  if(!ican[0] || !ieth[0]) {
+  if(itfcount < 2) {
     fprintf(stderr, "Need at least two interfaces to function as a gateway!\n");
     exit(1);
   }
@@ -271,6 +291,27 @@ void init(int argc, char **argv, char *upath) {
     }
     setcallbacks(eth);
   }
+
+  /* init TCP */
+  if(tport[0]) {
+    if((itf = mbnTCPOpen(NULL, NULL, "0.0.0.0", strcmp(tport, "0") ? tport : NULL, err)) == NULL) {
+      fprintf(stderr, "mbnTCPOpen: %s\n", err);
+      if(can)
+        mbnFree(can);
+      if(eth)
+        mbnFree(eth);
+      exit(1);
+    }
+    if((tcp = mbnInit(&this_node, obj, itf, err)) == NULL) {
+      fprintf(stderr, "mbnInit(tcp): %s\n", err);
+      if(can)
+        mbnFree(can);
+      if(eth)
+        mbnFree(eth);
+      exit(1);
+    }
+    setcallbacks(tcp);
+  }
 }
 
 
@@ -284,6 +325,8 @@ int main(int argc, char **argv) {
     mbnFree(can);
   if(eth)
     mbnFree(eth);
+  if(tcp)
+    mbnFree(tcp);
 
   return 0;
 }
