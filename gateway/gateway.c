@@ -184,68 +184,100 @@ void setcallbacks(struct mbn_handler *mbn) {
 }
 
 
-int main(int argc, char **argv) {
+void init(int argc, char **argv, char *upath) {
   struct mbn_interface *itf = NULL;
   struct mbn_object obj[2];
-  char err[MBN_ERRSIZE], upath[UNIX_PATH_MAX];
+  char err[MBN_ERRSIZE], ican[50], ieth[50];
   unsigned short parent[3] = {0,0,0};
   int c;
 
+  strcpy(upath, DEFAULT_UNIX_PATH);
+  ican[0] = ieth[0] = 0;
   can = eth = NULL;
+
   obj[OBJ_CANNODES] = MBN_OBJ("CAN Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
-
-  strcpy(upath, DEFAULT_UNIX_PATH);
 
   while((c = getopt(argc, argv, "c:e:u:")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
-        if((itf = mbnCANOpen(optarg, parent, err)) == NULL) {
-          printf("mbnCANOpen: %s\n", err);
-          return 1;
+        if(strlen(optarg) > 49) {
+          fprintf(stderr, "CAN interface name too long\n");
+          exit(1);
         }
-        this_node.HardwareParent[0] = parent[0];
-        this_node.HardwareParent[1] = parent[1];
-        this_node.HardwareParent[2] = parent[2];
-        printf("Received hardware parent: %04X:%04X:%04X\n", parent[0], parent[1], parent[2]);
-        if((can = mbnInit(&this_node, obj, itf, err)) == NULL) {
-          printf("mbnInit(can): %s", err);
-          return 1;
-        }
-        setcallbacks(can);
+        strcpy(ican, optarg);
         break;
       /* ethernet interface */
       case 'e':
-        if((itf = mbnEthernetOpen(optarg, err)) == NULL) {
-          printf("mbnEthernetOpen: %s\n", err);
-          return 1;
+        if(strlen(optarg) > 49) {
+          fprintf(stderr, "Ethernet interface name too long\n");
+          exit(1);
         }
-        if((eth = mbnInit(&this_node, obj, itf, err)) == NULL) {
-          printf("mbnInit(eth): %s", err);
-          return 1;
-        }
-        setcallbacks(eth);
+        strcpy(ieth, optarg);
         break;
       /* UNIX socket */
       case 'u':
         if(strlen(optarg) > UNIX_PATH_MAX) {
-          fprintf(stderr, "Too long path to UNIX socket!");
+          fprintf(stderr, "Too long path to UNIX socket!\n");
           exit(1);
         }
         strcpy(upath, optarg);
         break;
       /* wrong option */
       default:
-        return 1;
+        fprintf(stderr, "Usage: %s [-c dev] [-e dev] [-u path]\n", argv[0]);
+        fprintf(stderr, "  -c dev   CAN device\n");
+        fprintf(stderr, "  -e dev   Ethernet device\n");
+        fprintf(stderr, "  -u path  Path to UNIX socket\n");
+        exit(1);
     }
   }
 
-  if(!can || !eth) {
-    printf("Need at least two interfaces to function as a gateway!\n");
-    return 1;
+  if(!ican[0] || !ieth[0]) {
+    fprintf(stderr, "Need at least two interfaces to function as a gateway!\n");
+    exit(1);
   }
 
+  /* init can */
+  if(ican[0]) {
+    if((itf = mbnCANOpen(ican, parent, err)) == NULL) {
+      fprintf(stderr, "mbnCANOpen: %s\n", err);
+      exit(1);
+    }
+    this_node.HardwareParent[0] = parent[0];
+    this_node.HardwareParent[1] = parent[1];
+    this_node.HardwareParent[2] = parent[2];
+    if((can = mbnInit(&this_node, obj, itf, err)) == NULL) {
+      fprintf(stderr, "mbnInit(can): %s\n", err);
+      exit(1);
+    }
+    setcallbacks(can);
+  }
+
+  /* init ethernet */
+  if(ieth[0]) {
+    if((itf = mbnEthernetOpen(ieth, err)) == NULL) {
+      fprintf(stderr, "mbnEthernetOpen: %s\n", err);
+      if(can)
+        mbnFree(can);
+      exit(1);
+    }
+    if((eth = mbnInit(&this_node, obj, itf, err)) == NULL) {
+      fprintf(stderr, "mbnInit(eth): %s\n", err);
+      if(can)
+        mbnFree(can);
+      exit(1);
+    }
+    setcallbacks(eth);
+  }
+}
+
+
+int main(int argc, char **argv) {
+  char upath[UNIX_PATH_MAX];
+
+  init(argc, argv, upath);
   process_unix(upath);
 
   if(can)
