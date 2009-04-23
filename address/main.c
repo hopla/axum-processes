@@ -153,7 +153,7 @@ void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, st
 
   db_lock(1);
   /* new node online, check with the DB */
-  if(!old && new) {
+  if(new) {
     node.Name[0] = 0;
     node.Parent[0] = node.Parent[1] = node.Parent[2] = 0;
     node.ManufacturerID = new->ManufacturerID;
