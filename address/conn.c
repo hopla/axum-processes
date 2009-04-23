@@ -357,6 +357,7 @@ void conn_cmd_reassign(int client, struct json_object *arg) {
     return conn_send(client, "ERROR {\"msg\":\"Node not found in database\"}");
 
   msg.MessageType = MBN_MSGTYPE_ADDRESS;
+  msg.AcknowledgeReply = 0;
   msg.AddressTo = MBN_BROADCAST_ADDRESS;
   msg.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
   msg.Message.Address.MambaNetAddr = 0;

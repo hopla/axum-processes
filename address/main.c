@@ -101,6 +101,7 @@ void node_online(struct db_node *node) {
       node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct, node->MambaNetAddr);
     reply.MessageType = MBN_MSGTYPE_ADDRESS;
     reply.AddressTo = MBN_BROADCAST_ADDRESS;
+    reply.AcknowledgeReply = 0;
     reply.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
     reply.Message.Address.ManufacturerID = node->ManufacturerID;
     reply.Message.Address.ProductID = node->ProductID;
@@ -242,6 +243,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
   db_lock(1);
   /* create a default reply message, MambaNetAddr and EngineAddr will need to be filled in */
   reply.MessageType = MBN_MSGTYPE_ADDRESS;
+  reply.AcknowledgeReply = 0;
   reply.AddressTo = MBN_BROADCAST_ADDRESS;
   reply.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
   reply.Message.Address.ManufacturerID = nfo->ManufacturerID;
