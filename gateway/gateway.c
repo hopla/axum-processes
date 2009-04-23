@@ -21,10 +21,12 @@
 #include <stdlib.h>
 
 #include <unistd.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/select.h>
+#include <sys/stat.h>
 
 #define MBN_VARARG
 #include "mbn.h"
@@ -195,12 +197,25 @@ void setcallbacks(struct mbn_handler *mbn) {
 }
 
 
+void trapsig(int sig) {
+  switch(sig) {
+    case SIGALRM:
+    case SIGCHLD:
+      exit(1);
+    case SIGUSR1:
+      exit(0);
+  }
+}
+
+
 void init(int argc, char **argv, char *upath) {
   struct mbn_interface *itf = NULL;
   struct mbn_object obj[3];
   char err[MBN_ERRSIZE], ican[50], ieth[50], tport[10];
   unsigned short parent[3] = {0,0,0};
   int c, itfcount = 0;
+  struct sigaction act;
+  pid_t pid;
 
   strcpy(upath, DEFAULT_UNIX_PATH);
   ican[0] = ieth[0] = tport[0] = 0;
@@ -268,6 +283,40 @@ void init(int argc, char **argv, char *upath) {
     exit(1);
   }
 
+  if(!verbose) {
+    /* catch signals in parent process */
+    act.sa_handler = trapsig;
+    act.sa_flags = 0;
+    sigaction(SIGCHLD, &act, NULL);
+    sigaction(SIGUSR1, &act, NULL);
+    sigaction(SIGALRM, &act, NULL);
+
+    /* fork */
+    if((pid = fork()) < 0) {
+      perror("fork()");
+      exit(1);
+    }
+    /* parent process, wait for initialization and return 1 on error */
+    if(pid > 0) {
+      alarm(15);
+      pause();
+      exit(1);
+    }
+    umask(0);
+
+    /* get parent id and a new session id */
+    pid = getppid();
+    if(setsid() < 0) {
+      perror("setsid()");
+      exit(1);
+    }
+
+    act.sa_handler = SIG_DFL;
+    sigaction(SIGCHLD, &act, NULL);
+    sigaction(SIGUSR1, &act, NULL);
+    sigaction(SIGALRM, &act, NULL);
+  }
+
   /* init can */
   if(ican[0]) {
     if((itf = mbnCANOpen(ican, parent, err)) == NULL) {
@@ -323,6 +372,13 @@ void init(int argc, char **argv, char *upath) {
       exit(1);
     }
     setcallbacks(tcp);
+  }
+
+  if(!verbose) {
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+    kill(pid, SIGUSR1);
   }
 }
 
