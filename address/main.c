@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/select.h>
+#include <sys/stat.h>
 
 #define DEFAULT_UNIX_PATH "/tmp/axum-address"
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
@@ -350,6 +351,26 @@ int hwparent(char *path, char *err) {
 }
 
 
+void trapsig(int sig) {
+  switch(sig) {
+    case SIGALRM:
+    case SIGCHLD:
+      exit(1);
+    case SIGUSR1:
+      exit(0);
+    case SIGHUP:
+      db_lock(1);
+      writelog("SIGHUP received, re-opening log file");
+      fclose(logfd);
+      logfd = fopen(logfile, "a");
+      db_lock(0);
+      break;
+    default:
+      main_quit = 1;
+  }
+}
+
+
 void init(int argc, char **argv) {
   struct mbn_interface *itf;
   char err[MBN_ERRSIZE];
@@ -357,6 +378,8 @@ void init(int argc, char **argv) {
   char dbpath[256];
   char upath[UNIX_PATH_MAX], gwpath[UNIX_PATH_MAX];
   int c, forcelisten = 0;
+  struct sigaction act;
+  pid_t pid;
 
   strcpy(upath, DEFAULT_UNIX_PATH);
   strcpy(gwpath, DEFAULT_GTW_PATH);
@@ -417,6 +440,43 @@ void init(int argc, char **argv) {
     }
   }
 
+  /* catch signals in parent process */
+  act.sa_handler = trapsig;
+  act.sa_flags = 0;
+  sigaction(SIGCHLD, &act, NULL);
+  sigaction(SIGUSR1, &act, NULL);
+  sigaction(SIGALRM, &act, NULL);
+
+  /* fork */
+  if((pid = fork()) < 0) {
+    perror("fork()");
+    exit(1);
+  }
+  /* parent process, wait for initialization and return 1 on error */
+  if(pid > 0) {
+    alarm(15);
+    pause();
+    exit(1);
+  }
+
+  /* catch signals in daemon process */
+  sigaction(SIGTERM, &act, NULL);
+  sigaction(SIGINT, &act, NULL);
+  sigaction(SIGHUP, &act, NULL);
+  act.sa_handler = SIG_DFL;
+  sigaction(SIGCHLD, &act, NULL);
+  act.sa_handler = SIG_IGN;
+  sigaction(SIGUSR1, &act, NULL);
+  sigaction(SIGALRM, &act, NULL);
+  umask(0);
+
+  /* get parent id and a new session id */
+  pid = getppid();
+  if(setsid() < 0) {
+    perror("setsid()");
+    exit(1);
+  }
+
   /* get and set hardware parent */
   if(hwparent(gwpath, err)) {
     fprintf(stderr, "Couldn't get hardware parent: %s\n", err);
@@ -469,34 +529,19 @@ void init(int argc, char **argv) {
   mbnSetErrorCallback(mbn, mError);
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
 
+  close(STDIN_FILENO);
+  close(STDOUT_FILENO);
+  close(STDERR_FILENO);
   writelog("-------------------------------");
   writelog("Axum Address Server Initialized");
-}
 
-
-void trapsig(int sig) {
-  if(sig != SIGHUP) {
-    main_quit = sig;
-    return;
-  }
-  db_lock(1);
-  writelog("SIGHUP received, re-opening log file");
-  fclose(logfd);
-  logfd = fopen(logfile, "a");
-  db_lock(0);
+  /* init was successfull, notify parent process */
+  kill(pid, SIGUSR1);
 }
 
 
 int main(int argc, char **argv) {
-  struct sigaction act;
-
-  act.sa_handler = trapsig;
-  act.sa_flags = 0;
-  sigaction(SIGTERM, &act, NULL);
-  sigaction(SIGINT, &act, NULL);
-  sigaction(SIGHUP, &act, NULL);
   main_quit = 0;
-
   init(argc, argv);
   while(!main_quit && !conn_loop())
     ;
