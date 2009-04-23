@@ -369,14 +369,14 @@ void init(int argc, char **argv) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
-          fprintf(stderr, "Too long device name.");
+          fprintf(stderr, "Too long device name.\n");
           exit(1);
         }
         strcpy(ethdev, optarg);
         break;
       case 'u':
         if(strlen(optarg) > UNIX_PATH_MAX) {
-          fprintf(stderr, "Too long path to UNIX socket!");
+          fprintf(stderr, "Too long path to UNIX socket!\n");
           exit(1);
         }
         strcpy(upath, optarg);
@@ -386,21 +386,21 @@ void init(int argc, char **argv) {
         break;
       case 'd':
         if(strlen(optarg) > 256) {
-          fprintf(stderr, "Too long path to sqlite3 DB!");
+          fprintf(stderr, "Too long path to sqlite3 DB!\n");
           exit(1);
         }
         strcpy(dbpath, optarg);
         break;
       case 'g':
         if(strlen(optarg) > UNIX_PATH_MAX) {
-          fprintf(stderr, "Too long path to UNIX socket!");
+          fprintf(stderr, "Too long path to UNIX socket!\n");
           exit(1);
         }
         strcpy(gwpath, optarg);
         break;
       case 'l':
         if(strlen(optarg) > 256) {
-          fprintf(stderr, "Too long path to log file!");
+          fprintf(stderr, "Too long path to log file!\n");
           exit(1);
         }
         strcpy(logfile, optarg);
@@ -419,13 +419,13 @@ void init(int argc, char **argv) {
 
   /* get and set hardware parent */
   if(hwparent(gwpath, err)) {
-    fprintf(stderr, "Couldn't get hardware parent: %s", err);
+    fprintf(stderr, "Couldn't get hardware parent: %s\n", err);
     exit(1);
   }
 
   /* initialize UNIX listen socket */
   if(conn_init(upath, forcelisten, err)) {
-    fprintf(stderr, "%s", err);
+    fprintf(stderr, "%s\n", err);
     fprintf(stderr, "Are you sure no other address server is running?\n");
     fprintf(stderr, "Use -f to ignore this error and open the socket anyway.\n");
     exit(1);
@@ -433,7 +433,7 @@ void init(int argc, char **argv) {
 
   /* open database */
   if(db_init(dbpath, err)) {
-    fprintf(stderr, "%s", err);
+    fprintf(stderr, "%s\n", err);
     conn_free();
     exit(1);
   }
