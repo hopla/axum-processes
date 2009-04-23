@@ -50,17 +50,19 @@ struct mbn_node_info this_node = {
   0, 0,    /* Hardware revision */
   1, 1,    /* Firmware revision */
   0, 0,    /* FPGAFirmware revision */
-  2,       /* NumberOfObjects */
+  3,       /* NumberOfObjects */
   0,       /* DefaultEngineAddr */
   {0,0,0}, /* Hardwareparent */
   0        /* Service request */
 };
 
 struct mbn_handler *eth, *can, *tcp;
+int verbose;
 
 
 void OnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid) {
-  printf("OnlineStatus on %s: %08lX %s\n", nodestr(mbn), addr, valid ? "validated" : "invalid");
+  if(verbose)
+    printf("OnlineStatus on %s: %08lX %s\n", nodestr(mbn), addr, valid ? "validated" : "invalid");
   if(valid) {
     if(mbn != can) mbnForceAddress(can, addr);
     if(mbn != eth) mbnForceAddress(eth, addr);
@@ -71,7 +73,8 @@ void OnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid) {
 
 
 void Error(struct mbn_handler *mbn, int code, char *msg) {
-  printf("Error(%s, %d, \"%s\")\n", nodestr(mbn), code, msg);
+  if(verbose)
+    printf("Error(%s, %d, \"%s\")\n", nodestr(mbn), code, msg);
 }
 
 
@@ -102,12 +105,13 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
   }
 
   /* print out what's happening */
-  printf(" %s %1X %08lX %08lX %03X %1X:", mbn == can ? "<" : ">",
-    msg->AcknowledgeReply, msg->AddressTo, msg->AddressFrom, msg->MessageID, msg->MessageType);
-  for(i=0;i<msg->bufferlength;i++)
-    printf(" %02X", msg->buffer[i]);
-  printf("\n");
-  fflush(stdout);
+  if(verbose) {
+    printf(" %s %1X %08lX %08lX %03X %1X:", nodestr(mbn),
+      msg->AcknowledgeReply, msg->AddressTo, msg->AddressFrom, msg->MessageID, msg->MessageType);
+    for(i=0;i<msg->bufferlength;i++)
+      printf(" %02X", msg->buffer[i]);
+    printf("\n");
+  }
 
   /* forward message */
 #define fwd(m) mbnSendMessage(m, msg, MBN_SEND_IGNOREVALID | MBN_SEND_FORCEADDR | MBN_SEND_NOCREATE | MBN_SEND_FORCEID)
@@ -201,12 +205,13 @@ void init(int argc, char **argv, char *upath) {
   strcpy(upath, DEFAULT_UNIX_PATH);
   ican[0] = ieth[0] = tport[0] = 0;
   can = eth = tcp = NULL;
+  verbose = 0;
 
   obj[OBJ_CANNODES] = MBN_OBJ("CAN Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_TCPNODES] = MBN_OBJ("TCP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
 
-  while((c = getopt(argc, argv, "c:e:u:t:")) != -1) {
+  while((c = getopt(argc, argv, "c:e:u:t:v")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
@@ -243,9 +248,13 @@ void init(int argc, char **argv, char *upath) {
         }
         strcpy(upath, optarg);
         break;
+      case 'v':
+        verbose++;
+        break;
       /* wrong option */
       default:
         fprintf(stderr, "Usage: %s [-c dev] [-e dev] [-u path]\n", argv[0]);
+        fprintf(stderr, "  -v       Print verbose output to stdout\n");
         fprintf(stderr, "  -c dev   CAN device\n");
         fprintf(stderr, "  -e dev   Ethernet device\n");
         fprintf(stderr, "  -t port  TCP port (0 = use default)\n");
@@ -268,6 +277,9 @@ void init(int argc, char **argv, char *upath) {
     this_node.HardwareParent[0] = parent[0];
     this_node.HardwareParent[1] = parent[1];
     this_node.HardwareParent[2] = parent[2];
+    if(verbose)
+      printf("Received hardware parent from CAN: %04X:%04X:%04X\n",
+        parent[0], parent[1], parent[2]);
     if((can = mbnInit(&this_node, obj, itf, err)) == NULL) {
       fprintf(stderr, "mbnInit(can): %s\n", err);
       exit(1);
