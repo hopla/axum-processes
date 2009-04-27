@@ -66,9 +66,9 @@ void OnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid) {
   if(verbose)
     printf("OnlineStatus on %s: %08lX %s\n", nodestr(mbn), addr, valid ? "validated" : "invalid");
   if(valid) {
-    if(mbn != can) mbnForceAddress(can, addr);
-    if(mbn != eth) mbnForceAddress(eth, addr);
-    if(mbn != tcp) mbnForceAddress(tcp, addr);
+    if(can != NULL && mbn != can) mbnForceAddress(can, addr);
+    if(eth != NULL && mbn != eth) mbnForceAddress(eth, addr);
+    if(tcp != NULL && mbn != tcp) mbnForceAddress(tcp, addr);
   }
   this_node.MambaNetAddr = addr;
 }
