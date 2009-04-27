@@ -90,11 +90,11 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
 
   /* figure out to which interface we need to send */
   if(msg->AddressTo != MBN_BROADCAST_ADDRESS) {
-    if(mbnNodeStatus(can, msg->AddressTo) != NULL)
+    if(can != NULL && mbnNodeStatus(can, msg->AddressTo) != NULL)
       dest = can;
-    else if(mbnNodeStatus(eth, msg->AddressTo) != NULL)
+    else if(eth != NULL && mbnNodeStatus(eth, msg->AddressTo) != NULL)
       dest = eth;
-    else if(mbnNodeStatus(tcp, msg->AddressTo) != NULL)
+    else if(tcp != NULL && mbnNodeStatus(tcp, msg->AddressTo) != NULL)
       dest = tcp;
 
     /* don't forward if we haven't found the destination node */
@@ -120,9 +120,9 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
   if(dest != NULL)
     fwd(dest);
   else {
-    if(mbn != eth) fwd(eth);
-    if(mbn != tcp) fwd(tcp);
-    if(mbn != can) {
+    if(eth != NULL && mbn != eth) fwd(eth);
+    if(tcp != NULL && mbn != tcp) fwd(tcp);
+    if(can != NULL && mbn != can) {
       /* filter out address reservation packets to can */
       if(!(dest == NULL && msg->MessageType == MBN_MSGTYPE_ADDRESS && msg->Message.Address.Action == MBN_ADDR_ACTION_INFO))
         fwd(can);
@@ -147,9 +147,9 @@ void AddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old, s
 
   obj = mbn == can ? OBJ_CANNODES : mbn == eth ? OBJ_ETHNODES : OBJ_TCPNODES;
   obj += 1024;
-  mbnUpdateSensorData(can, obj, count);
-  mbnUpdateSensorData(eth, obj, count);
-  mbnUpdateSensorData(tcp, obj, count);
+  if(can != NULL) mbnUpdateSensorData(can, obj, count);
+  if(eth != NULL) mbnUpdateSensorData(eth, obj, count);
+  if(tcp != NULL) mbnUpdateSensorData(tcp, obj, count);
 }
 
 
