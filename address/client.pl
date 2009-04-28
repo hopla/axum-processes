@@ -19,6 +19,7 @@ use POE;
 use POE::Wheel::SocketFactory;
 use POE::Wheel::ReadWrite;
 use POE::Wheel::ReadLine;
+use POE::Filter::Line;
 
 
 POE::Session->create(package_states => [
@@ -182,7 +183,8 @@ sub sock_connect {
   $_[HEAP]{rw} = POE::Wheel::ReadWrite->new(
     Handle => $_[ARG0],
     InputEvent => 'sock_input',
-    ErrorEvent => 'sock_error'
+    ErrorEvent => 'sock_error',
+    Filter => POE::Filter::Line->new(Literal => "\n"),
   );
 }
 
