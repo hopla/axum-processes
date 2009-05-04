@@ -27,6 +27,10 @@
 #include <sys/un.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <net/if_arp.h>
+#include <net/if.h>
+#include <netinet/in.h>
 
 #define MBN_VARARG
 #include "mbn.h"
@@ -39,9 +43,10 @@
 
 #define nodestr(n) (n == eth ? "eth" : n == can ? "can" : "tcp")
 
-#define OBJ_CANNODES 0
-#define OBJ_ETHNODES 1
-#define OBJ_TCPNODES 2
+#define OBJ_IPADDR   0
+#define OBJ_CANNODES 1
+#define OBJ_ETHNODES 2
+#define OBJ_TCPNODES 3
 
 
 struct mbn_node_info this_node = {
@@ -50,9 +55,9 @@ struct mbn_node_info this_node = {
   "YorHels Gateway",
   0xFFFF, 0x0002, 0x0001,   /* UniqueMediaAccessId */
   0, 0,    /* Hardware revision */
-  1, 1,    /* Firmware revision */
+  2, 1,    /* Firmware revision */
   0, 0,    /* FPGAFirmware revision */
-  3,       /* NumberOfObjects */
+  4,       /* NumberOfObjects */
   0,       /* DefaultEngineAddr */
   {0,0,0}, /* Hardwareparent */
   0        /* Service request */
@@ -60,6 +65,25 @@ struct mbn_node_info this_node = {
 
 struct mbn_handler *eth, *can, *tcp;
 int verbose;
+char ieth[50];
+
+
+/* doesn't do IPv6 */
+unsigned int get_ip() {
+  struct ifreq ir;
+  int s;
+
+  if((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    return 0;
+  strcpy(ir.ifr_name, ieth);
+  if(ioctl(s, SIOCGIFADDR, &ir, sizeof(struct ifreq)) < 0)
+    return 0;
+  close(s);
+
+  if(((struct sockaddr *)&(ir.ifr_addr))->sa_family == AF_INET)
+    return ntohl(((struct sockaddr_in *)&(ir.ifr_addr))->sin_addr.s_addr);
+  return 0;
+}
 
 
 void OnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid) {
@@ -210,8 +234,8 @@ void trapsig(int sig) {
 
 void init(int argc, char **argv, char *upath) {
   struct mbn_interface *itf = NULL;
-  struct mbn_object obj[3];
-  char err[MBN_ERRSIZE], ican[50], ieth[50], tport[10];
+  struct mbn_object obj[4];
+  char err[MBN_ERRSIZE], ican[50], tport[10];
   unsigned short parent[3] = {0,0,0};
   int c, itfcount = 0;
   struct sigaction act;
@@ -221,10 +245,6 @@ void init(int argc, char **argv, char *upath) {
   ican[0] = ieth[0] = tport[0] = 0;
   can = eth = tcp = NULL;
   verbose = 0;
-
-  obj[OBJ_CANNODES] = MBN_OBJ("CAN Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
-  obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
-  obj[OBJ_TCPNODES] = MBN_OBJ("TCP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
 
   while((c = getopt(argc, argv, "c:e:u:t:v")) != -1) {
     switch(c) {
@@ -282,6 +302,12 @@ void init(int argc, char **argv, char *upath) {
     fprintf(stderr, "Need at least two interfaces to function as a gateway!\n");
     exit(1);
   }
+
+  /* objects */
+  obj[OBJ_IPADDR]   = MBN_OBJ("IP Address", MBN_DATATYPE_NODATA, MBN_DATATYPE_UINT, 4, 0, ~0, 0, ieth[0] ? get_ip() : 0);
+  obj[OBJ_CANNODES] = MBN_OBJ("CAN Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
+  obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
+  obj[OBJ_TCPNODES] = MBN_OBJ("TCP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
 
   if(!verbose) {
     /* catch signals in parent process */
