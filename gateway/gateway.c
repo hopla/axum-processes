@@ -86,6 +86,26 @@ unsigned int get_ip() {
 }
 
 
+int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_data dat) {
+  struct ifreq ir;
+  struct sockaddr_in *si = (struct sockaddr_in *)&(ir.ifr_addr);
+  int s;
+
+  if(object != OBJ_IPADDR+1024)
+    return 1;
+  if((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    return 1;
+  si->sin_addr.s_addr = htonl(dat.UInt);
+  si->sin_family = AF_INET;
+  strcpy(ir.ifr_name, ieth);
+  if(ioctl(s, SIOCSIFADDR, &ir) < 0)
+    return 1;
+  close(s);
+  return 0;
+  mbn++;
+}
+
+
 void OnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid) {
   if(verbose)
     printf("OnlineStatus on %s: %08lX %s\n", nodestr(mbn), addr, valid ? "validated" : "invalid");
@@ -218,6 +238,7 @@ void setcallbacks(struct mbn_handler *mbn) {
   mbnSetOnlineStatusCallback(mbn, OnlineStatus);
   mbnSetReceiveMessageCallback(mbn, ReceiveMessage);
   mbnSetAddressTableChangeCallback(mbn, AddressTableChange);
+  mbnSetSetActuatorDataCallback(mbn, SetActuatorData);
 }
 
 
