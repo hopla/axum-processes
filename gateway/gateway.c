@@ -36,6 +36,7 @@
 #include "mbn.h"
 
 #define DEFAULT_UNIX_PATH "/tmp/axum-gateway"
+#define DEFAULT_DATA_PATH "/var/lib/axum/axum-gateway.ip"
 
 #ifndef UNIX_PATH_MAX
 # define UNIX_PATH_MAX 108
@@ -65,14 +66,50 @@ struct mbn_node_info this_node = {
 
 struct mbn_handler *eth, *can, *tcp;
 int verbose;
-char ieth[50];
+char ieth[50], data_path[1000];
 
+
+void set_ip(unsigned int ip) {
+  struct ifreq ir;
+  struct sockaddr_in *si = (struct sockaddr_in *)&(ir.ifr_addr);
+  int s;
+  FILE *f;
+
+  /* set ip */
+  if((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    return;
+  si->sin_addr.s_addr = htonl(ip);
+  si->sin_family = AF_INET;
+  strcpy(ir.ifr_name, ieth);
+  if(ioctl(s, SIOCSIFADDR, &ir) < 0)
+    return;
+  close(s);
+
+  /* save to data file (silently ignoring errors) */
+  if((f = fopen(data_path, "w")) != NULL) {
+    fprintf(f, "%08X\n", ip);
+    fclose(f);
+  }
+}
 
 /* doesn't do IPv6 */
 unsigned int get_ip() {
   struct ifreq ir;
+  FILE *f;
   int s;
+  unsigned int r;
 
+  /* try to get an IP from the data file first */
+  if((f = fopen(data_path, "r")) == NULL)
+    goto from_system;
+  if(fscanf(f, "%08x", &r) != 1)
+    goto from_system;
+  /* and set the IP */
+  set_ip(r);
+  return r;
+
+  /* otherwise, get current setting */
+from_system:
   if((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
     return 0;
   strcpy(ir.ifr_name, ieth);
@@ -87,22 +124,10 @@ unsigned int get_ip() {
 
 
 int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_data dat) {
-  struct ifreq ir;
-  struct sockaddr_in *si = (struct sockaddr_in *)&(ir.ifr_addr);
-  int s;
-
-  if(object != OBJ_IPADDR+1024)
+  if(object != OBJ_IPADDR+1024 || mbn != eth)
     return 1;
-  if((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-    return 1;
-  si->sin_addr.s_addr = htonl(dat.UInt);
-  si->sin_family = AF_INET;
-  strcpy(ir.ifr_name, ieth);
-  if(ioctl(s, SIOCSIFADDR, &ir) < 0)
-    return 1;
-  close(s);
+  set_ip(dat.UInt);
   return 0;
-  mbn++;
 }
 
 
@@ -263,11 +288,12 @@ void init(int argc, char **argv, char *upath) {
   pid_t pid;
 
   strcpy(upath, DEFAULT_UNIX_PATH);
+  strcpy(data_path, DEFAULT_DATA_PATH);
   ican[0] = ieth[0] = tport[0] = 0;
   can = eth = tcp = NULL;
   verbose = 0;
 
-  while((c = getopt(argc, argv, "c:e:u:t:v")) != -1) {
+  while((c = getopt(argc, argv, "c:e:u:t:d:v")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
@@ -304,6 +330,15 @@ void init(int argc, char **argv, char *upath) {
         }
         strcpy(upath, optarg);
         break;
+      /* data path */
+      case 'd':
+        if(strlen(optarg) > 1000) {
+          fprintf(stderr, "Too long path to data file!\n");
+          exit(1);
+        }
+        strcpy(data_path, optarg);
+        break;
+      /* verbose */
       case 'v':
         verbose++;
         break;
@@ -315,6 +350,7 @@ void init(int argc, char **argv, char *upath) {
         fprintf(stderr, "  -e dev   Ethernet device\n");
         fprintf(stderr, "  -t port  TCP port (0 = use default)\n");
         fprintf(stderr, "  -u path  Path to UNIX socket\n");
+        fprintf(stderr, "  -d path  Path to data file (for IP setting)\n");
         exit(1);
     }
   }
