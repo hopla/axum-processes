@@ -83,7 +83,18 @@ void set_ip(unsigned int ip) {
   strcpy(ir.ifr_name, ieth);
   if(ioctl(s, SIOCSIFADDR, &ir) < 0)
     return;
-  close(s);
+  /* set flags */
+  if(ip > 0) {
+    strcpy(ir.ifr_name, ieth);
+    if(ioctl(s, SIOCGIFFLAGS, &ir) < 0)
+      return;
+    ir.ifr_flags |= (IFF_UP | IFF_RUNNING);
+    strcpy(ir.ifr_name, ieth);
+    if(ioctl(s, SIOCSIFFLAGS, &ir) < 0)
+      return;
+  }
+  if(verbose)
+    printf("IP Set to %08X\n", ip);
 
   /* save to data file (silently ignoring errors) */
   if((f = fopen(data_path, "w")) != NULL) {
