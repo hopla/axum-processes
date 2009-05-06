@@ -137,10 +137,12 @@ from_system:
 
 void SynchroniseDateTime(struct mbn_handler *mbn, time_t time) {
   struct timeval tv;
-  /* TODO: set hardware clock */
   tv.tv_usec = 0;
   tv.tv_sec = time;
   settimeofday(&tv, NULL);
+  /* Neither POSIX nor Linux provide a nice API to do this, so run hwclock instead
+   * NOTE: this command can block a few seconds */
+  system("/sbin/hwclock --systohc");
   if(verbose)
     printf("Setting system time to %ld, request from %s\n", time, nodestr(mbn));
 }
