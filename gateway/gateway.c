@@ -28,6 +28,7 @@
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
 #include <net/if_arp.h>
 #include <net/if.h>
 #include <netinet/in.h>
@@ -131,6 +132,17 @@ from_system:
   if(((struct sockaddr *)&(ir.ifr_addr))->sa_family == AF_INET)
     return ntohl(((struct sockaddr_in *)&(ir.ifr_addr))->sin_addr.s_addr);
   return 0;
+}
+
+
+void SynchroniseDateTime(struct mbn_handler *mbn, time_t time) {
+  struct timeval tv;
+  /* TODO: set hardware clock */
+  tv.tv_usec = 0;
+  tv.tv_sec = time;
+  settimeofday(&tv, NULL);
+  if(verbose)
+    printf("Setting system time to %ld, request from %s\n", time, nodestr(mbn));
 }
 
 
@@ -275,6 +287,7 @@ void setcallbacks(struct mbn_handler *mbn) {
   mbnSetReceiveMessageCallback(mbn, ReceiveMessage);
   mbnSetAddressTableChangeCallback(mbn, AddressTableChange);
   mbnSetSetActuatorDataCallback(mbn, SetActuatorData);
+  mbnSetSynchroniseDateTimeCallback(mbn, SynchroniseDateTime);
 }
 
 
