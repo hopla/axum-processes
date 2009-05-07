@@ -28,6 +28,7 @@
 #include <sys/time.h>       //for setittimer
 #include <sys/times.h>      //for tms and times()
 #include <sys/signal.h>     //for SIGALRM
+#include <sys/un.h>         //for sockaddr_un (UNIX sockets)
 
 #include <errno.h>          //errno and EINTR
 #include <time.h>               //nanosleep
@@ -624,48 +625,63 @@ ONLINE_NODE_INFORMATION_STRUCT OnlineNodeInformation[ADDRESS_TABLE_SIZE];
 sqlite3 *axum_engine_db;
 sqlite3 *address_db;
 sqlite3 *node_templates_db;
-sqlite3 *gateway_db;
 
 int CallbackNodeIndex = -1;
 
-static int HardwareParentCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
+
+unsigned long hex2int(const char *hex, int len) {
+  int i;
+  unsigned long r = 0;
+  for(i=0; i<len; i++) {
+    r <<= 4;
+    if(hex[i] >= '0' && hex[i] <= '9')
+      r += hex[i]-'0';
+    else if(hex[i] >= 'a' && hex[i] <= 'f')
+      r += hex[i]-'a'+10;
+    else if(hex[i] >= 'A' && hex[i] <= 'F')
+      r += hex[i]-'A'+10;
+  }
+  return r;
+}
+
+
+static int SetHardwareParent(void)
 {
+  struct sockaddr_un p;
+  char msg[14];
+  int sock;
 	int i;
 	int ManufacturerID = 0;
 	int ProductID = 0;
 	int UniqueIDPerProduct = 0;
 
-	for(i=0; i<argc; i++)
-   {
-		if (argv[i])
-		{
-			if (strcmp(azColName[i],"ManufacturerID") == 0)
-			{
-				ManufacturerID = atoi(argv[i]);
-			}
-			if (strcmp(azColName[i],"ProductID") == 0)
-			{
-				ProductID = atoi(argv[i]);
-			}
-			if (strcmp(azColName[i],"UniqueIDPerProduct") == 0)
-			{
-				UniqueIDPerProduct = atoi(argv[i]);
-			}
+  /* connect to unix socket */
+  /* TODO: configurable path to unix socket */
+  p.sun_family = AF_UNIX;
+  strcpy(p.sun_path, "/tmp/axum-gateway");
+  if((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
+    perror("Opening UNIX socket");
+    return 1;
+  }
+  if(connect(sock, (struct sockaddr *)&p, sizeof(struct sockaddr_un)) < 0) {
+    perror("Connecting to gateway");
+    return 1;
+  }
+  /* TODO: check readability (select(), nonblock)? time-out? */
+  if(read(sock, msg, 14) < 14) {
+    perror("Reading from socket");
+    return 1;
+  }
+  ManufacturerID = hex2int(&(msg[ 0]), 4);
+  ProductID = hex2int(&(msg[ 5]), 4);
+  UniqueIDPerProduct = hex2int(&(msg[10]), 4);
 
-			printf(azColName[i]);
-			printf(" - ");
-			printf(argv[i]);
-			printf("\n");
-		}	
-	}
-	if ((ManufacturerID != 0) && (ProductID != 0) && (UniqueIDPerProduct != 0))
-	{
-		AxumEngineDefaultObjects.Parent[0] = (ManufacturerID>>8)&0xFF;
-		AxumEngineDefaultObjects.Parent[1] = ManufacturerID&0xFF;
-		AxumEngineDefaultObjects.Parent[2] = (ProductID>>8)&0xFF;
-		AxumEngineDefaultObjects.Parent[3] = ProductID&0xFF;
-		AxumEngineDefaultObjects.Parent[4] = (UniqueIDPerProduct>>8)&0xFF;
-		AxumEngineDefaultObjects.Parent[5] = UniqueIDPerProduct&0xFF;
+  AxumEngineDefaultObjects.Parent[0] = (ManufacturerID>>8)&0xFF;
+  AxumEngineDefaultObjects.Parent[1] = ManufacturerID&0xFF;
+  AxumEngineDefaultObjects.Parent[2] = (ProductID>>8)&0xFF;
+  AxumEngineDefaultObjects.Parent[3] = ProductID&0xFF;
+  AxumEngineDefaultObjects.Parent[4] = (UniqueIDPerProduct>>8)&0xFF;
+  AxumEngineDefaultObjects.Parent[5] = UniqueIDPerProduct&0xFF;
 
 		if ((ManufacturerID == 0x0001) &&
 			 (ProductID == 0x000C))
@@ -713,7 +729,6 @@ static int HardwareParentCallback(void *IndexOfSender, int argc, char **argv, ch
 				}
 			}
 		}
-	}
 
    return 0;
 }
@@ -3913,12 +3928,6 @@ int main(int argc, char *argv[])
         sqlite3_close(node_templates_db);
         return 1;
     }
-    if (sqlite3_open("/usr/local/gateway.sqlite", &gateway_db))
-    {
-        printf("Can't open database: gateway.sqlite");
-        sqlite3_close(gateway_db);
-        return 1;
-    }
 
 //**************************************************************/
 //Initialize AXUM Data
@@ -5489,14 +5498,9 @@ int main(int argc, char *argv[])
 	 pthread_t tid;
 	 pthread_create(&tid, NULL, thread, NULL);
 
-	 //Do load  hardware parent
-	 sprintf(SQLQuery,	"SELECT * FROM hardware_parent;\n");
-	 if (sqlite3_exec(gateway_db, SQLQuery, HardwareParentCallback, 0, &zErrMsg) != SQLITE_OK)
-	 {
-		printf("SQL error: %s\n", zErrMsg);
-		sqlite3_free(zErrMsg);
-	 }
-
+	 // load hardware parent
+   if(SetHardwareParent())
+     ExitApplication = 1;
 
       while (!ExitApplication)
       {
@@ -6003,7 +6007,6 @@ int main(int argc, char *argv[])
         close(fd);
         printf("/dev/pci2040 closed...\r\n");
     }
-    sqlite3_close(gateway_db);
     sqlite3_close(node_templates_db);
     sqlite3_close(address_db);
     sqlite3_close(axum_engine_db);
@@ -18003,7 +18006,6 @@ void *thread(void *vargp)
 			unsigned char ExternSourceConfigurationChanged = 0;
 			unsigned char TalkbackConfigurationChanged = 0;
 			unsigned char GlobalConfigurationChanged = 0;
-			unsigned char HardwareParentChanged = 0;
 			unsigned int MambaNetAddress = 0x00000000;
 			unsigned int ObjectNr = 0;
 
@@ -18062,10 +18064,6 @@ void *thread(void *vargp)
 							else if (strcmp("global_configuration", TempBuffer) == 0)
 							{
 								GlobalConfigurationChanged = 1;
-							}
-							else if (strcmp("hardware_parent", TempBuffer) == 0)
-							{
-								HardwareParentChanged = 1;
 							}
 						}
 						break;
@@ -18234,20 +18232,6 @@ void *thread(void *vargp)
 				sprintf(SQLQuery,	"SELECT * FROM global_configuration;\n", ObjectNr);
 				printf(SQLQuery);
 				if (sqlite3_exec(axum_engine_db, SQLQuery, GlobalConfigurationCallback, 0, &zErrMsg) != SQLITE_OK)
-				{
-					printf("SQL error: %s\n", zErrMsg);
-					sqlite3_free(zErrMsg);
-				}
-			}
-			if (HardwareParentChanged)
-			{
-				char SQLQuery[8192];
-				char *zErrMsg;
-
-				//Do refresh hardware parent
-				sprintf(SQLQuery,	"SELECT * FROM hardware_parent;\n");
-				printf(SQLQuery);
-				if (sqlite3_exec(gateway_db, SQLQuery, HardwareParentCallback, 0, &zErrMsg) != SQLITE_OK)
 				{
 					printf("SQL error: %s\n", zErrMsg);
 					sqlite3_free(zErrMsg);
