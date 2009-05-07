@@ -623,7 +623,6 @@ typedef struct
 ONLINE_NODE_INFORMATION_STRUCT OnlineNodeInformation[ADDRESS_TABLE_SIZE];
 
 sqlite3 *axum_engine_db;
-sqlite3 *address_db;
 sqlite3 *node_templates_db;
 
 int CallbackNodeIndex = -1;
@@ -3916,12 +3915,6 @@ int main(int argc, char *argv[])
         sqlite3_close(axum_engine_db);
         return 1;
     }
-    if (sqlite3_open("/usr/local/address_table.sqlite", &address_db))
-    {
-        printf("Can't open database: address_table.sqlite");
-        sqlite3_close(address_db);
-        return 1;
-    }
     if (sqlite3_open("/usr/local/node_templates.sqlite", &node_templates_db))
     {
         printf("Can't open database: node_templates.sqlite");
@@ -6008,7 +6001,6 @@ int main(int argc, char *argv[])
         printf("/dev/pci2040 closed...\r\n");
     }
     sqlite3_close(node_templates_db);
-    sqlite3_close(address_db);
     sqlite3_close(axum_engine_db);
     CloseNetwork(NetworkFileDescriptor);
     CloseSTDIN(&oldtio, oldflags);
