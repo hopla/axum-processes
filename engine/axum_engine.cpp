@@ -4352,7 +4352,7 @@ int main(int argc, char *argv[])
 //-------------------------------------------------------------------------
 //Load DSP1&2 with module firmware
 //-------------------------------------------------------------------------
-            FILE *DSPMappings = fopen("/usr/local/AxumModule.map", "r");
+            FILE *DSPMappings = fopen("/usr/lib/axum/dsp/AxumModule.map", "r");
             if (DSPMappings == NULL)
             {
                 printf("Axum Module DSP Mappings open error!\n");
@@ -4463,7 +4463,7 @@ int main(int argc, char *argv[])
                 fclose(DSPMappings);
             }
 
-            int DSPFirmware = open("/usr/local/AxumModule.b0", O_RDONLY);
+            int DSPFirmware = open("/usr/lib/axum/dsp/AxumModule.b0", O_RDONLY);
            if (DSPFirmware<0)
            {
               printf("Module DSP Firmware open error!\n");
@@ -4507,7 +4507,7 @@ int main(int argc, char *argv[])
 //-------------------------------------------------------------------------
 //Load DSP3 with summing firmware
 //-------------------------------------------------------------------------
-            DSPMappings = fopen("/usr/local/AxumSumming.map", "r");
+            DSPMappings = fopen("/usr/lib/axum/dsp/AxumSumming.map", "r");
             if (DSPMappings == NULL)
             {
                 printf("Axum Summing DSP Mappings open error!\n");
@@ -4588,7 +4588,7 @@ int main(int argc, char *argv[])
                 fclose(DSPMappings);
             }
 
-            DSPFirmware = open("/usr/local/AxumSumming.b0", O_RDONLY);
+            DSPFirmware = open("/usr/lib/axum/dsp/AxumSumming.b0", O_RDONLY);
            if (DSPFirmware<0)
            {
               printf("Summing DSP Firmware open error!\n");
@@ -4629,7 +4629,7 @@ int main(int argc, char *argv[])
 //-------------------------------------------------------------------------
 //Load DSP4 with FX firmware
 //-------------------------------------------------------------------------
-            DSPMappings = fopen("/usr/local/AxumFX1.map", "r");
+            DSPMappings = fopen("/usr/lib/axum/dsp/AxumFX1.map", "r");
             if (DSPMappings == NULL)
             {
                 printf("Axum FX DSP Mappings open error!\n");
@@ -4666,7 +4666,7 @@ int main(int argc, char *argv[])
                 fclose(DSPMappings);
             }
 
-            DSPFirmware = open("/usr/local/AxumFX1.b0", O_RDONLY);
+            DSPFirmware = open("/usr/lib/axum/dsp/AxumFX1.b0", O_RDONLY);
            if (DSPFirmware<0)
            {
               printf("FX DSP Firmware open error!\n");
