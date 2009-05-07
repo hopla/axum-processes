@@ -3909,15 +3909,15 @@ int main(int argc, char *argv[])
 	AxumEngineDefaultObjects.UniqueIDPerProduct = UniqueIDPerProduct;
 
     char *zErrMsg;
-    if (sqlite3_open("/usr/local/axum_engine.sqlite", &axum_engine_db))
+    if (sqlite3_open("/usr/lib/axum/axum-engine.sqlite3", &axum_engine_db))
     {
-        printf("Can't open database: axum_engine.sqlite");
+        printf("Can't open database: axum-engine.sqlite3");
         sqlite3_close(axum_engine_db);
         return 1;
     }
-    if (sqlite3_open("/usr/local/node_templates.sqlite", &node_templates_db))
+    if (sqlite3_open("/usr/lib/axum/node-templates.sqlite3", &node_templates_db))
     {
-        printf("Can't open database: node_templates.sqlite");
+        printf("Can't open database: node-templates.sqlite");
         sqlite3_close(node_templates_db);
         return 1;
     }
