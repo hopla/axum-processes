@@ -3909,13 +3909,13 @@ int main(int argc, char *argv[])
 	AxumEngineDefaultObjects.UniqueIDPerProduct = UniqueIDPerProduct;
 
     char *zErrMsg;
-    if (sqlite3_open("/usr/lib/axum/axum-engine.sqlite3", &axum_engine_db))
+    if (sqlite3_open("/var/lib/axum/axum-engine.sqlite3", &axum_engine_db))
     {
         printf("Can't open database: axum-engine.sqlite3");
         sqlite3_close(axum_engine_db);
         return 1;
     }
-    if (sqlite3_open("/usr/lib/axum/node-templates.sqlite3", &node_templates_db))
+    if (sqlite3_open("/var/lib/axum/node-templates.sqlite3", &node_templates_db))
     {
         printf("Can't open database: node-templates.sqlite");
         sqlite3_close(node_templates_db);
@@ -4352,7 +4352,7 @@ int main(int argc, char *argv[])
 //-------------------------------------------------------------------------
 //Load DSP1&2 with module firmware
 //-------------------------------------------------------------------------
-            FILE *DSPMappings = fopen("/usr/lib/axum/dsp/AxumModule.map", "r");
+            FILE *DSPMappings = fopen("/var/lib/axum/dsp/AxumModule.map", "r");
             if (DSPMappings == NULL)
             {
                 printf("Axum Module DSP Mappings open error!\n");
@@ -4463,7 +4463,7 @@ int main(int argc, char *argv[])
                 fclose(DSPMappings);
             }
 
-            int DSPFirmware = open("/usr/lib/axum/dsp/AxumModule.b0", O_RDONLY);
+            int DSPFirmware = open("/var/lib/axum/dsp/AxumModule.b0", O_RDONLY);
            if (DSPFirmware<0)
            {
               printf("Module DSP Firmware open error!\n");
@@ -4507,7 +4507,7 @@ int main(int argc, char *argv[])
 //-------------------------------------------------------------------------
 //Load DSP3 with summing firmware
 //-------------------------------------------------------------------------
-            DSPMappings = fopen("/usr/lib/axum/dsp/AxumSumming.map", "r");
+            DSPMappings = fopen("/var/lib/axum/dsp/AxumSumming.map", "r");
             if (DSPMappings == NULL)
             {
                 printf("Axum Summing DSP Mappings open error!\n");
@@ -4588,7 +4588,7 @@ int main(int argc, char *argv[])
                 fclose(DSPMappings);
             }
 
-            DSPFirmware = open("/usr/lib/axum/dsp/AxumSumming.b0", O_RDONLY);
+            DSPFirmware = open("/var/lib/axum/dsp/AxumSumming.b0", O_RDONLY);
            if (DSPFirmware<0)
            {
               printf("Summing DSP Firmware open error!\n");
@@ -4629,7 +4629,7 @@ int main(int argc, char *argv[])
 //-------------------------------------------------------------------------
 //Load DSP4 with FX firmware
 //-------------------------------------------------------------------------
-            DSPMappings = fopen("/usr/lib/axum/dsp/AxumFX1.map", "r");
+            DSPMappings = fopen("/var/lib/axum/dsp/AxumFX1.map", "r");
             if (DSPMappings == NULL)
             {
                 printf("Axum FX DSP Mappings open error!\n");
@@ -4666,7 +4666,7 @@ int main(int argc, char *argv[])
                 fclose(DSPMappings);
             }
 
-            DSPFirmware = open("/usr/lib/axum/dsp/AxumFX1.b0", O_RDONLY);
+            DSPFirmware = open("/var/lib/axum/dsp/AxumFX1.b0", O_RDONLY);
            if (DSPFirmware<0)
            {
               printf("FX DSP Firmware open error!\n");
