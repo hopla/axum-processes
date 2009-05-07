@@ -23,10 +23,6 @@
 #include <sys/ioctl.h>          //for ioctl
 #include "axum_engine_functions.h"
 
-//#include <sched.h>
-//#include <sys/resource.h>
-//#define MIN(a,b) ( (a) < (b) ? (a) : (b) )
-
 #include <arpa/inet.h>      //for AF_PACKET/SOCK_DGRAM/htons/ntohs/socket/bind/sendto
 #include <linux/if_arp.h>   //for ETH_P_ALL/ifreq/sockaddr_ll/ETH_ALEN etc...
 #include <sys/time.h>       //for setittimer
@@ -40,7 +36,6 @@
 #include <math.h>               //for pow10, log10
 
 #include "ddpci2040.h"
-
 #include "mambanet_stack_axum.h"
 
 #include <sqlite3.h>
