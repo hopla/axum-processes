@@ -3887,14 +3887,12 @@ int main(int argc, char *argv[])
     fd_set readfs;
 
 	int UniqueIDPerProduct = -1;
-	char FilenameUniqueID[64];
 	char UniqueIDString[8];
-	sprintf(FilenameUniqueID, "%s.dat", argv[0]);
 
-	int FileHandleUniqueID = open(FilenameUniqueID, O_RDONLY);
+	int FileHandleUniqueID = open("/var/lib/axum/axum-engine.dat", O_RDONLY);
 	if (FileHandleUniqueID == -1)
 	{
-		perror(FilenameUniqueID);
+		perror("axum-engine.dat");
 		exit(1);
 	}
 
