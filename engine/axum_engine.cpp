@@ -27,10 +27,6 @@
 //#include <sys/resource.h>
 //#define MIN(a,b) ( (a) < (b) ? (a) : (b) )
 
-#include <linux/n_mambanet.h>
-#define N_MAMBANET              16
-
-#include <linux/serial.h>       //for serial_struct
 #include <arpa/inet.h>      //for AF_PACKET/SOCK_DGRAM/htons/ntohs/socket/bind/sendto
 #include <linux/if_arp.h>   //for ETH_P_ALL/ifreq/sockaddr_ll/ETH_ALEN etc...
 #include <sys/time.h>       //for setittimer
@@ -456,15 +452,8 @@ bool ExitApplication = 0;
 unsigned char TraceValue;           //To set the MambaNet trace (0x01=packets, 0x02=address table)
 bool dump_packages;                 //To debug the incoming data
 
-int SerialLineFileDescriptor;       //identifies the used serial device
 int NetworkFileDescriptor;          //identifies the used network device
 
-
-unsigned char SerialLineReceiveBuffer[4096];
-int cntSerialLineReceiveBufferTop;
-int cntSerialLineReceiveBufferBottom;
-unsigned char SerialLineMambaNetDecodeBuffer[128];
-unsigned char cntSerialLineMambaNetDecodeBuffer;
 
 unsigned char EthernetReceiveBuffer[4096];
 int cntEthernetReceiveBufferTop;
@@ -495,20 +484,13 @@ void dump_block(const unsigned char *block, unsigned int length);
 
 
 void SetupSTDIN(struct termios *oldtio, int *oldflags);
-int SetupSerialLine(char *PortName);
 int SetupNetwork(char *NetworkInterface, unsigned char *LocalMACAddress);
 
 void CloseSTDIN(struct termios *oldtio, int oldflags);
-void CloseSerialLine(int SerialLineFileDescriptor);
 void CloseNetwork(int NetworkFileDescriptor);
 
 
-int SerialLineInterfaceIndex = -1;
 int EthernetInterfaceIndex = -1;
-
-void SerialLineMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16]);
-void SerialLineMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigned long int FromAddress, unsigned char Ack, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress);
-void SerialLineMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *AddressTable, MambaNetAddressTableStatus Status, int Index);
 
 void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16]);
 void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigned long int FromAddress, unsigned char Ack, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress);
@@ -5423,7 +5405,6 @@ int main(int argc, char *argv[])
     //initalize global variables
     TTYDevice[0]                    = 0x00;
     NetworkInterface[0]         = 0x00;
-    SerialLineFileDescriptor    = -1;
     NetworkFileDescriptor       = -1;
     dump_packages                   = 0;
     TraceValue                      = 0x00;
@@ -5460,20 +5441,6 @@ int main(int argc, char *argv[])
     //Change stdin (keyboard) settings to be 'character-driven' instead of line.
     SetupSTDIN(&oldtio, &oldflags);
 
-    //Setup Serial line if serial port name is given.
-    if (TTYDevice[0] == 0x00)
-    {
-        printf("No TTY device found.\r\n");
-    }
-    else
-    {
-        SerialLineFileDescriptor = SetupSerialLine(TTYDevice);
-        if (SerialLineFileDescriptor >= 0)
-        {
-            printf("using TTY device: %s.\r\n", TTYDevice);
-        }
-    }
-
     //Setup Network if serial port name is given.
     if (NetworkInterface[0] == 0x00)
     {
@@ -5489,7 +5456,7 @@ int main(int argc, char *argv[])
     }
 
     //Only one interface may be open for a application
-    if ((SerialLineFileDescriptor>=0) != (NetworkFileDescriptor>=0))
+    if (NetworkFileDescriptor>=0)
     {
 
 //**************************************************************/
@@ -5520,15 +5487,9 @@ int main(int argc, char *argv[])
 
 	 //initalize maxfd for the idle-wait process 'select'
 	 maxfd = STDIN_FILENO;
-	 if (SerialLineFileDescriptor > maxfd)
-	 {
-   	maxfd = SerialLineFileDescriptor;
-	 }
-	 if (NetworkFileDescriptor > maxfd)
-	 {
+	 if(NetworkFileDescriptor > maxfd)
     	maxfd = NetworkFileDescriptor;
-    }
-    maxfd++;
+   maxfd++;
 
 	 pthread_t tid;
 	 pthread_create(&tid, NULL, thread, NULL);
@@ -5545,17 +5506,10 @@ int main(int argc, char *argv[])
       while (!ExitApplication)
       {
             //Set the sources which wakes the idle-wait process 'select'
-            //Standard input (keyboard), Serial line and network.
+            //Standard input (keyboard) and network.
 				FD_ZERO(&readfs);
             FD_SET(STDIN_FILENO, &readfs);
-            if (SerialLineFileDescriptor >= 0)
-            {
-                FD_SET(SerialLineFileDescriptor, &readfs);
-            }
-            if (NetworkFileDescriptor >= 0)
-            {
-                FD_SET(NetworkFileDescriptor, &readfs);
-            }
+            FD_SET(NetworkFileDescriptor, &readfs);
 
             // block (process is in idle mode) until input becomes available
 //            int ReturnValue = select(maxfd, &readfs, NULL, NULL, NULL);
@@ -5887,62 +5841,7 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                //Test if the serial port generated an event.
-                if (SerialLineFileDescriptor >= 0)
-                {
-                    if (FD_ISSET(SerialLineFileDescriptor, &readfs))
-                    {
-                        unsigned int cnt;
-                        unsigned char Buffer[128];
-
-                        int NrOfBytesReceived = read(SerialLineFileDescriptor, Buffer, 128);
-                        for (cnt=0; cnt<NrOfBytesReceived; cnt++)
-                        {
-                            SerialLineReceiveBuffer[cntSerialLineReceiveBufferTop++] = Buffer[cnt];
-                            if (cntSerialLineReceiveBufferTop>4095)
-                            {
-                                cntSerialLineReceiveBufferTop = 0;
-                            }
-                        }
-
-                        while (cntSerialLineReceiveBufferTop != cntSerialLineReceiveBufferBottom)
-                        {
-                            unsigned char ReadedByte = SerialLineReceiveBuffer[cntSerialLineReceiveBufferBottom++];
-                            if (cntSerialLineReceiveBufferBottom>4095)
-                            {
-                                cntSerialLineReceiveBufferBottom = 0;
-                            }
-
-									 switch (ReadedByte&0xC0)
-									 {
-										  case 0x80: //0x80, 0x81, 0x82
-										  {
-                                    cntSerialLineMambaNetDecodeBuffer = 0;
-                                    SerialLineMambaNetDecodeBuffer[cntSerialLineMambaNetDecodeBuffer++] = ReadedByte;
-                                }
-                                break;
-										  case 0xC0: //0xFF
-										  {
-												if (ReadedByte == 0xFF)
-												{
-                                    	SerialLineMambaNetDecodeBuffer[cntSerialLineMambaNetDecodeBuffer++] = ReadedByte;
-                                    	DecodeRawMambaNetMessage(SerialLineMambaNetDecodeBuffer, cntSerialLineMambaNetDecodeBuffer, SerialLineInterfaceIndex);
-												}
-                                }
-                                break;
-                                default:
-                                {
-                                    SerialLineMambaNetDecodeBuffer[cntSerialLineMambaNetDecodeBuffer++] = ReadedByte;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-
                 //Test if the network generated an event.
-                if (NetworkFileDescriptor>=0)
-                {
                     if (FD_ISSET(NetworkFileDescriptor, &readfs))
                     {
                         unsigned int cnt;
@@ -6096,7 +5995,6 @@ int main(int argc, char *argv[])
                             }
                            numRead = recv(NetworkFileDescriptor, buffer, 2048, 0);
                         }*/
-                    }
                 }
             }
       }
@@ -6115,7 +6013,6 @@ int main(int argc, char *argv[])
     sqlite3_close(address_db);
     sqlite3_close(axum_engine_db);
     CloseNetwork(NetworkFileDescriptor);
-    CloseSerialLine(SerialLineFileDescriptor);
     CloseSTDIN(&oldtio, oldflags);
 }
 
@@ -11660,133 +11557,6 @@ void CloseSTDIN(struct termios *oldtio, int oldflags)
     fcntl(STDIN_FILENO, F_SETFL, oldflags);
 }
 
-//This function opens a serial port and set this port to
-//Axum/MambaNet compatible settings:
-//
-//baudrate = 250000;
-//no echo of chars
-//no line interpetation.
-//use protocol driver <n_mambanet.c>
-//enable to receive all types of mambanet messages.
-//
-//example PortName = "/dev/ttyS1"
-int SetupSerialLine(char *PortName)
-{
-   struct termios tio;
-   int ioctl_arg;
-    int fd;
-    bool error;
-
-    cntSerialLineReceiveBufferTop = 0;
-    cntSerialLineReceiveBufferBottom = 0;
-    cntSerialLineMambaNetDecodeBuffer = 0;
-
-    fd = -1;
-    error = 0;
-
-    //Open the serial port
-   fd = open(PortName, O_RDWR | O_NOCTTY | O_NDELAY);
-   if (fd<0)
-   {
-        perror("Error opening serial port");
-        error = 1;
-   }
-   else
-   {
-        //Set the FNDELAY for this port
-      if (fcntl(fd, F_SETFL, FNDELAY) == -1)
-      {
-            perror("could not do fcntl FNDELAY");
-            error = 1;
-      }
-
-        //Get the attributes.
-      if (tcgetattr(fd, &tio) != 0)
-      {
-            perror("could not get attribs");
-//could not be opened for second application so no error.
-//          error = 1;
-      }
-
-        //Change the atrributes to use a baudrate of 500000
-      if (cfsetspeed(&tio, B250000) != 0)
-      {
-            perror("could not set baudrate to 250000");
-            error = 1;
-      }
-
-        //Change the atrributes to disable local echo, line processing etc.
-      tio.c_cflag &= ~CRTSCTS;
-      tio.c_cflag |= CLOCAL;
-      tio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-      tio.c_oflag &= ~OPOST;
-
-        //Set the attributes.
-      if (tcsetattr(fd, TCSANOW, &tio) != 0)
-      {
-            perror("could not set attribs");
-//could not be opened for second application so no error.
-//          error = 1;
-      }
-
-        //Tell the serial port to use the MambaNet line discipline
-        //WARNING: the kernel must have the MambaNet line discipline
-        //       char driver compiled.
-      ioctl_arg = N_MAMBANET;
-      if (ioctl (fd, TIOCSETD, &ioctl_arg) == -1)
-      {
-            perror("could not change the line discipline to N_MAMBANET");
-            error = 1;
-      }
-
-        //The MambaNet line discipline will receive ALL signals.
-        ioctl_arg = MAMBANET_SIG_ALL;
-      if (ioctl (fd, MAMBANET_ENABLE_SIGNALS, ioctl_arg) == -1)
-      {
-            perror("could not enable signals");
-            error = 1;
-      }
-    }
-    if (error)
-    {
-        if (fd>=0)
-        {
-            close(fd);
-            fd = -1;
-        }
-    }
-    else
-    {
-       INTERFACE_PARAMETER_STRUCT InterfaceParameters;
-        InterfaceParameters.Type = UART;
-        InterfaceParameters.HardwareAddress[0] = 0;
-        InterfaceParameters.TransmitCallback = SerialLineMambaNetMessageTransmitCallback;
-        InterfaceParameters.ReceiveCallback = SerialLineMambaNetMessageReceiveCallback;
-        InterfaceParameters.AddressTableChangeCallback = SerialLineMambaNetAddressTableChangeCallback;
-        InterfaceParameters.TransmitFilter = ALL_MESSAGES;
-       InterfaceParameters.cntMessageReceived = 0;
-       InterfaceParameters.cntMessageTransmitted = 0;
-
-       SerialLineInterfaceIndex = RegisterMambaNetInterface(&InterfaceParameters);
-    }
-
-    //If ok, return the FileDescriptor of the serial port.
-    return fd;
-}
-
-//Close the serial port.
-void CloseSerialLine(int SerialLineFileDescriptor)
-{
-    if (SerialLineInterfaceIndex != -1)
-    {
-        UnregisterMambaNetInterface(SerialLineInterfaceIndex);
-    }
-
-    if (SerialLineFileDescriptor >= 0)
-    {
-        close(SerialLineFileDescriptor);
-    }
-}
 
 //This function opens a network interface and set the
 //interface Axum/MambaNet compatible settings:
@@ -11957,74 +11727,6 @@ void CloseNetwork(int NetworkFileDescriptor)
     }
 }
 
-void SerialLineMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16])
-{
-    if (SerialLineFileDescriptor>=0)
-    {
-        write(SerialLineFileDescriptor, buffer, buffersize);
-
-//      TRACE_PACKETS("[UART] SendMambaMessage(0x%08X, 0x%08X, 0x%04X, %d)", ToAddress, FromAddress, MessageType, DataLength);
-    }
-}
-
-void SerialLineMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigned long int FromAddress, unsigned char Ack, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress)
-{
-    unsigned char MessageProcessed = 0;
-
-   switch (MessageType)
-   {
-      case 0x0001:
-      {
-         int ObjectNumber;
-         unsigned char Action;
-
-         ObjectNumber = Data[0];
-         ObjectNumber <<=8;
-         ObjectNumber |= Data[1];
-         Action  = Data[2];
-         if (Action == MAMBANET_OBJECT_ACTION_GET_ACTUATOR_DATA)
-         {
-            if (ObjectNumber == 1)
-            {
-               unsigned char TransmitBuffer[64];
-               unsigned char cntTransmitBuffer;
-
-               cntTransmitBuffer = 0;
-               TransmitBuffer[cntTransmitBuffer++] = (ObjectNumber>>8)&0xFF;
-               TransmitBuffer[cntTransmitBuffer++] = ObjectNumber&0xFF;
-               TransmitBuffer[cntTransmitBuffer++] = MAMBANET_OBJECT_ACTION_ACTUATOR_DATA_RESPONSE;
-               TransmitBuffer[cntTransmitBuffer++] = OCTET_STRING_DATATYPE;
-               TransmitBuffer[cntTransmitBuffer++] = 11;
-               TransmitBuffer[cntTransmitBuffer++] = 'A';
-               TransmitBuffer[cntTransmitBuffer++] = 'x';
-               TransmitBuffer[cntTransmitBuffer++] = 'u';
-               TransmitBuffer[cntTransmitBuffer++] = 'm';
-               TransmitBuffer[cntTransmitBuffer++] = ' ';
-               TransmitBuffer[cntTransmitBuffer++] = 'E';
-               TransmitBuffer[cntTransmitBuffer++] = 'n';
-               TransmitBuffer[cntTransmitBuffer++] = 'g';
-               TransmitBuffer[cntTransmitBuffer++] = 'i';
-               TransmitBuffer[cntTransmitBuffer++] = 'n';
-               TransmitBuffer[cntTransmitBuffer++] = 'e';
-
-               SendMambaNetMessage(FromAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, 1, TransmitBuffer, cntTransmitBuffer);
-
-                    MessageProcessed = 1;
-            }
-         }
-        }
-        break;
-    }
-
-    if (!MessageProcessed)
-    {
-        MambaNetMessageReceived(ToAddress, FromAddress, MessageID, MessageType, Data, DataLength);
-    }
-}
-
-void SerialLineMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *AddressTable, MambaNetAddressTableStatus Status, int Index)
-{
-}
 
 void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16])
 {

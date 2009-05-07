@@ -6,7 +6,7 @@ TARGET=axum-engine
 
 all: ${TARGET}
 
-${TARGET}: *.o Makefile
+${TARGET}: ${OBJ} Makefile
 	g++ ${OBJ} ${LFLAGS} -o ${TARGET}
 
 %.o: %.c ${HEADERS} Makefile
