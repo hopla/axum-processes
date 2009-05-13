@@ -22,7 +22,7 @@
 #define DEFAULT_UNIX_PATH "/tmp/axum-address"
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
 #define DEFAULT_ETH_DEV   "eth0"
-#define DEFAULT_DB_PATH   "/var/lib/axum/axum-address.sqlite3"
+#define DEFAULT_DB_STR    "dbname='axum' user='axum'"
 #define DEFAULT_LOG_FILE  "/var/log/axum-address.log"
 
 #ifndef UNIX_PATH_MAX
@@ -375,7 +375,7 @@ void init(int argc, char **argv) {
   struct mbn_interface *itf;
   char err[MBN_ERRSIZE];
   char ethdev[50];
-  char dbpath[256];
+  char dbstr[256];
   char upath[UNIX_PATH_MAX], gwpath[UNIX_PATH_MAX];
   int c, forcelisten = 0;
   struct sigaction act;
@@ -384,7 +384,7 @@ void init(int argc, char **argv) {
   strcpy(upath, DEFAULT_UNIX_PATH);
   strcpy(gwpath, DEFAULT_GTW_PATH);
   strcpy(ethdev, DEFAULT_ETH_DEV);
-  strcpy(dbpath, DEFAULT_DB_PATH);
+  strcpy(dbstr, DEFAULT_DB_STR);
   strcpy(logfile, DEFAULT_LOG_FILE);
 
   /* parse options */
@@ -409,10 +409,10 @@ void init(int argc, char **argv) {
         break;
       case 'd':
         if(strlen(optarg) > 256) {
-          fprintf(stderr, "Too long path to sqlite3 DB!\n");
+          fprintf(stderr, "Too long database connection string!\n");
           exit(1);
         }
-        strcpy(dbpath, optarg);
+        strcpy(dbstr, optarg);
         break;
       case 'g':
         if(strlen(optarg) > UNIX_PATH_MAX) {
@@ -435,7 +435,7 @@ void init(int argc, char **argv) {
         fprintf(stderr, "  -u path  Path to UNIX socket.\n");
         fprintf(stderr, "  -g path  Hardware parent or path to gateway socket.\n");
         fprintf(stderr, "  -l path  Path to log file.\n");
-        fprintf(stderr, "  -d path  Path to SQLite3 database file.\n");
+        fprintf(stderr, "  -d str   PostgreSQL database connection options.\n");
         exit(1);
     }
   }
@@ -492,7 +492,7 @@ void init(int argc, char **argv) {
   }
 
   /* open database */
-  if(db_init(dbpath, err)) {
+  if(db_init(dbstr, err)) {
     fprintf(stderr, "%s\n", err);
     conn_free();
     exit(1);

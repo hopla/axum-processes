@@ -5,46 +5,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sqlite3.h>
+#include <libpq-fe.h>
+#include <pthread.h>
 #include <mbn.h>
 
-sqlite3 *sqldb;
+PGconn *sqldb;
+pthread_mutex_t dbmutex = PTHREAD_MUTEX_INITIALIZER;
 
 
-int db_init(char *dbpath, char *err) {
-  char *dberr;
+int db_init(char *conninfo, char *err) {
+  PGresult *res;
 
-  if(sqlite3_open(dbpath, &sqldb) != SQLITE_OK) {
-    sprintf(err, "Opening database: %s\n", sqlite3_errmsg(sqldb));
-    sqlite3_close(sqldb);
+  sqldb = PQconnectdb(conninfo);
+  if(PQstatus(sqldb) != CONNECTION_OK) {
+    sprintf(err, "Opening database: %s\n", PQerrorMessage(sqldb));
+    PQfinish(sqldb);
     return 0;
   }
-  if(sqlite3_exec(sqldb, "\
-    CREATE TABLE IF NOT EXISTS nodes (\
-      MambaNetAddress    INT NOT NULL PRIMARY KEY,\
-      Name               VARCHAR(32),\
-      ManufacturerID     INT NOT NULL,\
-      ProductID          INT NOT NULL,\
-      UniqueIDPerProduct INT NOT NULL,\
-      EngineAddr         INT NOT NULL,\
-      Services           INT NOT NULL,\
-      Active             INT NOT NULL,\
-      HardwareParent     BLOB(6) NOT NULL DEFAULT X'000000000000',\
-      flags              INT NOT NULL,\
-      FirstSeen          INT NOT NULL,\
-      LastSeen           INT NOT NULL,\
-      AddressRequests    INT NOT NULL\
-    )", NULL, NULL, &dberr
-  ) != SQLITE_OK) {
-    sprintf(err, "Creating table: %s\n", dberr);
-    sqlite3_free(dberr);
-    sqlite3_close(sqldb);
-    return 1;
-  }
-  if(sqlite3_exec(sqldb, "UPDATE nodes SET Active = 0", NULL, NULL, &dberr) != SQLITE_OK) {
-    sprintf(err, "Clearing active bit: %s\n", dberr);
-    sqlite3_free(dberr);
-    sqlite3_close(sqldb);
+
+  res = PQexec(sqldb, "UPDATE addresses SET active = false");
+  if(PQresultStatus(res) != PGRES_COMMAND_OK) {
+    sprintf(err, "Clearing active bit: %s\n", PQerrorMessage(sqldb));
+    PQclear(res);
+    PQfinish(sqldb);
     return 1;
   }
   return 0;
@@ -52,174 +35,182 @@ int db_init(char *dbpath, char *err) {
 
 
 void db_free() {
-  sqlite3_close(sqldb);
+  PQfinish(sqldb);
 }
 
 
-int db_parserow(sqlite3_stmt *st, struct db_node *res) {
-  int n;
-  const unsigned char *str;
-
-  n = sqlite3_step(st);
-  if(n == SQLITE_DONE)
-    return 0;
-  if(n != SQLITE_ROW) {
-    writelog("SQL Error: %s", sqlite3_errmsg(sqldb));
-    return 0;
-  }
+/* assumes a SELECT * FROM addresses as columns */
+int db_parserow(PGresult *q, int row, struct db_node *res) {
   if(res == NULL)
     return 1;
 
   memset((void *)res, 0, sizeof(struct db_node));
-  res->MambaNetAddr       =  (unsigned long)sqlite3_column_int(st, 0);
-  if((str = sqlite3_column_text(st, 1)) == NULL || strlen((char *)str) > 32)
+  sscanf(PQgetvalue(q, row, 0), "%ld", &(res->MambaNetAddr));
+  if(PQgetisnull(q, row, 1))
     res->Name[0] = 0;
   else
-    strcpy(res->Name, (char *)str);
-  res->ManufacturerID     = (unsigned short)sqlite3_column_int(st, 2);
-  res->ProductID          = (unsigned short)sqlite3_column_int(st, 3);
-  res->UniqueIDPerProduct = (unsigned short)sqlite3_column_int(st, 4);
-  res->EngineAddr         =  (unsigned long)sqlite3_column_int(st, 5);
-  res->Services           =  (unsigned char)sqlite3_column_int(st, 6);
-  res->Active             =  sqlite3_column_int(st, 7) ? 1 : 0;
-  res->Parent[0] = res->Parent[1] = res->Parent[2] = 0;
-  if((str = (unsigned char *)sqlite3_column_blob(st, 8)) != NULL) {
-    res->Parent[0] = (unsigned short)(str[0]<<8) + str[1];
-    res->Parent[1] = (unsigned short)(str[2]<<8) + str[3];
-    res->Parent[2] = (unsigned short)(str[4]<<8) + str[5];
-  }
-  res->flags              =  (unsigned char)sqlite3_column_int(st, 9);
-  res->FirstSeen          =         (time_t)sqlite3_column_int64(st, 10);
-  res->LastSeen           =         (time_t)sqlite3_column_int64(st, 11);
-  res->AddressRequests    =                 sqlite3_column_int(st, 12);
+    strcpy(res->Name, PQgetvalue(q, row, 1));
+  sscanf(PQgetvalue(q, row, 2),  "(%hd,%hd,%hd)", &(res->ManufacturerID), &(res->ProductID), &(res->UniqueIDPerProduct));
+  sscanf(PQgetvalue(q, row, 3),  "%ld",  &(res->EngineAddr));
+  sscanf(PQgetvalue(q, row, 4),  "%hhd", &(res->Services));
+  res->Active = strcmp(PQgetvalue(q, row, 5), "f") == 0 ? 0 : 1;
+  sscanf(PQgetvalue(q, row, 6),  "(%hd,%hd,%hd)", res->Parent, res->Parent+1, res->Parent+2);
+  if(strcmp(PQgetvalue(q, row, 7), "f") != 0)
+    res->flags |= DB_FLAGS_SETNAME;
+  if(strcmp(PQgetvalue(q, row, 8), "f") != 0)
+    res->flags |= DB_FLAGS_REFRESH;
+  sscanf(PQgetvalue(q, row, 9),  "%ld", &(res->FirstSeen));
+  sscanf(PQgetvalue(q, row, 10), "%ld", &(res->LastSeen));
+  sscanf(PQgetvalue(q, row, 11), "%d",  &(res->AddressRequests));
   return 1;
 }
 
 
 int db_getnode(struct db_node *res, unsigned long addr) {
-  sqlite3_stmt *stmt;
-  char q[100];
+  PGresult *qs;
+  char str[20];
+  const char *params[1];
   int n;
 
-  sprintf(q, "SELECT * FROM nodes WHERE MambaNetAddress = %ld", addr);
-  if(sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL) != SQLITE_OK) {
-    writelog("SQL Error for \"%s\": %s", q, sqlite3_errmsg(sqldb));
+  sprintf(str, "%ld", addr);
+  params[0] = str;
+  qs = PQexecParams(sqldb, "SELECT * FROM addresses WHERE addr = $1",
+      1, NULL, params, NULL, NULL, 0);
+  if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
+    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    PQclear(qs);
     return 0;
   }
-  n = db_parserow(stmt, res);
-  sqlite3_finalize(stmt);
+  if(!PQntuples(qs))
+    n = 0;
+  else
+    n = db_parserow(qs, 0, res);
+  PQclear(qs);
   return n;
 }
 
 
 int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset, int order, struct db_node **res) {
-  sqlite3_stmt *stmt;
-  char q[500];
-  int i, s;
+  PGresult *qs;
+  char q[500], str[129];
+  int i;
 
-  strcpy(q, "SELECT * FROM nodes WHERE 1");
-  if(matchfields & DB_NAME)
-    sqlite3_snprintf(50, &(q[strlen(q)]), " AND Name = %Q", match->Name);
+  /* TODO: clean method using PQexecParams() */
+  strcpy(q, "SELECT * FROM addresses WHERE 't'");
+  if(matchfields & DB_NAME) {
+    PQescapeStringConn(sqldb, str, match->Name, strlen(match->Name), NULL);
+    sprintf(&(q[strlen(q)]), " AND name = %s", str);
+  }
   if(matchfields & DB_MAMBANETADDR)
-    sqlite3_snprintf(32, &(q[strlen(q)]), " AND MambaNetAddress = %ld", match->MambaNetAddr);
+    sprintf(&(q[strlen(q)]), " AND addr = %ld", match->MambaNetAddr);
   if(matchfields & DB_MANUFACTURERID)
-    sqlite3_snprintf(32, &(q[strlen(q)]), " AND ManufacturerID = %d", match->ManufacturerID);
+    sprintf(&(q[strlen(q)]), " AND (id).man = %hd", match->ManufacturerID);
   if(matchfields & DB_PRODUCTID)
-    sqlite3_snprintf(32, &(q[strlen(q)]), " AND ProductID = %d", match->ProductID);
+    sprintf(&(q[strlen(q)]), " AND (id).prod = %hd", match->ProductID);
   if(matchfields & DB_UNIQUEID)
-    sqlite3_snprintf(40, &(q[strlen(q)]), " AND UniqueIDPerProduct = %d", match->UniqueIDPerProduct);
+    sprintf(&(q[strlen(q)]), " AND (id).id = %hd", match->UniqueIDPerProduct);
   if(matchfields & DB_ENGINEADDR)
-    sqlite3_snprintf(32, &(q[strlen(q)]), " AND EngineAddr = %ld", match->EngineAddr);
+    sprintf(&(q[strlen(q)]), " AND engine_addr = %ld", match->EngineAddr);
   if(matchfields & DB_SERVICES)
-    sqlite3_snprintf(32, &(q[strlen(q)]), " AND Services = %d", match->Services);
+    sprintf(&(q[strlen(q)]), " AND services = %d", match->Services);
   if(matchfields & DB_ACTIVE)
-    sqlite3_snprintf(32, &(q[strlen(q)]), " AND Active = %d", match->Active);
+    sprintf(&(q[strlen(q)]), " AND active = '%c'", match->Active ? 't' : 'f');
   if(matchfields & DB_PARENT)
-    sqlite3_snprintf(50, &(q[strlen(q)]), " AND HardwareParent = X'%04X%04X%04X'",
+    sprintf(&(q[strlen(q)]), " AND (parent).man = %hd AND (parent).prod = %hd AND (parent).id = %hd",
        match->Parent[0], match->Parent[1], match->Parent[2]);
 
   if(!order || order == DB_DESC)
     order |= DB_MAMBANETADDR;
   if(!limit)
     limit = 99999;
-  sqlite3_snprintf(100, &(q[strlen(q)]), " ORDER BY %s%s LIMIT %d OFFSET %d",
-    order & DB_NAME       ? "Name"     : order & DB_MAMBANETADDR ? "MambaNetAddress" :
-      order & DB_SERVICES ? "Services" : order & DB_ACTIVE       ? "Active"          :
+  sprintf(&(q[strlen(q)]), " ORDER BY %s%s LIMIT %d OFFSET %d",
+    order & DB_NAME       ? "name"     : order & DB_MAMBANETADDR ? "addr" :
+      order & DB_SERVICES ? "services" : order & DB_ACTIVE       ? "active"          :
       order & DB_MANUFACTURERID || order & DB_PRODUCTID || order & DB_UNIQUEID ?
-        "(ManufacturerID<<32)+(ProductID<<16)+UniqueIDPerProduct" : "HardwareParent",
+        "((id).man<<32)+((id).prod<<16)+(id).id" : "((parent).man<<32)+((parent).prod<<16)+(parent).id",
     order & DB_DESC ? " DESC" : " ASC", limit, offset
   );
-  if(sqlite3_prepare_v2(sqldb, q, -1, &stmt, NULL) != SQLITE_OK) {
-    writelog("SQL Error for \"%s\": %s", q, sqlite3_errmsg(sqldb));
+  qs = PQexec(sqldb, q);
+  if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
+    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    PQclear(qs);
+    return 0;
+  }
+  if(!PQntuples(qs)) {
+    PQclear(qs);
     return 0;
   }
 
-  s = 5*sizeof(struct db_node);
-  *res = malloc(s);
-  for(i=0; db_parserow(stmt, &((*res)[i])) == 1; i++)
-    if((i+2)*sizeof(struct db_node) > (unsigned int)s) {
-      s *= 2;
-      *res = realloc(*res, s);
-    }
-  if(!i) {
-    free(*res);
-    *res = NULL;
-  }
-  sqlite3_finalize(stmt);
+  *res = malloc(PQntuples(qs)*sizeof(struct db_node));
+  for(i=0; i<PQntuples(qs); i++)
+    db_parserow(qs, i, &((*res)[i]));
+  PQclear(qs);
   return i;
 }
 
 
 int db_setnode(unsigned long addr, struct db_node *node) {
-  char *q, *qf, *err;
+  PGresult *qs;
+  char q[700], str[131], *qf;
+
+  /* TODO: clean method using PQexecParams() */
+  if(node->Name[0] == 0)
+    strcpy(str, "NULL");
+  else {
+    str[0] = '\'';
+    PQescapeStringConn(sqldb, str+1, node->Name, strlen(node->Name), NULL);
+    strcat(str, "'");
+  }
 
   if(addr)
-    qf = "UPDATE nodes\
+    qf = "UPDATE addresses\
       SET\
-        MambaNetAddress = %ld,\
-        Name = %Q,\
-        ManufacturerID = %d,\
-        ProductID = %d,\
-        UniqueIDPerProduct = %d,\
-        EngineAddr = %ld,\
-        Services = %d,\
-        Active = %d,\
-        HardwareParent = X'%04X%04X%04X',\
-        flags = %d,\
-        FirstSeen = %lld,\
-        LastSeen = %lld,\
-        AddressRequests = %d\
-      WHERE MambaNetAddress = %d";
+        addr = %ld,\
+        name = %s,\
+        id = (%hd,%hd,%hd),\
+        engine_addr = %ld,\
+        services = %d,\
+        active = '%c',\
+        parent = (%hd,%hd,%hd),\
+        setname = '%c',\
+        refresh = '%c',\
+        firstseen = %lld,\
+        lastseen = %lld,\
+        addr_requests = %d\
+      WHERE addr = %d";
   else
-    qf = "INSERT INTO nodes\
-      VALUES(%ld, %Q, %d, %d, %d, %ld, %d, %d, X'%04X%04X%04X', %d, %lld, %lld, %d)";
+    qf = "INSERT INTO addresses\
+      VALUES(%ld, %s, (%hd,%hd,%hd), %ld, %d, '%c', (%hd,%hd,%hd), '%c', '%c', %lld, %lld, %d)";
 
-  q = sqlite3_mprintf(qf,
-    node->MambaNetAddr, node->Name[0] == 0 ? NULL : node->Name,
-    node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct,
-    node->EngineAddr, node->Services & ~MBN_ADDR_SERVICES_VALID, node->Active ? 1 : 0,
-    node->Parent[0], node->Parent[1], node->Parent[2], node->flags,
-    (long long)node->FirstSeen, (long long)node->LastSeen, node->AddressRequests, addr
+  sprintf(q, qf,
+    node->MambaNetAddr, str, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct,
+    node->EngineAddr, node->Services & ~MBN_ADDR_SERVICES_VALID, node->Active ? 't' : 'f',
+    node->Parent[0], node->Parent[1], node->Parent[2], node->flags & DB_FLAGS_SETNAME ? 't' : 'f',
+    node->flags & DB_FLAGS_REFRESH ? 't' : 'f', (long long)node->FirstSeen,
+    (long long)node->LastSeen, node->AddressRequests, addr
   );
-  if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {
-    writelog("SQL Error for \"%s\": %s", q, err);
-    sqlite3_free(err);
-    sqlite3_free(q);
+  qs = PQexec(sqldb, q);
+  if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK) {
+    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    PQclear(qs);
     return 0;
   }
-  sqlite3_free(q);
+  PQclear(qs);
   return 1;
 }
 
 
 void db_rmnode(unsigned long addr) {
-  char *err, *q;
-  q = sqlite3_mprintf("DELETE FROM nodes WHERE MambaNetAddress = %ld", addr);
-  if(sqlite3_exec(sqldb, q, NULL, NULL, &err) != SQLITE_OK) {
-    writelog("SQL Error for \"%s\": %s", q, err);
-    sqlite3_free(err);
-  }
-  sqlite3_free(q);
+  PGresult *qs;
+  char str[20];
+  const char *params[1];
+
+  sprintf(str, "%ld", addr);
+  params[0] = str;
+  qs = PQexecParams(sqldb, "DELETE FROM addresses WHERE addr = $1", 1, NULL, params, NULL, NULL, 0);
+  if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK)
+    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+  PQclear(qs);
 }
 
 
@@ -234,8 +225,8 @@ unsigned long db_newaddress() {
 
 void db_lock(int l) {
   if(l)
-    sqlite3_mutex_enter(sqlite3_db_mutex(sqldb));
+    pthread_mutex_lock(&dbmutex);
   else
-    sqlite3_mutex_leave(sqlite3_db_mutex(sqldb));
+    pthread_mutex_unlock(&dbmutex);
 }
 
