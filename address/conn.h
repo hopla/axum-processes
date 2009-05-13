@@ -1,6 +1,7 @@
 
 
 #ifndef _conn_h
+#define _conn_h
 
 void conn_free();
 int  conn_loop();
