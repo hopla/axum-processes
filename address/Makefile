@@ -1,7 +1,7 @@
-CFLAGS=-Wall -Wextra -g -I`pg_config --includedir` `pkg-config --cflags json`
-LFLAGS=-lmbn -L`pg_config --libdir` -lpq -lpthread `pkg-config --libs json`
-OBJECTS=conn.o db.o main.o
-HEADERS=conn.h db.h main.h
+CFLAGS=-Wall -Wextra -g -I`pg_config --includedir`
+LFLAGS=-lmbn -L`pg_config --libdir` -lpq -lpthread
+OBJECTS=db.o main.o
+HEADERS=db.h main.h
 OUTPUT=axum-address
 
 all: ${OUTPUT}

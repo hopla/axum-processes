@@ -1,6 +1,5 @@
 
 #include "main.h"
-#include "conn.h"
 #include "db.h"
 
 #include <stdio.h>
@@ -13,13 +12,13 @@
 #include <mbn.h>
 #include <unistd.h>
 #include <signal.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/select.h>
 #include <sys/stat.h>
 
-#define DEFAULT_UNIX_PATH "/tmp/axum-address"
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
 #define DEFAULT_ETH_DEV   "eth0"
 #define DEFAULT_DB_STR    "dbname='axum' user='axum'"
@@ -376,19 +375,18 @@ void init(int argc, char **argv) {
   char err[MBN_ERRSIZE];
   char ethdev[50];
   char dbstr[256];
-  char upath[UNIX_PATH_MAX], gwpath[UNIX_PATH_MAX];
-  int c, forcelisten = 0;
+  char gwpath[UNIX_PATH_MAX];
+  int c;
   struct sigaction act;
   pid_t pid;
 
-  strcpy(upath, DEFAULT_UNIX_PATH);
   strcpy(gwpath, DEFAULT_GTW_PATH);
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbstr, DEFAULT_DB_STR);
   strcpy(logfile, DEFAULT_LOG_FILE);
 
   /* parse options */
-  while((c = getopt(argc, argv, "e:u:d:l:g:f")) != -1) {
+  while((c = getopt(argc, argv, "e:d:l:g:")) != -1) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
@@ -396,16 +394,6 @@ void init(int argc, char **argv) {
           exit(1);
         }
         strcpy(ethdev, optarg);
-        break;
-      case 'u':
-        if(strlen(optarg) > UNIX_PATH_MAX) {
-          fprintf(stderr, "Too long path to UNIX socket!\n");
-          exit(1);
-        }
-        strcpy(upath, optarg);
-        break;
-      case 'f':
-        forcelisten = 1;
         break;
       case 'd':
         if(strlen(optarg) > 256) {
@@ -430,9 +418,7 @@ void init(int argc, char **argv) {
         break;
       default:
         fprintf(stderr, "Usage: %s [-f] [-e dev] [-u path] [-d path]\n", argv[0]);
-        fprintf(stderr, "  -f       Force listen on UNIX socket.\n");
         fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
-        fprintf(stderr, "  -u path  Path to UNIX socket.\n");
         fprintf(stderr, "  -g path  Hardware parent or path to gateway socket.\n");
         fprintf(stderr, "  -l path  Path to log file.\n");
         fprintf(stderr, "  -d str   PostgreSQL database connection options.\n");
@@ -483,25 +469,15 @@ void init(int argc, char **argv) {
     exit(1);
   }
 
-  /* initialize UNIX listen socket */
-  if(conn_init(upath, forcelisten, err)) {
-    fprintf(stderr, "%s\n", err);
-    fprintf(stderr, "Are you sure no other address server is running?\n");
-    fprintf(stderr, "Use -f to ignore this error and open the socket anyway.\n");
-    exit(1);
-  }
-
   /* open database */
   if(db_init(dbstr, err)) {
     fprintf(stderr, "%s\n", err);
-    conn_free();
     exit(1);
   }
 
   /* open log file */
   if((logfd = fopen(logfile, "a")) == NULL) {
     perror("Opening log file");
-    conn_free();
     db_free();
     exit(1);
   }
@@ -510,14 +486,12 @@ void init(int argc, char **argv) {
   if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
     fprintf(stderr, "Opening %s: %s\n", ethdev, err);
     fclose(logfd);
-    conn_free();
     db_free();
     exit(1);
   }
   if((mbn = mbnInit(&this_node, NULL, itf, err)) == NULL) {
     fprintf(stderr, "mbnInit: %s\n", err);
     fclose(logfd);
-    conn_free();
     db_free();
     exit(1);
   }
@@ -543,12 +517,13 @@ void init(int argc, char **argv) {
 int main(int argc, char **argv) {
   main_quit = 0;
   init(argc, argv);
-  while(!main_quit && !conn_loop())
+
+  /* this should be replaced with a select() loop on the DB connection */
+  while(!main_quit && !sleep(1))
     ;
 
   /* free */
   writelog("Closing Address Server");
-  conn_free();
   mbnFree(mbn);
   db_free();
   fclose(logfd);
