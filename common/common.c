@@ -36,11 +36,15 @@ void log_open(char *file) {
 
 
 void log_close() {
-  fclose(logfd);
+  if(logfd != NULL)
+    fclose(logfd);
+  logfd = NULL;
 }
 
 
 void log_reopen() {
+  if(logfd == NULL)
+    return;
   log_write("SIGHUP received, re-opening log file");
   log_close();
   logfd = fopen(logfile, "a");
@@ -129,3 +133,4 @@ void daemonize_finish() {
   close(STDERR_FILENO);
   kill(parent_pid, SIGUSR1);
 }
+
