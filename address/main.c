@@ -67,7 +67,7 @@ void writelog(char *fmt, ...) {
 
 
 void node_online(struct db_node *node) {
-  struct db_node addr, *id;
+  struct db_node addr, id;
   struct mbn_message reply;
   int addr_f, id_f;
   union mbn_data dat;
@@ -76,11 +76,11 @@ void node_online(struct db_node *node) {
   memset((void *)&addr, 0, sizeof(struct db_node));
   memset((void *)&id, 0, sizeof(struct db_node));
   addr_f = db_getnode(&addr, node->MambaNetAddr);
-  id_f = db_searchnodes(node, DB_MANUFACTURERID|DB_PRODUCTID|DB_UNIQUEID, 1, 0, 0, &id);
+  id_f = db_nodebyid(&id, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
 
   /* Reset node address when the previous search didn't return the exact same node */
   if((addr_f && !id_f) || (!addr_f && id_f)
-      || (addr_f && id_f && memcmp((void *)&addr, (void *)id, sizeof(struct db_node)) != 0)) {
+      || (addr_f && id_f && memcmp((void *)&addr, (void *)&id, sizeof(struct db_node)) != 0)) {
     writelog("Address mismatch for %04X:%04X:%04X (%08lX), resetting valid bit",
       node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct, node->MambaNetAddr);
     reply.MessageType = MBN_MSGTYPE_ADDRESS;
@@ -94,12 +94,8 @@ void node_online(struct db_node *node) {
     reply.Message.Address.MambaNetAddr = 0;
     reply.Message.Address.EngineAddr = node->EngineAddr;
     mbnSendMessage(mbn, &reply, MBN_SEND_IGNOREVALID);
-    if(id_f)
-      free(id);
     return;
   }
-  if(id_f)
-    free(id);
 
   /* not in the DB at all? Add it. */
   if(!addr_f) {
@@ -205,7 +201,7 @@ int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsign
 
 int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
   struct mbn_message_address *nfo = &(msg->Message.Address);
-  struct db_node node, *res;
+  struct db_node node;
   struct mbn_message reply;
 
   /* ignore everything but address information messages */
@@ -235,22 +231,19 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
   reply.Message.Address.UniqueIDPerProduct = nfo->UniqueIDPerProduct;
   reply.Message.Address.Services = nfo->Services | MBN_ADDR_SERVICES_VALID;
 
-  /* search for UniqueMediaAccessID in the DB */
-  node.ManufacturerID = nfo->ManufacturerID;
-  node.ProductID = nfo->ProductID;
-  node.UniqueIDPerProduct = nfo->UniqueIDPerProduct;
-
-  /* found it? reply with its old address */
-  if(db_searchnodes(&node, DB_MANUFACTURERID | DB_PRODUCTID | DB_UNIQUEID, 1, 0, 0, &res)) {
-    reply.Message.Address.MambaNetAddr = res->MambaNetAddr;
-    reply.Message.Address.EngineAddr = res->EngineAddr;
+  /* found UniqueMediaAccessID in the DB? reply with its old address */
+  if(db_nodebyid(&node, nfo->ManufacturerID, nfo->ProductID, nfo->UniqueIDPerProduct)) {
+    reply.Message.Address.MambaNetAddr = node.MambaNetAddr;
+    reply.Message.Address.EngineAddr = node.EngineAddr;
     writelog("Address request of %04X:%04X:%04X, sent %08lX",
-      node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct, res->MambaNetAddr);
-    res->AddressRequests++;
-    db_setnode(res->MambaNetAddr, res);
-    free(res);
+      node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct, node.MambaNetAddr);
+    node.AddressRequests++;
+    db_setnode(node.MambaNetAddr, &node);
   } else {
     /* not found, get new address and insert into the DB */
+    node.ManufacturerID = nfo->ManufacturerID;
+    node.ProductID = nfo->ProductID;
+    node.UniqueIDPerProduct = nfo->UniqueIDPerProduct;
     node.MambaNetAddr = db_newaddress();
     node.Services = nfo->Services;
     node.Name[0] = node.Active = node.EngineAddr = 0;

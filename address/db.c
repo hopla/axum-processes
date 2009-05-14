@@ -81,71 +81,31 @@ int db_getnode(struct db_node *res, unsigned long addr) {
     PQclear(qs);
     return 0;
   }
-  if(!PQntuples(qs))
-    n = 0;
-  else
-    n = db_parserow(qs, 0, res);
+  n = !PQntuples(qs) ? 0 : db_parserow(qs, 0, res);
   PQclear(qs);
   return n;
 }
 
 
-int db_searchnodes(struct db_node *match, int matchfields, int limit, int offset, int order, struct db_node **res) {
+int db_nodebyid(struct db_node *res, unsigned short id_man, unsigned short id_prod, unsigned short id_id) {
   PGresult *qs;
-  char q[500], str[129];
-  int i;
+  char str[3][20];
+  const char *params[3] = {(const char *)&(str[0]), (const char *)&(str[1]), (const char *)&(str[2])};
+  int n;
 
-  /* TODO: clean method using PQexecParams() */
-  strcpy(q, "SELECT * FROM addresses WHERE 't'");
-  if(matchfields & DB_NAME) {
-    PQescapeStringConn(sqldb, str, match->Name, strlen(match->Name), NULL);
-    sprintf(&(q[strlen(q)]), " AND name = %s", str);
-  }
-  if(matchfields & DB_MAMBANETADDR)
-    sprintf(&(q[strlen(q)]), " AND addr = %ld", match->MambaNetAddr);
-  if(matchfields & DB_MANUFACTURERID)
-    sprintf(&(q[strlen(q)]), " AND (id).man = %hd", match->ManufacturerID);
-  if(matchfields & DB_PRODUCTID)
-    sprintf(&(q[strlen(q)]), " AND (id).prod = %hd", match->ProductID);
-  if(matchfields & DB_UNIQUEID)
-    sprintf(&(q[strlen(q)]), " AND (id).id = %hd", match->UniqueIDPerProduct);
-  if(matchfields & DB_ENGINEADDR)
-    sprintf(&(q[strlen(q)]), " AND engine_addr = %ld", match->EngineAddr);
-  if(matchfields & DB_SERVICES)
-    sprintf(&(q[strlen(q)]), " AND services = %d", match->Services);
-  if(matchfields & DB_ACTIVE)
-    sprintf(&(q[strlen(q)]), " AND active = '%c'", match->Active ? 't' : 'f');
-  if(matchfields & DB_PARENT)
-    sprintf(&(q[strlen(q)]), " AND (parent).man = %hd AND (parent).prod = %hd AND (parent).id = %hd",
-       match->Parent[0], match->Parent[1], match->Parent[2]);
-
-  if(!order || order == DB_DESC)
-    order |= DB_MAMBANETADDR;
-  if(!limit)
-    limit = 99999;
-  sprintf(&(q[strlen(q)]), " ORDER BY %s%s LIMIT %d OFFSET %d",
-    order & DB_NAME       ? "name"     : order & DB_MAMBANETADDR ? "addr" :
-      order & DB_SERVICES ? "services" : order & DB_ACTIVE       ? "active"          :
-      order & DB_MANUFACTURERID || order & DB_PRODUCTID || order & DB_UNIQUEID ?
-        "((id).man<<32)+((id).prod<<16)+(id).id" : "((parent).man<<32)+((parent).prod<<16)+(parent).id",
-    order & DB_DESC ? " DESC" : " ASC", limit, offset
-  );
-  qs = PQexec(sqldb, q);
+  sprintf(str[0], "%hd", id_man);
+  sprintf(str[1], "%hd", id_prod);
+  sprintf(str[2], "%hd", id_id);
+  qs = PQexecParams(sqldb, "SELECT * FROM addresses WHERE (id).man = $1 AND (id).prod = $2 AND (id).id = $3",
+      3, NULL, params, NULL, NULL, 0);
   if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
     writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
     PQclear(qs);
     return 0;
   }
-  if(!PQntuples(qs)) {
-    PQclear(qs);
-    return 0;
-  }
-
-  *res = malloc(PQntuples(qs)*sizeof(struct db_node));
-  for(i=0; i<PQntuples(qs); i++)
-    db_parserow(qs, i, &((*res)[i]));
+  n = !PQntuples(qs) ? 0 : db_parserow(qs, 0, res);
   PQclear(qs);
-  return i;
+  return n;
 }
 
 

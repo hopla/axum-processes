@@ -36,7 +36,7 @@ struct db_node {
 int  db_init(char *, char *);
 void db_free();
 int  db_getnode(struct db_node *, unsigned long);
-int  db_searchnodes(struct db_node *, int, int, int, int, struct db_node **);
+int  db_nodebyid(struct db_node *, unsigned short, unsigned short, unsigned short);
 int  db_setnode(unsigned long, struct db_node *);
 void db_rmnode(unsigned long);
 void db_lock(int);
