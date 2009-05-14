@@ -126,7 +126,7 @@ int db_setnode(unsigned long addr, struct db_node *node) {
     strcpy(str[1], node->Name);
   sprintf(str[2],  "(%hd,%hd,%hd)", node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
   sprintf(str[3],  "%ld", node->EngineAddr);
-  sprintf(str[4],  "%d", node->Services);
+  sprintf(str[4],  "%d", node->Services & ~MBN_ADDR_SERVICES_VALID);
   sprintf(str[5],  "%c", node->Active ? 't' : 'f');
   sprintf(str[6],  "(%hd,%hd,%hd)", node->Parent[0], node->Parent[1], node->Parent[2]);
   sprintf(str[7],  "%c", node->flags & DB_FLAGS_SETNAME ? 't' : 'f');
