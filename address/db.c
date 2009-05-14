@@ -270,6 +270,18 @@ void db_event_setengine(char myself, char *arg) {
 }
 
 
+void db_event_setaddress(char myself, char *arg) {
+  struct db_node node;
+  int old, new;
+
+  if(myself || sscanf(arg, "%d %d", &old, &new) != 2 || !db_getnode(&node, new))
+    return;
+
+  set_address_struct(new, node);
+  writelog("Changing address of %08X to %08X", old, new);
+}
+
+
 void db_processnotifies() {
   PGresult *qs;
   PGnotify *not;
@@ -304,6 +316,8 @@ void db_processnotifies() {
       db_event_removed(myself, arg);
     if(strcmp(cmd, "address_set_engine") == 0)
       db_event_setengine(myself, arg);
+    if(strcmp(cmd, "address_set_addr") == 0)
+      db_event_setaddress(myself, arg);
   }
   /* update lastnotify variable */
   strcpy(lastnotify, PQgetvalue(qs, i-1, 2));
