@@ -66,22 +66,6 @@ void writelog(char *fmt, ...) {
 }
 
 
-unsigned long hex2int(const char *hex, int len) {
-  int i;
-  unsigned long r = 0;
-  for(i=0; i<len; i++) {
-    r <<= 4;
-    if(hex[i] >= '0' && hex[i] <= '9')
-      r += hex[i]-'0';
-    else if(hex[i] >= 'a' && hex[i] <= 'f')
-      r += hex[i]-'a'+10;
-    else if(hex[i] >= 'A' && hex[i] <= 'F')
-      r += hex[i]-'A'+10;
-  }
-  return r;
-}
-
-
 void node_online(struct db_node *node) {
   struct db_node addr, *id;
   struct mbn_message reply;
@@ -321,12 +305,9 @@ int hwparent(char *path, char *err) {
   int sock;
 
   /* if path is a hardware parent, use that */
-  if(strlen(path) == 14 && path[0] != '/' && path[4] == ':' && path[9] == ':') {
-    this_node.HardwareParent[0] = hex2int(&(path[ 0]), 4);
-    this_node.HardwareParent[1] = hex2int(&(path[ 5]), 4);
-    this_node.HardwareParent[2] = hex2int(&(path[10]), 4);
+  if(sscanf(path, "%04hx:%04hx:%04hx", this_node.HardwareParent, this_node.HardwareParent+1, this_node.HardwareParent+2) == 3)
     return 0;
-  }
+
   /* otherwise, connect to unix socket */
   p.sun_family = AF_UNIX;
   strcpy(p.sun_path, path);
@@ -343,9 +324,10 @@ int hwparent(char *path, char *err) {
     sprintf(err, "Reading from socket: %s", strerror(errno));
     return 1;
   }
-  this_node.HardwareParent[0] = hex2int(&(msg[ 0]), 4);
-  this_node.HardwareParent[1] = hex2int(&(msg[ 5]), 4);
-  this_node.HardwareParent[2] = hex2int(&(msg[10]), 4);
+  if(sscanf(msg, "%04hx:%04hx:%04hx", this_node.HardwareParent, this_node.HardwareParent+1, this_node.HardwareParent+2) != 3) {
+    sprintf(err, "Received invalid parent: %s\n", msg);
+    return 1;
+  }
   return 0;
 }
 
