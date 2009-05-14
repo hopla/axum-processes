@@ -111,45 +111,38 @@ int db_nodebyid(struct db_node *res, unsigned short id_man, unsigned short id_pr
 
 int db_setnode(unsigned long addr, struct db_node *node) {
   PGresult *qs;
-  char q[700], str[131], *qf;
+  char str[13][33];
+  const char *params[13];
+  int i;
 
-  /* TODO: clean method using PQexecParams() */
+  /* create arguments array */
+  for(i=0;i<13;i++)
+    params[i] = (const char *)str[i];
+
+  sprintf(str[0], "%ld", node->MambaNetAddr);
   if(node->Name[0] == 0)
-    strcpy(str, "NULL");
-  else {
-    str[0] = '\'';
-    PQescapeStringConn(sqldb, str+1, node->Name, strlen(node->Name), NULL);
-    strcat(str, "'");
-  }
-
-  if(addr)
-    qf = "UPDATE addresses\
-      SET\
-        addr = %ld,\
-        name = %s,\
-        id = (%hd,%hd,%hd),\
-        engine_addr = %ld,\
-        services = %d,\
-        active = '%c',\
-        parent = (%hd,%hd,%hd),\
-        setname = '%c',\
-        refresh = '%c',\
-        firstseen = %lld,\
-        lastseen = %lld,\
-        addr_requests = %d\
-      WHERE addr = %d";
+    params[1] = NULL;
   else
-    qf = "INSERT INTO addresses\
-      VALUES(%ld, %s, (%hd,%hd,%hd), %ld, %d, '%c', (%hd,%hd,%hd), '%c', '%c', %lld, %lld, %d)";
+    strcpy(str[1], node->Name);
+  sprintf(str[2],  "(%hd,%hd,%hd)", node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
+  sprintf(str[3],  "%ld", node->EngineAddr);
+  sprintf(str[4],  "%d", node->Services);
+  sprintf(str[5],  "%c", node->Active ? 't' : 'f');
+  sprintf(str[6],  "(%hd,%hd,%hd)", node->Parent[0], node->Parent[1], node->Parent[2]);
+  sprintf(str[7],  "%c", node->flags & DB_FLAGS_SETNAME ? 't' : 'f');
+  sprintf(str[8],  "%c", node->flags & DB_FLAGS_REFRESH ? 't' : 'f');
+  sprintf(str[9],  "%ld", node->FirstSeen);
+  sprintf(str[10], "%ld", node->LastSeen);
+  sprintf(str[11], "%d", node->AddressRequests);
+  sprintf(str[12], "%ld", node->MambaNetAddr);
 
-  sprintf(q, qf,
-    node->MambaNetAddr, str, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct,
-    node->EngineAddr, node->Services & ~MBN_ADDR_SERVICES_VALID, node->Active ? 't' : 'f',
-    node->Parent[0], node->Parent[1], node->Parent[2], node->flags & DB_FLAGS_SETNAME ? 't' : 'f',
-    node->flags & DB_FLAGS_REFRESH ? 't' : 'f', (long long)node->FirstSeen,
-    (long long)node->LastSeen, node->AddressRequests, addr
-  );
-  qs = PQexec(sqldb, q);
+  /* execute query */
+  qs = PQexecParams(sqldb,
+    addr ? "UPDATE addresses SET addr = $1, name = $2, id = $3, engine_addr = $4, services = $5,\
+              active = $6, parent = $7, setname = $8, refresh = $9, firstseen = $10, lastseen = $11,\
+              addr_requests = $12 WHERE addr = $13"
+         : "INSERT INTO addresses VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+    addr ? 13 : 12, NULL, params, NULL, NULL, 0);
   if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK) {
     writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
     PQclear(qs);
