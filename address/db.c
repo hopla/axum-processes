@@ -240,26 +240,12 @@ int db_loop() {
 
 void db_notify_removed(int addr) {
   struct mbn_address_node *n;
-  struct mbn_message msg;
-
-  writelog("Address reserveration for %08X has been removed", addr);
 
   /* if the address is currently online, reset its valid bit,
    * otherwise simply ignore the removal */
-  if((n = mbnNodeStatus(mbn, addr)) == NULL)
-    return;
-
-  msg.MessageType = MBN_MSGTYPE_ADDRESS;
-  msg.AcknowledgeReply = 0;
-  msg.AddressTo = MBN_BROADCAST_ADDRESS;
-  msg.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
-  msg.Message.Address.MambaNetAddr = 0;
-  msg.Message.Address.ManufacturerID = n->ManufacturerID;
-  msg.Message.Address.ProductID = n->ProductID;
-  msg.Message.Address.UniqueIDPerProduct = n->UniqueIDPerProduct;
-  msg.Message.Address.Services = n->Services & ~MBN_ADDR_SERVICES_VALID;
-  msg.Message.Address.EngineAddr = n->EngineAddr;
-  mbnSendMessage(mbn, &msg, MBN_SEND_IGNOREVALID);
+  if((n = mbnNodeStatus(mbn, addr)) != NULL)
+    set_address_struct(0, *n);
+  writelog("Address reserveration for %08X has been removed", addr);
 }
 
 

@@ -65,9 +65,29 @@ void writelog(char *fmt, ...) {
 }
 
 
+void set_address(unsigned long addr, unsigned short man, unsigned short prod, unsigned short id, unsigned long engine, unsigned char serv) {
+  struct mbn_message msg;
+
+  if(addr == 0)
+    serv &= ~MBN_ADDR_SERVICES_VALID;
+  else
+    serv |= MBN_ADDR_SERVICES_VALID;
+  msg.MessageType = MBN_MSGTYPE_ADDRESS;
+  msg.AcknowledgeReply = 0;
+  msg.AddressTo = MBN_BROADCAST_ADDRESS;
+  msg.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
+  msg.Message.Address.MambaNetAddr = addr;
+  msg.Message.Address.ManufacturerID = man;
+  msg.Message.Address.ProductID = prod;
+  msg.Message.Address.UniqueIDPerProduct = id;
+  msg.Message.Address.Services = serv;
+  msg.Message.Address.EngineAddr = engine;
+  mbnSendMessage(mbn, &msg, MBN_SEND_IGNOREVALID);
+}
+
+
 void node_online(struct db_node *node) {
   struct db_node addr, id;
-  struct mbn_message reply;
   int addr_f, id_f;
   union mbn_data dat;
 
@@ -82,17 +102,7 @@ void node_online(struct db_node *node) {
       || (addr_f && id_f && memcmp((void *)&addr, (void *)&id, sizeof(struct db_node)) != 0)) {
     writelog("Address mismatch for %04X:%04X:%04X (%08lX), resetting valid bit",
       node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct, node->MambaNetAddr);
-    reply.MessageType = MBN_MSGTYPE_ADDRESS;
-    reply.AddressTo = MBN_BROADCAST_ADDRESS;
-    reply.AcknowledgeReply = 0;
-    reply.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
-    reply.Message.Address.ManufacturerID = node->ManufacturerID;
-    reply.Message.Address.ProductID = node->ProductID;
-    reply.Message.Address.UniqueIDPerProduct = node->UniqueIDPerProduct;
-    reply.Message.Address.Services = node->Services & ~MBN_ADDR_SERVICES_VALID;
-    reply.Message.Address.MambaNetAddr = 0;
-    reply.Message.Address.EngineAddr = node->EngineAddr;
-    mbnSendMessage(mbn, &reply, MBN_SEND_IGNOREVALID);
+    set_address_struct(0, *node);
     return;
   }
 
@@ -201,7 +211,6 @@ int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsign
 int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
   struct mbn_message_address *nfo = &(msg->Message.Address);
   struct db_node node;
-  struct mbn_message reply;
 
   /* ignore everything but address information messages */
   if(!(msg->MessageType == MBN_MSGTYPE_ADDRESS && nfo->Action == MBN_ADDR_ACTION_INFO))
@@ -220,22 +229,12 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
 
   /* invalid, update its address status */
   db_lock(1);
-  /* create a default reply message, MambaNetAddr and EngineAddr will need to be filled in */
-  reply.MessageType = MBN_MSGTYPE_ADDRESS;
-  reply.AcknowledgeReply = 0;
-  reply.AddressTo = MBN_BROADCAST_ADDRESS;
-  reply.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
-  reply.Message.Address.ManufacturerID = nfo->ManufacturerID;
-  reply.Message.Address.ProductID = nfo->ProductID;
-  reply.Message.Address.UniqueIDPerProduct = nfo->UniqueIDPerProduct;
-  reply.Message.Address.Services = nfo->Services | MBN_ADDR_SERVICES_VALID;
 
   /* found UniqueMediaAccessID in the DB? reply with its old address */
   if(db_nodebyid(&node, nfo->ManufacturerID, nfo->ProductID, nfo->UniqueIDPerProduct)) {
-    reply.Message.Address.MambaNetAddr = node.MambaNetAddr;
-    reply.Message.Address.EngineAddr = node.EngineAddr;
     writelog("Address request of %04X:%04X:%04X, sent %08lX",
       node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct, node.MambaNetAddr);
+    set_address_struct(node.MambaNetAddr, node);
     node.AddressRequests++;
     db_setnode(node.MambaNetAddr, &node);
   } else {
@@ -250,18 +249,15 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
     node.flags = DB_FLAGS_REFRESH;
     node.FirstSeen = node.LastSeen = time(NULL);
     node.AddressRequests = 1;
-    db_setnode(0, &node);
-    reply.Message.Address.MambaNetAddr = node.MambaNetAddr;
-    reply.Message.Address.EngineAddr = node.EngineAddr;
     writelog("New node added to the network: %08lX (%04X:%04X:%04X)",
       node.MambaNetAddr, node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct);
+    set_address_struct(node.MambaNetAddr, node);
+    db_setnode(0, &node);
   }
 
   db_lock(0);
-
-  /* send the reply */
-  mbnSendMessage(m, &reply, MBN_SEND_IGNOREVALID);
   return 0;
+  m++;
 }
 
 
