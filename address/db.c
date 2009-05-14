@@ -254,6 +254,22 @@ void db_event_removed(char myself, char *arg) {
 }
 
 
+void db_event_setengine(char myself, char *arg) {
+  struct db_node node;
+  union mbn_data dat;
+  int addr;
+
+  sscanf(arg, "%d", &addr);
+  if(myself || !db_getnode(&node, addr))
+    return;
+
+  dat.UInt = node.EngineAddr;
+  if(node.Active)
+    mbnSetActuatorData(mbn, addr, MBN_NODEOBJ_ENGINEADDRESS, MBN_DATATYPE_UINT, 4, dat, 1);
+  writelog("Setting engine address of %08X to %08X", addr, node.EngineAddr);
+}
+
+
 void db_processnotifies() {
   PGresult *qs;
   PGnotify *not;
@@ -286,6 +302,8 @@ void db_processnotifies() {
 
     if(strcmp(cmd, "address_removed") == 0)
       db_event_removed(myself, arg);
+    if(strcmp(cmd, "address_set_engine") == 0)
+      db_event_setengine(myself, arg);
   }
   /* update lastnotify variable */
   strcpy(lastnotify, PQgetvalue(qs, i-1, 2));
