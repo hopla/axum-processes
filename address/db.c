@@ -238,11 +238,36 @@ int db_loop() {
 }
 
 
+void db_notify_removed(int addr) {
+  struct mbn_address_node *n;
+  struct mbn_message msg;
+
+  writelog("Address reserveration for %08X has been removed", addr);
+
+  /* if the address is currently online, reset its valid bit,
+   * otherwise simply ignore the removal */
+  if((n = mbnNodeStatus(mbn, addr)) == NULL)
+    return;
+
+  msg.MessageType = MBN_MSGTYPE_ADDRESS;
+  msg.AcknowledgeReply = 0;
+  msg.AddressTo = MBN_BROADCAST_ADDRESS;
+  msg.Message.Address.Action = MBN_ADDR_ACTION_RESPONSE;
+  msg.Message.Address.MambaNetAddr = 0;
+  msg.Message.Address.ManufacturerID = n->ManufacturerID;
+  msg.Message.Address.ProductID = n->ProductID;
+  msg.Message.Address.UniqueIDPerProduct = n->UniqueIDPerProduct;
+  msg.Message.Address.Services = n->Services & ~MBN_ADDR_SERVICES_VALID;
+  msg.Message.Address.EngineAddr = n->EngineAddr;
+  mbnSendMessage(mbn, &msg, MBN_SEND_IGNOREVALID);
+}
+
+
 void db_processnotifies() {
   PGresult *qs;
   PGnotify *not;
   const char *params[1] = { (const char *)lastnotify };
-  int i;
+  int i, id;
 
   /* we don't actually check the struct returned by PQnotifies() */
   if((not = PQnotifies(sqldb)) == NULL)
@@ -253,7 +278,7 @@ void db_processnotifies() {
   while((not = PQnotifies(sqldb)) != NULL);
 
   /* check the recent_changes table */
-  qs = PQexecParams(sqldb, "SELECT row_id, timestamp FROM recent_changes\
+  qs = PQexecParams(sqldb, "SELECT change, row_id, timestamp FROM recent_changes\
       WHERE change = 'address_removed' AND timestamp > $1 ORDER BY timestamp",
       1, NULL, params, NULL, NULL, 0);
   if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
@@ -262,10 +287,13 @@ void db_processnotifies() {
     return;
   }
   for(i=0; i<PQntuples(qs); i++) {
-    /* TODO: check row_id and handle the changes */
+    if(strcmp(PQgetvalue(qs, i, 0), "address_removed") == 0) {
+      sscanf(PQgetvalue(qs, i, 1), "%d", &id);
+      db_notify_removed(id);
+    }
   }
   /* update lastnotify variable */
-  strcpy(lastnotify, PQgetvalue(qs, i-1, 1));
+  strcpy(lastnotify, PQgetvalue(qs, i-1, 2));
   PQclear(qs);
 }
 
