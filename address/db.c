@@ -238,14 +238,19 @@ int db_loop() {
 }
 
 
-void db_notify_removed(int addr) {
+void db_event_removed(char myself, char *arg) {
   struct mbn_address_node *n;
+  int addr;
+
+  sscanf(arg, "%d", &addr);
 
   /* if the address is currently online, reset its valid bit,
    * otherwise simply ignore the removal */
   if((n = mbnNodeStatus(mbn, addr)) != NULL)
     set_address_struct(0, *n);
   writelog("Address reserveration for %08X has been removed", addr);
+  return;
+  myself++;
 }
 
 
@@ -253,7 +258,8 @@ void db_processnotifies() {
   PGresult *qs;
   PGnotify *not;
   const char *params[1] = { (const char *)lastnotify };
-  int i, id;
+  char *cmd, *arg, myself;
+  int i, pid;
 
   /* we don't actually check the struct returned by PQnotifies() */
   if((not = PQnotifies(sqldb)) == NULL)
@@ -264,8 +270,8 @@ void db_processnotifies() {
   while((not = PQnotifies(sqldb)) != NULL);
 
   /* check the recent_changes table */
-  qs = PQexecParams(sqldb, "SELECT change, row_id, timestamp FROM recent_changes\
-      WHERE change = 'address_removed' AND timestamp > $1 ORDER BY timestamp",
+  qs = PQexecParams(sqldb, "SELECT change, arguments, timestamp, pid\
+      FROM recent_changes WHERE timestamp > $1 ORDER BY timestamp",
       1, NULL, params, NULL, NULL, 0);
   if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
     writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
@@ -273,10 +279,13 @@ void db_processnotifies() {
     return;
   }
   for(i=0; i<PQntuples(qs); i++) {
-    if(strcmp(PQgetvalue(qs, i, 0), "address_removed") == 0) {
-      sscanf(PQgetvalue(qs, i, 1), "%d", &id);
-      db_notify_removed(id);
-    }
+    cmd = PQgetvalue(qs, i, 0);
+    arg = PQgetvalue(qs, i, 1);
+    sscanf(PQgetvalue(qs, i, 3), "%d", &pid);
+    myself = pid == PQbackendPID(sqldb) ? 1 : 0;
+
+    if(strcmp(cmd, "address_removed") == 0)
+      db_event_removed(myself, arg);
   }
   /* update lastnotify variable */
   strcpy(lastnotify, PQgetvalue(qs, i-1, 2));
