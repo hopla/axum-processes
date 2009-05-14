@@ -12,7 +12,6 @@
 #include <mbn.h>
 #include <unistd.h>
 #include <signal.h>
-#include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -493,8 +492,7 @@ int main(int argc, char **argv) {
   main_quit = 0;
   init(argc, argv);
 
-  /* this should be replaced with a select() loop on the DB connection */
-  while(!main_quit && !sleep(1))
+  while(!main_quit && !db_loop())
     ;
 
   /* free */

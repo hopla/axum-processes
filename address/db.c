@@ -5,12 +5,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+
+#include <sys/select.h>
+
 #include <libpq-fe.h>
 #include <pthread.h>
 #include <mbn.h>
 
+
+char lastnotify[50];
 PGconn *sqldb;
 pthread_mutex_t dbmutex = PTHREAD_MUTEX_INITIALIZER;
+
+
+void db_processnotifies();
 
 
 int db_init(char *conninfo, char *err) {
@@ -24,12 +33,35 @@ int db_init(char *conninfo, char *err) {
   }
 
   res = PQexec(sqldb, "UPDATE addresses SET active = false");
-  if(PQresultStatus(res) != PGRES_COMMAND_OK) {
+  if(res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
     sprintf(err, "Clearing active bit: %s\n", PQerrorMessage(sqldb));
     PQclear(res);
     PQfinish(sqldb);
     return 1;
   }
+  PQclear(res);
+
+  res = PQexec(sqldb, "LISTEN change");
+  if(res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
+    sprintf(err, "LISTENing on change: %s\n", PQerrorMessage(sqldb));
+    PQclear(res);
+    PQfinish(sqldb);
+    return 1;
+  }
+  PQclear(res);
+
+  /* get timestamp of the most recent change or the current time if the table is empty.
+   * This ensures that we have a timestamp in a format suitable for comparing to other
+   * timestamps, and in the same time and timezone as the PostgreSQL server. */
+  res = PQexec(sqldb, "SELECT MAX(timestamp) FROM recent_changes UNION SELECT NOW() LIMIT 1");
+  if(res == NULL || PQresultStatus(res) != PGRES_TUPLES_OK) {
+    sprintf(err, "Getting last timestamp: %s\n", PQerrorMessage(sqldb));
+    PQclear(res);
+    PQfinish(sqldb);
+    return 1;
+  }
+  strcpy(lastnotify, PQgetvalue(res, 0, 0));
+  PQclear(res);
   return 0;
 }
 
@@ -83,6 +115,7 @@ int db_getnode(struct db_node *res, unsigned long addr) {
   }
   n = !PQntuples(qs) ? 0 : db_parserow(qs, 0, res);
   PQclear(qs);
+  db_processnotifies();
   return n;
 }
 
@@ -105,6 +138,7 @@ int db_nodebyid(struct db_node *res, unsigned short id_man, unsigned short id_pr
   }
   n = !PQntuples(qs) ? 0 : db_parserow(qs, 0, res);
   PQclear(qs);
+  db_processnotifies();
   return n;
 }
 
@@ -149,6 +183,7 @@ int db_setnode(unsigned long addr, struct db_node *node) {
     return 0;
   }
   PQclear(qs);
+  db_processnotifies();
   return 1;
 }
 
@@ -164,6 +199,7 @@ void db_rmnode(unsigned long addr) {
   if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK)
     writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
   PQclear(qs);
+  db_processnotifies();
 }
 
 
@@ -173,6 +209,64 @@ unsigned long db_newaddress() {
   for(addr=1; db_getnode(NULL, addr); addr++)
     ;
   return addr;
+}
+
+
+int db_loop() {
+  int s = PQsocket(sqldb);
+  int n;
+  fd_set rd;
+  if(s < 0) {
+    writelog("Invalid PostgreSQL socket!");
+    return 1;
+  }
+
+  FD_ZERO(&rd);
+  FD_SET(s, &rd);
+  n = select(s+1, &rd, NULL, NULL, NULL);
+  if(n == 0 || (n < 0 && errno == EINTR))
+    return 0;
+  if(n < 0) {
+    writelog("select() failed: %s\n", strerror(errno));
+    return 1;
+  }
+  db_lock(1);
+  PQconsumeInput(sqldb);
+  db_processnotifies();
+  db_lock(0);
+  return 0;
+}
+
+
+void db_processnotifies() {
+  PGresult *qs;
+  PGnotify *not;
+  const char *params[1] = { (const char *)lastnotify };
+  int i;
+
+  /* we don't actually check the struct returned by PQnotifies() */
+  if((not = PQnotifies(sqldb)) == NULL)
+    return;
+  /* clear any other received notifications */
+  do
+    PQfreemem(not);
+  while((not = PQnotifies(sqldb)) != NULL);
+
+  /* check the recent_changes table */
+  qs = PQexecParams(sqldb, "SELECT row_id, timestamp FROM recent_changes\
+      WHERE change = 'address_removed' AND timestamp > $1 ORDER BY timestamp",
+      1, NULL, params, NULL, NULL, 0);
+  if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
+    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    PQclear(qs);
+    return;
+  }
+  for(i=0; i<PQntuples(qs); i++) {
+    /* TODO: check row_id and handle the changes */
+  }
+  /* update lastnotify variable */
+  strcpy(lastnotify, PQgetvalue(qs, i-1, 1));
+  PQclear(qs);
 }
 
 
