@@ -289,15 +289,33 @@ void db_event_setname(char myself, char *arg) {
 
   sscanf(arg, "%d", &addr);
   /* if the node is online, set its name and reset the setname flag */
-  if(mbnNodeStatus(mbn, addr) != NULL) {
+  if(myself || mbnNodeStatus(mbn, addr) != NULL) {
     db_getnode(&node, addr);
     node.flags &= ~DB_FLAGS_SETNAME;
     db_setnode(addr, &node);
     dat.Octets = (unsigned char *)node.Name;
     mbnSetActuatorData(mbn, addr, MBN_NODEOBJ_NAME, MBN_DATATYPE_OCTETS, 32, dat, 1);
   }
-  return;
-  myself++;
+}
+
+
+void db_event_refresh(char myself, char *arg) {
+  PGresult *qs;
+  int addr;
+  char str[20];
+  const char *params[1] = { (const char *)str };
+
+  sscanf(arg, "%d", &addr);
+  /* if the node is online, fetch the name & parent and reset the refresh flag */
+  if(myself || mbnNodeStatus(mbn, addr) != NULL) {
+    mbnGetActuatorData(mbn, addr, MBN_NODEOBJ_NAME, 1);
+    mbnGetSensorData(mbn, addr, MBN_NODEOBJ_HWPARENT, 1);
+    sprintf(str, "%d", addr);
+    qs = PQexecParams(sqldb, "UPDATE addresses SET refresh = FALSE WHERE addr = $1", 1, NULL, params, NULL, NULL, 0);
+    if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK)
+      writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    PQclear(qs);
+  }
 }
 
 
@@ -339,6 +357,8 @@ void db_processnotifies() {
       db_event_setaddress(myself, arg);
     if(strcmp(cmd, "address_set_name") == 0)
       db_event_setname(myself, arg);
+    if(strcmp(cmd, "address_refresh") == 0)
+      db_event_refresh(myself, arg);
   }
   /* update lastnotify variable */
   strcpy(lastnotify, PQgetvalue(qs, i-1, 2));
