@@ -367,9 +367,16 @@ void db_processnotifies() {
 
 
 void db_lock(int l) {
-  if(l)
+  PGresult *qs;
+  if(l) {
     pthread_mutex_lock(&dbmutex);
-  else
+    qs = PQexec(sqldb, "BEGIN");
+  } else {
+    qs = PQexec(sqldb, "COMMIT");
     pthread_mutex_unlock(&dbmutex);
+  }
+  if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK)
+    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+  PQclear(qs);
 }
 
