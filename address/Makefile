@@ -4,6 +4,8 @@ OBJECTS=db.o main.o ../common/common.a
 HEADERS=db.h main.h
 OUTPUT=axum-address
 
+.PHONY: ../common/common.a
+
 all: ${OUTPUT}
 
 ${OUTPUT}: ${OBJECTS}

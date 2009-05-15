@@ -12,12 +12,10 @@
 
 #include <mbn.h>
 #include <unistd.h>
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/select.h>
-#include <sys/stat.h>
 
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
 #define DEFAULT_ETH_DEV   "eth0"
@@ -46,7 +44,6 @@ struct mbn_node_info this_node = {
 
 /* global variables */
 struct mbn_handler *mbn;
-volatile int main_quit;
 
 void set_address(unsigned long addr, unsigned short man, unsigned short prod, unsigned short id, unsigned long engine, unsigned char serv) {
   struct mbn_message msg;
@@ -303,24 +300,6 @@ int hwparent(char *path, char *err) {
 }
 
 
-void trapsig(int sig) {
-  switch(sig) {
-    case SIGALRM:
-    case SIGCHLD:
-      exit(1);
-    case SIGUSR1:
-      exit(0);
-    case SIGHUP:
-      db_lock(1);
-      log_reopen();
-      db_lock(0);
-      break;
-    default:
-      main_quit = 1;
-  }
-}
-
-
 void init(int argc, char **argv) {
   struct mbn_interface *itf;
   char err[MBN_ERRSIZE];
@@ -328,8 +307,6 @@ void init(int argc, char **argv) {
   char dbstr[256];
   char gwpath[UNIX_PATH_MAX];
   int c;
-  struct sigaction act;
-  pid_t pid;
 
   strcpy(gwpath, DEFAULT_GTW_PATH);
   strcpy(ethdev, DEFAULT_ETH_DEV);
@@ -371,44 +348,9 @@ void init(int argc, char **argv) {
         exit(1);
     }
   }
+
+  daemonize();
   log_open(DEFAULT_LOG_FILE);
-
-  /* catch signals in parent process */
-  act.sa_handler = trapsig;
-  act.sa_flags = 0;
-  sigaction(SIGCHLD, &act, NULL);
-  sigaction(SIGUSR1, &act, NULL);
-  sigaction(SIGALRM, &act, NULL);
-
-  /* fork */
-  if((pid = fork()) < 0) {
-    perror("fork()");
-    exit(1);
-  }
-  /* parent process, wait for initialization and return 1 on error */
-  if(pid > 0) {
-    alarm(15);
-    pause();
-    exit(1);
-  }
-
-  /* catch signals in daemon process */
-  sigaction(SIGTERM, &act, NULL);
-  sigaction(SIGINT, &act, NULL);
-  sigaction(SIGHUP, &act, NULL);
-  act.sa_handler = SIG_DFL;
-  sigaction(SIGCHLD, &act, NULL);
-  act.sa_handler = SIG_IGN;
-  sigaction(SIGUSR1, &act, NULL);
-  sigaction(SIGALRM, &act, NULL);
-  umask(0);
-
-  /* get parent id and a new session id */
-  pid = getppid();
-  if(setsid() < 0) {
-    perror("setsid()");
-    exit(1);
-  }
 
   /* get and set hardware parent */
   if(hwparent(gwpath, err)) {
@@ -443,19 +385,13 @@ void init(int argc, char **argv) {
   mbnSetErrorCallback(mbn, mError);
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
 
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
+  daemonize_finish();
   log_write("-------------------------------");
   log_write("Axum Address Server Initialized");
-
-  /* init was successfull, notify parent process */
-  kill(pid, SIGUSR1);
 }
 
 
 int main(int argc, char **argv) {
-  main_quit = 0;
   init(argc, argv);
 
   while(!main_quit && !db_loop())
