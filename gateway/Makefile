@@ -7,3 +7,5 @@ all: ${OUTPUT}
 ${OUTPUT}: Makefile gateway.c
 	gcc ${CFLAGS} gateway.c ${LFLAGS} -o ${OUTPUT}
 
+clean:
+	rm -f ${OUTPUT}

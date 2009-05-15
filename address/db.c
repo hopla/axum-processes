@@ -1,4 +1,5 @@
 
+#include "common.h"
 #include "main.h"
 #include "db.h"
 
@@ -109,7 +110,7 @@ int db_getnode(struct db_node *res, unsigned long addr) {
   qs = PQexecParams(sqldb, "SELECT * FROM addresses WHERE addr = $1",
       1, NULL, params, NULL, NULL, 0);
   if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
-    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
     PQclear(qs);
     return 0;
   }
@@ -132,7 +133,7 @@ int db_nodebyid(struct db_node *res, unsigned short id_man, unsigned short id_pr
   qs = PQexecParams(sqldb, "SELECT * FROM addresses WHERE (id).man = $1 AND (id).prod = $2 AND (id).id = $3",
       3, NULL, params, NULL, NULL, 0);
   if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
-    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
     PQclear(qs);
     return 0;
   }
@@ -178,7 +179,7 @@ int db_setnode(unsigned long addr, struct db_node *node) {
          : "INSERT INTO addresses VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
     addr ? 13 : 12, NULL, params, NULL, NULL, 0);
   if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK) {
-    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
     PQclear(qs);
     return 0;
   }
@@ -197,7 +198,7 @@ void db_rmnode(unsigned long addr) {
   params[0] = str;
   qs = PQexecParams(sqldb, "DELETE FROM addresses WHERE addr = $1", 1, NULL, params, NULL, NULL, 0);
   if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK)
-    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
   PQclear(qs);
   db_processnotifies();
 }
@@ -217,7 +218,7 @@ int db_loop() {
   int n;
   fd_set rd;
   if(s < 0) {
-    writelog("Invalid PostgreSQL socket!");
+    log_write("Invalid PostgreSQL socket!");
     return 1;
   }
 
@@ -227,7 +228,7 @@ int db_loop() {
   if(n == 0 || (n < 0 && errno == EINTR))
     return 0;
   if(n < 0) {
-    writelog("select() failed: %s\n", strerror(errno));
+    log_write("select() failed: %s\n", strerror(errno));
     return 1;
   }
   db_lock(1);
@@ -248,7 +249,7 @@ void db_event_removed(char myself, char *arg) {
    * otherwise simply ignore the removal */
   if((n = mbnNodeStatus(mbn, addr)) != NULL)
     set_address_struct(0, *n);
-  writelog("Address reserveration for %08X has been removed", addr);
+  log_write("Address reserveration for %08X has been removed", addr);
   return;
   myself++;
 }
@@ -266,7 +267,7 @@ void db_event_setengine(char myself, char *arg) {
   dat.UInt = node.EngineAddr;
   if(node.Active)
     mbnSetActuatorData(mbn, addr, MBN_NODEOBJ_ENGINEADDRESS, MBN_DATATYPE_UINT, 4, dat, 1);
-  writelog("Setting engine address of %08X to %08X", addr, node.EngineAddr);
+  log_write("Setting engine address of %08X to %08X", addr, node.EngineAddr);
 }
 
 
@@ -278,7 +279,7 @@ void db_event_setaddress(char myself, char *arg) {
     return;
 
   set_address_struct(new, node);
-  writelog("Changing address of %08X to %08X", old, new);
+  log_write("Changing address of %08X to %08X", old, new);
 }
 
 
@@ -313,7 +314,7 @@ void db_event_refresh(char myself, char *arg) {
     sprintf(str, "%d", addr);
     qs = PQexecParams(sqldb, "UPDATE addresses SET refresh = FALSE WHERE addr = $1", 1, NULL, params, NULL, NULL, 0);
     if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK)
-      writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+      log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
     PQclear(qs);
   }
 }
@@ -339,7 +340,7 @@ void db_processnotifies() {
       FROM recent_changes WHERE timestamp > $1 ORDER BY timestamp",
       1, NULL, params, NULL, NULL, 0);
   if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
-    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
     PQclear(qs);
     return;
   }
@@ -376,7 +377,7 @@ void db_lock(int l) {
     pthread_mutex_unlock(&dbmutex);
   }
   if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK)
-    writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
   PQclear(qs);
 }
 

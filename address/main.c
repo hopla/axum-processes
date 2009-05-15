@@ -1,4 +1,5 @@
 
+#include "common.h"
 #include "main.h"
 #include "db.h"
 
@@ -45,25 +46,7 @@ struct mbn_node_info this_node = {
 
 /* global variables */
 struct mbn_handler *mbn;
-char logfile[256];
-FILE *logfd;
 volatile int main_quit;
-
-
-void writelog(char *fmt, ...) {
-  va_list ap;
-  char buf[400], tm[20];
-  time_t t = time(NULL);
-  if(logfd == NULL)
-    return;
-  va_start(ap, fmt);
-  vsnprintf(buf, 400, fmt, ap);
-  va_end(ap);
-  strftime(tm, 20, "%Y-%m-%d %H:%M:%S", gmtime(&t));
-  fprintf(logfd, "[%s] %s\n", tm, buf);
-  fflush(logfd);
-}
-
 
 void set_address(unsigned long addr, unsigned short man, unsigned short prod, unsigned short id, unsigned long engine, unsigned char serv) {
   struct mbn_message msg;
@@ -100,7 +83,7 @@ void node_online(struct db_node *node) {
   /* Reset node address when the previous search didn't return the exact same node */
   if((addr_f && !id_f) || (!addr_f && id_f)
       || (addr_f && id_f && memcmp((void *)&addr, (void *)&id, sizeof(struct db_node)) != 0)) {
-    writelog("Address mismatch for %04X:%04X:%04X (%08lX), resetting valid bit",
+    log_write("Address mismatch for %04X:%04X:%04X (%08lX), resetting valid bit",
       node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct, node->MambaNetAddr);
     set_address_struct(0, *node);
     return;
@@ -108,7 +91,7 @@ void node_online(struct db_node *node) {
 
   /* not in the DB at all? Add it. */
   if(!addr_f) {
-    writelog("New validated node found on the network but not in DB: %08lX (%04X:%04X:%04X)",
+    log_write("New validated node found on the network but not in DB: %08lX (%04X:%04X:%04X)",
       node->MambaNetAddr, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
     node->flags |= DB_FLAGS_REFRESH;
     node->FirstSeen = node->LastSeen = time(NULL);
@@ -179,7 +162,7 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
     node.Parent[0] = (unsigned short)(p[0]<<8) + p[1];
     node.Parent[1] = (unsigned short)(p[2]<<8) + p[3];
     node.Parent[2] = (unsigned short)(p[4]<<8) + p[5];
-    writelog("Received hardware parent of %08lX: %04X:%04X:%04X",
+    log_write("Received hardware parent of %08lX: %04X:%04X:%04X",
       msg->AddressFrom, node.Parent[0], node.Parent[1], node.Parent[2]);
     db_setnode(msg->AddressFrom, &node);
   }
@@ -199,7 +182,7 @@ int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsign
   if(db_getnode(&node, msg->AddressFrom)) {
     strncpy(node.Name, (char *)dat.Octets, 32);
     node.flags &= ~DB_FLAGS_REFRESH;
-    writelog("Received name of %08lX: %s", msg->AddressFrom, node.Name);
+    log_write("Received name of %08lX: %s", msg->AddressFrom, node.Name);
     db_setnode(msg->AddressFrom, &node);
   }
   db_lock(0);
@@ -232,7 +215,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
 
   /* found UniqueMediaAccessID in the DB? reply with its old address */
   if(db_nodebyid(&node, nfo->ManufacturerID, nfo->ProductID, nfo->UniqueIDPerProduct)) {
-    writelog("Address request of %04X:%04X:%04X, sent %08lX",
+    log_write("Address request of %04X:%04X:%04X, sent %08lX",
       node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct, node.MambaNetAddr);
     set_address_struct(node.MambaNetAddr, node);
     node.AddressRequests++;
@@ -249,7 +232,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
     node.flags = DB_FLAGS_REFRESH;
     node.FirstSeen = node.LastSeen = time(NULL);
     node.AddressRequests = 1;
-    writelog("New node added to the network: %08lX (%04X:%04X:%04X)",
+    log_write("New node added to the network: %08lX (%04X:%04X:%04X)",
       node.MambaNetAddr, node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct);
     set_address_struct(node.MambaNetAddr, node);
     db_setnode(0, &node);
@@ -262,7 +245,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
 
 
 void mError(struct mbn_handler *m, int code, char *str) {
-  writelog("MambaNet Error: %s (%d)", str, code);
+  log_write("MambaNet Error: %s (%d)", str, code);
   m++;
 }
 
@@ -274,13 +257,13 @@ void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
   /* retry a SETNAME action when the node comes online again */
   if(msg->MessageType == MBN_MSGTYPE_OBJECT && msg->Message.Object.Action == MBN_OBJ_ACTION_SET_ACTUATOR
       && msg->Message.Object.Number == MBN_NODEOBJ_NAME) {
-    writelog("Acknowledge timeout for SETNAME for %08lX", msg->AddressTo);
+    log_write("Acknowledge timeout for SETNAME for %08lX", msg->AddressTo);
     if(db_getnode(&node, msg->AddressTo)) {
       node.flags |= DB_FLAGS_SETNAME;
       db_setnode(msg->AddressTo, &node);
     }
   } else
-    writelog("Acknowledge timeout for message to %08lX", msg->AddressTo);
+    log_write("Acknowledge timeout for message to %08lX", msg->AddressTo);
 
   db_lock(0);
   m++;
@@ -329,9 +312,7 @@ void trapsig(int sig) {
       exit(0);
     case SIGHUP:
       db_lock(1);
-      writelog("SIGHUP received, re-opening log file");
-      fclose(logfd);
-      logfd = fopen(logfile, "a");
+      log_reopen();
       db_lock(0);
       break;
     default:
@@ -353,7 +334,6 @@ void init(int argc, char **argv) {
   strcpy(gwpath, DEFAULT_GTW_PATH);
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbstr, DEFAULT_DB_STR);
-  strcpy(logfile, DEFAULT_LOG_FILE);
 
   /* parse options */
   while((c = getopt(argc, argv, "e:d:l:g:")) != -1) {
@@ -380,11 +360,7 @@ void init(int argc, char **argv) {
         strcpy(gwpath, optarg);
         break;
       case 'l':
-        if(strlen(optarg) > 256) {
-          fprintf(stderr, "Too long path to log file!\n");
-          exit(1);
-        }
-        strcpy(logfile, optarg);
+        log_open(optarg);
         break;
       default:
         fprintf(stderr, "Usage: %s [-f] [-e dev] [-u path] [-d path]\n", argv[0]);
@@ -395,6 +371,7 @@ void init(int argc, char **argv) {
         exit(1);
     }
   }
+  log_open(DEFAULT_LOG_FILE);
 
   /* catch signals in parent process */
   act.sa_handler = trapsig;
@@ -445,23 +422,16 @@ void init(int argc, char **argv) {
     exit(1);
   }
 
-  /* open log file */
-  if((logfd = fopen(logfile, "a")) == NULL) {
-    perror("Opening log file");
-    db_free();
-    exit(1);
-  }
-
   /* initialize the MambaNet node */
   if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
     fprintf(stderr, "Opening %s: %s\n", ethdev, err);
-    fclose(logfd);
+    log_close();
     db_free();
     exit(1);
   }
   if((mbn = mbnInit(&this_node, NULL, itf, err)) == NULL) {
     fprintf(stderr, "mbnInit: %s\n", err);
-    fclose(logfd);
+    log_close();
     db_free();
     exit(1);
   }
@@ -476,8 +446,8 @@ void init(int argc, char **argv) {
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
-  writelog("-------------------------------");
-  writelog("Axum Address Server Initialized");
+  log_write("-------------------------------");
+  log_write("Axum Address Server Initialized");
 
   /* init was successfull, notify parent process */
   kill(pid, SIGUSR1);
@@ -492,10 +462,10 @@ int main(int argc, char **argv) {
     ;
 
   /* free */
-  writelog("Closing Address Server");
+  log_write("Closing Address Server");
   mbnFree(mbn);
   db_free();
-  fclose(logfd);
+  log_close();
   return 0;
 }
 

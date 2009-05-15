@@ -16,4 +16,5 @@ clean:
 	${MAKE} -C address clean
 	${MAKE} -C gateway clean
 	${MAKE} -C engine clean
+	${MAKE} -C common clean
 

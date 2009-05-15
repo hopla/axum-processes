@@ -1,4 +1,5 @@
 *.o
+*.a
 *.~
 engine/axum-engine
 address/axum-address
