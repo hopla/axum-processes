@@ -282,6 +282,25 @@ void db_event_setaddress(char myself, char *arg) {
 }
 
 
+void db_event_setname(char myself, char *arg) {
+  struct db_node node;
+  union mbn_data dat;
+  int addr;
+
+  sscanf(arg, "%d", &addr);
+  /* if the node is online, set its name and reset the setname flag */
+  if(mbnNodeStatus(mbn, addr) != NULL) {
+    db_getnode(&node, addr);
+    node.flags &= ~DB_FLAGS_SETNAME;
+    db_setnode(addr, &node);
+    dat.Octets = (unsigned char *)node.Name;
+    mbnSetActuatorData(mbn, addr, MBN_NODEOBJ_NAME, MBN_DATATYPE_OCTETS, 32, dat, 1);
+  }
+  return;
+  myself++;
+}
+
+
 void db_processnotifies() {
   PGresult *qs;
   PGnotify *not;
@@ -318,6 +337,8 @@ void db_processnotifies() {
       db_event_setengine(myself, arg);
     if(strcmp(cmd, "address_set_addr") == 0)
       db_event_setaddress(myself, arg);
+    if(strcmp(cmd, "address_set_name") == 0)
+      db_event_setname(myself, arg);
   }
   /* update lastnotify variable */
   strcpy(lastnotify, PQgetvalue(qs, i-1, 2));
