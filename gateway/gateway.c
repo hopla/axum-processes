@@ -53,9 +53,9 @@
 
 struct mbn_node_info this_node = {
   0x00000000, 0x00, /* MambaNet Addr + Services */
-  "Axum CAN Gateway",
-  "YorHels Gateway",
-  0xFFFF, 0x0002, 0x0001,   /* UniqueMediaAccessId */
+  "Axum MambaNet CAN+TCP+Ethernet Gateway",
+  "Axum MambaNet Gateway",
+  0x0001, 0x000D, 0x0001,   /* UniqueMediaAccessId */
   0, 0,    /* Hardware revision */
   2, 1,    /* Firmware revision */
   0, 0,    /* FPGAFirmware revision */
