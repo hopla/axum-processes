@@ -32,8 +32,8 @@
 struct mbn_node_info this_node = {
   0, MBN_ADDR_SERVICES_SERVER,
   "MambaNet Address Server",
-  "D&R Address Server (beta)",
-  0xFFFF, 0x0004, 0x0001,
+  "Axum Address Server",
+  0x0001, 0x000F, 0x0001,
   0, 0, /* HW */
   0, 1, /* FW */
   0, 0, /* FPGA */
