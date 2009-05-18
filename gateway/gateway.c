@@ -14,6 +14,9 @@
 **
 ****************************************************************************/
 
+#define MBN_VARARG
+#include "common.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -33,8 +36,7 @@
 #include <net/if.h>
 #include <netinet/in.h>
 
-#define MBN_VARARG
-#include "mbn.h"
+#include <mbn.h>
 
 #define DEFAULT_UNIX_PATH "/tmp/axum-gateway"
 #define DEFAULT_DATA_PATH "/var/lib/axum/axum-gateway.ip"
@@ -293,25 +295,12 @@ void setcallbacks(struct mbn_handler *mbn) {
 }
 
 
-void trapsig(int sig) {
-  switch(sig) {
-    case SIGALRM:
-    case SIGCHLD:
-      exit(1);
-    case SIGUSR1:
-      exit(0);
-  }
-}
-
-
 void init(int argc, char **argv, char *upath) {
   struct mbn_interface *itf = NULL;
   struct mbn_object obj[4];
   char err[MBN_ERRSIZE], ican[50], tport[10];
   unsigned short parent[3] = {0,0,0};
   int c, itfcount = 0;
-  struct sigaction act;
-  pid_t pid;
 
   strcpy(upath, DEFAULT_UNIX_PATH);
   strcpy(data_path, DEFAULT_DATA_PATH);
@@ -392,39 +381,8 @@ void init(int argc, char **argv, char *upath) {
   obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_TCPNODES] = MBN_OBJ("TCP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
 
-  if(!verbose) {
-    /* catch signals in parent process */
-    act.sa_handler = trapsig;
-    act.sa_flags = 0;
-    sigaction(SIGCHLD, &act, NULL);
-    sigaction(SIGUSR1, &act, NULL);
-    sigaction(SIGALRM, &act, NULL);
-
-    /* fork */
-    if((pid = fork()) < 0) {
-      perror("fork()");
-      exit(1);
-    }
-    /* parent process, wait for initialization and return 1 on error */
-    if(pid > 0) {
-      alarm(15);
-      pause();
-      exit(1);
-    }
-    umask(0);
-
-    /* get parent id and a new session id */
-    pid = getppid();
-    if(setsid() < 0) {
-      perror("setsid()");
-      exit(1);
-    }
-
-    act.sa_handler = SIG_DFL;
-    sigaction(SIGCHLD, &act, NULL);
-    sigaction(SIGUSR1, &act, NULL);
-    sigaction(SIGALRM, &act, NULL);
-  }
+  if(!verbose)
+    daemonize();
 
   /* init can */
   if(ican[0]) {
@@ -483,12 +441,8 @@ void init(int argc, char **argv, char *upath) {
     setcallbacks(tcp);
   }
 
-  if(!verbose) {
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
-    kill(pid, SIGUSR1);
-  }
+  if(!verbose)
+    daemonize_finish();
 }
 
 

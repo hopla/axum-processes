@@ -1,10 +1,9 @@
-CFLAGS=-pedantic -Wall -Wextra -g
-LFLAGS=-lmbn
+include ../Makefile.inc
 OUTPUT=axum-gateway
 
 all: ${OUTPUT}
 
-${OUTPUT}: Makefile gateway.c
+${OUTPUT}: gateway.c
 	gcc ${CFLAGS} gateway.c ${LFLAGS} -o ${OUTPUT}
 
 clean:
