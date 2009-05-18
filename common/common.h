@@ -3,6 +3,8 @@
 #define _common_h
 
 #include <mbn.h>
+#include <libpq-fe.h>
+
 
 /* Logging functions. */
 extern char log_file[500];
@@ -25,6 +27,13 @@ extern volatile int main_quit;
 /* receives hardware parent from UNIX socket or command line */
 extern char hwparent_path[500];
 void hwparent(struct mbn_node_info *);
+
+
+/* similar to PQexecParams(), except it returns NULL on
+ * error, calls log_write(), and lacks the paramTypes,
+ * paramLengths, paramFormats and resultFormat arguments. */
+PGresult *sql_exec(PGconn *, const char *, char, int, const char * const *);
+
 
 
 #endif

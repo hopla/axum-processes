@@ -107,13 +107,8 @@ int db_getnode(struct db_node *res, unsigned long addr) {
 
   sprintf(str, "%ld", addr);
   params[0] = str;
-  qs = PQexecParams(sqldb, "SELECT * FROM addresses WHERE addr = $1",
-      1, NULL, params, NULL, NULL, 0);
-  if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
-    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
-    PQclear(qs);
+  if((qs = sql_exec(sqldb, "SELECT * FROM addresses WHERE addr = $1", 1, 1, params)) == NULL)
     return 0;
-  }
   n = !PQntuples(qs) ? 0 : db_parserow(qs, 0, res);
   PQclear(qs);
   db_processnotifies();
@@ -130,13 +125,9 @@ int db_nodebyid(struct db_node *res, unsigned short id_man, unsigned short id_pr
   sprintf(str[0], "%hd", id_man);
   sprintf(str[1], "%hd", id_prod);
   sprintf(str[2], "%hd", id_id);
-  qs = PQexecParams(sqldb, "SELECT * FROM addresses WHERE (id).man = $1 AND (id).prod = $2 AND (id).id = $3",
-      3, NULL, params, NULL, NULL, 0);
-  if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
-    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
-    PQclear(qs);
+  if((qs = sql_exec(sqldb, "SELECT * FROM addresses\
+      WHERE (id).man = $1 AND (id).prod = $2 AND (id).id = $3", 1, 3, params)) == NULL)
     return 0;
-  }
   n = !PQntuples(qs) ? 0 : db_parserow(qs, 0, res);
   PQclear(qs);
   db_processnotifies();
@@ -172,17 +163,14 @@ int db_setnode(unsigned long addr, struct db_node *node) {
   sprintf(str[12], "%ld", node->MambaNetAddr);
 
   /* execute query */
-  qs = PQexecParams(sqldb,
+  qs = sql_exec(sqldb,
     addr ? "UPDATE addresses SET addr = $1, name = $2, id = $3, engine_addr = $4, services = $5,\
               active = $6, parent = $7, setname = $8, refresh = $9, firstseen = $10, lastseen = $11,\
               addr_requests = $12 WHERE addr = $13"
          : "INSERT INTO addresses VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
-    addr ? 13 : 12, NULL, params, NULL, NULL, 0);
-  if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK) {
-    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
-    PQclear(qs);
+    0, addr ? 13 : 12, params);
+  if(qs == 0)
     return 0;
-  }
   PQclear(qs);
   db_processnotifies();
   return 1;
@@ -196,9 +184,8 @@ void db_rmnode(unsigned long addr) {
 
   sprintf(str, "%ld", addr);
   params[0] = str;
-  qs = PQexecParams(sqldb, "DELETE FROM addresses WHERE addr = $1", 1, NULL, params, NULL, NULL, 0);
-  if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK)
-    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
+  if((qs = sql_exec(sqldb, "DELETE FROM addresses WHERE addr = $1", 0, 1, params)) == NULL)
+    return;
   PQclear(qs);
   db_processnotifies();
 }
@@ -312,10 +299,9 @@ void db_event_refresh(char myself, char *arg) {
     mbnGetActuatorData(mbn, addr, MBN_NODEOBJ_NAME, 1);
     mbnGetSensorData(mbn, addr, MBN_NODEOBJ_HWPARENT, 1);
     sprintf(str, "%d", addr);
-    qs = PQexecParams(sqldb, "UPDATE addresses SET refresh = FALSE WHERE addr = $1", 1, NULL, params, NULL, NULL, 0);
-    if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK)
-      log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
-    PQclear(qs);
+    if((qs = sql_exec(sqldb, "UPDATE addresses SET refresh = FALSE\
+        WHERE addr = $1", 0, 1, params)) != NULL)
+      PQclear(qs);
   }
 }
 
@@ -336,14 +322,11 @@ void db_processnotifies() {
   while((not = PQnotifies(sqldb)) != NULL);
 
   /* check the recent_changes table */
-  qs = PQexecParams(sqldb, "SELECT change, arguments, timestamp, pid\
+  if((qs = sql_exec(sqldb, "SELECT change, arguments, timestamp, pid\
       FROM recent_changes WHERE timestamp > $1 ORDER BY timestamp",
-      1, NULL, params, NULL, NULL, 0);
-  if(qs == NULL || PQresultStatus(qs) != PGRES_TUPLES_OK) {
-    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
-    PQclear(qs);
+      0, 1, params)) == NULL)
     return;
-  }
+
   for(i=0; i<PQntuples(qs); i++) {
     cmd = PQgetvalue(qs, i, 0);
     arg = PQgetvalue(qs, i, 1);
@@ -371,13 +354,12 @@ void db_lock(int l) {
   PGresult *qs;
   if(l) {
     pthread_mutex_lock(&dbmutex);
-    qs = PQexec(sqldb, "BEGIN");
+    qs = sql_exec(sqldb, "BEGIN", 0, 0, NULL);
   } else {
-    qs = PQexec(sqldb, "COMMIT");
+    qs = sql_exec(sqldb, "COMMIT", 0, 0, NULL);
     pthread_mutex_unlock(&dbmutex);
   }
-  if(qs == NULL || PQresultStatus(qs) != PGRES_COMMAND_OK)
-    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qs));
-  PQclear(qs);
+  if(qs != NULL)
+    PQclear(qs);
 }
 

@@ -17,6 +17,7 @@
 #include <sys/un.h>
 
 #include <mbn.h>
+#include <libpq-fe.h>
 
 
 FILE *logfd = NULL;
@@ -167,4 +168,19 @@ void hwparent(struct mbn_node_info *node) {
   }
 }
 
+
+PGresult *sql_exec(PGconn *db, const char *query, char res, int nparams, const char * const *values) {
+  PGresult *qs;
+  qs = PQexecParams(db, query, nparams, NULL, values, NULL, NULL, 0);
+  if(qs == NULL) {
+    log_write("Fatal PostgreSQL error: %s", PQerrorMessage(db));
+    return NULL;
+  }
+  if(PQresultStatus(qs) != (res ? PGRES_TUPLES_OK : PGRES_COMMAND_OK)) {
+    log_write("SQL Error for %s: %s", query, PQresultErrorMessage(qs));
+    PQclear(qs);
+    return NULL;
+  }
+  return qs;
+}
 
