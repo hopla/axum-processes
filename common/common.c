@@ -31,6 +31,7 @@ struct sql_notify *sql_events;
 int sql_notifylen = 0;
 char sql_lastnotify[50];
 pthread_mutex_t sql_mutex = PTHREAD_MUTEX_INITIALIZER;
+PGconn *sql_conn;
 
 
 void log_open() {

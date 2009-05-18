@@ -31,7 +31,7 @@ void hwparent(struct mbn_node_info *);
 
 /* the sql connection, shouldn't really be used in the application,
  * but might be useful in some rare cases. */
-PGconn *sql_conn;
+extern PGconn *sql_conn;
 
 /* A listen event */
 struct sql_notify {
