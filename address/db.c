@@ -30,7 +30,7 @@ int db_init(char *conninfo, char *err) {
   if(PQstatus(sqldb) != CONNECTION_OK) {
     sprintf(err, "Opening database: %s\n", PQerrorMessage(sqldb));
     PQfinish(sqldb);
-    return 0;
+    return 1;
   }
 
   res = PQexec(sqldb, "UPDATE addresses SET active = false");
