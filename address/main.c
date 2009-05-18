@@ -12,19 +12,11 @@
 
 #include <mbn.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <sys/select.h>
 
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
 #define DEFAULT_ETH_DEV   "eth0"
 #define DEFAULT_DB_STR    "dbname='axum' user='axum'"
 #define DEFAULT_LOG_FILE  "/var/log/axum-address.log"
-
-#ifndef UNIX_PATH_MAX
-# define UNIX_PATH_MAX 108
-#endif
 
 
 /* node info */
@@ -267,50 +259,17 @@ void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
 }
 
 
-int hwparent(char *path, char *err) {
-  struct sockaddr_un p;
-  char msg[14];
-  int sock;
-
-  /* if path is a hardware parent, use that */
-  if(sscanf(path, "%04hx:%04hx:%04hx", this_node.HardwareParent, this_node.HardwareParent+1, this_node.HardwareParent+2) == 3)
-    return 0;
-
-  /* otherwise, connect to unix socket */
-  p.sun_family = AF_UNIX;
-  strcpy(p.sun_path, path);
-  if((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
-    sprintf(err, "Opening UNIX socket: %s", strerror(errno));
-    return 1;
-  }
-  if(connect(sock, (struct sockaddr *)&p, sizeof(struct sockaddr_un)) < 0) {
-    sprintf(err, "Connecting to gateway: %s", strerror(errno));
-    return 1;
-  }
-  /* TODO: check readability (select(), nonblock)? time-out? */
-  if(read(sock, msg, 14) < 14) {
-    sprintf(err, "Reading from socket: %s", strerror(errno));
-    return 1;
-  }
-  if(sscanf(msg, "%04hx:%04hx:%04hx", this_node.HardwareParent, this_node.HardwareParent+1, this_node.HardwareParent+2) != 3) {
-    sprintf(err, "Received invalid parent: %s\n", msg);
-    return 1;
-  }
-  return 0;
-}
-
-
 void init(int argc, char **argv) {
   struct mbn_interface *itf;
   char err[MBN_ERRSIZE];
   char ethdev[50];
   char dbstr[256];
-  char gwpath[UNIX_PATH_MAX];
   int c;
 
-  strcpy(gwpath, DEFAULT_GTW_PATH);
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbstr, DEFAULT_DB_STR);
+  strcpy(log_file, DEFAULT_LOG_FILE);
+  strcpy(hwparent_path, DEFAULT_GTW_PATH);
 
   /* parse options */
   while((c = getopt(argc, argv, "e:d:l:g:")) != -1) {
@@ -330,14 +289,10 @@ void init(int argc, char **argv) {
         strcpy(dbstr, optarg);
         break;
       case 'g':
-        if(strlen(optarg) > UNIX_PATH_MAX) {
-          fprintf(stderr, "Too long path to UNIX socket!\n");
-          exit(1);
-        }
-        strcpy(gwpath, optarg);
+        strcpy(hwparent_path, optarg);
         break;
       case 'l':
-        log_open(optarg);
+        strcpy(log_file, optarg);
         break;
       default:
         fprintf(stderr, "Usage: %s [-f] [-e dev] [-u path] [-d path]\n", argv[0]);
@@ -350,13 +305,8 @@ void init(int argc, char **argv) {
   }
 
   daemonize();
-  log_open(DEFAULT_LOG_FILE);
-
-  /* get and set hardware parent */
-  if(hwparent(gwpath, err)) {
-    fprintf(stderr, "Couldn't get hardware parent: %s\n", err);
-    exit(1);
-  }
+  log_open();
+  hwparent(&this_node);
 
   /* open database */
   if(db_init(dbstr, err)) {

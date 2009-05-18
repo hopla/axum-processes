@@ -12,23 +12,24 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+
+#include <mbn.h>
 
 
 FILE *logfd = NULL;
-char logfile[256];
+char log_file[500];
+char hwparent_path[500];
 pid_t parent_pid;
 volatile int main_quit = 0;
 
 
-void log_open(char *file) {
+void log_open() {
   if(logfd != NULL)
-    return;
-  if(strlen(file) > 255) {
-    fprintf(stderr, "Path to log file is too long!\n");
-    exit(1);
-  }
-  strcpy(logfile, file);
-  if((logfd = fopen(logfile, "a")) == NULL) {
+    fclose(logfd);
+  if((logfd = fopen(log_file, "a")) == NULL) {
     fprintf(stderr, "Couldn't open log file: %s\n", strerror(errno));
     exit(1);
   }
@@ -47,11 +48,11 @@ void log_reopen() {
     return;
   log_write("SIGHUP received, re-opening log file");
   log_close();
-  logfd = fopen(logfile, "a");
+  log_open();
 }
 
 
-void log_write(char *fmt, ...) {
+void log_write(const char *fmt, ...) {
   va_list ap;
   char buf[500], tm[20];
   time_t t = time(NULL);
@@ -133,4 +134,37 @@ void daemonize_finish() {
   close(STDERR_FILENO);
   kill(parent_pid, SIGUSR1);
 }
+
+
+void hwparent(struct mbn_node_info *node) {
+  struct sockaddr_un p;
+  char msg[14];
+  int sock;
+
+  /* if path is a hardware parent, use that */
+  if(sscanf(hwparent_path, "%04hx:%04hx:%04hx", node->HardwareParent, node->HardwareParent+1, node->HardwareParent+2) == 3)
+    return;
+
+  /* otherwise, connect to unix socket */
+  p.sun_family = AF_UNIX;
+  strcpy(p.sun_path, hwparent_path);
+  if((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
+    perror("Opening UNIX socket to gateway");
+    exit(1);
+  }
+  if(connect(sock, (struct sockaddr *)&p, sizeof(struct sockaddr_un)) < 0) {
+    perror("Connecting to gateway");
+    exit(1);
+  }
+  /* TODO: check readability (select(), nonblock)? time-out? */
+  if(read(sock, msg, 14) < 14) {
+    perror("Reading from gateway socket");
+    exit(1);
+  }
+  if(sscanf(msg, "%04hx:%04hx:%04hx", node->HardwareParent, node->HardwareParent+1, node->HardwareParent+2) != 3) {
+    fprintf(stderr, "Received invalid parent: %s\n", msg);
+    exit(1);
+  }
+}
+
 

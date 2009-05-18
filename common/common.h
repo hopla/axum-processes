@@ -2,12 +2,13 @@
 #ifndef _common_h
 #define _common_h
 
+#include <mbn.h>
 
 /* Logging functions. */
-void log_write(char *, ...);
+extern char log_file[500];
+void log_write(const char *, ...);
 void log_close();
-/* log_open() can be called multiple times, all subsequent calls will be ignored */
-void log_open(char *);
+void log_open();
 
 
 /* Handles daemonizing and sets signal handling.
@@ -19,6 +20,11 @@ void daemonize_finish();
 /* Will be set to 1 in a signal handler to indicate that
  * the process should quit */
 extern volatile int main_quit;
+
+
+/* receives hardware parent from UNIX socket or command line */
+extern char hwparent_path[500];
+void hwparent(struct mbn_node_info *);
 
 
 #endif
