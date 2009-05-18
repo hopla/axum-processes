@@ -4,13 +4,13 @@
 all: address gateway engine
 
 address:
-	${MAKE} -C address all
+	${MAKE} -C address
 
 gateway:
-	${MAKE} -C gateway all
+	${MAKE} -C gateway
 
 engine:
-	${MAKE} -C engine all
+	${MAKE} -C engine
 
 clean:
 	${MAKE} -C address clean

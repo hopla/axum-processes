@@ -1,4 +1,4 @@
-CFLAGS=-Wall -Wextra -g
+include ../Makefile.inc
 OBJECTS=common.o
 HEADERS=common.h
 TARGET=common.a
@@ -8,7 +8,7 @@ all: ${TARGET}
 ${TARGET}: ${OBJECTS}
 	ar rcs ${TARGET} ${OBJECTS}
 
-%.o: %.c ${HEADERS} Makefile
+%.o: %.c ${HEADERS}
 	gcc -c ${CFLAGS} $*.c
 
 clean:
