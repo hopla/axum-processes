@@ -57,14 +57,13 @@ void log_write(const char *fmt, ...) {
   va_list ap;
   char buf[500], tm[20];
   time_t t = time(NULL);
-  if(logfd == NULL)
-    return;
+  int fd = logfd == NULL ? stderr : logfd;
   va_start(ap, fmt);
   vsnprintf(buf, 500, fmt, ap);
   va_end(ap);
   strftime(tm, 20, "%Y-%m-%d %H:%M:%S", gmtime(&t));
-  fprintf(logfd, "[%s] %s\n", tm, buf);
-  fflush(logfd);
+  fprintf(fd, "[%s] %s\n", tm, buf);
+  fflush(fd);
 }
 
 
