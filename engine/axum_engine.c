@@ -15,6 +15,8 @@
 ****************************************************************************/
 
 #include "axum_engine.h"
+#include "db.h"
+
 #include <stdio.h>
 #include <stdlib.h>         //for atoi
 #include <unistd.h>         //for STDIN_FILENO/close/write
@@ -48,6 +50,8 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/msg.h>
+
+#include <libpq-fe.h>       //postgres library
 
 #define PCB_MAJOR_VERSION        1
 #define PCB_MINOR_VERSION        0
@@ -168,7 +172,8 @@ unsigned char TraceValue;           //To set the MambaNet trace (0x01=packets, 0
 bool dump_packages;                 //To debug the incoming data
 
 int NetworkFileDescriptor;          //identifies the used network device
-
+int DatabaseFileDescriptor;
+extern PGconn *sqldb;
 
 unsigned char EthernetReceiveBuffer[4096];
 int cntEthernetReceiveBufferTop;
@@ -202,6 +207,11 @@ void *thread(void *vargp);
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName)
 {
+  //make sure the variable are used
+  NotUsed = NULL;
+  argc = 0;
+  argv = NULL;
+  azColName = NULL;
 }
 
 typedef struct
@@ -3506,6 +3516,7 @@ int main(int argc, char *argv[])
   struct termios oldtio;
   int oldflags;
   int fd = 0;
+  char *err;
 
   int maxfd;
   fd_set readfs;
@@ -3542,6 +3553,11 @@ int main(int argc, char *argv[])
     printf("Can't open database: node-templates.sqlite");
     sqlite3_close(node_templates_db);
     return 1;
+  }
+
+  if(db_init("hostaddr=192.168.0.57 name=axum", err)) {
+    fprintf(stderr, "%s\n", err);
+    exit(1);
   }
 
 //**************************************************************/
@@ -5117,6 +5133,12 @@ int main(int argc, char *argv[])
     if (SetHardwareParent())
       ExitApplication = 1;
 
+    DatabaseFileDescriptor = PQsocket(sqldb);
+    if(DatabaseFileDescriptor < 0) {
+      //log_write("Invalid PostgreSQL socket!");
+      ExitApplication = 1;
+    }
+
     while (!ExitApplication)
     {
       //Set the sources which wakes the idle-wait process 'select'
@@ -5124,6 +5146,7 @@ int main(int argc, char *argv[])
       FD_ZERO(&readfs);
       FD_SET(STDIN_FILENO, &readfs);
       FD_SET(NetworkFileDescriptor, &readfs);
+      FD_SET(DatabaseFileDescriptor, &readfs);
 
       // block (process is in idle mode) until input becomes available
 //            int ReturnValue = select(maxfd, &readfs, NULL, NULL, NULL);
@@ -5622,6 +5645,7 @@ int main(int argc, char *argv[])
     close(fd);
     printf("/dev/pci2040 closed...\r\n");
   }
+  db_free();
   sqlite3_close(node_templates_db);
   sqlite3_close(axum_engine_db);
   CloseNetwork(NetworkFileDescriptor);
