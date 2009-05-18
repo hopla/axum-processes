@@ -29,11 +29,40 @@ extern char hwparent_path[500];
 void hwparent(struct mbn_node_info *);
 
 
+/* the sql connection, shouldn't really be used in the application,
+ * but might be useful in some rare cases. */
+PGconn *sql_conn;
+
+/* A listen event */
+struct sql_notify {
+  char *event;
+  void (*callback)(char, char *);
+};
+
+/* Open the database connection, first argument is a connection
+ * string (a la PQconnectdb), second is the number of listen events,
+ * third an array of events to process */
+void sql_open(const char *, int, struct sql_notify *);
+
+/* closes the connection */
+void sql_close();
+
+/* lock access to the database internally, and begin/commit a transaction */
+void sql_lock(int l);
+
+/* check for notifications from PostgreSQL, automatically called by
+ * sql_exec() and sql_loop(), but might be useful if you're not using
+ * sql_loop() */
+void sql_processnotifies();
+
+/* blocking wait for notifications, returns 0 when it should be called again,
+ * or 1 on error */
+int sql_loop();
+
 /* similar to PQexecParams(), except it returns NULL on
  * error, calls log_write(), and lacks the paramTypes,
  * paramLengths, paramFormats and resultFormat arguments. */
-PGresult *sql_exec(PGconn *, const char *, char, int, const char * const *);
-
+PGresult *sql_exec(const char *, char, int, const char * const *);
 
 
 #endif

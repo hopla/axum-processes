@@ -11,64 +11,34 @@
 #include <sys/select.h>
 
 #include <libpq-fe.h>
-#include <pthread.h>
 #include <mbn.h>
 
 
-char lastnotify[50];
-PGconn *sqldb;
-pthread_mutex_t dbmutex = PTHREAD_MUTEX_INITIALIZER;
+
+void db_event_removed(char, char *);
+void db_event_setengine(char, char *);
+void db_event_setname(char, char *);
+void db_event_setaddress(char, char *);
+void db_event_refresh(char, char *);
+
+struct sql_notify notifies[] = {
+  { "address_removed",    db_event_removed },
+  { "address_set_engine", db_event_setengine },
+  { "address_set_name",   db_event_setname },
+  { "address_set_engine", db_event_setengine },
+  { "address_refresh",    db_event_refresh }
+};
 
 
-void db_processnotifies();
-
-
-int db_init(char *conninfo, char *err) {
+void db_init(char *conninfo) {
   PGresult *res;
 
-  sqldb = PQconnectdb(conninfo);
-  if(PQstatus(sqldb) != CONNECTION_OK) {
-    sprintf(err, "Opening database: %s\n", PQerrorMessage(sqldb));
-    PQfinish(sqldb);
-    return 1;
-  }
+  sql_open(conninfo, 5, notifies);
 
-  res = PQexec(sqldb, "UPDATE addresses SET active = false");
-  if(res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
-    sprintf(err, "Clearing active bit: %s\n", PQerrorMessage(sqldb));
-    PQclear(res);
-    PQfinish(sqldb);
-    return 1;
-  }
+  /* reset active columns */
+  if((res = sql_exec("UPDATE addresses SET active = false", 0, 0, NULL)) == NULL)
+    exit(1);
   PQclear(res);
-
-  res = PQexec(sqldb, "LISTEN change");
-  if(res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
-    sprintf(err, "LISTENing on change: %s\n", PQerrorMessage(sqldb));
-    PQclear(res);
-    PQfinish(sqldb);
-    return 1;
-  }
-  PQclear(res);
-
-  /* get timestamp of the most recent change or the current time if the table is empty.
-   * This ensures that we have a timestamp in a format suitable for comparing to other
-   * timestamps, and in the same time and timezone as the PostgreSQL server. */
-  res = PQexec(sqldb, "SELECT MAX(timestamp) FROM recent_changes UNION SELECT NOW() LIMIT 1");
-  if(res == NULL || PQresultStatus(res) != PGRES_TUPLES_OK) {
-    sprintf(err, "Getting last timestamp: %s\n", PQerrorMessage(sqldb));
-    PQclear(res);
-    PQfinish(sqldb);
-    return 1;
-  }
-  strcpy(lastnotify, PQgetvalue(res, 0, 0));
-  PQclear(res);
-  return 0;
-}
-
-
-void db_free() {
-  PQfinish(sqldb);
 }
 
 
@@ -107,11 +77,10 @@ int db_getnode(struct db_node *res, unsigned long addr) {
 
   sprintf(str, "%ld", addr);
   params[0] = str;
-  if((qs = sql_exec(sqldb, "SELECT * FROM addresses WHERE addr = $1", 1, 1, params)) == NULL)
+  if((qs = sql_exec("SELECT * FROM addresses WHERE addr = $1", 1, 1, params)) == NULL)
     return 0;
   n = !PQntuples(qs) ? 0 : db_parserow(qs, 0, res);
   PQclear(qs);
-  db_processnotifies();
   return n;
 }
 
@@ -125,12 +94,11 @@ int db_nodebyid(struct db_node *res, unsigned short id_man, unsigned short id_pr
   sprintf(str[0], "%hd", id_man);
   sprintf(str[1], "%hd", id_prod);
   sprintf(str[2], "%hd", id_id);
-  if((qs = sql_exec(sqldb, "SELECT * FROM addresses\
+  if((qs = sql_exec("SELECT * FROM addresses\
       WHERE (id).man = $1 AND (id).prod = $2 AND (id).id = $3", 1, 3, params)) == NULL)
     return 0;
   n = !PQntuples(qs) ? 0 : db_parserow(qs, 0, res);
   PQclear(qs);
-  db_processnotifies();
   return n;
 }
 
@@ -163,7 +131,7 @@ int db_setnode(unsigned long addr, struct db_node *node) {
   sprintf(str[12], "%ld", node->MambaNetAddr);
 
   /* execute query */
-  qs = sql_exec(sqldb,
+  qs = sql_exec(
     addr ? "UPDATE addresses SET addr = $1, name = $2, id = $3, engine_addr = $4, services = $5,\
               active = $6, parent = $7, setname = $8, refresh = $9, firstseen = $10, lastseen = $11,\
               addr_requests = $12 WHERE addr = $13"
@@ -172,7 +140,6 @@ int db_setnode(unsigned long addr, struct db_node *node) {
   if(qs == 0)
     return 0;
   PQclear(qs);
-  db_processnotifies();
   return 1;
 }
 
@@ -184,10 +151,9 @@ void db_rmnode(unsigned long addr) {
 
   sprintf(str, "%ld", addr);
   params[0] = str;
-  if((qs = sql_exec(sqldb, "DELETE FROM addresses WHERE addr = $1", 0, 1, params)) == NULL)
+  if((qs = sql_exec("DELETE FROM addresses WHERE addr = $1", 0, 1, params)) == NULL)
     return;
   PQclear(qs);
-  db_processnotifies();
 }
 
 
@@ -197,32 +163,6 @@ unsigned long db_newaddress() {
   for(addr=1; db_getnode(NULL, addr); addr++)
     ;
   return addr;
-}
-
-
-int db_loop() {
-  int s = PQsocket(sqldb);
-  int n;
-  fd_set rd;
-  if(s < 0) {
-    log_write("Invalid PostgreSQL socket!");
-    return 1;
-  }
-
-  FD_ZERO(&rd);
-  FD_SET(s, &rd);
-  n = select(s+1, &rd, NULL, NULL, NULL);
-  if(n == 0 || (n < 0 && errno == EINTR))
-    return 0;
-  if(n < 0) {
-    log_write("select() failed: %s\n", strerror(errno));
-    return 1;
-  }
-  db_lock(1);
-  PQconsumeInput(sqldb);
-  db_processnotifies();
-  db_lock(0);
-  return 0;
 }
 
 
@@ -299,67 +239,9 @@ void db_event_refresh(char myself, char *arg) {
     mbnGetActuatorData(mbn, addr, MBN_NODEOBJ_NAME, 1);
     mbnGetSensorData(mbn, addr, MBN_NODEOBJ_HWPARENT, 1);
     sprintf(str, "%d", addr);
-    if((qs = sql_exec(sqldb, "UPDATE addresses SET refresh = FALSE\
+    if((qs = sql_exec("UPDATE addresses SET refresh = FALSE\
         WHERE addr = $1", 0, 1, params)) != NULL)
       PQclear(qs);
   }
-}
-
-
-void db_processnotifies() {
-  PGresult *qs;
-  PGnotify *not;
-  const char *params[1] = { (const char *)lastnotify };
-  char *cmd, *arg, myself;
-  int i, pid;
-
-  /* we don't actually check the struct returned by PQnotifies() */
-  if((not = PQnotifies(sqldb)) == NULL)
-    return;
-  /* clear any other received notifications */
-  do
-    PQfreemem(not);
-  while((not = PQnotifies(sqldb)) != NULL);
-
-  /* check the recent_changes table */
-  if((qs = sql_exec(sqldb, "SELECT change, arguments, timestamp, pid\
-      FROM recent_changes WHERE timestamp > $1 ORDER BY timestamp",
-      0, 1, params)) == NULL)
-    return;
-
-  for(i=0; i<PQntuples(qs); i++) {
-    cmd = PQgetvalue(qs, i, 0);
-    arg = PQgetvalue(qs, i, 1);
-    sscanf(PQgetvalue(qs, i, 3), "%d", &pid);
-    myself = pid == PQbackendPID(sqldb) ? 1 : 0;
-
-    if(strcmp(cmd, "address_removed") == 0)
-      db_event_removed(myself, arg);
-    if(strcmp(cmd, "address_set_engine") == 0)
-      db_event_setengine(myself, arg);
-    if(strcmp(cmd, "address_set_addr") == 0)
-      db_event_setaddress(myself, arg);
-    if(strcmp(cmd, "address_set_name") == 0)
-      db_event_setname(myself, arg);
-    if(strcmp(cmd, "address_refresh") == 0)
-      db_event_refresh(myself, arg);
-  }
-  /* update lastnotify variable */
-  strcpy(lastnotify, PQgetvalue(qs, i-1, 2));
-  PQclear(qs);
-}
-
-
-void db_lock(int l) {
-  PGresult *qs;
-  if(l) {
-    pthread_mutex_lock(&dbmutex);
-    qs = sql_exec(sqldb, "BEGIN", 0, 0, NULL);
-  } else {
-    qs = sql_exec(sqldb, "COMMIT", 0, 0, NULL);
-    pthread_mutex_unlock(&dbmutex);
-  }
-  if(qs != NULL)
-    PQclear(qs);
 }
 

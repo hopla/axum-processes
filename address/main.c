@@ -307,12 +307,7 @@ void init(int argc, char **argv) {
   daemonize();
   log_open();
   hwparent(&this_node);
-
-  /* open database */
-  if(db_init(dbstr, err)) {
-    fprintf(stderr, "%s\n", err);
-    exit(1);
-  }
+  db_init(dbstr);
 
   /* initialize the MambaNet node */
   if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {

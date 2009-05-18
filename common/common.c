@@ -17,6 +17,7 @@
 #include <sys/un.h>
 
 #include <mbn.h>
+#include <pthread.h>
 #include <libpq-fe.h>
 
 
@@ -25,6 +26,11 @@ char log_file[500];
 char hwparent_path[500];
 pid_t parent_pid;
 volatile int main_quit = 0;
+
+struct sql_notify *sql_events;
+int sql_notifylen = 0;
+char sql_lastnotify[50];
+pthread_mutex_t sql_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 void log_open() {
@@ -57,7 +63,7 @@ void log_write(const char *fmt, ...) {
   va_list ap;
   char buf[500], tm[20];
   time_t t = time(NULL);
-  int fd = logfd == NULL ? stderr : logfd;
+  FILE *fd = logfd == NULL ? stderr : logfd;
   va_start(ap, fmt);
   vsnprintf(buf, 500, fmt, ap);
   va_end(ap);
@@ -168,11 +174,11 @@ void hwparent(struct mbn_node_info *node) {
 }
 
 
-PGresult *sql_exec(PGconn *db, const char *query, char res, int nparams, const char * const *values) {
+PGresult *sql_exec(const char *query, char res, int nparams, const char * const *values) {
   PGresult *qs;
-  qs = PQexecParams(db, query, nparams, NULL, values, NULL, NULL, 0);
+  qs = PQexecParams(sql_conn, query, nparams, NULL, values, NULL, NULL, 0);
   if(qs == NULL) {
-    log_write("Fatal PostgreSQL error: %s", PQerrorMessage(db));
+    log_write("Fatal PostgreSQL error: %s", PQerrorMessage(sql_conn));
     return NULL;
   }
   if(PQresultStatus(qs) != (res ? PGRES_TUPLES_OK : PGRES_COMMAND_OK)) {
@@ -180,6 +186,119 @@ PGresult *sql_exec(PGconn *db, const char *query, char res, int nparams, const c
     PQclear(qs);
     return NULL;
   }
+  sql_processnotifies();
   return qs;
 }
+
+
+void sql_open(const char *str, int l, struct sql_notify *events) {
+  PGresult *res;
+
+  sql_conn = PQconnectdb(str);
+  if(PQstatus(sql_conn) != CONNECTION_OK) {
+    fprintf(stderr, "Opening database: %s\n", PQerrorMessage(sql_conn));
+    PQfinish(sql_conn);
+    exit(1);
+  }
+  sql_notifylen = l;
+  sql_events = events;
+
+  if(l == 0)
+    return;
+
+  if((res = sql_exec("LISTEN change", 0, 0, NULL)) == NULL)
+    exit(1);
+  PQclear(res);
+
+  /* get timestamp of the most recent change or the current time if the table is empty.
+   * This ensures that we have a timestamp in a format suitable for comparing to other
+   * timestamps, and in the same time and timezone as the PostgreSQL server. */
+  if((res = sql_exec("SELECT MAX(timestamp) FROM recent_changes UNION SELECT NOW() LIMIT 1", 1, 0, NULL)) == NULL)
+    exit(1);
+  strcpy(sql_lastnotify, PQgetvalue(res, 0, 0));
+  PQclear(res);
+}
+
+void sql_close() {
+  PQfinish(sql_conn);
+}
+
+
+void sql_processnotifies() {
+  PGresult *qs;
+  PGnotify *not;
+  const char *params[1] = { (const char *)sql_lastnotify };
+  char *cmd, *arg, myself;
+  int i, j, pid;
+
+  /* we don't actually check the struct returned by PQnotifies() */
+  if((not = PQnotifies(sql_conn)) == NULL)
+    return;
+  /* clear any other received notifications */
+  do
+    PQfreemem(not);
+  while((not = PQnotifies(sql_conn)) != NULL);
+
+  /* check the recent_changes table
+   * TODO: only fetch notifies in the sql_notifies list? */
+  if((qs = sql_exec("SELECT change, arguments, timestamp, pid\
+      FROM recent_changes WHERE timestamp > $1 ORDER BY timestamp",
+      1, 1, params)) == NULL)
+    return;
+
+  for(i=0; i<PQntuples(qs); i++) {
+    cmd = PQgetvalue(qs, i, 0);
+    arg = PQgetvalue(qs, i, 1);
+    sscanf(PQgetvalue(qs, i, 3), "%d", &pid);
+    myself = pid == PQbackendPID(sql_conn) ? 1 : 0;
+
+    for(j=0; j<sql_notifylen; j++)
+      if(strcmp(cmd, sql_events[j].event) == 0)
+        sql_events[j].callback(myself, arg);
+  }
+  /* update lastnotify variable */
+  strcpy(sql_lastnotify, PQgetvalue(qs, i-1, 2));
+  PQclear(qs);
+}
+
+
+void sql_lock(int l) {
+  PGresult *qs;
+  if(l) {
+    pthread_mutex_lock(&sql_mutex);
+    qs = sql_exec("BEGIN", 0, 0, NULL);
+  } else {
+    qs = sql_exec("COMMIT", 0, 0, NULL);
+    pthread_mutex_unlock(&sql_mutex);
+  }
+  if(qs != NULL)
+    PQclear(qs);
+}
+
+
+int sql_loop() {
+  int s = PQsocket(sql_conn);
+  int n;
+  fd_set rd;
+  if(s < 0) {
+    log_write("Invalid PostgreSQL socket!");
+    return 1;
+  }
+
+  FD_ZERO(&rd);
+  FD_SET(s, &rd);
+  n = select(s+1, &rd, NULL, NULL, NULL);
+  if(n == 0 || (n < 0 && errno == EINTR))
+    return 0;
+  if(n < 0) {
+    log_write("select() failed: %s\n", strerror(errno));
+    return 1;
+  }
+  sql_lock(1);
+  PQconsumeInput(sql_conn);
+  sql_processnotifies();
+  sql_lock(0);
+  return 0;
+}
+
 
