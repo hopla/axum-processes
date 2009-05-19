@@ -67,6 +67,7 @@ CREATE TABLE templates (
   man_id smallint NOT NULL,
   prod_id smallint NOT NULL,
   firm_major smallint NOT NULL,
+  "number" integer NOT NULL,
   "desc" varchar(32) NOT NULL,
   services smallint NOT NULL CHECK (services >= 0 AND services <= 3),
   sensor_type smallint NOT NULL CHECK(sensor_type >= 0 AND sensor_type <= 6),
@@ -78,7 +79,7 @@ CREATE TABLE templates (
   actuator_min mambanet_minmax,
   actuator_max mambanet_minmax,
   actuator_def mambanet_minmax,
-  PRIMARY KEY(man_id, prod_id, firm_major)
+  PRIMARY KEY(man_id, prod_id, firm_major, number)
 );
 
 CREATE TABLE functions (
