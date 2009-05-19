@@ -85,7 +85,7 @@ Defines for the MambaNet Protocol
 #define SIGNED_INTEGER_DATATYPE                 2
 #define STATE_DATATYPE                          3
 #define OCTET_STRING_DATATYPE                   4
-#define FLOAT_DATATYPE                        5
+#define FLOAT_DATATYPE                          5
 #define BIT_STRING_DATATYPE                     6
 #define OBJECT_INFORMATION_DATATYPE             128
 #define ERROR_DATATYPE                          255

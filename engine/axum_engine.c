@@ -14,6 +14,9 @@
 **
 ****************************************************************************/
 
+extern "C" {
+#include "common.h"
+}
 #include "axum_engine.h"
 #include "db.h"
 
@@ -212,6 +215,8 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName)
   argc = 0;
   argv = NULL;
   azColName = NULL;
+
+  return 0;
 }
 
 typedef struct
@@ -224,10 +229,10 @@ typedef struct
 
 typedef struct
 {
-  int MambaNetAddress;
-  int ManufacturerID;
-  int ProductID;
-  int UniqueIDPerProduct;
+  unsigned int MambaNetAddress;
+  unsigned int ManufacturerID;
+  unsigned int ProductID;
+  unsigned int UniqueIDPerProduct;
   int FirmwareMajorRevision;
 //  int FirmwareMinorRevision;
 
@@ -281,10 +286,9 @@ static int SetHardwareParent(void)
   struct sockaddr_un p;
   char msg[14];
   int sock;
-  int i;
-  int ManufacturerID = 0;
-  int ProductID = 0;
-  int UniqueIDPerProduct = 0;
+  unsigned int ManufacturerID = 0;
+  unsigned int ProductID = 0;
+  unsigned int UniqueIDPerProduct = 0;
 
   /* connect to unix socket */
   /* TODO: configurable path to unix socket */
@@ -324,7 +328,7 @@ static int SetHardwareParent(void)
           (OnlineNodeInformation[cntIndex].UniqueIDPerProduct == UniqueIDPerProduct) &&
           (OnlineNodeInformation[cntIndex].FirmwareMajorRevision == 0))
       {
-        printf("1 - Backplane %08lx\n", OnlineNodeInformation[cntIndex].MambaNetAddress);
+        printf("1 - Backplane %08x\n", OnlineNodeInformation[cntIndex].MambaNetAddress);
         if (BackplaneMambaNetAddress != OnlineNodeInformation[cntIndex].MambaNetAddress)
         { //Initalize routing
           BackplaneMambaNetAddress = OnlineNodeInformation[cntIndex].MambaNetAddress;
@@ -371,6 +375,8 @@ static int SlotNumberObjectCallback(void *NotUsed, int argc, char **argv, char *
     OnlineNodeInformation[CallbackNodeIndex].SlotNumberObjectNr    = atoi(argv[0]);
   }
   return 0;
+  NotUsed = NULL;
+  azColName = NULL;
 }
 
 static int InputChannelCountObjectCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -380,6 +386,8 @@ static int InputChannelCountObjectCallback(void *NotUsed, int argc, char **argv,
     OnlineNodeInformation[CallbackNodeIndex].InputChannelCountObjectNr    = atoi(argv[0]);
   }
   return 0;
+  NotUsed = NULL;
+  azColName = NULL;
 }
 
 static int OutputChannelCountObjectCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -389,11 +397,13 @@ static int OutputChannelCountObjectCallback(void *NotUsed, int argc, char **argv
     OnlineNodeInformation[CallbackNodeIndex].OutputChannelCountObjectNr    = atoi(argv[0]);
   }
   return 0;
+  NotUsed = NULL;
+  azColName = NULL;
 }
 
 static int NumberOfCustomObjectsCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
-  printf("[NumberOfCustomObjectsCallback] argc:%d, CallbackNodeIndex:%d, argv:%08lx\n", argc, CallbackNodeIndex, argv);
+  printf("[NumberOfCustomObjectsCallback] argc:%d, CallbackNodeIndex:%d\n", argc, CallbackNodeIndex);
 
   if ((argc == 1) && (CallbackNodeIndex != -1) && (argv != NULL))
   {
@@ -418,6 +428,8 @@ static int NumberOfCustomObjectsCallback(void *NotUsed, int argc, char **argv, c
     }
   }
   return 0;
+  NotUsed = NULL;
+  azColName = NULL;
 }
 
 static int ObjectInformationCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -562,6 +574,7 @@ static int ObjectInformationCallback(void *NotUsed, int argc, char **argv, char 
   }
 
   return 0;
+  NotUsed = NULL;
 }
 
 static int NodeConfigurationCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
@@ -604,7 +617,7 @@ static int NodeConfigurationCallback(void *IndexOfSender, int argc, char **argv,
   return 0;
 }
 
-static int RackOrganizationCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
+static int RackOrganizationCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   int i;
   int SlotNr = -1;
@@ -633,9 +646,10 @@ static int RackOrganizationCallback(void *IndexOfSender, int argc, char **argv, 
   }
 
   return 0;
+  NotUsed = NULL;
 }
 
-static int SourceConfigurationCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
+static int SourceConfigurationCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   int i;
   int Number = 0;
@@ -844,7 +858,7 @@ static int SourceConfigurationCallback(void *IndexOfSender, int argc, char **arg
   if (Number>0)
   {
     strncpy(AxumData.SourceData[Number-1].SourceName, Label, 32);
-    for (char cntInput=0; cntInput<8; cntInput++)
+    for (unsigned char cntInput=0; cntInput<8; cntInput++)
     {
       AxumData.SourceData[Number-1].InputData[cntInput].MambaNetAddress = InputData[cntInput].MambaNetAddress;
       AxumData.SourceData[Number-1].InputData[cntInput].SubChannel = InputData[cntInput].SubChannel;
@@ -876,6 +890,7 @@ static int SourceConfigurationCallback(void *IndexOfSender, int argc, char **arg
   }
 
   return 0;
+  NotUsed = NULL;
 }
 
 static int ModuleConfigurationCallback(void *UpdateType, int argc, char **argv, char **azColName)
@@ -1530,7 +1545,7 @@ static int ModuleConfigurationCallback(void *UpdateType, int argc, char **argv, 
   return 0;
 }
 
-static int BussConfigurationCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
+static int BussConfigurationCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   int i;
   int Number = 0;
@@ -1625,9 +1640,10 @@ static int BussConfigurationCallback(void *IndexOfSender, int argc, char **argv,
   }
 
   return 0;
+  NotUsed = NULL;
 }
 
-static int MonitorBussConfigurationCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
+static int MonitorBussConfigurationCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   int i;
   int Number = 0;
@@ -1784,9 +1800,10 @@ static int MonitorBussConfigurationCallback(void *IndexOfSender, int argc, char 
   }
 
   return 0;
+  NotUsed = NULL;
 }
 
-static int ExternSourceConfigurationCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
+static int ExternSourceConfigurationCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   int i;
   int Number = 0;
@@ -1856,9 +1873,10 @@ static int ExternSourceConfigurationCallback(void *IndexOfSender, int argc, char
   }
 
   return 0;
+  NotUsed = NULL;
 }
 
-static int TalkbackConfigurationCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
+static int TalkbackConfigurationCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   int i;
   int Talkback[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -1947,9 +1965,10 @@ static int TalkbackConfigurationCallback(void *IndexOfSender, int argc, char **a
   //set routing?
 
   return 0;
+  NotUsed = NULL;
 }
 
-static int GlobalConfigurationCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
+static int GlobalConfigurationCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   int i;
   unsigned int Samplerate = 48000;
@@ -2056,9 +2075,10 @@ static int GlobalConfigurationCallback(void *IndexOfSender, int argc, char **arg
   CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
 
   return 0;
+  NotUsed = NULL;
 }
 
-static int DestinationConfigurationCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
+static int DestinationConfigurationCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   int i;
   int Number = 0;
@@ -2169,7 +2189,7 @@ static int DestinationConfigurationCallback(void *IndexOfSender, int argc, char 
   if (Number>0)
   {
     strncpy(AxumData.DestinationData[Number-1].DestinationName, Label, 32);
-    for (char cntOutput=0; cntOutput<8; cntOutput++)
+    for (unsigned char cntOutput=0; cntOutput<8; cntOutput++)
     {
       AxumData.DestinationData[Number-1].OutputData[cntOutput].MambaNetAddress = OutputData[cntOutput].MambaNetAddress;
       AxumData.DestinationData[Number-1].OutputData[cntOutput].SubChannel = OutputData[cntOutput].SubChannel;
@@ -2191,6 +2211,7 @@ static int DestinationConfigurationCallback(void *IndexOfSender, int argc, char 
   }
 
   return 0;
+  NotUsed = NULL;
 }
 
 static int PositionTodBCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -2224,6 +2245,7 @@ static int PositionTodBCallback(void *NotUsed, int argc, char **argv, char **azC
   }
 
   return 0;
+  NotUsed = NULL;
 }
 
 static int dBToPositionCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -2262,6 +2284,7 @@ static int dBToPositionCallback(void *NotUsed, int argc, char **argv, char **azC
   }
 
   return 0;
+  NotUsed = NULL;
 }
 
 static int NodeDefaultsCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
@@ -2614,6 +2637,7 @@ static int ModuleFunctionTableCallback(void *NotUsed, int argc, char **argv, cha
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int BussFunctionTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -2639,6 +2663,7 @@ static int BussFunctionTableCallback(void *NotUsed, int argc, char **argv, char 
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int MonitorBussFunctionTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -2708,6 +2733,7 @@ static int MonitorBussFunctionTableCallback(void *NotUsed, int argc, char **argv
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int GlobalFunctionTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3083,6 +3109,7 @@ static int GlobalFunctionTableCallback(void *NotUsed, int argc, char **argv, cha
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int SourceFunctionTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3163,6 +3190,7 @@ static int SourceFunctionTableCallback(void *NotUsed, int argc, char **argv, cha
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int DestinationFunctionTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3230,6 +3258,7 @@ static int DestinationFunctionTableCallback(void *NotUsed, int argc, char **argv
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int RackOrganizationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3258,6 +3287,7 @@ static int RackOrganizationTableCallback(void *NotUsed, int argc, char **argv, c
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int SourceConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3286,6 +3316,7 @@ static int SourceConfigurationTableCallback(void *NotUsed, int argc, char **argv
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int ModuleConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3315,6 +3346,7 @@ static int ModuleConfigurationTableCallback(void *NotUsed, int argc, char **argv
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int BussConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3370,6 +3402,7 @@ static int BussConfigurationTableCallback(void *NotUsed, int argc, char **argv, 
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int MonitorBussConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3405,6 +3438,7 @@ static int MonitorBussConfigurationTableCallback(void *NotUsed, int argc, char *
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int ExternSourceConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3433,6 +3467,7 @@ static int ExternSourceConfigurationTableCallback(void *NotUsed, int argc, char 
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int TalkbackConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3457,6 +3492,7 @@ static int TalkbackConfigurationTableCallback(void *NotUsed, int argc, char **ar
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int GlobalConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3481,6 +3517,7 @@ static int GlobalConfigurationTableCallback(void *NotUsed, int argc, char **argv
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 static int DestinationConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3509,6 +3546,7 @@ static int DestinationConfigurationTableCallback(void *NotUsed, int argc, char *
     }
   }
   return 0;
+  NotUsed = NULL;
 }
 
 int main(int argc, char *argv[])
@@ -3516,7 +3554,6 @@ int main(int argc, char *argv[])
   struct termios oldtio;
   int oldflags;
   int fd = 0;
-  char *err;
 
   int maxfd;
   fd_set readfs;
@@ -3555,10 +3592,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  if(db_init("hostaddr=192.168.0.57 name=axum", err)) {
-    fprintf(stderr, "%s\n", err);
-    exit(1);
-  }
+  sql_open("hostaddr=192.168.0.57 name=axum", 0, NULL);
 
 //**************************************************************/
 //Initialize AXUM Data
@@ -3673,6 +3707,7 @@ int main(int argc, char *argv[])
     AxumData.ModuleData[cntModule].EQBand[5].Bandwidth = 1;
     AxumData.ModuleData[cntModule].EQBand[5].Slope = 1;
     AxumData.ModuleData[cntModule].EQBand[5].Type = LPF;
+
     AxumData.ModuleData[cntModule].EQOn = 1;
     AxumData.ModuleData[cntModule].EQOnOffA = 0;
     AxumData.ModuleData[cntModule].EQOnOffB = 0;
@@ -3702,7 +3737,7 @@ int main(int argc, char *argv[])
       AxumData.ModuleData[cntModule].Buss[cntBuss].Active = 1;
     }
   }
-
+  
   AxumData.Control1Mode = MODULE_CONTROL_MODE_NONE;
   AxumData.Control2Mode = MODULE_CONTROL_MODE_NONE;
   AxumData.Control3Mode = MODULE_CONTROL_MODE_NONE;
@@ -3819,9 +3854,6 @@ int main(int argc, char *argv[])
   }
   else
   {
-    char DebugText[255];
-    char buffer[64];
-
     printf("PCI2040 opened!\n");
 
     pci2040_ioctl_linux pci2040_ioctl_message;
@@ -3917,10 +3949,10 @@ int main(int argc, char *argv[])
         PtrDSP_HPID[cntDSP] = (unsigned long *)cntPtrAddress;
         cntPtrAddress += 0x800;
 
-        printf("DSP:%d, HPIA: %08X - HPID: %08X\n", cntDSP, PtrDSP_HPIA[cntDSP], PtrDSP_HPID[cntDSP]);
+        printf("DSP:%d, HPIA: %08lX - HPID: %08lX\n", cntDSP, (unsigned long)PtrDSP_HPIA[cntDSP], (unsigned long)PtrDSP_HPID[cntDSP]);
       }
-      printf("HPI Reset Register: %08X\n", *((unsigned long *)((unsigned long)PtrHPI_CSR+0x14)));
-      printf("HPI DSP Implementation Register: %08X\n", *((unsigned long *)((unsigned long)PtrHPI_CSR+0x16)));
+      printf("HPI Reset Register: %08lX\n", *((unsigned long *)((unsigned long)PtrHPI_CSR+0x14)));
+      printf("HPI DSP Implementation Register: %08lX\n", *((unsigned long *)((unsigned long)PtrHPI_CSR+0x16)));
 
 //GPIO5 = 1, so HCS1-4 are disconnected
 //         pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_DUMP_CONFIGURATION;
@@ -4000,7 +4032,7 @@ int main(int argc, char *argv[])
         int readedbytes;
         size_t len = 0;
         char *line = NULL;
-        unsigned int MappingAddress;
+        unsigned long int MappingAddress;
         char MappingVariableName[256];
 
         while ((readedbytes = getline(&line, &len, DSPMappings)) != -1)
@@ -4009,7 +4041,7 @@ int main(int argc, char *argv[])
           //printf("%s", line);
 
           memset(MappingVariableName, 0, 256);
-          int ItemsConverted = sscanf(line, "%x%s", &MappingAddress, MappingVariableName);
+          int ItemsConverted = sscanf(line, "%lx%s", &MappingAddress, MappingVariableName);
           if (ItemsConverted != EOF)
           {
             //printf("Items: %d\n" , ItemsConverted);
@@ -4155,7 +4187,7 @@ int main(int argc, char *argv[])
         int readedbytes;
         size_t len = 0;
         char *line = NULL;
-        unsigned int MappingAddress;
+        unsigned long int MappingAddress;
         char MappingVariableName[256];
 
         while ((readedbytes = getline(&line, &len, DSPMappings)) != -1)
@@ -4164,7 +4196,7 @@ int main(int argc, char *argv[])
           //printf("%s", line);
 
           memset(MappingVariableName, 0, 256);
-          int ItemsConverted = sscanf(line, "%x%s", &MappingAddress, MappingVariableName);
+          int ItemsConverted = sscanf(line, "%lx%s", &MappingAddress, MappingVariableName);
           if (ItemsConverted != EOF)
           {
             //printf("Items: %d\n" , ItemsConverted);
@@ -4277,13 +4309,13 @@ int main(int argc, char *argv[])
         int readedbytes;
         size_t len = 0;
         char *line = NULL;
-        unsigned int MappingAddress;
+        unsigned long int MappingAddress;
         char MappingVariableName[256];
 
         while ((readedbytes = getline(&line, &len, DSPMappings)) != -1)
         {
           memset(MappingVariableName, 0, 256);
-          int ItemsConverted = sscanf(line, "%x%s", &MappingAddress, MappingVariableName);
+          int ItemsConverted = sscanf(line, "%lx%s", &MappingAddress, MappingVariableName);
           if (ItemsConverted != EOF)
           {
             if (ItemsConverted != 0)
@@ -5133,7 +5165,7 @@ int main(int argc, char *argv[])
     if (SetHardwareParent())
       ExitApplication = 1;
 
-    DatabaseFileDescriptor = PQsocket(sqldb);
+    DatabaseFileDescriptor = PQsocket(sql_conn);
     if(DatabaseFileDescriptor < 0) {
       //log_write("Invalid PostgreSQL socket!");
       ExitApplication = 1;
@@ -5481,7 +5513,7 @@ int main(int argc, char *argv[])
         //Test if the network generated an event.
         if (FD_ISSET(NetworkFileDescriptor, &readfs))
         {
-          unsigned int cnt;
+          int cnt;
           unsigned char buffer[2048];
           sockaddr_ll fromAddress;
           int fromlen = sizeof(fromAddress);
@@ -5633,6 +5665,11 @@ int main(int argc, char *argv[])
                                      numRead = recv(NetworkFileDescriptor, buffer, 2048, 0);
                                   }*/
         }
+        //Test if the database notifier generated an event.
+        if (FD_ISSET(DatabaseFileDescriptor, &readfs))
+        {
+          sql_processnotifies(); 
+        } 
       }
     }
   }
@@ -5645,7 +5682,7 @@ int main(int argc, char *argv[])
     close(fd);
     printf("/dev/pci2040 closed...\r\n");
   }
-  db_free();
+  sql_close();
   sqlite3_close(node_templates_db);
   sqlite3_close(axum_engine_db);
   CloseNetwork(NetworkFileDescriptor);
@@ -5722,9 +5759,6 @@ void GetCommandLineArguments(int argc, char *argv[], char *TTYDevice, char *Netw
 //The function in this process implements nothing
 void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int FromAddress, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress)
 {
-  long cnt;
-  bool Found;
-
   if ((ToAddress == 0x10000000) || (ToAddress == AxumEngineDefaultObjects.MambaNetAddress))
   {
     int IndexOfSender = -1;
@@ -5930,7 +5964,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                     (OnlineNodeInformation[IndexOfSender].ProductID == ParentProductID) &&
                     (OnlineNodeInformation[IndexOfSender].UniqueIDPerProduct == ParentUniqueIDPerProduct))
                 {
-                  printf("2 - Backplane %08lx\n", OnlineNodeInformation[IndexOfSender].MambaNetAddress);
+                  printf("2 - Backplane %08x\n", OnlineNodeInformation[IndexOfSender].MambaNetAddress);
 
                   if (BackplaneMambaNetAddress != OnlineNodeInformation[IndexOfSender].MambaNetAddress)
                   { //Initialize all routing
@@ -6037,7 +6071,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                 printf("Make or get node defaults\n");
                 //Make or get node defaults
-                sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS defaults_node_%08x	\
+                sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS defaults_node_%08lx	\
 												(																\
 													\"Object Number\" int PRIMARY KEY,				\
 													\"Default Data\" VARCHAR(64)										\
@@ -6049,7 +6083,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   sqlite3_free(zErrMsg);
                 }
 
-                sprintf(SQLQuery, "	SELECT * FROM defaults_node_%08x;\n", FromAddress);
+                sprintf(SQLQuery, "	SELECT * FROM defaults_node_%08lx;\n", FromAddress);
                 if (sqlite3_exec(axum_engine_db, SQLQuery, NodeDefaultsCallback, (void *)&IndexOfSender, &zErrMsg) != SQLITE_OK)
                 {
                   printf("SQL error: %s\n", zErrMsg);
@@ -6058,7 +6092,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                 printf("Make or get node configuration\n");
                 //Make or get node configuration
-                sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS configuration_node_%08x	\
+                sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS configuration_node_%08lx	\
 												(																	\
 													\"Object Number\" int PRIMARY KEY,						\
 													Function int												\
@@ -6071,7 +6105,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                 }
 
 
-                sprintf(SQLQuery, "	SELECT * FROM configuration_node_%08x;\n", FromAddress);
+                sprintf(SQLQuery, "	SELECT * FROM configuration_node_%08lx;\n", FromAddress);
                 if (sqlite3_exec(axum_engine_db, SQLQuery, NodeConfigurationCallback, (void *)&IndexOfSender, &zErrMsg) != SQLITE_OK)
                 {
                   printf("SQL error: %s\n", zErrMsg);
@@ -6079,9 +6113,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                 }
               }
             }
-            if (ObjectNr == OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr)
+            if (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr)
             {
-              printf("0x%08X @Slot: %d\n", FromAddress, Data[5]+1);
+              printf("0x%08lX @Slot: %d\n", FromAddress, Data[5]+1);
               char SQLQuery[8192];
 
               for (int cntSlot=0; cntSlot<42; cntSlot++)
@@ -6104,7 +6138,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
               }
               AxumData.RackOrganization[Data[5]] = FromAddress;
 
-              sprintf(SQLQuery,   "UPDATE rack_organization SET MambaNetAddress = %d WHERE SlotNr = %d;", FromAddress, Data[5]+1);
+              sprintf(SQLQuery,   "UPDATE rack_organization SET MambaNetAddress = %ld WHERE SlotNr = %d;", FromAddress, Data[5]+1);
               char *zErrMsg;
               if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
               {
@@ -6200,10 +6234,10 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
             else if (OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr != -1)
             {
               printf("Check for Channel Counts: %d, %d\n", OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr, OnlineNodeInformation[IndexOfSender].OutputChannelCountObjectNr);
-              if (ObjectNr == OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr)
+              if (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr)
               {
                 char SQLQuery[8192];
-                sprintf(SQLQuery,   "UPDATE rack_organization SET InputChannelCount = %d WHERE MambaNetAddress = %d;", Data[5], FromAddress);
+                sprintf(SQLQuery,   "UPDATE rack_organization SET InputChannelCount = %d WHERE MambaNetAddress = %ld;", Data[5], FromAddress);
                 char *zErrMsg;
                 printf(SQLQuery);
                 printf("\n" );
@@ -6213,10 +6247,10 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   sqlite3_free(zErrMsg);
                 }
               }
-              else if (ObjectNr == OnlineNodeInformation[IndexOfSender].OutputChannelCountObjectNr)
+              else if (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].OutputChannelCountObjectNr)
               {
                 char SQLQuery[8192];
-                sprintf(SQLQuery,   "UPDATE rack_organization SET OutputChannelCount = %d WHERE MambaNetAddress = %d;", Data[5], FromAddress);
+                sprintf(SQLQuery,   "UPDATE rack_organization SET OutputChannelCount = %d WHERE MambaNetAddress = %ld;", Data[5], FromAddress);
                 char *zErrMsg;
                 printf(SQLQuery);
                 printf("\n" );
@@ -6244,7 +6278,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
             float DataMaximal = OnlineNodeInformation[IndexOfSender].ObjectInformation[ObjectNr-1024].SensorDataMaximal;
 
             char TempString[256] = "";
-            printf("Sensor changed, ObjectNr %d -> Sensor receive function %08lx", ObjectNr, SensorReceiveFunctionNumber);
+            printf("Sensor changed, ObjectNr %d -> Sensor receive function %08x", ObjectNr, SensorReceiveFunctionNumber);
 
             if (SensorReceiveFunctionNumber != -1)
             {
@@ -6855,7 +6889,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       TempData <<= 8;
                       TempData |= Data[5+cntByte];
                     }
-                    printf("Min:%f, Max:%f, Temp:%d\n", DataMinimal, DataMaximal, TempData);
+                    printf("Min:%f, Max:%f, Temp:%ld\n", DataMinimal, DataMaximal, TempData);
 
                     AxumData.ModuleData[ModuleNr].Gain = (((float)40*(TempData-DataMinimal))/(DataMaximal-DataMinimal))-20;
 
@@ -6979,7 +7013,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     SetAxum_ModuleProcessing(ModuleNr);
 
-                    unsigned int DisplayFunctionNr = (ModuleNr<<12) | MODULE_FUNCTION_LOW_CUT_FREQUENCY;
                     CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                     unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
@@ -7798,7 +7831,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       SetAxum_BussLevels(ModuleNr);
 
                       unsigned int DisplayFunctionNr = (ModuleNr<<12);
-                      CheckObjectsToSent(DisplayFunctionNr | MODULE_FUNCTION_BUSS_1_2_LEVEL+(BussNr*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL)));
+                      CheckObjectsToSent(DisplayFunctionNr | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(BussNr*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL))));
 
                       unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -8523,7 +8556,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
               case MONITOR_BUSS_FUNCTIONS:
               {   //Monitor Busses
                 unsigned int MonitorBussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
-                unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+                int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
                 printf(" > MonitorBussNr %d ", MonitorBussNr);
                 if ((FunctionNr>=MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF) && (FunctionNr<MONITOR_BUSS_FUNCTION_MUTE))
@@ -8799,7 +8832,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (17+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == ((signed int)(17+MonitorBussNr)))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE);
@@ -8841,7 +8874,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (17+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == ((signed int)(17+MonitorBussNr)))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
@@ -8878,7 +8911,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (17+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == ((signed int)(17+MonitorBussNr)))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_PHONES_LEVEL);
@@ -8915,7 +8948,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (17+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == ((signed int)(17+MonitorBussNr)))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_PHONES_LEVEL);
@@ -8957,7 +8990,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (17+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == ((signed int)(17+MonitorBussNr)))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONO_AND_MONITOR_MONO);
@@ -8998,7 +9031,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (17+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == ((signed int)(17+MonitorBussNr)))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_PHASE_AND_MONITOR_PHASE);
@@ -9034,7 +9067,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (17+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == ((signed int)(17+MonitorBussNr)))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_SPEAKER_LEVEL);
@@ -9071,7 +9104,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (17+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == ((signed int)(17+MonitorBussNr)))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_SPEAKER_LEVEL);
@@ -9140,7 +9173,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (17+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == ((signed int)(17+MonitorBussNr)))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
 
@@ -9169,7 +9202,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                 if (GlobalNr == 0)
                 {
-                  if ((FunctionNr>=GLOBAL_FUNCTION_REDLIGHT_1) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE))
+                  if (((signed)FunctionNr>=GLOBAL_FUNCTION_REDLIGHT_1) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE))
                   { //all states
                     if (Data[3] == STATE_DATATYPE)
                     {
@@ -9266,7 +9299,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         {
                           if (delay_time>=OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].TimeBeforeMomentary)
                           {
-                            if (AxumData.Control1Mode == (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE))
+                            if (AxumData.Control1Mode == ((signed int)(FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE)))
                             {
                               NewControl1Mode = AxumData.Control1Mode;
                             }
@@ -9323,7 +9356,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         {
                           if (delay_time>=OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].TimeBeforeMomentary)
                           {
-                            if (AxumData.Control2Mode == (FunctionNr-GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE))
+                            if (AxumData.Control2Mode == ((signed int)(FunctionNr-GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE)))
                             {
                               NewControl2Mode = AxumData.Control2Mode;
                             }
@@ -9381,7 +9414,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         {
                           if (delay_time>=OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].TimeBeforeMomentary)
                           {
-                            if (AxumData.Control3Mode == (FunctionNr-GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE))
+                            if (AxumData.Control3Mode == ((signed int)(FunctionNr-GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE)))
                             {
                               NewControl3Mode = AxumData.Control3Mode;
                             }
@@ -9440,7 +9473,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         {
                           if (delay_time>=OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].TimeBeforeMomentary)
                           {
-                            if (AxumData.Control4Mode == (FunctionNr-GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE))
+                            if (AxumData.Control4Mode == ((signed int)(FunctionNr-GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE)))
                             {
                               NewControl4Mode = AxumData.Control4Mode;
                             }
@@ -9488,7 +9521,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       if (TempData)
                       {
                         char NewMasterControl1Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
-                        float BussMasterLevel;
 
                         unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl1Mode+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2);
                         AxumData.MasterControl1Mode = NewMasterControl1Mode;
@@ -9514,7 +9546,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       if (TempData)
                       {
                         char NewMasterControl2Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2;
-                        float BussMasterLevel;
 
                         unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl2Mode+GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2);
                         AxumData.MasterControl2Mode = NewMasterControl2Mode;
@@ -9540,7 +9571,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       if (TempData)
                       {
                         char NewMasterControl3Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2;
-                        float BussMasterLevel;
 
                         unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl3Mode+GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2);
                         AxumData.MasterControl3Mode = NewMasterControl3Mode;
@@ -9566,7 +9596,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       if (TempData)
                       {
                         char NewMasterControl4Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2;
-                        float BussMasterLevel;
 
                         unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl4Mode+GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2);
                         AxumData.MasterControl4Mode = NewMasterControl4Mode;
@@ -9634,7 +9663,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                      if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                       {
                         int CurrentOn = AxumData.ModuleData[cntModule].On;
 
@@ -9722,7 +9751,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                      if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                       {
                         float CurrentLevel = AxumData.ModuleData[cntModule].FaderLevel;
                         if (TempData)
@@ -9819,7 +9848,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                      if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                       {
                         float CurrentLevel = AxumData.ModuleData[cntModule].FaderLevel;
                         float CurrentOn = AxumData.ModuleData[cntModule].On;
@@ -9953,7 +9982,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntModule=0; cntModule<128; cntModule++)
                       {
-                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                        if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                         {
                           AxumData.ModuleData[cntModule].Buss[BussNr].On = 1;
                           SetAxum_BussLevels(cntModule);
@@ -10095,7 +10124,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntModule=0; cntModule<128; cntModule++)
                       {
-                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                        if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                         {
                           AxumData.ModuleData[cntModule].Buss[BussNr].On = 0;
                           SetAxum_BussLevels(cntModule);
@@ -10234,7 +10263,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                      if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                       {
                         if (TempData)
                         {
@@ -10391,7 +10420,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                      if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                       {
                         AxumData.ModuleData[cntModule].Cough = TempData;
 
@@ -10475,7 +10504,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntModule=0; cntModule<128; cntModule++)
                       {
-                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                        if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                         {
                           DisplayFunctionNr = (cntModule<<12);
                           CheckObjectsToSent(DisplayFunctionNr | MODULE_FUNCTION_SOURCE_START);
@@ -10521,7 +10550,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                      if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                       {
                         DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_PHANTOM;
                         CheckObjectsToSent(DisplayFunctionNr);
@@ -10564,7 +10593,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                      if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                       {
                         DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_PAD;
                         CheckObjectsToSent(DisplayFunctionNr);
@@ -10605,7 +10634,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                      if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                       {
                         DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_GAIN_LEVEL;
                         CheckObjectsToSent(DisplayFunctionNr);
@@ -10648,7 +10677,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+                      if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
                       {
                         DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_ALERT;
                         CheckObjectsToSent(DisplayFunctionNr);
@@ -11116,6 +11145,8 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
     strcat(TextString, "\r\n");
     printf(TextString);
   }
+  MessageID = 0;
+  FromHardwareAddress = NULL;
 }
 
 //function used for debug, dumping packages to the stdout
@@ -11206,7 +11237,6 @@ void CloseSTDIN(struct termios *oldtio, int oldflags)
 //example NetworkInterface = "eth0"
 int SetupNetwork(char *NetworkInterface, unsigned char *LocalMACAddress)
 {
-  int arg;
   bool error = 0;
   ifreq ethreq;
 
@@ -11513,6 +11543,7 @@ void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigne
   {
     MambaNetMessageReceived(ToAddress, FromAddress, MessageID, MessageType, Data, DataLength, FromHardwareAddress);
   }
+  Ack = 0;
 }
 
 void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *AddressTable, MambaNetAddressTableStatus Status, int Index)
@@ -11548,7 +11579,7 @@ void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *Address
       //TransmitBuffer[cntTransmitBuffer++] = 0;
 
       SendMambaNetMessage(AddressTable[Index].MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, 1, TransmitBuffer, cntTransmitBuffer);
-      printf("Get firmware 0x%08X\n", AddressTable[Index].MambaNetAddress);
+      printf("Get firmware 0x%08lX\n", AddressTable[Index].MambaNetAddress);
 
     }
   }
@@ -11615,7 +11646,7 @@ void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *Address
   }
   break;
   }
-  printf("Index:%d ManID:0x%04X, ProdID:0x%04X, UniqID:0x%04X, MambaNetAddr:0x%08X Services:%02X\n", Index, AddressTable[Index].ManufacturerID, AddressTable[Index].ProductID, AddressTable[Index].UniqueIDPerProduct, AddressTable[Index].MambaNetAddress, AddressTable[Index].NodeServices);
+  printf("Index:%d ManID:0x%04X, ProdID:0x%04X, UniqID:0x%04X, MambaNetAddr:0x%08lX Services:%02X\n", Index, AddressTable[Index].ManufacturerID, AddressTable[Index].ProductID, AddressTable[Index].UniqueIDPerProduct, AddressTable[Index].MambaNetAddress, AddressTable[Index].NodeServices);
 }
 
 void Timer100HzDone(int Value)
@@ -11766,7 +11797,7 @@ void Timer100HzDone(int Value)
     MambaNetReservationTimerTick();
 
     //Check for firmware requests
-    int cntIndex=0;
+    unsigned int cntIndex=0;
     while (cntIndex<AddressTableCount)
     {
       if ((OnlineNodeInformation[cntIndex].MambaNetAddress != 0x00000000) &&
@@ -11803,6 +11834,7 @@ void Timer100HzDone(int Value)
       PreviousCount_BroadcastPing = cntMillisecondTimer;
     }
   }
+  Value = 0;
 }
 
 int delay_ms(double sleep_time)
@@ -11915,7 +11947,6 @@ bool ProgramEEPROM(int fd)
 
   pci2040_ioctl_linux pci2040_ioctl_message;
   PCI2040_WRITE_REG  reg;
-  unsigned int len=0;
 
   reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
   //Clock High & Data High
@@ -12831,7 +12862,7 @@ void SetBackplane_Source(unsigned int FormInputNr, unsigned int ChannelNr)
   }
   else
   {
-    printf("BackplaneMambaNetAddress == null\n", BackplaneMambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress);
+    printf("BackplaneMambaNetAddress == null\n");
   }
 }
 
@@ -13085,8 +13116,8 @@ void SetAxum_ModuleSource(unsigned int ModuleNr)
   unsigned int FirstDSPChannelNr = ModuleNr<<1;
 //    unsigned char DSPCardNr = FirstDSPChannelNr/64;
   unsigned char DSPCardNr = (FirstDSPChannelNr/64);
-  unsigned char DSPNr = (FirstDSPChannelNr%64)/32;
-  unsigned char DSPChannelNr = FirstDSPChannelNr%32;
+  //unsigned char DSPNr = (FirstDSPChannelNr%64)/32;
+  //unsigned char DSPChannelNr = FirstDSPChannelNr%32;
 
   unsigned int ToChannelNr = 480+(DSPCardNr*5*32)+FirstDSPChannelNr%64;
 
@@ -13229,8 +13260,6 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
 
       if (AxumData.ModuleData[ModuleNr].Source != 0)
       {
-        int SourceNr = AxumData.ModuleData[ModuleNr].Source-1;
-
         printf ("MixMinus@%s\n", AxumData.DestinationData[DestinationNr].DestinationName);
 
         int BussToUse = -1;
@@ -13278,8 +13307,8 @@ void SetAxum_ModuleInsertSource(unsigned int ModuleNr)
   unsigned int FirstDSPChannelNr = ModuleNr<<1;
 //    unsigned char DSPCardNr = FirstDSPChannelNr/64;
   unsigned char DSPCardNr = (FirstDSPChannelNr/64);
-  unsigned char DSPNr = (FirstDSPChannelNr%64)/32;
-  unsigned char DSPChannelNr = FirstDSPChannelNr%32;
+  //unsigned char DSPNr = (FirstDSPChannelNr%64)/32;
+  //unsigned char DSPChannelNr = FirstDSPChannelNr%32;
 
   unsigned int ToChannelNr = 480+64+(DSPCardNr*5*32)+FirstDSPChannelNr%64;
 
@@ -13440,7 +13469,7 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
       printf("src: Module insert out %d\n", ModuleNr+1);
 
       unsigned char DSPCardNr = (ModuleNr/32);
-      unsigned char DSPNr = (ModuleNr%32)/16;
+      //unsigned char DSPNr = (ModuleNr%32)/16;
 
       unsigned int FirstDSPChannelNr = 481+(DSPCardNr*5*32);
 
@@ -13547,7 +13576,7 @@ void SetAxum_TalkbackSource(unsigned int TalkbackNr)
     printf("Talkback src: Module insert out %d\n", ModuleNr+1);
 
     unsigned char DSPCardNr = (ModuleNr/32);
-    unsigned char DSPNr = (ModuleNr%32)/16;
+    //unsigned char DSPNr = (ModuleNr%32)/16;
 
     unsigned int FirstDSPChannelNr = 481+(DSPCardNr*5*32);
 
@@ -14187,7 +14216,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         if (AxumData.ModuleData[ModuleNr].Source == 0)
         {
-          sprintf(LCDText, "  None  \0");
+          sprintf(LCDText, "  None  ");
         }
         else
         {
@@ -14327,11 +14356,11 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         if (AxumData.ModuleData[ModuleNr].Source == 0)
         {
-          sprintf(LCDText, "  - dB  \0");
+          sprintf(LCDText, "  - dB  ");
         }
         else
         {
-          sprintf(LCDText,     "%5.1fdB\0", AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].Gain);
+          sprintf(LCDText,     "%5.1fdB", AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].Gain);
         }
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
@@ -14417,7 +14446,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       break;
       case OCTET_STRING_DATATYPE:
       {
-        sprintf(LCDText,     "%5.1fdB\0", AxumData.ModuleData[ModuleNr].Gain);
+        sprintf(LCDText,     "%5.1fdB", AxumData.ModuleData[ModuleNr].Gain);
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
         TransmitData[1] = ObjectNr&0xFF;
@@ -14451,11 +14480,11 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         if (!AxumData.ModuleData[ModuleNr].Filter.On)
         {
-          sprintf(LCDText, "  Off  \0");
+          sprintf(LCDText, "  Off  ");
         }
         else
         {
-          sprintf(LCDText, "%5dHz\0", AxumData.ModuleData[ModuleNr].Filter.Frequency);
+          sprintf(LCDText, "%5dHz", AxumData.ModuleData[ModuleNr].Filter.Frequency);
         }
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
@@ -14509,7 +14538,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
       case OCTET_STRING_DATATYPE:
       {
-        sprintf(LCDText, "%5.1fdB\0", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level);
+        sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level);
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
         TransmitData[1] = ObjectNr&0xFF;
@@ -14544,7 +14573,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
       case OCTET_STRING_DATATYPE:
       {
-        sprintf(LCDText, "%5dHz\0", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency);
+        sprintf(LCDText, "%5dHz", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency);
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
         TransmitData[1] = ObjectNr&0xFF;
@@ -14579,7 +14608,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
       case OCTET_STRING_DATATYPE:
       {
-        sprintf(LCDText, "%5.1f Q\0", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth);
+        sprintf(LCDText, "%5.1f Q", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth);
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
         TransmitData[1] = ObjectNr&0xFF;
@@ -14649,37 +14678,37 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case HPF:
         {
-          sprintf(LCDText, "HighPass\0");
+          sprintf(LCDText, "HighPass");
         }
         break;
         case LOWSHELF:
         {
-          sprintf(LCDText, "LowShelf\0");
+          sprintf(LCDText, "LowShelf");
         }
         break;
         case PEAKINGEQ:
         {
-          sprintf(LCDText, "Peaking \0");
+          sprintf(LCDText, "Peaking ");
         }
         break;
         case HIGHSHELF:
         {
-          sprintf(LCDText, "Hi Shelf\0");
+          sprintf(LCDText, "Hi Shelf");
         }
         break;
         case LPF:
         {
-          sprintf(LCDText, "Low Pass\0");
+          sprintf(LCDText, "Low Pass");
         }
         break;
         case BPF:
         {
-          sprintf(LCDText, "BandPass\0");
+          sprintf(LCDText, "BandPass");
         }
         break;
         case NOTCH:
         {
-          sprintf(LCDText, "  Notch \0");
+          sprintf(LCDText, "  Notch ");
         }
         break;
         }
@@ -14734,7 +14763,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
       case OCTET_STRING_DATATYPE:
       {
-        sprintf(LCDText, "  %3d%%  \0", AxumData.ModuleData[ModuleNr].Dynamics);
+        sprintf(LCDText, "  %3d%%  ", AxumData.ModuleData[ModuleNr].Dynamics);
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
         TransmitData[1] = ObjectNr&0xFF;
@@ -14804,18 +14833,18 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         unsigned char Pos = AxumData.ModuleData[ModuleNr].Panorama/128;
         unsigned char Type = (AxumData.ModuleData[ModuleNr].Panorama%128)/32;
 
-        sprintf(LCDText, "        \0");
+        sprintf(LCDText, "        ");
         if (AxumData.ModuleData[ModuleNr].Panorama == 0)
         {
-          sprintf(LCDText, "Left    \0");
+          sprintf(LCDText, "Left    ");
         }
         else if ((AxumData.ModuleData[ModuleNr].Panorama == 511) || (AxumData.ModuleData[ModuleNr].Panorama == 512))
         {
-          sprintf(LCDText, " Center \0");
+          sprintf(LCDText, " Center ");
         }
         else if (AxumData.ModuleData[ModuleNr].Panorama == 1023)
         {
-          sprintf(LCDText, "   Right\0");
+          sprintf(LCDText, "   Right");
         }
         else
         {
@@ -14891,7 +14920,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       break;
       case OCTET_STRING_DATATYPE:
       {
-        sprintf(LCDText, " %4.0f dB\0", AxumData.ModuleData[ModuleNr].FaderLevel);
+        sprintf(LCDText, " %4.0f dB", AxumData.ModuleData[ModuleNr].FaderLevel);
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
         TransmitData[1] = ObjectNr&0xFF;
@@ -15032,11 +15061,11 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         if (AxumData.ModuleData[ModuleNr].Buss[BussNr].On)
         {
-          sprintf(LCDText, " %4.0f dB\0", AxumData.ModuleData[ModuleNr].Buss[BussNr].Level);
+          sprintf(LCDText, " %4.0f dB", AxumData.ModuleData[ModuleNr].Buss[BussNr].Level);
         }
         else
         {
-          sprintf(LCDText, "  Off   \0");
+          sprintf(LCDText, "  Off   ");
         }
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
@@ -15174,18 +15203,18 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         unsigned char Pos = AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance/128;
         unsigned char Type = (AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance%128)/32;
 
-        sprintf(LCDText, "        \0");
+        sprintf(LCDText, "        ");
         if (AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance == 0)
         {
-          sprintf(LCDText, "Left    \0");
+          sprintf(LCDText, "Left    ");
         }
         else if ((AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance == 511) || (AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance == 512))
         {
-          sprintf(LCDText, " Center \0");
+          sprintf(LCDText, " Center ");
         }
         else if (AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance == 1023)
         {
-          sprintf(LCDText, "   Right\0");
+          sprintf(LCDText, "   Right");
         }
         else
         {
@@ -15396,7 +15425,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       case OCTET_STRING_DATATYPE:
       {
         char LCDText[9];
-        sprintf(LCDText, " %4.0f dB\0", AxumData.BussMasterData[BussNr].Level);
+        sprintf(LCDText, " %4.0f dB", AxumData.BussMasterData[BussNr].Level);
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
         TransmitData[1] = ObjectNr&0xFF;
@@ -15551,7 +15580,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
     unsigned int Active = 0;
     unsigned char TransmitData[32];
 
-    if ((FunctionNr>=0) && (FunctionNr<24))
+    if (FunctionNr<24)
     {
       switch (FunctionNr)
       {
@@ -15715,7 +15744,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case OCTET_STRING_DATATYPE:
         {
           char LCDText[9];
-          sprintf(LCDText, " %4.0f dB\0", AxumData.Monitor[MonitorBussNr].PhonesLevel);
+          sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].PhonesLevel);
 
           TransmitData[0] = (ObjectNr>>8)&0xFF;
           TransmitData[1] = ObjectNr&0xFF;
@@ -15843,7 +15872,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case OCTET_STRING_DATATYPE:
         {
           char LCDText[9];
-          sprintf(LCDText, " %4.0f dB\0", AxumData.Monitor[MonitorBussNr].SpeakerLevel);
+          sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].SpeakerLevel);
 
           TransmitData[0] = (ObjectNr>>8)&0xFF;
           TransmitData[1] = ObjectNr&0xFF;
@@ -15992,7 +16021,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
     if (GlobalNr == 0)
     {
-      if ((FunctionNr>=GLOBAL_FUNCTION_REDLIGHT_1) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE))
+      if ((((signed int)FunctionNr)>=GLOBAL_FUNCTION_REDLIGHT_1) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE))
       { //all states
         unsigned char Active = 0;
         unsigned char TransmitData[32];
@@ -16228,7 +16257,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+        if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
         {
           if (AxumData.ModuleData[cntModule].On)
           {
@@ -16261,7 +16290,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+        if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
         {
           if (AxumData.ModuleData[cntModule].FaderLevel>-80)
           {
@@ -16293,7 +16322,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+        if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
         {
           if (AxumData.ModuleData[cntModule].FaderLevel>-80)
           {
@@ -16344,7 +16373,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+        if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
         {
           if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
           {
@@ -16385,7 +16414,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+        if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
         {
           if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
           {
@@ -16426,7 +16455,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+        if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
         {
           if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
           {
@@ -16451,7 +16480,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+1))
+        if (AxumData.ModuleData[cntModule].Source == ((signed int)(SourceNr+1)))
         {
           if (AxumData.ModuleData[cntModule].Cough)
           {
@@ -16664,14 +16693,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         {
           if (AxumData.DestinationData[DestinationNr].Source<161)
           {
-            sprintf(LCDText, "Ins: %d\0", AxumData.DestinationData[DestinationNr].Source-32);
+            sprintf(LCDText, "Ins: %d", AxumData.DestinationData[DestinationNr].Source-32);
           }
           else
           {
             int SourceNr =AxumData.DestinationData[DestinationNr].Source-161;
             if ((SourceNr+1) == 0)
             {
-              sprintf(LCDText, "  None  \0");
+              sprintf(LCDText, "  None  ");
             }
             else
             {
@@ -16746,7 +16775,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case OCTET_STRING_DATATYPE:
         {
           char LCDText[9];
-          sprintf(LCDText, " %4.0f dB\0", AxumData.Monitor[MonitorBussNr].SpeakerLevel);
+          sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].SpeakerLevel);
 
           TransmitData[0] = (ObjectNr>>8)&0xFF;
           TransmitData[1] = ObjectNr&0xFF;
@@ -16840,7 +16869,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case OCTET_STRING_DATATYPE:
         {
           char LCDText[9];
-          sprintf(LCDText, " %4.0f dB\0", AxumData.Monitor[MonitorBussNr].PhonesLevel);
+          sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].PhonesLevel);
 
           TransmitData[0] = (ObjectNr>>8)&0xFF;
           TransmitData[1] = ObjectNr&0xFF;
@@ -16930,7 +16959,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       case OCTET_STRING_DATATYPE:
       {
         char LCDText[9];
-        sprintf(LCDText, " %4.0f dB\0", AxumData.DestinationData[DestinationNr].Level);
+        sprintf(LCDText, " %4.0f dB", AxumData.DestinationData[DestinationNr].Level);
 
         TransmitData[0] = (ObjectNr>>8)&0xFF;
         TransmitData[1] = ObjectNr&0xFF;
@@ -17379,7 +17408,7 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
     delete AxumFunctionInformationStructToDelete;
   }
 
-  for (int cntNodes=0; cntNodes<AddressTableCount; cntNodes++)
+  for (unsigned int cntNodes=0; cntNodes<AddressTableCount; cntNodes++)
   {
     if (OnlineNodeInformation[cntNodes].MambaNetAddress != 0)
     {
@@ -17649,7 +17678,7 @@ void *thread(void *vargp)
 
       int ParameterNumber = 0;
       char TempBuffer[256];
-      char cntTempBuffer = 0;
+      unsigned char cntTempBuffer = 0;
       for (int cntChar=0; cntChar<Length; cntChar++)
       {
         if (TextString[StartPos+cntChar]==',')
@@ -17736,7 +17765,7 @@ void *thread(void *vargp)
         sprintf(SQLQuery, "	SELECT * FROM configuration_node_%08x WHERE \"Object Number\" = %d;\n", MambaNetAddress, ObjectNr);
 
         int IndexOfSender = -1;
-        for (int cntIndex=0; cntIndex<AddressTableCount; cntIndex++)
+        for (unsigned int cntIndex=0; cntIndex<AddressTableCount; cntIndex++)
         {
           if (OnlineNodeInformation[cntIndex].MambaNetAddress == MambaNetAddress)
           {
@@ -17853,7 +17882,7 @@ void *thread(void *vargp)
         char *zErrMsg;
 
         //Do refresh configuration table
-        sprintf(SQLQuery, "SELECT * FROM talkback_configuration;\n", ObjectNr);
+        sprintf(SQLQuery, "SELECT * FROM talkback_configuration;\n");
         printf(SQLQuery);
         if (sqlite3_exec(axum_engine_db, SQLQuery, TalkbackConfigurationCallback, 0, &zErrMsg) != SQLITE_OK)
         {
@@ -17867,7 +17896,7 @@ void *thread(void *vargp)
         char *zErrMsg;
 
         //Do refresh configuration table
-        sprintf(SQLQuery, "SELECT * FROM global_configuration;\n", ObjectNr);
+        sprintf(SQLQuery, "SELECT * FROM global_configuration;\n");
         printf(SQLQuery);
         if (sqlite3_exec(axum_engine_db, SQLQuery, GlobalConfigurationCallback, 0, &zErrMsg) != SQLITE_OK)
         {
@@ -17879,12 +17908,11 @@ void *thread(void *vargp)
   }
 
   return NULL;
+  vargp = NULL;
 }
 
 void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char *Data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
 {
-  int BandNr = 0;
-  float Coefs[6] = {0,0,0,0,0,0};
   unsigned int ModuleNr = (SensorReceiveFunctionNr>>12)&0xFFF;
   unsigned int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   char ControlMode = -1;
@@ -18552,7 +18580,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-      FunctionNrToSent = (ModuleNr<<12) | MODULE_FUNCTION_BUSS_1_2_LEVEL+(BussNr*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL));
+      FunctionNrToSent = (ModuleNr<<12) | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(BussNr*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL)));
       CheckObjectsToSent(FunctionNrToSent);
     }
     break;
@@ -18598,12 +18626,14 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     break;
     }
   }
+  DataType = 0;
+  DataSize = 0;
+  DataMinimal = 0;
+  DataMaximal = 0;
 }
 
 void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char *Data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
 {
-  int BandNr = 0;
-  float Coefs[6] = {0,0,0,0,0,0};
   unsigned int ModuleNr = (SensorReceiveFunctionNr>>12)&0xFFF;
   unsigned int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   char ControlMode = -1;
@@ -19082,6 +19112,10 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       }
     }
   }
+  DataType = 0;
+  DataSize = 0;
+  DataMinimal = 0;
+  DataMaximal = 0;
 }
 
 void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
@@ -19122,7 +19156,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   {
     if (AxumData.ModuleData[ModuleNr].Source == 0)
     {
-      sprintf(LCDText, "  None  \0");
+      sprintf(LCDText, "  None  ");
     }
     else
     {
@@ -19134,7 +19168,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   {
     if (AxumData.ModuleData[ModuleNr].Source == 0)
     {
-      sprintf(LCDText, "  None  \0");
+      sprintf(LCDText, "  None  ");
     }
     else
     {
@@ -19146,17 +19180,17 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   {
     if (AxumData.ModuleData[ModuleNr].Source == 0)
     {
-      sprintf(LCDText, "  - dB  \0");
+      sprintf(LCDText, "  - dB  ");
     }
     else
     {
-      sprintf(LCDText,     "%5.1fdB\0", AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].Gain);
+      sprintf(LCDText,     "%5.1fdB", AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].Gain);
     }
   }
   break;
   case MODULE_CONTROL_MODE_GAIN:
   {
-    sprintf(LCDText,     "%5.1fdB\0", AxumData.ModuleData[ModuleNr].Gain);
+    sprintf(LCDText,     "%5.1fdB", AxumData.ModuleData[ModuleNr].Gain);
   }
   break;
   case MODULE_CONTROL_MODE_PHASE:
@@ -19175,11 +19209,11 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   {
     if (!AxumData.ModuleData[ModuleNr].Filter.On)
     {
-      sprintf(LCDText, "  Off  \0");
+      sprintf(LCDText, "  Off  ");
     }
     else
     {
-      sprintf(LCDText, "%5dHz\0", AxumData.ModuleData[ModuleNr].Filter.Frequency);
+      sprintf(LCDText, "%5dHz", AxumData.ModuleData[ModuleNr].Filter.Frequency);
     }
   }
   break;
@@ -19191,7 +19225,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   case MODULE_CONTROL_MODE_EQ_BAND_6_LEVEL:
   {
     int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL)/(MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL);
-    sprintf(LCDText, "%5.1fdB\0", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level);
+    sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level);
   }
   break;
   case MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY:
@@ -19202,7 +19236,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   case MODULE_CONTROL_MODE_EQ_BAND_6_FREQUENCY:
   {
     int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY)/(MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY);
-    sprintf(LCDText, "%5dHz\0", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency);
+    sprintf(LCDText, "%5dHz", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency);
   }
   break;
   case MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH:
@@ -19213,7 +19247,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   case MODULE_CONTROL_MODE_EQ_BAND_6_BANDWIDTH:
   {
     int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH)/(MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH);
-    sprintf(LCDText, "%5.1f Q\0", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth);
+    sprintf(LCDText, "%5.1f Q", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth);
   }
   break;
   case MODULE_CONTROL_MODE_EQ_BAND_1_TYPE:
@@ -19233,37 +19267,37 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
     break;
     case HPF:
     {
-      sprintf(LCDText, "HighPass\0");
+      sprintf(LCDText, "HighPass");
     }
     break;
     case LOWSHELF:
     {
-      sprintf(LCDText, "LowShelf\0");
+      sprintf(LCDText, "LowShelf");
     }
     break;
     case PEAKINGEQ:
     {
-      sprintf(LCDText, "Peaking \0");
+      sprintf(LCDText, "Peaking ");
     }
     break;
     case HIGHSHELF:
     {
-      sprintf(LCDText, "Hi Shelf\0");
+      sprintf(LCDText, "Hi Shelf");
     }
     break;
     case LPF:
     {
-      sprintf(LCDText, "Low Pass\0");
+      sprintf(LCDText, "Low Pass");
     }
     break;
     case BPF:
     {
-      sprintf(LCDText, "BandPass\0");
+      sprintf(LCDText, "BandPass");
     }
     break;
     case NOTCH:
     {
-      sprintf(LCDText, "  Notch \0");
+      sprintf(LCDText, "  Notch ");
     }
     break;
     }
@@ -19271,7 +19305,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   break;
   case MODULE_CONTROL_MODE_DYNAMICS:
   {
-    sprintf(LCDText, "  %3d%%  \0", AxumData.ModuleData[ModuleNr].Dynamics);
+    sprintf(LCDText, "  %3d%%  ", AxumData.ModuleData[ModuleNr].Dynamics);
   }
   break;
   case MODULE_CONTROL_MODE_MONO:
@@ -19292,18 +19326,18 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
     unsigned char Pos = AxumData.ModuleData[ModuleNr].Panorama/128;
     unsigned char Type = (AxumData.ModuleData[ModuleNr].Panorama%128)/32;
 
-    sprintf(LCDText, "        \0");
+    sprintf(LCDText, "        ");
     if (AxumData.ModuleData[ModuleNr].Panorama == 0)
     {
-      sprintf(LCDText, "Left    \0");
+      sprintf(LCDText, "Left    ");
     }
     else if ((AxumData.ModuleData[ModuleNr].Panorama == 511) || (AxumData.ModuleData[ModuleNr].Panorama == 512))
     {
-      sprintf(LCDText, " Center \0");
+      sprintf(LCDText, " Center ");
     }
     else if (AxumData.ModuleData[ModuleNr].Panorama == 1023)
     {
-      sprintf(LCDText, "   Right\0");
+      sprintf(LCDText, "   Right");
     }
     else
     {
@@ -19313,7 +19347,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   break;
   case MODULE_CONTROL_MODE_MODULE_LEVEL:
   {
-    sprintf(LCDText, " %4.0f dB\0", AxumData.ModuleData[ModuleNr].FaderLevel);
+    sprintf(LCDText, " %4.0f dB", AxumData.ModuleData[ModuleNr].FaderLevel);
   }
   break;
   case MODULE_CONTROL_MODE_BUSS_1_2:
@@ -19336,11 +19370,11 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
     int BussNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
     if (AxumData.ModuleData[ModuleNr].Buss[BussNr].On)
     {
-      sprintf(LCDText, " %4.0f dB\0", AxumData.ModuleData[ModuleNr].Buss[BussNr].Level);
+      sprintf(LCDText, " %4.0f dB", AxumData.ModuleData[ModuleNr].Buss[BussNr].Level);
     }
     else
     {
-      sprintf(LCDText, "  Off   \0");
+      sprintf(LCDText, "  Off   ");
     }
   }
   break;
@@ -19367,18 +19401,18 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
     unsigned char Pos = AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance/128;
     unsigned char Type = (AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance%128)/32;
 
-    sprintf(LCDText, "        \0");
+    sprintf(LCDText, "        ");
     if (AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance == 0)
     {
-      sprintf(LCDText, "Left    \0");
+      sprintf(LCDText, "Left    ");
     }
     else if ((AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance == 511) || (AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance == 512))
     {
-      sprintf(LCDText, " Center \0");
+      sprintf(LCDText, " Center ");
     }
     else if (AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance == 1023)
     {
-      sprintf(LCDText, "   Right\0");
+      sprintf(LCDText, "   Right");
     }
     else
     {
@@ -19408,6 +19442,11 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   TransmitData[12] = LCDText[7];
 
   SendMambaNetMessage(MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 13);
+  
+  DataType = 0;
+  DataSize = 0;
+  DataMinimal = 0;
+  DataMaximal = 0;
 }
 
 void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
@@ -19608,12 +19647,15 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
   TransmitData[12] = LCDText[7];
 
   SendMambaNetMessage(MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 13);
+  DataType = 0;
+  DataSize = 0;
+  DataMinimal = 0;
+  DataMaximal = 0;
 }
 
 
 void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char *Data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
 {
-  int GlobalNr = (SensorReceiveFunctionNr>>12)&0xFFF;
   int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   int MasterControlMode = -1;
 
@@ -19749,11 +19791,12 @@ void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsi
     break;
     }
   }
+  DataType = 0;
+  DataSize = 0;
 }
 
 void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char *Data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
 {
-  int GlobalNr = (SensorReceiveFunctionNr>>12)&0xFFF;
   int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   int MasterControlMode = -1;
 
@@ -19783,7 +19826,6 @@ void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr,
 
   if (Data[3] == STATE_DATATYPE)
   {
-    float *BussMasterLevel = NULL;
     unsigned long TempData = 0;
 
     for (int cntByte=0; cntByte<Data[4]; cntByte++)
@@ -19829,12 +19871,15 @@ void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr,
       }
     }
   }
+  DataType = 0;
+  DataSize = 0;
+  DataMinimal = 0;
+  DataMaximal = 0;
 }
 
 
 void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
 {
-  int GlobalNr = (SensorReceiveFunctionNr>>12)&0xFFF;
   int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   int MasterControlMode = -1;
   unsigned char TransmitData[32];
@@ -19935,6 +19980,7 @@ void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned 
   }
   break;
   }
+  DataSize = 0;
 }
 
 void DoAxum_BussReset(int BussNr)
@@ -20148,7 +20194,6 @@ void DoAxum_ModuleStatusChanged(int ModuleNr)
 void DoAxum_ModulePreStatusChanged(int BussNr)
 {
   unsigned char NewMonitorBussDim[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-  int ModuleToBussChanged = 0;
 
   for (int cntModule=0; cntModule<128; cntModule++)
   {
