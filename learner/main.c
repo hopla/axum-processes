@@ -232,17 +232,6 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
 }
 
 
-void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
-  log_write("AcknowledgeTimeout: %08X[%5d] get %s", msg->AddressFrom, msg->Message.Object.Number,
-    msg->Message.Object.Action == MBN_OBJ_ACTION_GET_INFO ? "object information" : "sensor data");
-
-  /* remove from the queue */
-  remove_queue(msg->AddressFrom, msg->Message.Object.Number);
-  return;
-  m++;
-}
-
-
 int mObjectInformationResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned short obj, struct mbn_object *nfo) {
   struct mbn_address_node *node;
   char str[15][34];
@@ -297,6 +286,23 @@ int mObjectInformationResponse(struct mbn_handler *m, struct mbn_message *msg, u
     VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)", 0, 15, params);
 
   return 0;
+  m++;
+}
+
+
+void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
+  log_write("AcknowledgeTimeout: %08X[%5d] get %s", msg->AddressFrom, msg->Message.Object.Number,
+    msg->Message.Object.Action == MBN_OBJ_ACTION_GET_INFO ? "object information" : "sensor data");
+  remove_queue(msg->AddressFrom, msg->Message.Object.Number);
+  return;
+  m++;
+}
+
+
+void mObjectError(struct mbn_handler *m, struct mbn_message *msg, unsigned short obj, char *err) {
+  log_write("ObjectError       : %08X[%5d] = %s", msg->AddressFrom, obj, err);
+  remove_queue(msg->AddressFrom, obj);
+  return;
   m++;
 }
 
@@ -364,6 +370,7 @@ void init(int argc, char *argv[]) {
   mbnSetSensorDataResponseCallback(mbn, mSensorDataResponse);
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
   mbnSetObjectInformationResponseCallback(mbn, mObjectInformationResponse);
+  mbnSetObjectErrorCallback(mbn, mObjectError);
 
   daemonize_finish();
   log_write("------------------------");
