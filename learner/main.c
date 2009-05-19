@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #define GET_NUM 5 /* maxumum number of concurrent requests */
+#define DEBUG 0
 
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
 #define DEFAULT_ETH_DEV   "eth0"
@@ -110,9 +111,13 @@ void process_queue() {
       mbnGetSensorData(mbn, a->addr, a->object, 1);
     else
       mbnGetObjectInformation(mbn, a->addr, a->object, 1);
+    if(DEBUG)
+      log_write("GET: %08lX[%5d] %s", a->addr, a->object, a->act ? "object information" : "sensor data");
     a->active = 1;
   }
   pthread_mutex_unlock(&get_queue_mutex);
+  if(DEBUG)
+    log_write("active = %d, sent = %d", active, sent);
 }
 
 
