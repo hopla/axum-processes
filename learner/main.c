@@ -8,6 +8,7 @@
 
 #include <mbn.h>
 #include <libpq-fe.h>
+#include <pthread.h>
 
 #define GET_NUM 5 /* maxumum number of concurrent requests */
 
@@ -36,6 +37,8 @@ struct get_action {
   struct get_action *next;
 };
 struct get_action *get_queue = NULL;
+/* deadlock warning: don't lock this one within an sql_lock() */
+pthread_mutex_t get_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* simple node info list, temporary place for getting the number
  * ob objects and firmware major revision */
@@ -79,19 +82,24 @@ void minmax(char *res, unsigned char type, union mbn_data dat) {
 
 
 void add_queue(char act, unsigned long addr, unsigned short obj) {
-  struct get_action **last = &get_queue;
+  struct get_action **last;
+  pthread_mutex_lock(&get_queue_mutex);
+  last = &get_queue;
   while(*last != NULL)
     last = &((*last)->next);
   *last = calloc(1, sizeof(struct get_action));
   (*last)->act = act;
   (*last)->addr = addr;
   (*last)->object = obj;
+  pthread_mutex_unlock(&get_queue_mutex);
 }
 
 
 void process_queue() {
   struct get_action *a;
   int i, active=0, sent=0;
+
+  pthread_mutex_lock(&get_queue_mutex);
   for(a=get_queue,i=0; a!=NULL&&i<GET_NUM; a=a->next,i++) {
     if(a->active != 0) {
       active++;
@@ -104,7 +112,7 @@ void process_queue() {
       mbnGetObjectInformation(mbn, a->addr, a->object, 1);
     a->active = 1;
   }
-  log_write("active = %d, sent = %d", active, sent);
+  pthread_mutex_unlock(&get_queue_mutex);
 }
 
 
@@ -112,18 +120,23 @@ int remove_queue(unsigned long addr, unsigned short obj) {
   struct get_action *n, *last;
   int i;
 
+  pthread_mutex_lock(&get_queue_mutex);
   for(n=last=get_queue,i=0; n!=NULL&&i<GET_NUM; n=n->next,i++) {
     if(n->active == 1 && n->addr == addr && n->object == obj)
       break;
     last = n;
   }
-  if(n == NULL || i == GET_NUM)
+  if(n == NULL || i == GET_NUM) {
+    pthread_mutex_unlock(&get_queue_mutex);
     return 0;
+  }
 
   if(get_queue == n)
     get_queue = n->next;
   else
     last->next = n->next;
+  pthread_mutex_unlock(&get_queue_mutex);
+
   return 1;
 }
 
