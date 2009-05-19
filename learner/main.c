@@ -293,7 +293,7 @@ int mObjectInformationResponse(struct mbn_handler *m, struct mbn_message *msg, u
 void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
   log_write("AcknowledgeTimeout: %08X[%5d] get %s", msg->AddressFrom, msg->Message.Object.Number,
     msg->Message.Object.Action == MBN_OBJ_ACTION_GET_INFO ? "object information" : "sensor data");
-  remove_queue(msg->AddressFrom, msg->Message.Object.Number);
+  remove_queue(msg->AddressTo, msg->Message.Object.Number);
   return;
   m++;
 }
