@@ -68,6 +68,16 @@ char *data2str(unsigned char type, union mbn_data dat) {
 }
 
 
+void minmax(char *res, unsigned char type, union mbn_data dat) {
+  if(type == MBN_DATATYPE_SINT)
+    sprintf(res, "(%ld,)", dat.SInt);
+  else if(type != MBN_DATATYPE_FLOAT)
+    sprintf(res, "(%ld,)", dat.UInt);
+  else
+    sprintf(res, "(,%f)", dat.Float);
+}
+
+
 void add_queue(char act, unsigned long addr, unsigned short obj) {
   struct get_action **last = &get_queue;
   while(*last != NULL)
@@ -81,16 +91,20 @@ void add_queue(char act, unsigned long addr, unsigned short obj) {
 
 void process_queue() {
   struct get_action *a;
-  int i;
+  int i, active=0, sent=0;
   for(a=get_queue,i=0; a!=NULL&&i<GET_NUM; a=a->next,i++) {
-    if(a->active != 0)
+    if(a->active != 0) {
+      active++;
       continue;
+    }
+    sent++;
     if(a->act == 0)
       mbnGetSensorData(mbn, a->addr, a->object, 1);
     else
       mbnGetObjectInformation(mbn, a->addr, a->object, 1);
     a->active = 1;
   }
+  log_write("active = %d, sent = %d", active, sent);
 }
 
 
@@ -148,12 +162,11 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
   const char *params[4] = { (const char *)&(str[0]), (const char *)&(str[1]), (const char *)&(str[2]), (const char *)&(str[3]) };
   int n, i;
 
-  if((node = mbnNodeStatus(mbn, msg->AddressFrom)) == NULL)
-    return 1;
-
   log_write("SensorDataResponse: %08lX[%5d] = (%2d) %s", msg->AddressFrom, obj, type, data2str(type, dat));
 
   if(!remove_queue(msg->AddressFrom, obj))
+    return 1;
+  if((node = mbnNodeStatus(mbn, msg->AddressFrom)) == NULL)
     return 1;
 
   /* we should receive both firmware and number of objects, wait
@@ -170,7 +183,6 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
     nodes[n].objects = dat.UInt;
   if(nodes[n].fwmajor == -1 || nodes[n].objects == -1)
     return 0;
-  nodes[n].addr = 0;
 
   /* doesn't have any objects? ignore */
   if(nodes[n].objects == 0)
@@ -208,29 +220,71 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
 
 
 void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
-  int i;
-
   log_write("AcknowledgeTimeout: %08X[%5d] get %s", msg->AddressFrom, msg->Message.Object.Number,
     msg->Message.Object.Action == MBN_OBJ_ACTION_GET_INFO ? "object information" : "sensor data");
 
-  /* remove from the queue and node list */
+  /* remove from the queue */
   remove_queue(msg->AddressFrom, msg->Message.Object.Number);
-  if(msg->Message.Object.Number == MBN_NODEOBJ_FWMAJOR || msg->Message.Object.Number == MBN_NODEOBJ_NUMBEROFOBJECTS)
-    for(i=0; i<nodesl; i++)
-      if(nodes[i].addr == msg->AddressFrom)
-        nodes[i].addr = 0;
   return;
   m++;
 }
 
 
 int mObjectInformationResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned short obj, struct mbn_object *nfo) {
+  struct mbn_address_node *node;
+  char str[15][34];
+  const char *params[15];
+  int i, fwmajor = -1;
+
   /* the lacking -e is intentional, to make the log aligned with the other messages */
   log_write("InformationRespons: %08X[%5d]", msg->AddressFrom, obj);
   if(!remove_queue(msg->AddressFrom, obj))
     return 1;
+
+  /* get firmware major revision and node information */
+  for(i=0; i<nodesl; i++)
+    if(nodes[i].addr == msg->AddressFrom) {
+      fwmajor = nodes[i].fwmajor;
+      break;
+    }
+  if(i == nodesl)
+    return 1;
+  if((node = mbnNodeStatus(mbn, msg->AddressFrom)) == NULL)
+    return 1;
+
+  /* create params list */
+  for(i=0; i<15; i++)
+    params[i] = (const char *)str[i];
+  sprintf(str[0], "%hd", node->ManufacturerID);
+  sprintf(str[1], "%hd", node->ProductID);
+  sprintf(str[2], "%hd", (short)fwmajor);
+  sprintf(str[3], "%hd", obj);
+  sprintf(str[4], "%s",  nfo->Description);
+  sprintf(str[5], "%hd", nfo->Services);
+  sprintf(str[6], "%hd", nfo->SensorType);
+  if(nfo->SensorType == MBN_DATATYPE_NODATA)
+    params[7] = params[8] = params[9] = NULL;
+  else {
+    sprintf(str[7], "%d", nfo->SensorSize);
+    minmax(str[8], nfo->SensorType, nfo->SensorMin);
+    minmax(str[9], nfo->SensorType, nfo->SensorMax);
+  }
+  sprintf(str[10], "%hd", nfo->ActuatorType);
+  if(nfo->ActuatorType == MBN_DATATYPE_NODATA)
+    params[11] = params[12] = params[13] = params[14] = NULL;
+  else {
+    sprintf(str[11], "%d", nfo->ActuatorSize);
+    minmax(str[12], nfo->ActuatorType, nfo->ActuatorMin);
+    minmax(str[13], nfo->ActuatorType, nfo->ActuatorMax);
+    minmax(str[14], nfo->ActuatorType, nfo->ActuatorDefault);
+  }
+
+  sql_exec("INSERT INTO templates (man_id, prod_id, firm_major, number, \"desc\", services, sensor_type, sensor_size,\
+    sensor_min, sensor_max, actuator_type, actuator_size, actuator_min, actuator_max, actuator_def)\
+    VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)", 0, 15, params);
+
   return 0;
-  m++; nfo++;
+  m++;
 }
 
 
@@ -313,7 +367,7 @@ int main(int argc, char *argv[]) {
 
   while(!main_quit) {
     process_queue();
-    sleep(3);
+    sleep(1);
   }
 
   log_write("Closing Learner");
