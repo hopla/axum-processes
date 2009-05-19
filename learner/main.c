@@ -7,7 +7,9 @@
 #include <unistd.h>
 
 #include <mbn.h>
+#include <libpq-fe.h>
 
+#define GET_NUM 5 /* maxumum number of concurrent requests */
 
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
 #define DEFAULT_ETH_DEV   "eth0"
@@ -25,6 +27,211 @@ struct mbn_node_info this_node = {
   {0,0,0}, 0
 };
 struct mbn_handler *mbn;
+
+struct get_action {
+  char act; /* 0=get sensor data, 1=get object information */
+  unsigned long addr;
+  unsigned short object;
+  char active;
+  struct get_action *next;
+};
+struct get_action *get_queue = NULL;
+
+/* simple node info list, temporary place for getting the number
+ * ob objects and firmware major revision */
+struct node_info {
+  unsigned long addr;
+  int objects, fwmajor;
+} *nodes = NULL;
+int nodesl = 0;
+
+
+char *data2str(unsigned char type, union mbn_data dat) {
+  static char d[256];
+  switch(type) {
+    case MBN_DATATYPE_NODATA: sprintf(d, "[no data]"); break;
+    case MBN_DATATYPE_UINT:   sprintf(d, "%lu", dat.UInt); break;
+    case MBN_DATATYPE_SINT:   sprintf(d, "%ld", dat.SInt); break;
+    case MBN_DATATYPE_STATE:  sprintf(d, "0x%08lX", dat.State); break;
+    case MBN_DATATYPE_OCTETS: sprintf(d, "\"%s\"", dat.Octets); break;
+    case MBN_DATATYPE_FLOAT:  sprintf(d, "%f", dat.Float); break;
+    case MBN_DATATYPE_BITS:
+      sprintf(d, "0x%02X%02X%02X%02X%02X%02X%02X%02X",
+        dat.Bits[0], dat.Bits[1], dat.Bits[2], dat.Bits[3],
+        dat.Bits[4], dat.Bits[5], dat.Bits[6], dat.Bits[7]);
+      break;
+    case MBN_DATATYPE_OBJINFO: sprintf(d, "[object info]"); break;
+    case MBN_DATATYPE_ERROR:   sprintf(d, "ERROR:\"%s\"", dat.Error); break;
+    default: sprintf(d, "[unknown datatype]");
+  }
+  return d;
+}
+
+
+void add_queue(char act, unsigned long addr, unsigned short obj) {
+  struct get_action **last = &get_queue;
+  while(*last != NULL)
+    last = &((*last)->next);
+  *last = calloc(1, sizeof(struct get_action));
+  (*last)->act = act;
+  (*last)->addr = addr;
+  (*last)->object = obj;
+}
+
+
+void process_queue() {
+  struct get_action *a;
+  int i;
+  for(a=get_queue,i=0; a!=NULL&&i<GET_NUM; a=a->next,i++) {
+    if(a->active != 0)
+      continue;
+    if(a->act == 0)
+      mbnGetSensorData(mbn, a->addr, a->object, 1);
+    else
+      mbnGetObjectInformation(mbn, a->addr, a->object, 1);
+    a->active = 1;
+  }
+}
+
+
+int remove_queue(unsigned long addr, unsigned short obj) {
+  struct get_action *n, *last;
+  int i;
+
+  for(n=last=get_queue,i=0; n!=NULL&&i<GET_NUM; n=n->next,i++) {
+    if(n->active == 1 && n->addr == addr && n->object == obj)
+      break;
+    last = n;
+  }
+  if(n == NULL || i == GET_NUM)
+    return 0;
+
+  if(get_queue == n)
+    get_queue = n->next;
+  else
+    last->next = n->next;
+  return 1;
+}
+
+
+void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, struct mbn_address_node *new) {
+  int i;
+
+  /* ignore anything but nodes that come online */
+  if(old != NULL || new == NULL)
+    return;
+
+  /* add node to node list (so we have a temporary storage for number of objects and firmware version */
+  for(i=0; i<nodesl; i++)
+    if(nodes[i].addr == 0 || nodes[i].addr == new->MambaNetAddr)
+      break;
+  if(i == nodesl) {
+    nodes = realloc(nodes, sizeof(struct node_info)*nodesl*2);
+    memset((void *)nodes+nodesl, 0, sizeof(struct node_info)*nodesl);
+    nodesl *= 2;
+  }
+  nodes[i].addr = new->MambaNetAddr;
+  nodes[i].fwmajor = nodes[i].objects = -1;
+
+  /* get major firmware version and number of objects */
+  add_queue(0, new->MambaNetAddr, MBN_NODEOBJ_FWMAJOR);
+  add_queue(0, new->MambaNetAddr, MBN_NODEOBJ_NUMBEROFOBJECTS);
+  return;
+  m++;
+}
+
+
+int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned short obj, unsigned char type, union mbn_data dat) {
+  struct mbn_address_node *node;
+  PGresult *res;
+  char str[4][20];
+  const char *params[4] = { (const char *)&(str[0]), (const char *)&(str[1]), (const char *)&(str[2]), (const char *)&(str[3]) };
+  int n, i;
+
+  if((node = mbnNodeStatus(mbn, msg->AddressFrom)) == NULL)
+    return 1;
+
+  log_write("SensorDataResponse: %08lX[%5d] = (%2d) %s", msg->AddressFrom, obj, type, data2str(type, dat));
+
+  if(!remove_queue(msg->AddressFrom, obj))
+    return 1;
+
+  /* we should receive both firmware and number of objects, wait
+   * for the other to arrive if we only have one of the values */
+  for(n=0; n<nodesl; n++)
+    if(nodes[n].addr == msg->AddressFrom)
+      break;
+  if(n == nodesl)
+    return 1;
+
+  if(obj == MBN_NODEOBJ_FWMAJOR)
+    nodes[n].fwmajor = dat.UInt;
+  else
+    nodes[n].objects = dat.UInt;
+  if(nodes[n].fwmajor == -1 || nodes[n].objects == -1)
+    return 0;
+  nodes[n].addr = 0;
+
+  /* doesn't have any objects? ignore */
+  if(nodes[n].objects == 0)
+    return 0;
+
+  /* we have both, check database for which objects we need to fetch */
+  sql_lock(1);
+  sprintf(str[0], "%d", nodes[n].objects+1024);
+  sprintf(str[1], "%hd", node->ManufacturerID);
+  sprintf(str[2], "%hd", node->ProductID);
+  sprintf(str[3], "%hd", nodes[n].fwmajor);
+  /* sql magic, returns the objects we don't have in the database */
+  if((res = sql_exec("SELECT n.a FROM generate_series(1024, $1) AS n(a)\
+        WHERE NOT EXISTS(SELECT 1 FROM templates t WHERE man_id = $2 AND prod_id = $3\
+        AND firm_major = $4 AND t.number = n.a)", 1, 4, params)) == NULL) {
+    sql_lock(0);
+    return 0;
+  }
+  for(i=0; i<PQntuples(res); i++) {
+    sscanf(PQgetvalue(res, i, 0), "%d", &n);
+    add_queue(1, msg->AddressFrom, n);
+  }
+  PQclear(res);
+
+  /* delete any objects outside the range, which might have been inserted
+   * by someone else or because of a change in the node */
+  if((res = sql_exec("DELETE FROM templates WHERE man_id = $2 AND prod_id = $3\
+       AND firm_major = $4 AND (number < 1024 OR number > $1)", 0, 4, params)) != NULL)
+    PQclear(res);
+  sql_lock(0);
+
+  return 0;
+  m++;
+}
+
+
+void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
+  int i;
+
+  log_write("AcknowledgeTimeout: %08X[%5d] get %s", msg->AddressFrom, msg->Message.Object.Number,
+    msg->Message.Object.Action == MBN_OBJ_ACTION_GET_INFO ? "object information" : "sensor data");
+
+  /* remove from the queue and node list */
+  remove_queue(msg->AddressFrom, msg->Message.Object.Number);
+  if(msg->Message.Object.Number == MBN_NODEOBJ_FWMAJOR || msg->Message.Object.Number == MBN_NODEOBJ_NUMBEROFOBJECTS)
+    for(i=0; i<nodesl; i++)
+      if(nodes[i].addr == msg->AddressFrom)
+        nodes[i].addr = 0;
+  return;
+  m++;
+}
+
+
+int mObjectInformationResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned short obj, struct mbn_object *nfo) {
+  /* the lacking -e is intentional, to make the log aligned with the other messages */
+  log_write("InformationRespons: %08X[%5d]", msg->AddressFrom, obj);
+  if(!remove_queue(msg->AddressFrom, obj))
+    return 1;
+  return 0;
+  m++; nfo++;
+}
 
 
 void init(int argc, char *argv[]) {
@@ -66,7 +273,6 @@ void init(int argc, char *argv[]) {
         fprintf(stderr, "  -l path  Path to log file.\n");
         fprintf(stderr, "  -d str   PostgreSQL database connection options.\n");
         exit(1);
-
     }
   }
 
@@ -87,6 +293,10 @@ void init(int argc, char *argv[]) {
     log_close();
     exit(1);
   }
+  mbnSetAddressTableChangeCallback(mbn, mAddressTableChange);
+  mbnSetSensorDataResponseCallback(mbn, mSensorDataResponse);
+  mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
+  mbnSetObjectInformationResponseCallback(mbn, mObjectInformationResponse);
 
   daemonize_finish();
   log_write("------------------------");
@@ -97,8 +307,14 @@ void init(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
   init(argc, argv);
 
-  while(!main_quit)
-    sleep(1);
+  /* init nodes list */
+  nodesl = 50;
+  nodes = calloc(nodesl, sizeof(struct node_info));
+
+  while(!main_quit) {
+    process_queue();
+    sleep(3);
+  }
 
   log_write("Closing Learner");
   mbnFree(mbn);
