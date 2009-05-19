@@ -203,7 +203,7 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
 
   /* we have both, check database for which objects we need to fetch */
   sql_lock(1);
-  sprintf(str[0], "%d", nodes[n].objects+1024);
+  sprintf(str[0], "%d", nodes[n].objects+1023);
   sprintf(str[1], "%hd", node->ManufacturerID);
   sprintf(str[2], "%hd", node->ProductID);
   sprintf(str[3], "%hd", nodes[n].fwmajor);
