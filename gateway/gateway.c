@@ -308,7 +308,7 @@ void init(int argc, char **argv, char *upath) {
   can = eth = tcp = NULL;
   verbose = 0;
 
-  while((c = getopt(argc, argv, "c:e:u:t:d:v")) != -1) {
+  while((c = getopt(argc, argv, "c:e:u:t:d:i:v")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
@@ -353,19 +353,27 @@ void init(int argc, char **argv, char *upath) {
         }
         strcpy(data_path, optarg);
         break;
+      /* uniqueidperproduct */
+      case 'i':
+        if(sscanf(optarg, "%hd", &(this_node.UniqueIDPerProduct)) != 1) {
+          fprintf(stderr, "Invalid UniqueIDPerProduct");
+          exit(1);
+        }
+        break;
       /* verbose */
       case 'v':
         verbose++;
         break;
       /* wrong option */
       default:
-        fprintf(stderr, "Usage: %s [-c dev] [-e dev] [-u path]\n", argv[0]);
+        fprintf(stderr, "Usage: %s [-v] [-c dev] [-e dev] [-t port] [-u path] [-d path] [-i id]\n", argv[0]);
         fprintf(stderr, "  -v       Print verbose output to stdout\n");
         fprintf(stderr, "  -c dev   CAN device\n");
         fprintf(stderr, "  -e dev   Ethernet device\n");
         fprintf(stderr, "  -t port  TCP port (0 = use default)\n");
         fprintf(stderr, "  -u path  Path to UNIX socket\n");
         fprintf(stderr, "  -d path  Path to data file (for IP setting)\n");
+        fprintf(stderr, "  -i id    UniqueIDPerProduct for the MambaNet node\n");
         exit(1);
     }
   }

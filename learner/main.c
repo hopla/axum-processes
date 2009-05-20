@@ -377,7 +377,7 @@ void init(int argc, char *argv[]) {
   strcpy(log_file, DEFAULT_LOG_FILE);
   strcpy(hwparent_path, DEFAULT_GTW_PATH);
 
-  while((c = getopt(argc, argv, "e:d:l:g:")) != -1) {
+  while((c = getopt(argc, argv, "e:d:l:g:i:")) != -1) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
@@ -399,12 +399,19 @@ void init(int argc, char *argv[]) {
       case 'l':
         strcpy(log_file, optarg);
         break;
+      case 'i':
+        if(sscanf(optarg, "%hd", &(this_node.UniqueIDPerProduct)) != 1) {
+          fprintf(stderr, "Invalid UniqueIDPerProduct");
+          exit(1);
+        }
+        break;
       default:
-        fprintf(stderr, "Usage: %s [-f] [-e dev] [-u path] [-d path]\n", argv[0]);
+        fprintf(stderr, "Usage: %s [-e dev] [-g path] [-l path] [-d str] [-i id]\n", argv[0]);
         fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
         fprintf(stderr, "  -g path  Hardware parent or path to gateway socket.\n");
         fprintf(stderr, "  -l path  Path to log file.\n");
         fprintf(stderr, "  -d str   PostgreSQL database connection options.\n");
+        fprintf(stderr, "  -i id    UniqueIDPerProduct for the MambaNet node\n");
         exit(1);
     }
   }
