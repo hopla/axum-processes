@@ -147,27 +147,39 @@ int remove_queue(unsigned long addr, unsigned short obj) {
 
 
 void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, struct mbn_address_node *new) {
+  struct get_action *n, *a;
   int i;
 
-  /* ignore anything but nodes that come online */
-  if(old != NULL || new == NULL)
-    return;
+  /* online */
+  if(old == NULL && new != NULL) {
+    /* add node to node list (so we have a temporary storage for number of objects and firmware version */
+    for(i=0; i<nodesl; i++)
+      if(nodes[i].addr == 0 || nodes[i].addr == new->MambaNetAddr)
+        break;
+    if(i == nodesl) {
+      nodes = realloc(nodes, sizeof(struct node_info)*nodesl*2);
+      memset((void *)nodes+nodesl, 0, sizeof(struct node_info)*nodesl);
+      nodesl *= 2;
+    }
+    nodes[i].addr = new->MambaNetAddr;
+    nodes[i].fwmajor = nodes[i].objects = -1;
 
-  /* add node to node list (so we have a temporary storage for number of objects and firmware version */
-  for(i=0; i<nodesl; i++)
-    if(nodes[i].addr == 0 || nodes[i].addr == new->MambaNetAddr)
-      break;
-  if(i == nodesl) {
-    nodes = realloc(nodes, sizeof(struct node_info)*nodesl*2);
-    memset((void *)nodes+nodesl, 0, sizeof(struct node_info)*nodesl);
-    nodesl *= 2;
+    /* get major firmware version and number of objects */
+    add_queue(0, new->MambaNetAddr, MBN_NODEOBJ_FWMAJOR);
+    add_queue(0, new->MambaNetAddr, MBN_NODEOBJ_NUMBEROFOBJECTS);
   }
-  nodes[i].addr = new->MambaNetAddr;
-  nodes[i].fwmajor = nodes[i].objects = -1;
 
-  /* get major firmware version and number of objects */
-  add_queue(0, new->MambaNetAddr, MBN_NODEOBJ_FWMAJOR);
-  add_queue(0, new->MambaNetAddr, MBN_NODEOBJ_NUMBEROFOBJECTS);
+  /* offline */
+  if(old != NULL && new == NULL) {
+    /* remove all queued get operations (this method isn't the most efficient) */
+    pthread_mutex_lock(&get_queue_mutex);
+    for(n=get_queue; n!=NULL; n=a) {
+      a = n->next;
+      if(n->addr == old->MambaNetAddr)
+        remove_queue(n->addr, n->object);
+    }
+    pthread_mutex_unlock(&get_queue_mutex);
+  }
   return;
   m++;
 }
