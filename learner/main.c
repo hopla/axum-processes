@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <sys/select.h>
+
 #include <mbn.h>
 #include <libpq-fe.h>
 #include <pthread.h>
@@ -38,7 +40,7 @@ struct get_action {
   struct get_action *next;
 };
 struct get_action *get_queue = NULL;
-/* deadlock warning: don't lock this one within an sql_lock() */
+/* deadlock warning: don't use sql_lock() within this mutex */
 pthread_mutex_t get_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* simple node info list, temporary place for getting the number
@@ -146,28 +148,40 @@ int remove_queue(unsigned long addr, unsigned short obj) {
 }
 
 
+int add_node(unsigned long addr) {
+  int i;
+  /* first, check if it's already in the list */
+  for(i=0; i<nodesl; i++)
+    if(nodes[i].addr == addr)
+      break;
+  /* otherwise, get a free slot */
+  if(i == nodesl)
+    for(i=0; i<nodesl; i++)
+      if(nodes[i].addr == 0)
+        break;
+  /* no free slot? reserve more memory */
+  if(i == nodesl) {
+    nodes = realloc(nodes, sizeof(struct node_info)*nodesl*2);
+    memset((void *)nodes+nodesl, 0, sizeof(struct node_info)*nodesl);
+    nodesl *= 2;
+  }
+  /* set address and reset fwmajor and objects */
+  nodes[i].addr = addr;
+  nodes[i].fwmajor = nodes[i].objects = -1;
+
+  /* and now get the major firmware version and number of objects */
+  add_queue(0, addr, MBN_NODEOBJ_FWMAJOR);
+  add_queue(0, addr, MBN_NODEOBJ_NUMBEROFOBJECTS);
+  return i;
+}
+
+
 void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, struct mbn_address_node *new) {
   struct get_action *n, *a;
-  int i;
 
   /* online */
-  if(old == NULL && new != NULL) {
-    /* add node to node list (so we have a temporary storage for number of objects and firmware version */
-    for(i=0; i<nodesl; i++)
-      if(nodes[i].addr == 0 || nodes[i].addr == new->MambaNetAddr)
-        break;
-    if(i == nodesl) {
-      nodes = realloc(nodes, sizeof(struct node_info)*nodesl*2);
-      memset((void *)nodes+nodesl, 0, sizeof(struct node_info)*nodesl);
-      nodesl *= 2;
-    }
-    nodes[i].addr = new->MambaNetAddr;
-    nodes[i].fwmajor = nodes[i].objects = -1;
-
-    /* get major firmware version and number of objects */
-    add_queue(0, new->MambaNetAddr, MBN_NODEOBJ_FWMAJOR);
-    add_queue(0, new->MambaNetAddr, MBN_NODEOBJ_NUMBEROFOBJECTS);
-  }
+  if(old == NULL && new != NULL)
+    add_node(new->MambaNetAddr);
 
   /* offline */
   if(old != NULL && new == NULL) {
@@ -324,10 +338,30 @@ void mObjectError(struct mbn_handler *m, struct mbn_message *msg, unsigned short
 }
 
 
+void template_removed(char myself, char *arg) {
+  struct mbn_address_node *a;
+  int man, prod, firm;
+
+  if(myself)
+    return;
+  sscanf(arg, "%d %d %d", &man, &prod, &firm);
+  log_write("Detected removal of template objects for %04X_%04X_%02X", man, prod, firm);
+  /* look for online nodes matching the man_id and prod_id,
+   * and re-fetch their info */
+  for(a=NULL; (a=mbnNextNode(mbn, a))!=NULL; )
+    if(a->ManufacturerID == man && a->ProductID == prod)
+      add_node(a->MambaNetAddr);
+}
+
+
 void init(int argc, char *argv[]) {
   char dbstr[256], ethdev[50], err[MBN_ERRSIZE];
   struct mbn_interface *itf;
   int c;
+
+  static struct sql_notify notifies[] = {
+    { "template_removed",  template_removed }
+  };
 
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbstr, DEFAULT_DB_STR);
@@ -369,7 +403,7 @@ void init(int argc, char *argv[]) {
   daemonize();
   log_open();
   hwparent(&this_node);
-  sql_open(dbstr, 0, NULL);
+  sql_open(dbstr, 1, notifies);
 
   if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
     fprintf(stderr, "Opening %s: %s\n", ethdev, err);
@@ -396,6 +430,8 @@ void init(int argc, char *argv[]) {
 
 
 int main(int argc, char *argv[]) {
+  struct timeval tv;
+  fd_set rd;
   init(argc, argv);
 
   /* init nodes list */
@@ -403,6 +439,19 @@ int main(int argc, char *argv[]) {
   nodes = calloc(nodesl, sizeof(struct node_info));
 
   while(!main_quit) {
+    /* poll PG socket (we don't need to receive the events asynchronously,
+     * so just polling instead of waiting is fine here) */
+    tv.tv_sec = tv.tv_usec = 0;
+    FD_ZERO(&rd);
+    FD_SET(PQsocket(sql_conn), &rd);
+    if(select(PQsocket(sql_conn)+1, &rd, NULL, NULL, &tv) > 0) {
+      sql_lock(1);
+      PQconsumeInput(sql_conn);
+      sql_processnotifies();
+      sql_lock(0);
+    }
+
+    /* process queue */
     process_queue();
     sleep(1);
   }

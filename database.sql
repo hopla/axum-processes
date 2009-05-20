@@ -170,3 +170,21 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER addresses_change_notify AFTER DELETE OR UPDATE ON addresses FOR EACH ROW EXECUTE PROCEDURE addresses_changed();
 
 
+CREATE OR REPLACE FUNCTION templates_changed() RETURNS trigger AS $$
+DECLARE
+  arg text;
+BEGIN
+  arg := OLD.man_id || ' ' || OLD.prod_id || ' ' || OLD.firm_major;
+  -- the argument of the templates_removed change don't include the object number,
+  -- so if we delete multiple rows from the same (man_id,prod_id,firm_id), make
+  -- sure to only insert one row into the recent_changes table
+  PERFORM 1 FROM recent_changes WHERE change = 'template_removed' AND arguments = arg AND timestamp = NOW();
+  IF NOT FOUND THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('template_removed', arg);
+  END IF;
+  RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER template_change_notify AFTER DELETE ON templates FOR EACH ROW EXECUTE PROCEDURE templates_changed();
+
