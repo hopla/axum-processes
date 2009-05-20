@@ -5,6 +5,9 @@
 #include <mbn.h>
 #include <libpq-fe.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Logging functions. */
 extern char log_file[500];
@@ -64,5 +67,8 @@ int sql_loop();
  * paramLengths, paramFormats and resultFormat arguments. */
 PGresult *sql_exec(const char *, char, int, const char * const *);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
