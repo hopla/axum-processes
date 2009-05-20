@@ -14,9 +14,7 @@
 **
 ****************************************************************************/
 
-extern "C" {
 #include "common.h"
-}
 #include "axum_engine.h"
 #include "db.h"
 
@@ -55,6 +53,11 @@ extern "C" {
 #include <sys/msg.h>
 
 #include <libpq-fe.h>       //postgres library
+
+#define DEFAULT_GTW_PATH    "/tmp/axum-gateway"
+#define DEFAULT_ETH_DEV     "eth0"
+#define DEFAULT_DB_STR      "dbname='axum' user='axum'"
+#define DEFAULT_LOG_FILE    "/var/log/axum-engine.log"
 
 #define PCB_MAJOR_VERSION        1
 #define PCB_MINOR_VERSION        0
@@ -209,51 +212,13 @@ void *thread(void *vargp);
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName)
 {
+  return 0;
   //make sure the variable are used
   NotUsed = NULL;
   argc = 0;
   argv = NULL;
   azColName = NULL;
-
-  return 0;
 }
-
-typedef struct
-{
-  unsigned int FunctionNr;
-  unsigned long LastChangedTime;
-  unsigned long PreviousLastChangedTime;
-  int TimeBeforeMomentary;
-} SENSOR_RECEIVE_FUNCTION_STRUCT;
-
-typedef struct
-{
-  unsigned int MambaNetAddress;
-  unsigned int ManufacturerID;
-  unsigned int ProductID;
-  unsigned int UniqueIDPerProduct;
-  int FirmwareMajorRevision;
-//  int FirmwareMinorRevision;
-
-//Not sure if should be stored here...
-  int SlotNumberObjectNr;
-  int InputChannelCountObjectNr;
-  int OutputChannelCountObjectNr;
-
-  struct
-  {
-    unsigned int ManufacturerID;
-    unsigned int ProductID;
-    unsigned int UniqueIDPerProduct;
-  } Parent;
-
-  int NumberOfCustomObjects;
-
-  //int *SensorReceiveFunction;
-  SENSOR_RECEIVE_FUNCTION_STRUCT *SensorReceiveFunction;
-  OBJECT_INFORMATION_STRUCT *ObjectInformation;
-
-} ONLINE_NODE_INFORMATION_STRUCT;
 
 #define ADDRESS_TABLE_SIZE 65536
 ONLINE_NODE_INFORMATION_STRUCT OnlineNodeInformation[ADDRESS_TABLE_SIZE];
@@ -263,108 +228,81 @@ sqlite3 *node_templates_db;
 
 int CallbackNodeIndex = -1;
 
-
-unsigned long hex2int(const char *hex, int len) {
-  int i;
-  unsigned long r = 0;
-  for (i=0; i<len; i++) {
-    r <<= 4;
-    if (hex[i] >= '0' && hex[i] <= '9')
-      r += hex[i]-'0';
-    else if (hex[i] >= 'a' && hex[i] <= 'f')
-      r += hex[i]-'a'+10;
-    else if (hex[i] >= 'A' && hex[i] <= 'F')
-      r += hex[i]-'A'+10;
-  }
-  return r;
-}
-
-
-static int SetHardwareParent(void)
+void init(int argc, char **argv)
 {
-  struct sockaddr_un p;
-  char msg[14];
-  int sock;
-  unsigned int ManufacturerID = 0;
-  unsigned int ProductID = 0;
-  unsigned int UniqueIDPerProduct = 0;
+  //struct mbn_interface *itf;
+  //char err[MBN_ERRSIZE];
+  char ethdev[50];
+  char dbstr[256];
+  int c;
 
-  /* connect to unix socket */
-  /* TODO: configurable path to unix socket */
-  p.sun_family = AF_UNIX;
-  strcpy(p.sun_path, "/tmp/axum-gateway");
-  if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
-    perror("Opening UNIX socket");
-    return 1;
-  }
-  if (connect(sock, (struct sockaddr *)&p, sizeof(struct sockaddr_un)) < 0) {
-    perror("Connecting to gateway");
-    return 1;
-  }
-  /* TODO: check readability (select(), nonblock)? time-out? */
-  if (read(sock, msg, 14) < 14) {
-    perror("Reading from socket");
-    return 1;
-  }
-  ManufacturerID = hex2int(&(msg[ 0]), 4);
-  ProductID = hex2int(&(msg[ 5]), 4);
-  UniqueIDPerProduct = hex2int(&(msg[10]), 4);
+  strcpy(ethdev, DEFAULT_ETH_DEV);
+  strcpy(dbstr, DEFAULT_DB_STR);
+  strcpy(log_file, DEFAULT_LOG_FILE);
+  strcpy(hwparent_path, DEFAULT_GTW_PATH);
 
-  AxumEngineDefaultObjects.Parent[0] = (ManufacturerID>>8)&0xFF;
-  AxumEngineDefaultObjects.Parent[1] = ManufacturerID&0xFF;
-  AxumEngineDefaultObjects.Parent[2] = (ProductID>>8)&0xFF;
-  AxumEngineDefaultObjects.Parent[3] = ProductID&0xFF;
-  AxumEngineDefaultObjects.Parent[4] = (UniqueIDPerProduct>>8)&0xFF;
-  AxumEngineDefaultObjects.Parent[5] = UniqueIDPerProduct&0xFF;
-
-  if ((ManufacturerID == 0x0001) &&
-      (ProductID == 0x000C))
-  {
-    for (int cntIndex=0; cntIndex<ADDRESS_TABLE_SIZE; cntIndex++)
-    {
-      if ((OnlineNodeInformation[cntIndex].ManufacturerID == ManufacturerID) &&
-          (OnlineNodeInformation[cntIndex].ProductID == ProductID) &&
-          (OnlineNodeInformation[cntIndex].UniqueIDPerProduct == UniqueIDPerProduct) &&
-          (OnlineNodeInformation[cntIndex].FirmwareMajorRevision == 0))
-      {
-        printf("1 - Backplane %08x\n", OnlineNodeInformation[cntIndex].MambaNetAddress);
-        if (BackplaneMambaNetAddress != OnlineNodeInformation[cntIndex].MambaNetAddress)
-        { //Initalize routing
-          BackplaneMambaNetAddress = OnlineNodeInformation[cntIndex].MambaNetAddress;
-
-          if (AxumApplicationAndDSPInitialized)
-          {
-            SetBackplane_Clock();
-
-            for (int cntModule=0; cntModule<128; cntModule++)
-            {
-              SetAxum_ModuleSource(cntModule);
-              SetAxum_ModuleMixMinus(cntModule);
-              SetAxum_ModuleInsertSource(cntModule);
-              SetAxum_BussLevels(cntModule);
-            }
-
-            for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
-            {
-              SetAxum_ExternSources(cntDSPCard);
-            }
-
-            for (int cntDestination=0; cntDestination<1280; cntDestination++)
-            {
-              SetAxum_DestinationSource(cntDestination);
-            }
-
-            for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
-            {
-              SetAxum_TalkbackSource(cntTalkback);
-            }
-          }
+  /* parse options */
+  while((c = getopt(argc, argv, "e:d:l:g:")) != -1) {
+    switch(c) {
+      case 'e':
+        if(strlen(optarg) > 50) {
+          fprintf(stderr, "Too long device name.\n");
+          exit(1);
         }
-      }
+        strcpy(ethdev, optarg);
+        break;
+      case 'd':
+        if(strlen(optarg) > 256) {
+          fprintf(stderr, "Too long database connection string!\n");
+          exit(1);
+        }
+        strcpy(dbstr, optarg);
+        break;
+      case 'g':
+        strcpy(hwparent_path, optarg);
+        break;
+      case 'l':
+        strcpy(log_file, optarg);
+        break;
+      default:
+        fprintf(stderr, "Usage: %s [-f] [-e dev] [-u path] [-d path]\n", argv[0]);
+        fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
+        fprintf(stderr, "  -g path  Hardware parent or path to gateway socket.\n");
+        fprintf(stderr, "  -l path  Path to log file.\n");
+        fprintf(stderr, "  -d str   PostgreSQL database connection options.\n");
+        exit(1);
     }
   }
 
-  return 0;
+  daemonize();
+  log_open();
+  //hwparent(&this_node);
+  sql_open(dbstr, 0, NULL);
+
+  /* initialize the MambaNet node */
+/*  if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
+    fprintf(stderr, "Opening %s: %s\n", ethdev, err);
+    log_close();
+    db_free();
+    exit(1);
+  }
+  if((mbn = mbnInit(&this_node, NULL, itf, err)) == NULL) {
+    fprintf(stderr, "mbnInit: %s\n", err);
+    log_close();
+    db_free();
+    exit(1);
+  }
+  mbnForceAddress(mbn, 0x0001FFFF);
+  mbnSetAddressTableChangeCallback(mbn, mAddressTableChange);
+  mbnSetSensorDataResponseCallback(mbn, mSensorDataResponse);
+  mbnSetActuatorDataResponseCallback(mbn, mActuatorDataResponse);
+  mbnSetReceiveMessageCallback(mbn, mReceiveMessage);
+  mbnSetErrorCallback(mbn, mError);
+  mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
+  */
+  daemonize_finish();
+  log_write("-----------------------");
+  log_write("Axum Engine Initialized");
 }
 
 static int SlotNumberObjectCallback(void *NotUsed, int argc, char **argv, char **azColName)
@@ -3577,6 +3515,8 @@ int main(int argc, char *argv[])
   }
   AxumEngineDefaultObjects.UniqueIDPerProduct = UniqueIDPerProduct;
 
+  init(argc, argv);
+
   char *zErrMsg;
   if (sqlite3_open("/var/lib/axum/axum-engine.sqlite3", &axum_engine_db))
   {
@@ -3591,8 +3531,8 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  sql_open("hostaddr=192.168.0.57 user=axum", 0, NULL);
-
+  db_check_engine_functions();
+  
 //**************************************************************/
 //Initialize AXUM Data
 //**************************************************************/
@@ -5161,10 +5101,6 @@ int main(int argc, char *argv[])
     pthread_t tid;
     pthread_create(&tid, NULL, thread, NULL);
 
-    // load hardware parent
-    if (SetHardwareParent())
-      ExitApplication = 1;
-
     DatabaseFileDescriptor = PQsocket(sql_conn);
     if(DatabaseFileDescriptor < 0) {
       //log_write("Invalid PostgreSQL socket!");
@@ -5682,12 +5618,18 @@ int main(int argc, char *argv[])
     close(fd);
     printf("/dev/pci2040 closed...\r\n");
   }
-  sql_close();
   sqlite3_close(node_templates_db);
   sqlite3_close(axum_engine_db);
   CloseNetwork(NetworkFileDescriptor);
   CloseSTDIN(&oldtio, oldflags);
+
+  log_write("Closing Engine");
+  sql_close();
+  log_close();
+
+  return 0;
 }
+
 
 //This functions checks the commandline arguments and stores
 //them in the corresponding variables.

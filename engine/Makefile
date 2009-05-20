@@ -1,7 +1,7 @@
 include ../Makefile.inc
 LFLAGS+=-lsqlite3
-OBJECTS+=axum_engine.o mambanet_stack_axum.o 
-HEADERS+=axum_engine_functions.h ddpci2040.h mambanet_stack_axum.h
+OBJECTS+=axum_engine.o mambanet_stack_axum.o db.o 
+HEADERS+=axum_engine_functions.h ddpci2040.h mambanet_stack_axum.h db.h
 TARGET=axum-engine
 
 all: ${TARGET}

@@ -309,6 +309,42 @@ typedef struct
   void *Next;
 } AXUM_FUNCTION_INFORMATION_STRUCT;
 
+typedef struct
+{
+  unsigned int FunctionNr;
+  unsigned long LastChangedTime;
+  unsigned long PreviousLastChangedTime;
+  int TimeBeforeMomentary;
+} SENSOR_RECEIVE_FUNCTION_STRUCT;
+
+typedef struct
+{
+  unsigned int MambaNetAddress;
+  unsigned int ManufacturerID;
+  unsigned int ProductID;
+  unsigned int UniqueIDPerProduct;
+  int FirmwareMajorRevision;
+//  int FirmwareMinorRevision;
+
+//Not sure if should be stored here...
+  int SlotNumberObjectNr;
+  int InputChannelCountObjectNr;
+  int OutputChannelCountObjectNr;
+
+  struct
+  {
+    unsigned int ManufacturerID;
+    unsigned int ProductID;
+    unsigned int UniqueIDPerProduct;
+  } Parent;
+
+  int NumberOfCustomObjects;
+
+  //int *SensorReceiveFunction;
+  SENSOR_RECEIVE_FUNCTION_STRUCT *SensorReceiveFunction;
+  OBJECT_INFORMATION_STRUCT *ObjectInformation;
+
+} ONLINE_NODE_INFORMATION_STRUCT;
 
 float CalculateEQ(float *Coefficients, float Gain, int Frequency, float Bandwidth, float Slope, FilterType Type);
 
