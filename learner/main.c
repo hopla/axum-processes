@@ -200,7 +200,7 @@ void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, st
 
 
 int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned short obj, unsigned char type, union mbn_data dat) {
-  struct mbn_address_node *node;
+  struct mbn_address_node *node, *tmp;
   PGresult *res;
   char str[4][20];
   const char *params[4] = { (const char *)&(str[0]), (const char *)&(str[1]), (const char *)&(str[2]), (const char *)&(str[3]) };
@@ -231,6 +231,16 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
   /* doesn't have any objects? ignore */
   if(nodes[n].objects == 0)
     return 0;
+
+  /* ignore this node if we already have another node with the same man/prod/fwmajor. */
+  for(i=0; i<nodesl; i++) {
+    if(i == n || nodes[i].addr == 0 || nodes[i].fwmajor != nodes[n].fwmajor)
+      continue;
+    if((tmp = mbnNodeStatus(mbn, nodes[i].addr)) == NULL)
+      continue;
+    if(tmp->ManufacturerID == node->ManufacturerID && tmp->ProductID == node->ProductID)
+      return 0;
+  }
 
   /* we have both, check database for which objects we need to fetch */
   sql_lock(1);
@@ -346,8 +356,7 @@ void template_removed(char myself, char *arg) {
     return;
   sscanf(arg, "%d %d %d", &man, &prod, &firm);
   log_write("Detected removal of template objects for %04X_%04X_%02X", man, prod, firm);
-  /* look for online nodes matching the man_id and prod_id,
-   * and re-fetch their info */
+  /* look for online nodes matching the man_id and prod_id, and re-fetch their info */
   for(a=NULL; (a=mbnNextNode(mbn, a))!=NULL; )
     if(a->ManufacturerID == man && a->ProductID == prod)
       add_node(a->MambaNetAddr);
