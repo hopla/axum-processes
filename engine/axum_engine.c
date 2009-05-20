@@ -170,7 +170,6 @@ unsigned int PulseTime;
 
 bool ExitApplication = 0;
 
-
 unsigned char TraceValue;           //To set the MambaNet trace (0x01=packets, 0x02=address table)
 bool dump_packages;                 //To debug the incoming data
 
@@ -3592,7 +3591,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  sql_open("hostaddr=192.168.0.57 name=axum", 0, NULL);
+  sql_open("hostaddr=192.168.0.57 user=axum", 0, NULL);
 
 //**************************************************************/
 //Initialize AXUM Data
@@ -3851,6 +3850,7 @@ int main(int argc, char *argv[])
   if (fd<0)
   {
     printf("PCI2040 open error!\n");
+    exit(1);
   }
   else
   {
