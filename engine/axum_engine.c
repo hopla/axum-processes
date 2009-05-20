@@ -2667,251 +2667,7 @@ int main(int argc, char *argv[])
 //**************************************************************/
 //Initialize AXUM Data
 //**************************************************************/
-  for (int cntSource=0; cntSource<1280; cntSource++)
-  {
-    AxumData.SourceData[cntSource].SourceName[0] = 0x00;
-    for (int cntInput=0; cntInput<8; cntInput++)
-    {
-      AxumData.SourceData[cntSource].InputData[cntInput].MambaNetAddress = 0x00000000;
-      AxumData.SourceData[cntSource].InputData[cntInput].SubChannel = -1;
-    }
-    for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
-    {
-      AxumData.SourceData[cntSource].Redlight[cntRedlight] = 0;
-    }
-    for (int cntMonitorMute=0; cntMonitorMute<16; cntMonitorMute++)
-    {
-      AxumData.SourceData[cntSource].MonitorMute[cntMonitorMute] = 0;
-    }
-    AxumData.SourceData[cntSource].Active = 0;
-    AxumData.SourceData[cntSource].Start = 0;
-    AxumData.SourceData[cntSource].Phantom = 0;
-    AxumData.SourceData[cntSource].Pad = 0;
-    AxumData.SourceData[cntSource].Gain = 30;
-    AxumData.SourceData[cntSource].Alert = 0;
-  }
-
-  for (int cntDestination=0; cntDestination<1280; cntDestination++)
-  {
-    AxumData.DestinationData[cntDestination].DestinationName[0] = 0x00;
-    for (int cntOutput=0; cntOutput<8; cntOutput++)
-    {
-      AxumData.DestinationData[cntDestination].OutputData[cntOutput].MambaNetAddress = 0x00000000;
-      AxumData.DestinationData[cntDestination].OutputData[cntOutput].SubChannel = -1;
-    }
-
-    AxumData.DestinationData[cntDestination].Source = 0;
-    AxumData.DestinationData[cntDestination].Level = -140;
-    AxumData.DestinationData[cntDestination].Mute = 0;
-    AxumData.DestinationData[cntDestination].Dim = 0;
-    AxumData.DestinationData[cntDestination].Mono = 0;
-    AxumData.DestinationData[cntDestination].Phase = 0;
-    AxumData.DestinationData[cntDestination].Talkback[0] = 0;
-    AxumData.DestinationData[cntDestination].Talkback[1] = 0;
-    AxumData.DestinationData[cntDestination].Talkback[2] = 0;
-    AxumData.DestinationData[cntDestination].Talkback[3] = 0;
-
-    AxumData.DestinationData[cntDestination].MixMinusSource = 0;
-    AxumData.DestinationData[cntDestination].MixMinusActive = 0;
-
-  }
-
-  for (int cntModule=0; cntModule<128; cntModule++)
-  {
-    AxumData.ModuleData[cntModule].Source = 0;
-    AxumData.ModuleData[cntModule].SourceA = 0;
-    AxumData.ModuleData[cntModule].SourceB = 0;
-    AxumData.ModuleData[cntModule].Insert = 0;
-    AxumData.ModuleData[cntModule].InsertOnOffA = 0;
-    AxumData.ModuleData[cntModule].InsertOnOffB = 0;
-    AxumData.ModuleData[cntModule].Gain = 0;
-    AxumData.ModuleData[cntModule].PhaseReverse = 0;
-
-    AxumData.ModuleData[cntModule].Filter.On = 0;
-    AxumData.ModuleData[cntModule].Filter.Level = 0;
-    AxumData.ModuleData[cntModule].Filter.Frequency = 80;
-    AxumData.ModuleData[cntModule].Filter.Bandwidth = 1;
-    AxumData.ModuleData[cntModule].Filter.Slope = 1;
-    AxumData.ModuleData[cntModule].Filter.Type = HPF;
-    AxumData.ModuleData[cntModule].FilterOnOffA = 0;
-    AxumData.ModuleData[cntModule].FilterOnOffB = 0;
-
-    AxumData.ModuleData[cntModule].EQBand[0].On = 1;
-    AxumData.ModuleData[cntModule].EQBand[0].Level = 0;
-    AxumData.ModuleData[cntModule].EQBand[0].Frequency = 12000;
-    AxumData.ModuleData[cntModule].EQBand[0].Bandwidth = 1;
-    AxumData.ModuleData[cntModule].EQBand[0].Slope = 1;
-    AxumData.ModuleData[cntModule].EQBand[0].Type = PEAKINGEQ;
-
-    AxumData.ModuleData[cntModule].EQBand[1].On = 1;
-    AxumData.ModuleData[cntModule].EQBand[1].Level = 0;
-    AxumData.ModuleData[cntModule].EQBand[1].Frequency = 4000;
-    AxumData.ModuleData[cntModule].EQBand[1].Bandwidth = 1;
-    AxumData.ModuleData[cntModule].EQBand[1].Slope = 1;
-    AxumData.ModuleData[cntModule].EQBand[1].Type = PEAKINGEQ;
-
-    AxumData.ModuleData[cntModule].EQBand[2].On = 1;
-    AxumData.ModuleData[cntModule].EQBand[2].Level = 0;
-    AxumData.ModuleData[cntModule].EQBand[2].Frequency = 800;
-    AxumData.ModuleData[cntModule].EQBand[2].Bandwidth = 1;
-    AxumData.ModuleData[cntModule].EQBand[2].Slope = 1;
-    AxumData.ModuleData[cntModule].EQBand[2].Type = PEAKINGEQ;
-
-    AxumData.ModuleData[cntModule].EQBand[3].On = 1;
-    AxumData.ModuleData[cntModule].EQBand[3].Level = 0;
-    AxumData.ModuleData[cntModule].EQBand[3].Frequency = 120;
-    AxumData.ModuleData[cntModule].EQBand[3].Bandwidth = 1;
-    AxumData.ModuleData[cntModule].EQBand[3].Slope = 1;
-    AxumData.ModuleData[cntModule].EQBand[3].Type = LOWSHELF;
-
-    AxumData.ModuleData[cntModule].EQBand[4].On = 0;
-    AxumData.ModuleData[cntModule].EQBand[4].Level = 0;
-    AxumData.ModuleData[cntModule].EQBand[4].Frequency = 300;
-    AxumData.ModuleData[cntModule].EQBand[4].Bandwidth = 1;
-    AxumData.ModuleData[cntModule].EQBand[4].Slope = 1;
-    AxumData.ModuleData[cntModule].EQBand[4].Type = HPF;
-
-    AxumData.ModuleData[cntModule].EQBand[5].On = 0;
-    AxumData.ModuleData[cntModule].EQBand[5].Level = 0;
-    AxumData.ModuleData[cntModule].EQBand[5].Frequency = 3000;
-    AxumData.ModuleData[cntModule].EQBand[5].Bandwidth = 1;
-    AxumData.ModuleData[cntModule].EQBand[5].Slope = 1;
-    AxumData.ModuleData[cntModule].EQBand[5].Type = LPF;
-
-    AxumData.ModuleData[cntModule].EQOn = 1;
-    AxumData.ModuleData[cntModule].EQOnOffA = 0;
-    AxumData.ModuleData[cntModule].EQOnOffB = 0;
-
-    AxumData.ModuleData[cntModule].Dynamics = 0;
-    AxumData.ModuleData[cntModule].DynamicsOn = 0;
-    AxumData.ModuleData[cntModule].DynamicsOnOffA = 0;
-    AxumData.ModuleData[cntModule].DynamicsOnOffB = 0;
-
-    AxumData.ModuleData[cntModule].Panorama = 512;
-    AxumData.ModuleData[cntModule].Mono = 0;
-
-    AxumData.ModuleData[cntModule].FaderLevel = -140;
-    AxumData.ModuleData[cntModule].FaderTouch = 0;
-    AxumData.ModuleData[cntModule].On = 0;
-    AxumData.ModuleData[cntModule].Cough = 0;
-
-    AxumData.ModuleData[cntModule].Signal = 0;
-    AxumData.ModuleData[cntModule].Peak = 0;
-
-    for (int cntBuss=0; cntBuss<16; cntBuss++)
-    {
-      AxumData.ModuleData[cntModule].Buss[cntBuss].Level = 0; //0dB
-      AxumData.ModuleData[cntModule].Buss[cntBuss].On = 0;
-      AxumData.ModuleData[cntModule].Buss[cntBuss].Balance = 512;
-      AxumData.ModuleData[cntModule].Buss[cntBuss].PreModuleLevel = 0;
-      AxumData.ModuleData[cntModule].Buss[cntBuss].Active = 1;
-    }
-  }
-  
-  AxumData.Control1Mode = MODULE_CONTROL_MODE_NONE;
-  AxumData.Control2Mode = MODULE_CONTROL_MODE_NONE;
-  AxumData.Control3Mode = MODULE_CONTROL_MODE_NONE;
-  AxumData.Control4Mode = MODULE_CONTROL_MODE_NONE;
-  AxumData.MasterControl1Mode = MASTER_CONTROL_MODE_BUSS_1_2;
-  AxumData.MasterControl2Mode = MASTER_CONTROL_MODE_BUSS_1_2;
-  AxumData.MasterControl3Mode = MASTER_CONTROL_MODE_BUSS_1_2;
-  AxumData.MasterControl4Mode = MASTER_CONTROL_MODE_BUSS_1_2;
-
-  for (int cntBuss=0; cntBuss<16; cntBuss++)
-  {
-    AxumData.BussMasterData[cntBuss].Label[0] = 0;
-    AxumData.BussMasterData[cntBuss].Level = 0;
-    AxumData.BussMasterData[cntBuss].On = 1;
-
-    AxumData.BussMasterData[cntBuss].PreModuleOn = 0;
-    AxumData.BussMasterData[cntBuss].PreModuleLevel = 0;
-    AxumData.BussMasterData[cntBuss].PreModuleBalance = 0;
-
-    AxumData.BussMasterData[cntBuss].Interlock = 0;
-    AxumData.BussMasterData[cntBuss].GlobalBussReset = 0;
-  }
-
-  AxumData.Redlight[0] = 0;
-  AxumData.Redlight[1] = 0;
-  AxumData.Redlight[2] = 0;
-  AxumData.Redlight[3] = 0;
-  AxumData.Redlight[4] = 0;
-  AxumData.Redlight[5] = 0;
-  AxumData.Redlight[6] = 0;
-  AxumData.Redlight[7] = 0;
-
-  AxumData.Samplerate = 48000;
-  AxumData.ExternClock = 0;
-  AxumData.Headroom = -20;
-  AxumData.LevelReserve = 0;
-  for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
-  {
-    AxumData.Talkback[cntTalkback].Source = 0;
-  }
-
-  for (int cntMonitor=0; cntMonitor<16; cntMonitor++)
-  {
-    AxumData.Monitor[cntMonitor].Label[0] = 0;
-    AxumData.Monitor[cntMonitor].Interlock = 0;
-    AxumData.Monitor[cntMonitor].DefaultSelection = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[0] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[1] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[2] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[3] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[4] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[5] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[6] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[7] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[8] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[9] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[10] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[11] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[12] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[13] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[14] = 0;
-    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[15] = 0;
-    AxumData.Monitor[cntMonitor].SwitchingDimLevel = -140;
-    AxumData.Monitor[cntMonitor].Buss[0] = 0;
-    AxumData.Monitor[cntMonitor].Buss[1] = 0;
-    AxumData.Monitor[cntMonitor].Buss[2] = 0;
-    AxumData.Monitor[cntMonitor].Buss[3] = 0;
-    AxumData.Monitor[cntMonitor].Buss[4] = 0;
-    AxumData.Monitor[cntMonitor].Buss[5] = 0;
-    AxumData.Monitor[cntMonitor].Buss[6] = 0;
-    AxumData.Monitor[cntMonitor].Buss[7] = 0;
-    AxumData.Monitor[cntMonitor].Buss[8] = 0;
-    AxumData.Monitor[cntMonitor].Buss[9] = 0;
-    AxumData.Monitor[cntMonitor].Buss[10] = 0;
-    AxumData.Monitor[cntMonitor].Buss[11] = 0;
-    AxumData.Monitor[cntMonitor].Buss[12] = 0;
-    AxumData.Monitor[cntMonitor].Buss[13] = 0;
-    AxumData.Monitor[cntMonitor].Buss[14] = 0;
-    AxumData.Monitor[cntMonitor].Buss[15] = 0;
-    AxumData.Monitor[cntMonitor].Ext[0] = 0;
-    AxumData.Monitor[cntMonitor].Ext[1] = 0;
-    AxumData.Monitor[cntMonitor].Ext[2] = 0;
-    AxumData.Monitor[cntMonitor].Ext[3] = 0;
-    AxumData.Monitor[cntMonitor].Ext[4] = 0;
-    AxumData.Monitor[cntMonitor].Ext[5] = 0;
-    AxumData.Monitor[cntMonitor].Ext[6] = 0;
-    AxumData.Monitor[cntMonitor].Ext[7] = 0;
-    AxumData.Monitor[cntMonitor].PhonesLevel = -140;
-    AxumData.Monitor[cntMonitor].SpeakerLevel = -140;
-    AxumData.Monitor[cntMonitor].Dim = 0;
-    AxumData.Monitor[cntMonitor].Mute = 0;
-  }
-
-  for (int cntMonitor=0; cntMonitor<4; cntMonitor++)
-  {
-    AxumData.ExternSource[cntMonitor].Ext[0] = 0;
-    AxumData.ExternSource[cntMonitor].Ext[1] = 0;
-    AxumData.ExternSource[cntMonitor].Ext[2] = 0;
-    AxumData.ExternSource[cntMonitor].Ext[3] = 0;
-    AxumData.ExternSource[cntMonitor].Ext[4] = 0;
-    AxumData.ExternSource[cntMonitor].Ext[5] = 0;
-    AxumData.ExternSource[cntMonitor].Ext[6] = 0;
-    AxumData.ExternSource[cntMonitor].Ext[7] = 0;
-  }
+  initialize_axum_data_struct();
 
   if (!dsp_open())
   {
@@ -2939,9 +2695,8 @@ int main(int argc, char *argv[])
       printf("Start Monitor buss 1\n");
       SetAxum_MonitorBuss(1);*/
 
-  printf("Parameters in DSPs initialized!!!\n");
-
   AxumApplicationAndDSPInitialized = 1;
+  log_write("Parameters in DSPs initialized");
 
   //Rack organization
   char SQLQuery[8192];
@@ -19000,5 +18755,254 @@ void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock)
       unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
       CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+BussNr));
     }
+  }
+}
+
+void initialize_axum_data_struct()
+{
+  for (int cntSource=0; cntSource<1280; cntSource++)
+  {
+    AxumData.SourceData[cntSource].SourceName[0] = 0x00;
+    for (int cntInput=0; cntInput<8; cntInput++)
+    {
+      AxumData.SourceData[cntSource].InputData[cntInput].MambaNetAddress = 0x00000000;
+      AxumData.SourceData[cntSource].InputData[cntInput].SubChannel = -1;
+    }
+    for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
+    {
+      AxumData.SourceData[cntSource].Redlight[cntRedlight] = 0;
+    }
+    for (int cntMonitorMute=0; cntMonitorMute<16; cntMonitorMute++)
+    {
+      AxumData.SourceData[cntSource].MonitorMute[cntMonitorMute] = 0;
+    }
+    AxumData.SourceData[cntSource].Active = 0;
+    AxumData.SourceData[cntSource].Start = 0;
+    AxumData.SourceData[cntSource].Phantom = 0;
+    AxumData.SourceData[cntSource].Pad = 0;
+    AxumData.SourceData[cntSource].Gain = 30;
+    AxumData.SourceData[cntSource].Alert = 0;
+  }
+
+  for (int cntDestination=0; cntDestination<1280; cntDestination++)
+  {
+    AxumData.DestinationData[cntDestination].DestinationName[0] = 0x00;
+    for (int cntOutput=0; cntOutput<8; cntOutput++)
+    {
+      AxumData.DestinationData[cntDestination].OutputData[cntOutput].MambaNetAddress = 0x00000000;
+      AxumData.DestinationData[cntDestination].OutputData[cntOutput].SubChannel = -1;
+    }
+
+    AxumData.DestinationData[cntDestination].Source = 0;
+    AxumData.DestinationData[cntDestination].Level = -140;
+    AxumData.DestinationData[cntDestination].Mute = 0;
+    AxumData.DestinationData[cntDestination].Dim = 0;
+    AxumData.DestinationData[cntDestination].Mono = 0;
+    AxumData.DestinationData[cntDestination].Phase = 0;
+    AxumData.DestinationData[cntDestination].Talkback[0] = 0;
+    AxumData.DestinationData[cntDestination].Talkback[1] = 0;
+    AxumData.DestinationData[cntDestination].Talkback[2] = 0;
+    AxumData.DestinationData[cntDestination].Talkback[3] = 0;
+
+    AxumData.DestinationData[cntDestination].MixMinusSource = 0;
+    AxumData.DestinationData[cntDestination].MixMinusActive = 0;
+
+  }
+
+  for (int cntModule=0; cntModule<128; cntModule++)
+  {
+    AxumData.ModuleData[cntModule].Source = 0;
+    AxumData.ModuleData[cntModule].SourceA = 0;
+    AxumData.ModuleData[cntModule].SourceB = 0;
+    AxumData.ModuleData[cntModule].Insert = 0;
+    AxumData.ModuleData[cntModule].InsertOnOffA = 0;
+    AxumData.ModuleData[cntModule].InsertOnOffB = 0;
+    AxumData.ModuleData[cntModule].Gain = 0;
+    AxumData.ModuleData[cntModule].PhaseReverse = 0;
+
+    AxumData.ModuleData[cntModule].Filter.On = 0;
+    AxumData.ModuleData[cntModule].Filter.Level = 0;
+    AxumData.ModuleData[cntModule].Filter.Frequency = 80;
+    AxumData.ModuleData[cntModule].Filter.Bandwidth = 1;
+    AxumData.ModuleData[cntModule].Filter.Slope = 1;
+    AxumData.ModuleData[cntModule].Filter.Type = HPF;
+    AxumData.ModuleData[cntModule].FilterOnOffA = 0;
+    AxumData.ModuleData[cntModule].FilterOnOffB = 0;
+
+    AxumData.ModuleData[cntModule].EQBand[0].On = 1;
+    AxumData.ModuleData[cntModule].EQBand[0].Level = 0;
+    AxumData.ModuleData[cntModule].EQBand[0].Frequency = 12000;
+    AxumData.ModuleData[cntModule].EQBand[0].Bandwidth = 1;
+    AxumData.ModuleData[cntModule].EQBand[0].Slope = 1;
+    AxumData.ModuleData[cntModule].EQBand[0].Type = PEAKINGEQ;
+
+    AxumData.ModuleData[cntModule].EQBand[1].On = 1;
+    AxumData.ModuleData[cntModule].EQBand[1].Level = 0;
+    AxumData.ModuleData[cntModule].EQBand[1].Frequency = 4000;
+    AxumData.ModuleData[cntModule].EQBand[1].Bandwidth = 1;
+    AxumData.ModuleData[cntModule].EQBand[1].Slope = 1;
+    AxumData.ModuleData[cntModule].EQBand[1].Type = PEAKINGEQ;
+
+    AxumData.ModuleData[cntModule].EQBand[2].On = 1;
+    AxumData.ModuleData[cntModule].EQBand[2].Level = 0;
+    AxumData.ModuleData[cntModule].EQBand[2].Frequency = 800;
+    AxumData.ModuleData[cntModule].EQBand[2].Bandwidth = 1;
+    AxumData.ModuleData[cntModule].EQBand[2].Slope = 1;
+    AxumData.ModuleData[cntModule].EQBand[2].Type = PEAKINGEQ;
+
+    AxumData.ModuleData[cntModule].EQBand[3].On = 1;
+    AxumData.ModuleData[cntModule].EQBand[3].Level = 0;
+    AxumData.ModuleData[cntModule].EQBand[3].Frequency = 120;
+    AxumData.ModuleData[cntModule].EQBand[3].Bandwidth = 1;
+    AxumData.ModuleData[cntModule].EQBand[3].Slope = 1;
+    AxumData.ModuleData[cntModule].EQBand[3].Type = LOWSHELF;
+
+    AxumData.ModuleData[cntModule].EQBand[4].On = 0;
+    AxumData.ModuleData[cntModule].EQBand[4].Level = 0;
+    AxumData.ModuleData[cntModule].EQBand[4].Frequency = 300;
+    AxumData.ModuleData[cntModule].EQBand[4].Bandwidth = 1;
+    AxumData.ModuleData[cntModule].EQBand[4].Slope = 1;
+    AxumData.ModuleData[cntModule].EQBand[4].Type = HPF;
+
+    AxumData.ModuleData[cntModule].EQBand[5].On = 0;
+    AxumData.ModuleData[cntModule].EQBand[5].Level = 0;
+    AxumData.ModuleData[cntModule].EQBand[5].Frequency = 3000;
+    AxumData.ModuleData[cntModule].EQBand[5].Bandwidth = 1;
+    AxumData.ModuleData[cntModule].EQBand[5].Slope = 1;
+    AxumData.ModuleData[cntModule].EQBand[5].Type = LPF;
+
+    AxumData.ModuleData[cntModule].EQOn = 1;
+    AxumData.ModuleData[cntModule].EQOnOffA = 0;
+    AxumData.ModuleData[cntModule].EQOnOffB = 0;
+
+    AxumData.ModuleData[cntModule].Dynamics = 0;
+    AxumData.ModuleData[cntModule].DynamicsOn = 0;
+    AxumData.ModuleData[cntModule].DynamicsOnOffA = 0;
+    AxumData.ModuleData[cntModule].DynamicsOnOffB = 0;
+
+    AxumData.ModuleData[cntModule].Panorama = 512;
+    AxumData.ModuleData[cntModule].Mono = 0;
+
+    AxumData.ModuleData[cntModule].FaderLevel = -140;
+    AxumData.ModuleData[cntModule].FaderTouch = 0;
+    AxumData.ModuleData[cntModule].On = 0;
+    AxumData.ModuleData[cntModule].Cough = 0;
+
+    AxumData.ModuleData[cntModule].Signal = 0;
+    AxumData.ModuleData[cntModule].Peak = 0;
+
+    for (int cntBuss=0; cntBuss<16; cntBuss++)
+    {
+      AxumData.ModuleData[cntModule].Buss[cntBuss].Level = 0; //0dB
+      AxumData.ModuleData[cntModule].Buss[cntBuss].On = 0;
+      AxumData.ModuleData[cntModule].Buss[cntBuss].Balance = 512;
+      AxumData.ModuleData[cntModule].Buss[cntBuss].PreModuleLevel = 0;
+      AxumData.ModuleData[cntModule].Buss[cntBuss].Active = 1;
+    }
+  }
+  
+  AxumData.Control1Mode = MODULE_CONTROL_MODE_NONE;
+  AxumData.Control2Mode = MODULE_CONTROL_MODE_NONE;
+  AxumData.Control3Mode = MODULE_CONTROL_MODE_NONE;
+  AxumData.Control4Mode = MODULE_CONTROL_MODE_NONE;
+  AxumData.MasterControl1Mode = MASTER_CONTROL_MODE_BUSS_1_2;
+  AxumData.MasterControl2Mode = MASTER_CONTROL_MODE_BUSS_1_2;
+  AxumData.MasterControl3Mode = MASTER_CONTROL_MODE_BUSS_1_2;
+  AxumData.MasterControl4Mode = MASTER_CONTROL_MODE_BUSS_1_2;
+
+  for (int cntBuss=0; cntBuss<16; cntBuss++)
+  {
+    AxumData.BussMasterData[cntBuss].Label[0] = 0;
+    AxumData.BussMasterData[cntBuss].Level = 0;
+    AxumData.BussMasterData[cntBuss].On = 1;
+
+    AxumData.BussMasterData[cntBuss].PreModuleOn = 0;
+    AxumData.BussMasterData[cntBuss].PreModuleLevel = 0;
+    AxumData.BussMasterData[cntBuss].PreModuleBalance = 0;
+
+    AxumData.BussMasterData[cntBuss].Interlock = 0;
+    AxumData.BussMasterData[cntBuss].GlobalBussReset = 0;
+  }
+
+  AxumData.Redlight[0] = 0;
+  AxumData.Redlight[1] = 0;
+  AxumData.Redlight[2] = 0;
+  AxumData.Redlight[3] = 0;
+  AxumData.Redlight[4] = 0;
+  AxumData.Redlight[5] = 0;
+  AxumData.Redlight[6] = 0;
+  AxumData.Redlight[7] = 0;
+
+  AxumData.Samplerate = 48000;
+  AxumData.ExternClock = 0;
+  AxumData.Headroom = -20;
+  AxumData.LevelReserve = 0;
+  for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+  {
+    AxumData.Talkback[cntTalkback].Source = 0;
+  }
+
+  for (int cntMonitor=0; cntMonitor<16; cntMonitor++)
+  {
+    AxumData.Monitor[cntMonitor].Label[0] = 0;
+    AxumData.Monitor[cntMonitor].Interlock = 0;
+    AxumData.Monitor[cntMonitor].DefaultSelection = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[0] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[1] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[2] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[3] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[4] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[5] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[6] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[7] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[8] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[9] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[10] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[11] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[12] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[13] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[14] = 0;
+    AxumData.Monitor[cntMonitor].AutoSwitchingBuss[15] = 0;
+    AxumData.Monitor[cntMonitor].SwitchingDimLevel = -140;
+    AxumData.Monitor[cntMonitor].Buss[0] = 0;
+    AxumData.Monitor[cntMonitor].Buss[1] = 0;
+    AxumData.Monitor[cntMonitor].Buss[2] = 0;
+    AxumData.Monitor[cntMonitor].Buss[3] = 0;
+    AxumData.Monitor[cntMonitor].Buss[4] = 0;
+    AxumData.Monitor[cntMonitor].Buss[5] = 0;
+    AxumData.Monitor[cntMonitor].Buss[6] = 0;
+    AxumData.Monitor[cntMonitor].Buss[7] = 0;
+    AxumData.Monitor[cntMonitor].Buss[8] = 0;
+    AxumData.Monitor[cntMonitor].Buss[9] = 0;
+    AxumData.Monitor[cntMonitor].Buss[10] = 0;
+    AxumData.Monitor[cntMonitor].Buss[11] = 0;
+    AxumData.Monitor[cntMonitor].Buss[12] = 0;
+    AxumData.Monitor[cntMonitor].Buss[13] = 0;
+    AxumData.Monitor[cntMonitor].Buss[14] = 0;
+    AxumData.Monitor[cntMonitor].Buss[15] = 0;
+    AxumData.Monitor[cntMonitor].Ext[0] = 0;
+    AxumData.Monitor[cntMonitor].Ext[1] = 0;
+    AxumData.Monitor[cntMonitor].Ext[2] = 0;
+    AxumData.Monitor[cntMonitor].Ext[3] = 0;
+    AxumData.Monitor[cntMonitor].Ext[4] = 0;
+    AxumData.Monitor[cntMonitor].Ext[5] = 0;
+    AxumData.Monitor[cntMonitor].Ext[6] = 0;
+    AxumData.Monitor[cntMonitor].Ext[7] = 0;
+    AxumData.Monitor[cntMonitor].PhonesLevel = -140;
+    AxumData.Monitor[cntMonitor].SpeakerLevel = -140;
+    AxumData.Monitor[cntMonitor].Dim = 0;
+    AxumData.Monitor[cntMonitor].Mute = 0;
+  }
+
+  for (int cntMonitor=0; cntMonitor<4; cntMonitor++)
+  {
+    AxumData.ExternSource[cntMonitor].Ext[0] = 0;
+    AxumData.ExternSource[cntMonitor].Ext[1] = 0;
+    AxumData.ExternSource[cntMonitor].Ext[2] = 0;
+    AxumData.ExternSource[cntMonitor].Ext[3] = 0;
+    AxumData.ExternSource[cntMonitor].Ext[4] = 0;
+    AxumData.ExternSource[cntMonitor].Ext[5] = 0;
+    AxumData.ExternSource[cntMonitor].Ext[6] = 0;
+    AxumData.ExternSource[cntMonitor].Ext[7] = 0;
   }
 }

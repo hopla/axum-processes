@@ -435,5 +435,6 @@ int Axum_MixMinusSourceUsed(int CurrentSource);
 void SetNewSource(int ModuleNr, int NewSource, int Forced, int ApplyAorBSettings);
 void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock);
 
+void initialize_axum_data_struct();
 
 #endif
