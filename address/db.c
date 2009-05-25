@@ -14,6 +14,8 @@
 #include <mbn.h>
 
 
+#define ADDRSELECT "addr, name, id, engine_addr, services, active, parent, setname, refresh, firstseen, lastseen, addr_requests"
+
 
 void db_event_removed(char, char *);
 void db_event_setengine(char, char *);
@@ -42,7 +44,7 @@ void db_init(char *conninfo) {
 }
 
 
-/* assumes a SELECT * FROM addresses as columns */
+/* assumes a SELECT ${ADDRSELECT} FROM addresses as columns */
 int db_parserow(PGresult *q, int row, struct db_node *res) {
   if(res == NULL)
     return 1;
@@ -77,7 +79,7 @@ int db_getnode(struct db_node *res, unsigned long addr) {
 
   sprintf(str, "%ld", addr);
   params[0] = str;
-  if((qs = sql_exec("SELECT * FROM addresses WHERE addr = $1", 1, 1, params)) == NULL)
+  if((qs = sql_exec("SELECT " ADDRSELECT " FROM addresses WHERE addr = $1", 1, 1, params)) == NULL)
     return 0;
   n = !PQntuples(qs) ? 0 : db_parserow(qs, 0, res);
   PQclear(qs);
@@ -94,7 +96,7 @@ int db_nodebyid(struct db_node *res, unsigned short id_man, unsigned short id_pr
   sprintf(str[0], "%hd", id_man);
   sprintf(str[1], "%hd", id_prod);
   sprintf(str[2], "%hd", id_id);
-  if((qs = sql_exec("SELECT * FROM addresses\
+  if((qs = sql_exec("SELECT " ADDRSELECT " FROM addresses\
       WHERE (id).man = $1 AND (id).prod = $2 AND (id).id = $3", 1, 3, params)) == NULL)
     return 0;
   n = !PQntuples(qs) ? 0 : db_parserow(qs, 0, res);
