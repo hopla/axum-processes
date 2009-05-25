@@ -834,12 +834,12 @@ int db_check_engine_functions()
   return 1;
 }
 
-int db_read_rack_organization()
+int db_read_slot_config()
 {
   int cntRow;
 
   //PGresult *qres = sql_exec("SELECT slot_nr, addr, input_ch_cnt, output_ch_cnt FROM rack_organization", 1, 0, NULL);
-  PGresult *qres = sql_exec("SELECT slot_nr, addr FROM rack_organization", 1, 0, NULL);
+  PGresult *qres = sql_exec("SELECT slot_nr, addr FROM slot_config", 1, 0, NULL);
   if (qres == NULL)
   {
     return 0;
@@ -855,12 +855,62 @@ int db_read_rack_organization()
     //sscanf(PQgetvalue(qres, cntRow, 2), "%hd", &input_ch_count);
     //sscanf(PQgetvalue(qres, cntRow, 4), "%hd", &output_ch_count);
 
-    AxumData.RackOrganization[slot_nr] = addr;
+    AxumData.RackOrganization[slot_nr-1] = addr;
   }
   return 1;
 }
 
+int db_read_source_config()
+{
+  int cntRow;
 
+  PGresult *qres = sql_exec("SELECT number, label, input1_addr, input1_sub_ch, input2_addr, input2_sub_ch, phantom, pad, gain, redlight1, redlight2, redlight3, redlight4, redlight5, redlight6, redlight7, redlight8, monitormute1, monitormute2, monitormute3, monitormute4, monitormute5, monitormute6, monitormute7, monitormute8, monitormute9, monitormute10, monitormute11, monitormute12, monitormute13, monitormute14, monitormute15, monitormute16 FROM source_config", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &number);
+
+    AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[number-1];
+    
+    sscanf(PQgetvalue(qres, cntRow, 1), "%s", SourceData->SourceName);
+    sscanf(PQgetvalue(qres, cntRow, 2), "%d", &SourceData->InputData[0].MambaNetAddress); 
+    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &SourceData->InputData[0].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, 4), "%d", &SourceData->InputData[1].MambaNetAddress); 
+    sscanf(PQgetvalue(qres, cntRow, 5), "%c", &SourceData->InputData[1].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, 6), "%c", &SourceData->Phantom); 
+    sscanf(PQgetvalue(qres, cntRow, 7), "%c", &SourceData->Pad); 
+    sscanf(PQgetvalue(qres, cntRow, 8), "%f", &SourceData->Gain); 
+    sscanf(PQgetvalue(qres, cntRow, 9), "%c", &SourceData->Redlight[0]); 
+    sscanf(PQgetvalue(qres, cntRow, 10), "%c", &SourceData->Redlight[1]); 
+    sscanf(PQgetvalue(qres, cntRow, 11), "%c", &SourceData->Redlight[2]); 
+    sscanf(PQgetvalue(qres, cntRow, 12), "%c", &SourceData->Redlight[3]); 
+    sscanf(PQgetvalue(qres, cntRow, 13), "%c", &SourceData->Redlight[4]); 
+    sscanf(PQgetvalue(qres, cntRow, 14), "%c", &SourceData->Redlight[5]); 
+    sscanf(PQgetvalue(qres, cntRow, 15), "%c", &SourceData->Redlight[6]); 
+    sscanf(PQgetvalue(qres, cntRow, 16), "%c", &SourceData->Redlight[7]); 
+    sscanf(PQgetvalue(qres, cntRow, 17), "%c", &SourceData->MonitorMute[0]);
+    sscanf(PQgetvalue(qres, cntRow, 18), "%c", &SourceData->MonitorMute[1]);
+    sscanf(PQgetvalue(qres, cntRow, 19), "%c", &SourceData->MonitorMute[2]);
+    sscanf(PQgetvalue(qres, cntRow, 20), "%c", &SourceData->MonitorMute[3]);
+    sscanf(PQgetvalue(qres, cntRow, 2l), "%c", &SourceData->MonitorMute[4]);
+    sscanf(PQgetvalue(qres, cntRow, 22), "%c", &SourceData->MonitorMute[5]);
+    sscanf(PQgetvalue(qres, cntRow, 23), "%c", &SourceData->MonitorMute[6]);
+    sscanf(PQgetvalue(qres, cntRow, 24), "%c", &SourceData->MonitorMute[7]);
+    sscanf(PQgetvalue(qres, cntRow, 25), "%c", &SourceData->MonitorMute[8]);
+    sscanf(PQgetvalue(qres, cntRow, 26), "%c", &SourceData->MonitorMute[9]);
+    sscanf(PQgetvalue(qres, cntRow, 27), "%c", &SourceData->MonitorMute[10]);
+    sscanf(PQgetvalue(qres, cntRow, 28), "%c", &SourceData->MonitorMute[11]);
+    sscanf(PQgetvalue(qres, cntRow, 29), "%c", &SourceData->MonitorMute[12]);
+    sscanf(PQgetvalue(qres, cntRow, 30), "%c", &SourceData->MonitorMute[13]);
+    sscanf(PQgetvalue(qres, cntRow, 31), "%c", &SourceData->MonitorMute[14]);
+    sscanf(PQgetvalue(qres, cntRow, 32), "%c", &SourceData->MonitorMute[15]);
+  }
+  return 1;
+}
 
 /*
 int db_load_engine_functions() {

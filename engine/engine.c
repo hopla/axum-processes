@@ -567,38 +567,6 @@ static int NodeConfigurationCallback(void *IndexOfSender, int argc, char **argv,
   return 0;
 }
 
-static int RackOrganizationCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  int i;
-  int SlotNr = -1;
-  unsigned int MambaNetAddress = 0x00000000;
-
-  for (i=0; i<argc; i++)
-  {
-    if (argv[i])
-    {
-      if (strcmp(azColName[i], "SlotNr") == 0)
-      {
-        SlotNr = atoi(argv[i])-1;
-      }
-      else if (strcmp(azColName[i], "MambaNetAddress") == 0)
-      {
-        MambaNetAddress = atoi(argv[i]);
-      }
-    }
-  }
-
-  if (SlotNr != -1)
-  {
-    //printf("SlotNr:%d - MambaNetAddress:0x%08lx\n", SlotNr, MambaNetAddress);
-
-    AxumData.RackOrganization[SlotNr] = MambaNetAddress;
-  }
-
-  return 0;
-  NotUsed = NULL;
-}
-
 static int SourceConfigurationCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   int i;
@@ -2342,64 +2310,6 @@ static int NodeDefaultsCallback(void *IndexOfSender, int argc, char **argv, char
   return 0;
 }
 
-static int RackOrganizationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if (argc == 1)
-  {
-    if (strcmp(azColName[0],"total_record") == 0)
-    {
-      if (strcmp(argv[0], "0") == 0)
-      { //INSERT all functions
-        printf("insert default data in table rack_organization\n");
-
-        for (int cntSlot=0; cntSlot<42; cntSlot++)
-        {
-          char SQLQuery[8192];
-          char *zErrMsg;
-
-          sprintf(SQLQuery, "INSERT INTO rack_organization VALUES (%d, 0, 0, 0)", cntSlot+1);
-          if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-          {
-            printf("SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-          }
-        }
-      }
-    }
-  }
-  return 0;
-  NotUsed = NULL;
-}
-
-static int SourceConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if (argc == 1)
-  {
-    if (strcmp(azColName[0],"total_record") == 0)
-    {
-      if (strcmp(argv[0], "0") == 0)
-      { //INSERT all functions
-        printf("insert default data in table source_configuration\n");
-
-        for (int cntSource=0; cntSource<1280; cntSource++)
-        {
-          char SQLQuery[8192];
-          char *zErrMsg;
-
-          sprintf(SQLQuery, "INSERT INTO source_configuration VALUES (%d, '- %4d -', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)", cntSource+1, cntSource+1);
-          if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-          {
-            printf("source_config SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-          }
-        }
-      }
-    }
-  }
-  return 0;
-  NotUsed = NULL;
-}
-
 static int ModuleConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   if (argc == 1)
@@ -2690,105 +2600,14 @@ int main(int argc, char *argv[])
   AxumApplicationAndDSPInitialized = 1;
   log_write("Parameters in DSPs initialized");
 
-  //Rack organization
-  char SQLQuery[8192];
-  sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS rack_organization \
-								(															\
-									SlotNr int,											\
-									MambaNetAddress int,								\
-									InputChannelCount int,							\
-									OutputChannelCount int							\
-								);\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-    return 1;
-  }
+  //Slot configuration, former rack organization
+  db_read_slot_config();
 
-  sprintf(SQLQuery, "SELECT COUNT (*) AS total_record FROM rack_organization;\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, RackOrganizationTableCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM rack_organization;", RackOrganizationCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  //source_configuration
-  sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS source_configuration	\
-								(																\
-									Number int,												\
-									Label varchar(32),									\
-									Input1MambaNetAddress int,							\
-									Input1SubChannel		 int,							\
-									Input2MambaNetAddress int,							\
-									Input2SubChannel		 int,							\
-									Input3MambaNetAddress int,							\
-									Input3SubChannel		 int,							\
-									Input4MambaNetAddress int,							\
-									Input4SubChannel		 int,							\
-									Input5MambaNetAddress int,							\
-									Input5SubChannel		 int,							\
-									Input6MambaNetAddress int,							\
-									Input6SubChannel		 int,							\
-									Input7MambaNetAddress int,							\
-									Input7SubChannel		 int,							\
-									Input8MambaNetAddress int,							\
-									Input8SubChannel		 int,							\
-									Phantom					 int,							\
-									Pad						 int,							\
-									Gain						 float,						\
-									Redlight1				 int,							\
-									Redlight2				 int,							\
-									Redlight3				 int,							\
-									Redlight4				 int,							\
-									Redlight5				 int,							\
-									Redlight6				 int,							\
-									Redlight7				 int,							\
-									Redlight8				 int,							\
-									MonitorMute1			 int,							\
-									MonitorMute2			 int,							\
-									MonitorMute3			 int,							\
-									MonitorMute4			 int,							\
-									MonitorMute5			 int,							\
-									MonitorMute6			 int,							\
-									MonitorMute7			 int,							\
-									MonitorMute8			 int,							\
-									MonitorMute9			 int,							\
-									MonitorMute10			 int,							\
-									MonitorMute11			 int,							\
-									MonitorMute12			 int,							\
-									MonitorMute13			 int,							\
-									MonitorMute14			 int,							\
-									MonitorMute15			 int,							\
-									MonitorMute16			 int							\
-								);\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("source_config SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-    return 1;
-  }
-
-  sprintf(SQLQuery, "SELECT COUNT (*) AS total_record FROM source_configuration;\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, SourceConfigurationTableCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM source_configuration;", SourceConfigurationCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-  /*****************/
+  //Source configuration
+  db_read_source_config();
+  
   //module_configuration
+  char SQLQuery[8192];
   sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS module_configuration	\
 								(																\
 									Number 					 		int,					\
