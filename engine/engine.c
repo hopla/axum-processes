@@ -243,7 +243,7 @@ void init(int argc, char **argv)
   strcpy(hwparent_path, DEFAULT_GTW_PATH);
 
   /* parse options */
-  while((c = getopt(argc, argv, "e:d:l:g:")) != -1) {
+  while((c = getopt(argc, argv, "e:d:l:g:i:")) != -1) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
@@ -251,6 +251,17 @@ void init(int argc, char **argv)
           exit(1);
         }
         strcpy(ethdev, optarg);
+        break;
+      case 'i':
+        if(sscanf(optarg, "%d", &(AxumEngineDefaultObjects.UniqueIDPerProduct)) != 1) {
+          fprintf(stderr, "Invalid UniqueIDPerProduct");
+          exit(1);
+        }
+        if ((AxumEngineDefaultObjects.UniqueIDPerProduct < 1) || (AxumEngineDefaultObjects.UniqueIDPerProduct > 65535))
+        {
+          fprintf(stderr, "Unique ID not found or out of range\n");
+          exit(1);
+        }
         break;
       case 'd':
         if(strlen(optarg) > 256) {
@@ -266,8 +277,9 @@ void init(int argc, char **argv)
         strcpy(log_file, optarg);
         break;
       default:
-        fprintf(stderr, "Usage: %s [-f] [-e dev] [-u path] [-d path]\n", argv[0]);
+        fprintf(stderr, "Usage: %s [-e dev] [-u path] [-g path] [-d str] [-l path] [-i id]\n", argv[0]);
         fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
+        fprintf(stderr, "  -i id    UniqueIDPerProduct for the MambaNet node.\n");
         fprintf(stderr, "  -g path  Hardware parent or path to gateway socket.\n");
         fprintf(stderr, "  -l path  Path to log file.\n");
         fprintf(stderr, "  -d str   PostgreSQL database connection options.\n");
