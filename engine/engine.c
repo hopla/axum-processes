@@ -2310,36 +2310,6 @@ static int NodeDefaultsCallback(void *IndexOfSender, int argc, char **argv, char
   return 0;
 }
 
-static int ModuleConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if (argc == 1)
-  {
-    if (strcmp(azColName[0],"total_record") == 0)
-    {
-      if (strcmp(argv[0], "0") == 0)
-      { //INSERT all functions
-        printf("insert default data in table module_configuration\n");
-
-        for (int cntModule=0; cntModule<128; cntModule++)
-        {
-          char SQLQuery[8192];
-          char *zErrMsg;
-
-          sprintf(SQLQuery, "INSERT INTO module_configuration VALUES (%d, 0, 0, 0, 0, 0, 0, 120, 0, 0, 18, 12000, 1, 1, 4, 18, 4000, 1, 1, 3, 18, 800, 1, 1, 2, 18, 120, 1, 1, 1, 18, 12000, 1, 1, 5, 18, 120, 1, 1, 0, 1, 0, 0, 0, 0, -140, 0, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1, 0, 0, 0, 512, 1)", cntModule+1);
-          if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-          {
-            printf("module_config SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-          }
-
-        }
-      }
-    }
-  }
-  return 0;
-  NotUsed = NULL;
-}
-
 static int BussConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   if (argc == 1)
@@ -2599,6 +2569,7 @@ int main(int argc, char *argv[])
 
   AxumApplicationAndDSPInitialized = 1;
   log_write("Parameters in DSPs initialized");
+  char SQLQuery[8192];
 
   //Slot configuration, former rack organization
   db_read_slot_config();
@@ -2607,159 +2578,8 @@ int main(int argc, char *argv[])
   db_read_source_config();
   
   //module_configuration
-  char SQLQuery[8192];
-  sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS module_configuration	\
-								(																\
-									Number 					 		int,					\
-									SourceA					 		int,					\
-									SourceB					 		int,					\
-									InsertSource			 		int,					\
-									InsertOnOffA					int,					\
-									InsertOnOffB					int,					\
-									Gain								int,					\
-									LowCutFrequency				int,					\
-									LowCutOnOffA					int,					\
-									LowCutOnOffB					int,					\
-									EQBand1Range			 		float,				\
-									EQBand1DefaultFrequency		int,					\
-									EQBand1DefaultBandwidth		float,				\
-									EQBand1DefaultSlope	 		float,				\
-									EQBand1DefaultType	 		int,					\
-									EQBand2Range			 		float,				\
-									EQBand2DefaultFrequency		int,					\
-									EQBand2DefaultBandwidth 	float,				\
-									EQBand2DefaultSlope	 		float,				\
-									EQBand2DefaultType	 		int,					\
-									EQBand3Range			 		float,				\
-									EQBand3DefaultFrequency		int,					\
-									EQBand3DefaultBandwidth		float,				\
-									EQBand3DefaultSlope	 		float,				\
-									EQBand3DefaultType	 		int,					\
-									EQBand4Range			 		float,				\
-									EQBand4DefaultFrequency		int,					\
-									EQBand4DefaultBandwidth 	float,				\
-									EQBand4DefaultSlope	 		float,				\
-									EQBand4DefaultType	 		int,					\
-									EQBand5Range			 		float,				\
-									EQBand5DefaultFrequency		int,					\
-									EQBand5DefaultBandwidth		float,				\
-									EQBand5DefaultSlope	 		float,				\
-									EQBand5DefaultType	 		int,					\
-									EQBand6Range			 		float,				\
-									EQBand6DefaultFrequency		int,					\
-									EQBand6DefaultBandwidth		float,				\
-									EQBand6DefaultSlope	 		float,				\
-									EQBand6DefaultType	 		int,					\
-									EQOnOffA					 		int,					\
-									EQOnOffB					 		int,					\
-									DynamicsAmount					int,					\
-									DynamicsOnOffA					int,					\
-									DynamicsOnOffB					int,					\
-									ModuleLevel						float,				\
-									ModuleOnOff						int, 					\
-									Buss1and2Level			 		float,				\
-									Buss1and2OnOff			 		int,					\
-									Buss1and2PrePost		 		int,					\
-									Buss1and2Balance		 		int,					\
-									Buss1and2Assignment	 		int,					\
-									Buss3and4Level			 		float,				\
-									Buss3and4OnOff			 		int,					\
-									Buss3and4PrePost		 		int,					\
-									Buss3and4Balance		 		int,					\
-									Buss3and4Assignment	 		int,					\
-									Buss5and6Level			 		float,				\
-									Buss5and6OnOff			 		int,					\
-									Buss5and6PrePost		 		int,					\
-									Buss5and6Balance		 		int,					\
-									Buss5and6Assignment	 		int,					\
-									Buss7and8Level			 		float,				\
-									Buss7and8OnOff			 		int,					\
-									Buss7and8PrePost		 		int,					\
-									Buss7and8Balance		 		int,					\
-									Buss7and8Assignment	 		int,					\
-									Buss9and10Level			 	float,				\
-									Buss9and10OnOff			 	int,					\
-									Buss9and10PrePost		 		int,					\
-									Buss9and10Balance		 		int,					\
-									Buss9and10Assignment	 		int,					\
-									Buss11and12Level			 	float,				\
-									Buss11and12OnOff			 	int,					\
-									Buss11and12PrePost		 	int,					\
-									Buss11and12Balance		 	int,					\
-									Buss11and12Assignment	 	int,					\
-									Buss13and14Level			 	float,				\
-									Buss13and14OnOff			 	int,					\
-									Buss13and14PrePost		 	int,					\
-									Buss13and14Balance		 	int,					\
-									Buss13and14Assignment	 	int,					\
-									Buss15and16Level			 	float,				\
-									Buss15and16OnOff			 	int,					\
-									Buss15and16PrePost		 	int,					\
-									Buss15and16Balance		 	int,					\
-									Buss15and16Assignment	 	int,					\
-									Buss17and18Level			 	float,				\
-									Buss17and18OnOff			 	int,					\
-									Buss17and18PrePost		 	int,					\
-									Buss17and18Balance		 	int,					\
-									Buss17and18Assignment	 	int,					\
-									Buss19and20Level			 	float,				\
-									Buss19and20OnOff		 		int,					\
-									Buss19and20PrePost	 		int,					\
-									Buss19and20Balance	 		int,					\
-									Buss19and20Assignment		int,					\
-									Buss21and22Level			 	float,				\
-									Buss21and22OnOff			 	int,					\
-									Buss21and22PrePost		 	int,					\
-									Buss21and22Balance		 	int,					\
-									Buss21and22Assignment	 	int,					\
-									Buss23and24Level			 	float,				\
-									Buss23and24OnOff			 	int,					\
-									Buss23and24PrePost		 	int,					\
-									Buss23and24Balance		 	int,					\
-									Buss23and24Assignment	 	int,					\
-									Buss25and26Level			 	float,				\
-									Buss25and26OnOff			 	int,					\
-									Buss25and26PrePost		 	int,					\
-									Buss25and26Balance		 	int,					\
-									Buss25and26Assignment	 	int,					\
-									Buss27and28Level			 	float,				\
-									Buss27and28OnOff			 	int,					\
-									Buss27and28PrePost		 	int,					\
-									Buss27and28Balance		 	int,					\
-									Buss27and28Assignment	 	int,					\
-									Buss29and30Level			 	float,				\
-									Buss29and30OnOff			 	int,					\
-									Buss29and30PrePost		 	int,					\
-									Buss29and30Balance		 	int,					\
-									Buss29and30Assignment	 	int,					\
-									Buss31and32Level			 	float,				\
-									Buss31and32OnOff			 	int,					\
-									Buss31and32PrePost		 	int,					\
-									Buss31and32Balance		 	int,					\
-									Buss31and32Assignment	 	int					\
-								);\n");
-
-  if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("module_config SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-    return 1;
-  }
-
-  sprintf(SQLQuery, "SELECT COUNT (*) AS total_record FROM module_configuration;\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, ModuleConfigurationTableCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  int ModuleConfigurationUpdateType = 0;
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM module_configuration;", ModuleConfigurationCallback, &ModuleConfigurationUpdateType, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
+  db_read_module_config();
+  
   //buss_configuration
   sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS buss_configuration	\
 								(																\

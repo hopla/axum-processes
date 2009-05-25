@@ -912,6 +912,190 @@ int db_read_source_config()
   return 1;
 }
 
+int db_read_module_config()
+{
+  int cntRow;
+
+  PGresult *qres = sql_exec("SELECT number,               \
+                                    source_a,             \
+                                    source_b,             \
+                                    insert_source,        \
+                                    insert_on_off_a,      \
+                                    insert_on_off_b,      \
+                                    gain,                 \
+                                    lc_frequency,         \
+                                    lc_on_off_a,          \
+                                    lc_on_off_b,          \
+                                    eq_band_1_range,      \
+                                    eq_band_1_freq,       \
+                                    eq_band_1_bw,         \
+                                    eq_band_1_slope,      \
+                                    eq_band_1_type,       \
+                                    eq_band_2_range,      \
+                                    eq_band_2_freq,       \
+                                    eq_band_2_bw,         \
+                                    eq_band_2_slope,      \
+                                    eq_band_2_type,       \
+                                    eq_band_3_range,      \
+                                    eq_band_3_freq,       \
+                                    eq_band_3_bw,         \
+                                    eq_band_3_slope,      \
+                                    eq_band_3_type,       \
+                                    eq_band_4_range,      \
+                                    eq_band_4_freq,       \
+                                    eq_band_4_bw,         \
+                                    eq_band_4_slope,      \
+                                    eq_band_4_type,       \
+                                    eq_band_5_range,      \
+                                    eq_band_5_freq,       \
+                                    eq_band_5_bw,         \
+                                    eq_band_5_slope,      \
+                                    eq_band_5_type,       \
+                                    eq_band_6_range,      \
+                                    eq_band_6_freq,       \
+                                    eq_band_6_bw,         \
+                                    eq_band_6_slope,      \
+                                    eq_band_6_type,       \
+                                    eq_on_off_a,          \
+                                    eq_on_off_b,          \
+                                    dyn_amount,           \
+                                    dyn_on_off_a,         \
+                                    dyn_on_off_b,         \
+                                    mod_level,            \
+                                    mod_on_off,           \
+                                    buss_1_2_level,       \
+                                    buss_1_2_on_off,      \
+                                    buss_1_2_pre_post,    \
+                                    buss_1_2_balance,     \
+                                    buss_1_2_assignment,  \
+                                    buss_3_4_level,       \
+                                    buss_3_4_on_off,      \
+                                    buss_3_4_pre_post,    \
+                                    buss_3_4_balance,     \
+                                    buss_3_4_assignment,  \
+                                    buss_5_6_level,       \
+                                    buss_5_6_on_off,      \
+                                    buss_5_6_pre_post,    \
+                                    buss_5_6_balance,     \
+                                    buss_5_6_assignment,  \
+                                    buss_7_8_level,       \
+                                    buss_7_8_on_off,      \
+                                    buss_7_8_pre_post,    \
+                                    buss_7_8_balance,     \
+                                    buss_7_8_assignment,  \
+                                    buss_9_10_level,       \
+                                    buss_9_10_on_off,      \
+                                    buss_9_10_pre_post,    \
+                                    buss_9_10_balance,     \
+                                    buss_9_10_assignment,  \
+                                    buss_11_12_level,       \
+                                    buss_11_12_on_off,      \
+                                    buss_11_12_pre_post,    \
+                                    buss_11_12_balance,     \
+                                    buss_11_12_assignment,  \
+                                    buss_13_14_level,       \
+                                    buss_13_14_on_off,      \
+                                    buss_13_14_pre_post,    \
+                                    buss_13_14_balance,     \
+                                    buss_13_14_assignment,  \
+                                    buss_15_16_level,       \
+                                    buss_15_16_on_off,      \
+                                    buss_15_16_pre_post,    \
+                                    buss_15_16_balance,     \
+                                    buss_15_16_assignment,  \
+                                    buss_17_18_level,       \
+                                    buss_17_18_on_off,      \
+                                    buss_17_18_pre_post,    \
+                                    buss_17_18_balance,     \
+                                    buss_17_18_assignment,  \
+                                    buss_19_20_level,       \
+                                    buss_19_20_on_off,      \
+                                    buss_19_20_pre_post,    \
+                                    buss_19_20_balance,     \
+                                    buss_19_20_assignment,  \
+                                    buss_21_22_level,       \
+                                    buss_21_22_on_off,      \
+                                    buss_21_22_pre_post,    \
+                                    buss_21_22_balance,     \
+                                    buss_21_22_assignment,  \
+                                    buss_23_24_level,       \
+                                    buss_23_24_on_off,      \
+                                    buss_23_24_pre_post,    \
+                                    buss_23_24_balance,     \
+                                    buss_23_24_assignment,  \
+                                    buss_25_26_level,       \
+                                    buss_25_26_on_off,      \
+                                    buss_25_26_pre_post,    \
+                                    buss_25_26_balance,     \
+                                    buss_25_26_assignment,  \
+                                    buss_27_28_level,       \
+                                    buss_27_28_on_off,      \
+                                    buss_27_28_pre_post,    \
+                                    buss_27_28_balance,     \
+                                    buss_27_28_assignment,  \
+                                    buss_29_30_level,       \
+                                    buss_29_30_on_off,      \
+                                    buss_29_30_pre_post,    \
+                                    buss_29_30_balance,     \
+                                    buss_29_30_assignment,  \
+                                    buss_31_32_level,       \
+                                    buss_31_32_on_off,      \
+                                    buss_31_32_pre_post,    \
+                                    buss_31_32_balance,     \
+                                    buss_31_32_assignment,  \
+                                    ", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    unsigned int cntField;
+    unsigned char cntEQ;
+    unsigned char cntBuss;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+
+    AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[number-1];
+    
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceA);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceB);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->InsertSource);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->InsertOnOffA);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->InsertOnOffB);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->Gain);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Filter.Frequency);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->FilterOnOffA);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->FilterOnOffB);
+    for (cntEQ=0; cntEQ<6; cntEQ++)
+    {
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Range);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->EQBand[cntEQ].Frequency);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Bandwidth);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Slope);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", (char *)&ModuleData->EQBand[cntEQ].Type);
+    }
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->EQOnOffA);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->EQOnOffB);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->Dynamics);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->DynamicsOnOffA);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->DynamicsOnOffB);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->FaderLevel);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->On);
+    for (cntBuss=0; cntBuss<16; cntBuss++)
+    {
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->Buss[cntBuss].Level);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->Buss[cntBuss].On);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->Buss[cntBuss].PreModuleLevel);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Buss[cntBuss].Balance);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->Buss[cntBuss].Active);
+    }
+  }
+  return 1;
+}
+
 /*
 int db_load_engine_functions() {
   PGresult *qres;
