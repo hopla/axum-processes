@@ -8,7 +8,7 @@ void db_free();
 int db_check_engine_functions();
 int db_insert_engine_functions(const char *table, int function_number, const char *name, int rcv_type, int xmt_type); 
 int db_read_slot_config();
-int db_read_source_config();
+int db_read_src_config();
 int db_read_module_config();
 int db_read_buss_config();
 

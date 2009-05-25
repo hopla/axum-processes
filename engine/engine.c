@@ -2519,7 +2519,7 @@ int main(int argc, char *argv[])
   db_read_slot_config();
 
   //Source configuration
-  db_read_source_config();
+  db_read_src_config();
   
   //module_configuration
   db_read_module_config();
