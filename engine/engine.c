@@ -2310,42 +2310,6 @@ static int NodeDefaultsCallback(void *IndexOfSender, int argc, char **argv, char
   return 0;
 }
 
-static int MonitorBussConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if (argc == 1)
-  {
-    if (strcmp(azColName[0],"total_record") == 0)
-    {
-      if (strcmp(argv[0], "0") == 0)
-      { //INSERT all functions
-        printf("insert default data in table monitor_buss_configuration\n");
-
-        char SQLQuery[8192];
-        char *zErrMsg;
-
-        sprintf(SQLQuery, "INSERT INTO monitor_buss_configuration VALUES (1, 'CRM', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -20)");
-        if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-        {
-          printf("SQL error: %s\n", zErrMsg);
-          sqlite3_free(zErrMsg);
-        }
-
-        for (int cntBuss=0; cntBuss<15; cntBuss++)
-        {
-          sprintf(SQLQuery, "INSERT INTO monitor_buss_configuration VALUES (%d, 'Std %d', 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -20)", 2+cntBuss, cntBuss+1);
-          if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-          {
-            printf("SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-          }
-        }
-      }
-    }
-  }
-  return 0;
-  NotUsed = NULL;
-}
-
 static int ExternSourceConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   if (argc == 1)
@@ -2528,51 +2492,8 @@ int main(int argc, char *argv[])
   db_read_buss_config();
 
   //monitor_buss_configuration
-  sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS monitor_buss_configuration	\
-								(																		\
-									Number				int,										\
-									Label 				varchar(32),							\
-									Interlock			int,										\
-									DefaultSelection	int,										\
-									Buss1and2			int,										\
-									Buss3and4			int,										\
-									Buss5and6			int,										\
-									Buss7and8			int,										\
-									Buss9and10			int,										\
-									Buss11and12			int,										\
-									Buss13and14			int,										\
-									Buss15and16			int,										\
-									Buss17and18			int,										\
-									Buss19and20			int,										\
-									Buss21and22			int,										\
-									Buss23and24			int,										\
-									Buss25and26			int,										\
-									Buss27and28			int,										\
-									Buss29and30			int,										\
-									Buss31and32			int,										\
-									SwitchingDimLevel	float										\
-								);\n");
-
-  if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-    return 1;
-  }
-
-  sprintf(SQLQuery, "SELECT COUNT (*) AS total_record FROM monitor_buss_configuration;\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, MonitorBussConfigurationTableCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM monitor_buss_configuration;", MonitorBussConfigurationCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
+  db_read_monitor_buss_config();
+  
   //extern_source_configuration
   sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS extern_source_configuration	\
 								(																\

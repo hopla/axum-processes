@@ -1124,6 +1124,38 @@ int db_read_buss_config()
   return 1;
 }
 
+int db_read_monitor_buss_config()
+{
+  int cntRow;
+
+  PGresult *qres = sql_exec("SELECT number, label, interlock, default_selection, buss_1_2, buss_3_4, buss_5_6, buss_7_8, buss_9_10, buss_11_12, buss_13_14, buss_15_!6, buss_17_18, buss_19_20, buss_21_22, buss_23_24, buss_25_26, buss_27_28, buss_29_30, buss_31_32, dim_level FROM monitor_buss_config", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    unsigned int cntField;
+    unsigned int cntMonitorBuss;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+
+    AXUM_MONITOR_OUTPUT_DATA_STRUCT *MonitorData = &AxumData.Monitor[number-1];
+    
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", MonitorData->Label);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &MonitorData->Interlock); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &MonitorData->DefaultSelection); 
+    for (cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
+    { 
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &MonitorData->AutoSwitchingBuss[cntMonitorBuss]); 
+    }
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &MonitorData->SwitchingDimLevel); 
+  }
+  return 1;
+}
+
 /*
 int db_load_engine_functions() {
   PGresult *qres;
