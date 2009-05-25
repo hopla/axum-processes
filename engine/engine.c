@@ -2310,60 +2310,6 @@ static int NodeDefaultsCallback(void *IndexOfSender, int argc, char **argv, char
   return 0;
 }
 
-static int GlobalConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if (argc == 1)
-  {
-    if (strcmp(azColName[0],"total_record") == 0)
-    {
-      if (strcmp(argv[0], "0") == 0)
-      { //INSERT all functions
-        printf("insert default data in table global_configuration\n");
-        char SQLQuery[8192];
-        char *zErrMsg;
-
-        sprintf(SQLQuery, "INSERT INTO global_configuration VALUES (48000, 0, 20, 0)");
-        if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-        {
-          printf("SQL error: %s\n", zErrMsg);
-          sqlite3_free(zErrMsg);
-        }
-      }
-    }
-  }
-  return 0;
-  NotUsed = NULL;
-}
-
-static int DestinationConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if (argc == 1)
-  {
-    if (strcmp(azColName[0],"total_record") == 0)
-    {
-      if (strcmp(argv[0], "0") == 0)
-      { //INSERT all functions
-        printf("insert default data in table destination_configuration\n");
-
-        for (int cntSource=0; cntSource<1280; cntSource++)
-        {
-          char SQLQuery[8192];
-          char *zErrMsg;
-
-          sprintf(SQLQuery, "INSERT INTO destination_configuration VALUES (%d, '- %4d -', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0)", cntSource+1, cntSource+1);
-          if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-          {
-            printf("SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-          }
-        }
-      }
-    }
-  }
-  return 0;
-  NotUsed = NULL;
-}
-
 int main(int argc, char *argv[])
 {
   struct termios oldtio;
@@ -2423,7 +2369,6 @@ int main(int argc, char *argv[])
 
   AxumApplicationAndDSPInitialized = 1;
   log_write("Parameters in DSPs initialized");
-  char SQLQuery[8192];
 
   //Slot configuration, former rack organization
   db_read_slot_config();
@@ -2447,80 +2392,11 @@ int main(int argc, char *argv[])
   db_read_talkback_config();
   
   //global_configuration
-  sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS global_configuration	\
-								(																\
-									Samplerate  		int,								\
-									ExternClock			int,								\
-									Headroom				float,							\
-									LevelReserve		float								\
-								);\n");
+  db_read_global_config();
 
-  if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-    return 1;
-  }
-
-  sprintf(SQLQuery, "SELECT COUNT (*) AS total_record FROM global_configuration;\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, GlobalConfigurationTableCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM global_configuration;", GlobalConfigurationCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  /*****************/
   //destination_configuration
-  sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS destination_configuration	\
-								(																		\
-									Number int,														\
-									Label varchar(32),											\
-									Output1MambaNetAddress	int,								\
-									Output1SubChannel		 	int,								\
-									Output2MambaNetAddress 	int,								\
-									Output2SubChannel		 	int,								\
-									Output3MambaNetAddress 	int,								\
-									Output3SubChannel		 	int,								\
-									Output4MambaNetAddress 	int,								\
-									Output4SubChannel		 	int,								\
-									Output5MambaNetAddress 	int,								\
-									Output5SubChannel		 	int,								\
-									Output6MambaNetAddress 	int,								\
-									Output6SubChannel		 	int,								\
-									Output7MambaNetAddress 	int,								\
-									Output7SubChannel		 	int,								\
-									Output8MambaNetAddress 	int,								\
-									Output8SubChannel		 	int,								\
-									Level							int,								\
-									Source						int,								\
-									MixMinusSource				int								\
-								);\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-    return 1;
-  }
-
-  sprintf(SQLQuery, "SELECT COUNT (*) AS total_record FROM destination_configuration;\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, DestinationConfigurationTableCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM destination_configuration;", DestinationConfigurationCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
+  db_read_dest_config();
+  
   if (sqlite3_exec(axum_engine_db, "SELECT * FROM position_to_db;", PositionTodBCallback, 0, &zErrMsg) != SQLITE_OK)
   {
     printf("SQL error: %s\n", zErrMsg);

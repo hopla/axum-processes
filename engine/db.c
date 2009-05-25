@@ -1212,6 +1212,56 @@ int db_read_talkback_config()
   return 1;
 }
 
+int db_read_global_config()
+{
+  int cntRow;
+
+  PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve FROM global_config", 1, 0, NULL);
+
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    unsigned int cntField;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &AxumData.Samplerate);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &AxumData.ExternClock);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.Headroom);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.LevelReserve);
+  }
+  return 1;
+}
+
+int db_read_dest_config()
+{
+  int cntRow;
+
+  PGresult *qres = sql_exec("SELECT number, label, output1_addr, output1_sub_ch, output2_addr, output2_sub_ch, level, source, mix_minus_source FROM dest_config", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &number);
+
+    AXUM_DESTINATION_DATA_STRUCT *DestinationData = &AxumData.DestinationData[number-1];
+    
+    sscanf(PQgetvalue(qres, cntRow, 1), "%s", DestinationData->DestinationName);
+    sscanf(PQgetvalue(qres, cntRow, 2), "%d", &DestinationData->OutputData[0].MambaNetAddress); 
+    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &DestinationData->OutputData[0].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, 4), "%d", &DestinationData->OutputData[1].MambaNetAddress); 
+    sscanf(PQgetvalue(qres, cntRow, 5), "%c", &DestinationData->OutputData[1].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, 6), "%f", &DestinationData->Level); 
+    sscanf(PQgetvalue(qres, cntRow, 7), "%d", &DestinationData->Source); 
+    sscanf(PQgetvalue(qres, cntRow, 8), "%d", &DestinationData->MixMinusSource); 
+  }
+  return 1;
+}
 /*
 int db_load_engine_functions() {
   PGresult *qres;
