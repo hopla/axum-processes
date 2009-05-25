@@ -2310,35 +2310,6 @@ static int NodeDefaultsCallback(void *IndexOfSender, int argc, char **argv, char
   return 0;
 }
 
-static int ExternSourceConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if (argc == 1)
-  {
-    if (strcmp(azColName[0],"total_record") == 0)
-    {
-      if (strcmp(argv[0], "0") == 0)
-      { //INSERT all functions
-        printf("insert default data in table extern_source_configuration\n");
-
-        char SQLQuery[8192];
-        char *zErrMsg;
-
-        for (int cntMonitorBuss=0; cntMonitorBuss<4; cntMonitorBuss++)
-        {
-          sprintf(SQLQuery, "INSERT INTO extern_source_configuration VALUES (%d, 0, 0, 0, 0, 0, 0, 0, 0)", cntMonitorBuss+1);
-          if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-          {
-            printf("SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-          }
-        }
-      }
-    }
-  }
-  return 0;
-  NotUsed = NULL;
-}
-
 static int TalkbackConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   if (argc == 1)
@@ -2495,38 +2466,7 @@ int main(int argc, char *argv[])
   db_read_monitor_buss_config();
   
   //extern_source_configuration
-  sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS extern_source_configuration	\
-								(																\
-									Number				int,								\
-									Ext1					int,								\
-									Ext2					int,								\
-									Ext3					int,								\
-									Ext4					int,								\
-									Ext5					int,								\
-									Ext6					int,								\
-									Ext7					int,								\
-									Ext8					int								\
-								);\n");
-
-  if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-    return 1;
-  }
-
-  sprintf(SQLQuery, "SELECT COUNT (*) AS total_record FROM extern_source_configuration;\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, ExternSourceConfigurationTableCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM extern_source_configuration;", ExternSourceConfigurationCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
+  db_read_extern_src_config();
 
   //talkback_configuration
   sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS talkback_configuration	\

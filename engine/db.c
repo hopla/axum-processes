@@ -1156,6 +1156,34 @@ int db_read_monitor_buss_config()
   return 1;
 }
 
+int db_read_extern_src_config()
+{
+  int cntRow;
+
+  PGresult *qres = sql_exec("SELECT number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8 FROM extern_src_config", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    unsigned int cntField;
+    unsigned int cntExternSource;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+
+    AXUM_EXTERN_SOURCE_DATA_STRUCT *ExternSource = &AxumData.ExternSource[number-1];
+    
+    for (cntExternSource=0; cntExternSource<8; cntExternSource++)
+    { 
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ExternSource->Ext[cntExternSource]); 
+    }
+  }
+  return 1;
+}
+
 /*
 int db_load_engine_functions() {
   PGresult *qres;
