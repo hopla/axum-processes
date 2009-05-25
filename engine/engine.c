@@ -2397,12 +2397,14 @@ int main(int argc, char *argv[])
   //destination_configuration
   db_read_dest_config();
   
+  //position to db
   if (sqlite3_exec(axum_engine_db, "SELECT * FROM position_to_db;", PositionTodBCallback, 0, &zErrMsg) != SQLITE_OK)
   {
     printf("SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
   }
 
+  //db to position
   if (sqlite3_exec(axum_engine_db, "SELECT * FROM db_to_position;", dBToPositionCallback, 0, &zErrMsg) != SQLITE_OK)
   {
     printf("SQL error: %s\n", zErrMsg);
