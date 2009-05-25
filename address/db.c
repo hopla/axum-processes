@@ -14,7 +14,8 @@
 #include <mbn.h>
 
 
-#define ADDRSELECT "addr, name, id, engine_addr, services, active, parent, setname, refresh, firstseen, lastseen, addr_requests"
+#define ADDRSELECT "addr, name, id, engine_addr, services, active, parent, setname,\
+  refresh, DATE_PART('epoch', firstseen), DATE_PART('epoch', lastseen), addr_requests"
 
 
 void db_event_removed(char, char *);
@@ -135,9 +136,11 @@ int db_setnode(unsigned long addr, struct db_node *node) {
   /* execute query */
   qs = sql_exec(
     addr ? "UPDATE addresses SET addr = $1, name = $2, id = $3, engine_addr = $4, services = $5,\
-              active = $6, parent = $7, setname = $8, refresh = $9, firstseen = $10, lastseen = $11,\
+              active = $6, parent = $7, setname = $8, refresh = $9, firstseen = 'epoch'::timestamptz\
+              + $10 * '1 second'::interval, lastseen = 'epoch'::timestamptz + $11 * '1 second'::interval,\
               addr_requests = $12 WHERE addr = $13"
-         : "INSERT INTO addresses VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+         : "INSERT INTO addresses VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, 'epoch'::timestamptz\
+              + $10 * '1 second'::interval, 'epoch'::timestamptz + $11 * '1 second'::interval, $12)",
     0, addr ? 13 : 12, params);
   if(qs == 0)
     return 0;

@@ -100,8 +100,8 @@ CREATE TABLE addresses (
   parent mambanet_unique_id NOT NULL DEFAULT ROW(0,0,0),
   setname boolean NOT NULL DEFAULT FALSE,
   refresh boolean NOT NULL DEFAULT FALSE,
-  firstseen bigint NOT NULL DEFAULT DATE_PART('epoch', NOW()),
-  lastseen bigint NOT NULL DEFAULT DATE_PART('epoch', NOW()),
+  firstseen timestamp NOT NULL DEFAULT NOW(),
+  lastseen timestamp NOT NULL DEFAULT NOW(),
   addr_requests integer NOT NULL DEFAULT 0
 );
 CREATE UNIQUE INDEX addresses_unique_id ON addresses (((id).man), ((id).prod), ((id).id));
