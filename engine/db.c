@@ -1184,6 +1184,34 @@ int db_read_extern_src_config()
   return 1;
 }
 
+int db_read_talkback_config()
+{
+  int cntRow;
+
+  PGresult *qres = sql_exec("SELECT number, source FROM talkback_config", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    unsigned int cntField;
+    unsigned int cntExternSource;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+
+    AXUM_EXTERN_SOURCE_DATA_STRUCT *ExternSource = &AxumData.ExternSource[number-1];
+    
+    for (cntExternSource=0; cntExternSource<8; cntExternSource++)
+    { 
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ExternSource->Ext[cntExternSource]); 
+    }
+  }
+  return 1;
+}
+
 /*
 int db_load_engine_functions() {
   PGresult *qres;

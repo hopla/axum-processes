@@ -13,6 +13,8 @@ int db_read_module_config();
 int db_read_buss_config();
 int db_read_monitor_buss_config();
 int db_read_extern_src_config();
+int db_read_talkback_config();
+
 int db_load_engine_functions();
 void db_lock(int);
 

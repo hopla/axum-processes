@@ -2310,31 +2310,6 @@ static int NodeDefaultsCallback(void *IndexOfSender, int argc, char **argv, char
   return 0;
 }
 
-static int TalkbackConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if (argc == 1)
-  {
-    if (strcmp(azColName[0],"total_record") == 0)
-    {
-      if (strcmp(argv[0], "0") == 0)
-      { //INSERT all functions
-        printf("insert default data in table talkback_configuration\n");
-        char SQLQuery[8192];
-        char *zErrMsg;
-
-        sprintf(SQLQuery, "INSERT INTO talkback_configuration VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)");
-        if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-        {
-          printf("SQL error: %s\n", zErrMsg);
-          sqlite3_free(zErrMsg);
-        }
-      }
-    }
-  }
-  return 0;
-  NotUsed = NULL;
-}
-
 static int GlobalConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   if (argc == 1)
@@ -2469,46 +2444,8 @@ int main(int argc, char *argv[])
   db_read_extern_src_config();
 
   //talkback_configuration
-  sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS talkback_configuration	\
-								(																\
-									Talkback1			int,								\
-									Talkback2			int,								\
-									Talkback3			int,								\
-									Talkback4			int,								\
-									Talkback5			int,								\
-									Talkback6			int,								\
-									Talkback7			int,								\
-									Talkback8			int,								\
-									Talkback9			int,								\
-									Talkback10			int,								\
-									Talkback11			int,								\
-									Talkback12 			int,								\
-									Talkback13			int,								\
-									Talkback14			int,								\
-									Talkback15			int,								\
-									Talkback16			int								\
-								);\n");
-
-  if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-    return 1;
-  }
-
-  sprintf(SQLQuery, "SELECT COUNT (*) AS total_record FROM talkback_configuration;\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, TalkbackConfigurationTableCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM talkback_configuration;", TalkbackConfigurationCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
+  db_read_talkback_config();
+  
   //global_configuration
   sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS global_configuration	\
 								(																\
