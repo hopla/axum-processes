@@ -2638,26 +2638,6 @@ int main(int argc, char *argv[])
   int maxfd;
   fd_set readfs;
 
-  int UniqueIDPerProduct = -1;
-  char UniqueIDString[8];
-
-  int FileHandleUniqueID = open("/var/lib/axum/axum-engine.dat", O_RDONLY);
-  if (FileHandleUniqueID == -1)
-  {
-    perror("axum-engine.dat");
-    exit(1);
-  }
-
-  read(FileHandleUniqueID, UniqueIDString, 8);
-
-  UniqueIDPerProduct = atoi(UniqueIDString);
-  if ((UniqueIDPerProduct < 1) || (UniqueIDPerProduct > 65535))
-  {
-    fprintf(stderr, "Unique ID not found or out of range\n");
-    exit(1);
-  }
-  AxumEngineDefaultObjects.UniqueIDPerProduct = UniqueIDPerProduct;
-
   init(argc, argv);
 
   char *zErrMsg;
