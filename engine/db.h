@@ -10,6 +10,8 @@ int db_insert_engine_functions(const char *table, int function_number, const cha
 int db_read_slot_config();
 int db_read_source_config();
 int db_read_module_config();
+int db_read_buss_config();
+
 int db_load_engine_functions();
 void db_lock(int);
 

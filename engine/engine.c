@@ -2310,62 +2310,6 @@ static int NodeDefaultsCallback(void *IndexOfSender, int argc, char **argv, char
   return 0;
 }
 
-static int BussConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if (argc == 1)
-  {
-    if (strcmp(azColName[0],"total_record") == 0)
-    {
-      if (strcmp(argv[0], "0") == 0)
-      { //INSERT all functions
-        printf("insert defaul buss configuration\n");
-
-        char SQLQuery[8192];
-        char *zErrMsg;
-
-        sprintf(SQLQuery, "INSERT INTO buss_configuration VALUES (1, 'Prog', 0, 0, 0, 0, 1, 0, 0)");
-        if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-        {
-          printf("buss_conf_prog SQL error: %s\n", zErrMsg);
-          sqlite3_free(zErrMsg);
-        }
-        sprintf(SQLQuery, "INSERT INTO buss_configuration VALUES (2, 'Sub', 0, 0, 0, 0, 1, 0, 0)");
-        if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-        {
-          printf("buss_conf_sub SQL error: %s\n", zErrMsg);
-          sqlite3_free(zErrMsg);
-        }
-
-        sprintf(SQLQuery, "INSERT INTO buss_configuration VALUES (3, 'CUE', 1, 1, 0, 0, 1, 0, 1)");
-        if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-        {
-          printf("buss_conf_CUE SQL error: %s\n", zErrMsg);
-          sqlite3_free(zErrMsg);
-        }
-
-        sprintf(SQLQuery, "INSERT INTO buss_configuration VALUES (4, 'Comm', 1, 1, 0, 0, 1, 0, 1)");
-        if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-        {
-          printf("buss_conf_Comm SQL error: %s\n", zErrMsg);
-          sqlite3_free(zErrMsg);
-        }
-
-        for (int cntBuss=0; cntBuss<12; cntBuss++)
-        {
-          sprintf(SQLQuery, "INSERT INTO buss_configuration VALUES (%d, 'Aux %d', 0, 0, 0, 0, 1, 0, 0)", 5+cntBuss, cntBuss+1);
-          if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-          {
-            printf("buss_conf_aux SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-          }
-        }
-      }
-    }
-  }
-  return 0;
-  NotUsed = NULL;
-}
-
 static int MonitorBussConfigurationTableCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
   if (argc == 1)
@@ -2581,38 +2525,7 @@ int main(int argc, char *argv[])
   db_read_module_config();
   
   //buss_configuration
-  sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS buss_configuration	\
-								(																\
-									Number				int,								\
-									Label 				varchar(32),					\
-									PreModuleOn			int,								\
-									PreModuleLevel		int,								\
-									PreModuleBalance	int,								\
-									Level					float,							\
-									OnOff					int,								\
-									Interlock			int,								\
-									GlobalBussReset	int								\
-								);\n");
-
-  if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("buss_conf SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-    return 1;
-  }
-
-  sprintf(SQLQuery, "SELECT COUNT (*) AS total_record FROM buss_configuration;\n");
-  if (sqlite3_exec(axum_engine_db, SQLQuery, BussConfigurationTableCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM buss_configuration;", BussConfigurationCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
+  db_read_buss_config();
 
   //monitor_buss_configuration
   sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS monitor_buss_configuration	\

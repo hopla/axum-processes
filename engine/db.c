@@ -1096,6 +1096,34 @@ int db_read_module_config()
   return 1;
 }
 
+int db_read_buss_config()
+{
+  int cntRow;
+
+  PGresult *qres = sql_exec("SELECT number, label, pre_on, pre_level, pre_balance, level, on_off, interlock, global_reset FROM buss_config", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &number);
+
+    AXUM_BUSS_MASTER_DATA_STRUCT *BussMasterData = &AxumData.BussMasterData[number-1];
+    
+    sscanf(PQgetvalue(qres, cntRow, 1), "%s", BussMasterData->Label);
+    sscanf(PQgetvalue(qres, cntRow, 2), "%c", &BussMasterData->PreModuleOn); 
+    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->PreModuleLevel); 
+    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->PreModuleBalance); 
+    sscanf(PQgetvalue(qres, cntRow, 3), "%f", &BussMasterData->Level); 
+    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->On); 
+    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->Interlock); 
+    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->GlobalBussReset); 
+  }
+  return 1;
+}
+
 /*
 int db_load_engine_functions() {
   PGresult *qres;
