@@ -5,19 +5,19 @@
 -- T A B L E S
 
 CREATE TABLE rack_organization (
-  slot_nr smallint NOT NULL CHECK(slot_nr>=1 AND slot_nr<42) PRIMARY KEY,
+  slot_nr smallint NOT NULL CHECK(slot_nr>=1 AND slot_nr<=42) PRIMARY KEY,
   addr integer NOT NULL,
   input_ch_cnt integer,
   output_ch_cnt integer
 );
 
 CREATE TABLE source_configuration (
-  number smallint NOT NULL CHECK (number>=0 AND number<1280) PRIMARY KEY,
+  number smallint NOT NULL CHECK (number>=1 AND number<=1280) PRIMARY KEY,
   label varchar(32) NOT NULL,
   input1_addr integer NOT NULL,
-  input1_sub_ch smallint NOT NULL CHECK(input1_sub_ch>=0 AND input1sub_ch<32),
+  input1_sub_ch smallint NOT NULL CHECK(input1_sub_ch>=1 AND input1sub_ch<=32),
   input2_addr integer NOT NULL,
-  input2_sub_ch smallint NOT NULL CHECK(input2_sub_ch>=0 AND input2sub_ch<32),
+  input2_sub_ch smallint NOT NULL CHECK(input2_sub_ch>=1 AND input2sub_ch<=32),
   phantom boolean NOT NULL,
   pad boolean NOT NULL,
   Gain float NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE source_configuration (
 );
 
 CREATE TABLE module_configuration (
-  number smallint NOT NULL CHECK(number>=0 AND number<128) PRIMARY KEY,
+  number smallint NOT NULL CHECK(number>=1 AND number<=128) PRIMARY KEY,
   source_a smallint NOT NULL,
   source_b smallint NOT NULL,
   insert_source smallint NOT NULL,
@@ -178,7 +178,7 @@ CREATE TABLE module_configuration (
 );
 
 CREATE TABLE buss_configuration	(
-  number smallint NOT NULL CHECK(number>=0 AND number<16) PRIMARY KEY,
+  number smallint NOT NULL CHECK(number>=1 AND number<=16) PRIMARY KEY,
   label varchar(32) NOT NULL,
   pre_on boolean NOT NULL,
   pre_level boolean NOT NULL,
@@ -190,7 +190,7 @@ CREATE TABLE buss_configuration	(
 )
 
 CREATE TABLE monitor_buss_configuration	(
-  number smallint NOT NULL CHECK(number>=0 AND number<16) PRIMARY KEY,
+  number smallint NOT NULL CHECK(number>=1 AND number<=16) PRIMARY KEY,
   label varchar(32) NOT NULL,
   interlock boolean NOT NULL,
   default_selection smallint NOT NULL,
@@ -214,7 +214,7 @@ CREATE TABLE monitor_buss_configuration	(
 );
 
 CREATE TABLE extern_source_configuration (
-  number smallint NOT NULL CHECK(number>=0 AND number<4) PRIMARY KEY,
+  number smallint NOT NULL CHECK(number>=1 AND number<=4) PRIMARY KEY,
   ext1 smallint NOT NULL,
   ext2 smallint NOT NULL,
   ext3 smallint NOT NULL,
@@ -226,7 +226,7 @@ CREATE TABLE extern_source_configuration (
 );
 
 CREATE TABLE talkback_configuration (
-  number smallint NOT NULL CHECK(number>=0 AND number<16) PRIMARY KEY,
+  number smallint NOT NULL CHECK(number>=1 AND number<=16) PRIMARY KEY,
   source smallint NOT NULL
 );
 
@@ -238,7 +238,7 @@ CREATE TABLE global_configuration (
 );
 
 CREATE TABLE destination_configuration (
-  number smallint NOT NULL CHECK(number>=0 AND number<1280) PRIMARY KEY,
+  number smallint NOT NULL CHECK(number>=1 AND number<=1280) PRIMARY KEY,
   label varchar(32) NOT NULL,
   output1_addr integer NOT NULL,
   output1_sub_ch smallint NOT NULL CHECK(input1_sub_ch>=0 AND input1sub_ch<32),
