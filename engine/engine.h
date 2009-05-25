@@ -14,11 +14,11 @@
 **
 ****************************************************************************/
 
-#ifndef _axum_engine_h
-#define _axum_engine_h
+#ifndef _engine_h
+#define _engine_h
 
 #include <stdio.h>
-#include "axum_engine_functions.h"
+#include "engine_functions.h"
 #include "mambanet_stack_axum.h"
 
 

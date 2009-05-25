@@ -15,7 +15,7 @@
 ****************************************************************************/
 
 #include "common.h"
-#include "axum_engine.h"
+#include "engine.h"
 #include "db.h"
 #include "dsp.h"
 
@@ -26,7 +26,7 @@
 #include <string.h>         //for memcpy/strncpy
 #include <termios.h>            //for termios
 #include <sys/ioctl.h>          //for ioctl
-#include "axum_engine_functions.h"
+#include "engine_functions.h"
 
 #include <arpa/inet.h>      //for AF_PACKET/SOCK_DGRAM/htons/ntohs/socket/bind/sendto
 #include <linux/if_arp.h>   //for ETH_P_ALL/ifreq/sockaddr_ll/ETH_ALEN etc...
