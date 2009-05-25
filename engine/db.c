@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern AXUM_DATA_STRUCT AxumData;
+
 int insert_engine_function(int type, int function_number, const char *name, int rcv_type, int xmt_type)
 {
   char q[1024];
@@ -828,6 +830,32 @@ int db_check_engine_functions()
     insert_global_functions();
     insert_source_functions();
     insert_destination_functions();
+  }
+  return 1;
+}
+
+int db_read_rack_organization()
+{
+  int cntRow;
+
+  //PGresult *qres = sql_exec("SELECT slot_nr, addr, input_ch_cnt, output_ch_cnt FROM rack_organization", 1, 0, NULL);
+  PGresult *qres = sql_exec("SELECT slot_nr, addr FROM rack_organization", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int slot_nr;
+    unsigned long int addr;
+    //short int input_ch_count, output_ch_count;
+
+    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &slot_nr);
+    sscanf(PQgetvalue(qres, cntRow, 1), "%ld", &addr);
+    //sscanf(PQgetvalue(qres, cntRow, 2), "%hd", &input_ch_count);
+    //sscanf(PQgetvalue(qres, cntRow, 4), "%hd", &output_ch_count);
+
+    AxumData.RackOrganization[slot_nr] = addr;
   }
   return 1;
 }
