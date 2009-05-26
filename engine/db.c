@@ -9,6 +9,7 @@
 extern AXUM_DATA_STRUCT AxumData;
 extern unsigned short int dB2Position[1500];
 extern float Position2dB[1024];
+extern DEFAULT_NODE_OBJECTS_STRUCT AxumEngineDefaultObjects;
 
 int insert_engine_function(int type, int function_number, const char *name, int rcv_type, int xmt_type)
 {
@@ -19,12 +20,12 @@ int insert_engine_function(int type, int function_number, const char *name, int 
   qres = sql_exec(q, 0, 0, NULL);
   if(qres == NULL) 
   {
-    log_write("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qres));
     return 0;
   }
 
   return 1;    
 }
+
 int insert_module_functions()
 {
   insert_engine_function(MODULE_FUNCTIONS     , MODULE_FUNCTION_SOURCE              , "Source"              , SIGNED_INTEGER_DATATYPE   , OCTET_STRING_DATATYPE     );
@@ -1300,7 +1301,314 @@ int db_read_db_to_position()
   return 1;
 }
 
-/*
+int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
+{
+  char str[3][32];
+  const char *params[3];
+  int cntParams;
+  int cntRow;
+
+  for (cntParams=0; cntParams<3; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  //Determine number of objects for memory reservation
+  sprintf(str[0], "%hd", node_info->ManufacturerID);
+  sprintf(str[1], "%hd", node_info->ProductID);
+  sprintf(str[2], "%c", node_info->FirmwareMajorRevision);
+ 
+  PGresult *qres = sql_exec("SELECT COUNT(*) FROM templates WHERE man_id=$1, prod_id=$2, firm_major=$3", 0, 3, params);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  sscanf(PQgetvalue(qres, 0, 0), "%d", &node_info->NumberOfCustomObjects);
+  if (node_info->NumberOfCustomObjects>0)
+  {
+    node_info->SensorReceiveFunction = new SENSOR_RECEIVE_FUNCTION_STRUCT[node_info->NumberOfCustomObjects];
+    node_info->ObjectInformation = new OBJECT_INFORMATION_STRUCT[node_info->NumberOfCustomObjects];
+    for (int cntObject=0; cntObject<node_info->NumberOfCustomObjects; cntObject++)
+    {
+      node_info->SensorReceiveFunction[cntObject].FunctionNr = -1;
+      node_info->SensorReceiveFunction[cntObject].LastChangedTime = 0;
+      node_info->SensorReceiveFunction[cntObject].PreviousLastChangedTime = 0;
+      node_info->SensorReceiveFunction[cntObject].TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
+      node_info->ObjectInformation[cntObject].AxumFunctionNr = -1;
+    }
+  }
+
+  //Load all object information (e.g. for range-convertion).
+  qres = sql_exec("SELECT number, desc, services, sensor_type, sensor_size, sensor_min, sensor_max, actuator_type, actuator_size, actuator_min, actuatar_max, actuator_def FROM templates WHERE man_id=$1, prod_id=$2, firm_major=$3", 0, 3, params);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    unsigned short int ObjectNr;
+    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
+    if (ObjectNr >= 1024)
+    {
+      OBJECT_INFORMATION_STRUCT *obj_info = &node_info->ObjectInformation[ObjectNr-1024];
+
+      sscanf(PQgetvalue(qres, cntRow, 1), "%s", &obj_info->Description[0]);
+      sscanf(PQgetvalue(qres, cntRow, 2), "%c", &obj_info->Services);
+      sscanf(PQgetvalue(qres, cntRow, 3), "%c", &obj_info->SensorDataType);
+      sscanf(PQgetvalue(qres, cntRow, 4), "%c", &obj_info->SensorDataSize);
+      sscanf(PQgetvalue(qres, cntRow, 5), "%f", &obj_info->SensorDataMinimal);
+      sscanf(PQgetvalue(qres, cntRow, 6), "%f", &obj_info->SensorDataMaximal);
+      sscanf(PQgetvalue(qres, cntRow, 7), "%c", &obj_info->ActuatorDataType);
+      sscanf(PQgetvalue(qres, cntRow, 8), "%c", &obj_info->ActuatorDataSize);
+      sscanf(PQgetvalue(qres, cntRow, 9), "%f", &obj_info->ActuatorDataMinimal);
+      sscanf(PQgetvalue(qres, cntRow, 10), "%f", &obj_info->ActuatorDataMaximal);
+      sscanf(PQgetvalue(qres, cntRow, 11), "%f", &obj_info->ActuatorDataDefault);
+      
+      if (strcmp("Slot number", &obj_info->Description[0]) == 0)
+      { 
+        node_info->SlotNumberObjectNr = ObjectNr;
+      }
+      else if (strcmp("Input channel count", &obj_info->Description[0]) == 0)
+      {
+        node_info->InputChannelCountObjectNr = ObjectNr;
+      }
+      else if (strcmp("Output channel count", &obj_info->Description[0]) == 0)
+      {
+        node_info->OutputChannelCountObjectNr = ObjectNr;
+      }
+    }
+  }
+  return 0;
+}
+
+int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info)
+{
+  char str[1][32];
+  const char *params[1];
+  int cntParams;
+  int cntRow;
+
+  for (cntParams=0; cntParams<1; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%d", node_info->MambaNetAddress);
+ 
+  PGresult *qres = sql_exec("SELECT object, data FROM defaults WHERE addr=$1", 0, 1, params);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    bool sent_default_data = false;
+    unsigned short int ObjectNr = -1;
+    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
+
+    if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->NumberOfCustomObjects))
+    {
+      OBJECT_INFORMATION_STRUCT *obj_info = &node_info->ObjectInformation[ObjectNr-1024];
+      if (obj_info->ActuatorDataType != NO_DATA_DATATYPE)
+      {
+        unsigned char TransmitData[128];
+        unsigned char cntTransmitData = 0;
+        TransmitData[cntTransmitData++] = (ObjectNr>>8)&0xFF;
+        TransmitData[cntTransmitData++] = ObjectNr&0xFF;
+        TransmitData[cntTransmitData++] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;//Set actuator
+        TransmitData[cntTransmitData++] = obj_info->ActuatorDataType;
+        switch (obj_info->ActuatorDataType)
+        {
+          case UNSIGNED_INTEGER_DATATYPE:
+          case STATE_DATATYPE:
+          {
+            unsigned long int DataValue;
+            sscanf(PQgetvalue(qres, cntRow, 0), "(%ld,,,)", &DataValue);
+
+            if (DataValue != obj_info->ActuatorDataDefault)
+            {
+              TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
+              for (int cntByte=0; cntByte<obj_info->ActuatorDataSize; cntByte++)
+              {
+                TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
+                sent_default_data = true;
+              }
+            }            
+          }
+          break;
+          case SIGNED_INTEGER_DATATYPE:
+          {
+            long int DataValue;
+            sscanf(PQgetvalue(qres, cntRow, 0), "(%ld,,,)", &DataValue);
+
+            if (DataValue != obj_info->ActuatorDataDefault)
+            {
+              TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
+              for (int cntByte=0; cntByte<obj_info->ActuatorDataSize; cntByte++)
+              {
+                TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
+                sent_default_data = true;
+              }
+            }            
+          }
+          break;
+          case OCTET_STRING_DATATYPE:
+          {
+            char OctetString[256];
+            sscanf(PQgetvalue(qres, cntRow, 0), "(,,,%s)", OctetString);
+            
+            int StringLength = strlen(OctetString);
+            if (StringLength>obj_info->ActuatorDataSize)
+            {
+              StringLength = obj_info->ActuatorDataSize;
+            }
+
+            TransmitData[cntTransmitData++] = StringLength;
+            for (int cntChar=0; cntChar<StringLength; cntChar++)
+            {
+              TransmitData[cntTransmitData++] = OctetString[cntChar];
+            }
+            sent_default_data = true;
+          }
+          break;
+          case FLOAT_DATATYPE:
+          {
+            float DataValue;
+            sscanf(PQgetvalue(qres, cntRow, 0), "(,%f,,)", &DataValue);
+            
+            if (DataValue != obj_info->ActuatorDataDefault)
+            {
+              TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
+
+              if (Float2VariableFloat(DataValue, obj_info->ActuatorDataSize, &TransmitData[cntTransmitData]) == 0)
+              {
+                cntTransmitData += cntTransmitData;
+              }
+              sent_default_data = true;
+            }
+            break;
+            case BIT_STRING_DATATYPE:
+            {
+              unsigned char cntBit;
+              unsigned long DataValue;
+              char BitString[256];
+              sscanf(PQgetvalue(qres, cntRow, 0), "(,,%s,)", BitString);
+             
+              int StringLength = strlen(BitString);
+              if (StringLength>obj_info->ActuatorDataSize)
+              {
+                StringLength = obj_info->ActuatorDataSize;
+              }
+
+              DataValue = 0;
+              for (cntBit=0; cntBit<StringLength; cntBit++)
+              {
+                if ((BitString[cntBit] == '0') || (BitString[cntBit] == '1'))
+                { 
+                  DataValue |= (BitString[cntBit]-'0');
+                }
+              }
+
+              TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
+              for (int cntByte=0; cntByte<obj_info->ActuatorDataSize; cntByte++)
+              {
+                TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
+              }
+              sent_default_data = true;
+            }
+            break;
+          }
+          
+          if (sent_default_data)
+          {
+            SendMambaNetMessage(node_info->MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, cntTransmitData);
+          } 
+        }
+      }
+    }
+  }
+  return 1;
+}
+
+int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info)
+{
+  return 1;
+  node_info = NULL;
+}
+
+int db_update_rack_organization(unsigned char slot_nr, unsigned long int addr, unsigned char input_ch_cnt, unsigned char output_ch_cnt)
+{
+  char str[4][32];
+  const char *params[4];
+  int cntParams;
+
+  for (cntParams=0; cntParams<4; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%d", slot_nr+1);
+  sprintf(str[1], "%ld", addr);
+  sprintf(str[2], "%c", input_ch_cnt);
+  sprintf(str[3], "%c", output_ch_cnt);
+  
+  PGresult *qres = sql_exec("UPDATE rack_organization SET MambaNetAddress = $2, InputChannelCount = $3, OutputChannelCount = $4 WHERE SlotNr = $1", 1, 4, params);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+
+  return 1; 
+}
+
+int db_update_rack_organization_input_ch_cnt(unsigned long int addr, unsigned char cnt)
+{
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
+
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%c", cnt);
+  sprintf(str[1], "%ld", addr);
+
+  PGresult *qres = sql_exec("UPDATE rack_organization SET InputChannelCount=$1, WHERE MambaNetAddress=$2", 1, 2, params);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+
+  return 1; 
+}
+
+int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned char cnt)
+{
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
+
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%c", cnt);
+  sprintf(str[1], "%ld", addr);
+
+  PGresult *qres = sql_exec("UPDATE rack_organization SET OutputChannelCount=$1, WHERE MambaNetAddress=$2", 1, 2, params);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+
+  return 1; 
+}
+ 
+ /*
 int db_load_engine_functions() {
   PGresult *qres;
   char q[1024];

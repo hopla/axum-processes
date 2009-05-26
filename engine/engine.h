@@ -21,6 +21,7 @@
 #include "engine_functions.h"
 #include "mambanet_stack_axum.h"
 
+#define DEFAULT_TIME_BEFORE_MOMENTARY 750
 
 enum FilterType {OFF=0, HPF=1, LOWSHELF=2, PEAKINGEQ=3, HIGHSHELF=4, LPF=5, BPF=6, NOTCH=7};
 
@@ -210,7 +211,6 @@ typedef struct
   AXUM_EXTERN_SOURCE_DATA_STRUCT ExternSource[4];
   AXUM_TALKBACK_STRUCT Talkback[16];
 } AXUM_DATA_STRUCT;
-
 
 //**************************************************************/
 //DSP Data definitions

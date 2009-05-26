@@ -13,6 +13,7 @@
 ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 **
 ****************************************************************************/
+//#define SQLITE3
 
 #include "common.h"
 #include "engine.h"
@@ -44,7 +45,9 @@
 #include "ddpci2040.h"
 #include "mambanet_stack_axum.h"
 
-#include <sqlite3.h>
+#ifdef SQLITE3
+  #include <sqlite3.h>
+#endif
 
 #include <pthread.h>
 #include <time.h>
@@ -113,8 +116,6 @@ CUSTOM_OBJECT_INFORMATION_STRUCT AxumEngineCustomObjectInformation[NR_OF_STATIC_
 #else
 CUSTOM_OBJECT_INFORMATION_STRUCT AxumEngineCustomObjectInformation[1];
 #endif
-
-#define DEFAULT_TIME_BEFORE_MOMENTARY 750
 
 int AxumApplicationAndDSPInitialized = 0;
 
@@ -211,21 +212,11 @@ int LinuxIfIndex;
 
 void *thread(void *vargp);
 
-static int callback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  return 0;
-  //make sure the variable are used
-  NotUsed = NULL;
-  argc = 0;
-  argv = NULL;
-  azColName = NULL;
-}
-
 #define ADDRESS_TABLE_SIZE 65536
 ONLINE_NODE_INFORMATION_STRUCT OnlineNodeInformation[ADDRESS_TABLE_SIZE];
 
-sqlite3 *axum_engine_db;
-sqlite3 *node_templates_db;
+//sqlite3 *axum_engine_db;
+//sqlite3 *node_templates_db;
 
 int CallbackNodeIndex = -1;
 
@@ -318,215 +309,7 @@ void init(int argc, char **argv)
   log_write("Axum Engine Initialized");
 }
 
-static int SlotNumberObjectCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if ((argc == 1) && (CallbackNodeIndex != -1) && (argv != NULL))
-  {
-    OnlineNodeInformation[CallbackNodeIndex].SlotNumberObjectNr    = atoi(argv[0]);
-  }
-  return 0;
-  NotUsed = NULL;
-  azColName = NULL;
-}
-
-static int InputChannelCountObjectCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if ((argc == 1) && (CallbackNodeIndex != -1) && (argv != NULL))
-  {
-    OnlineNodeInformation[CallbackNodeIndex].InputChannelCountObjectNr    = atoi(argv[0]);
-  }
-  return 0;
-  NotUsed = NULL;
-  azColName = NULL;
-}
-
-static int OutputChannelCountObjectCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  if ((argc == 1) && (CallbackNodeIndex != -1) && (argv != NULL))
-  {
-    OnlineNodeInformation[CallbackNodeIndex].OutputChannelCountObjectNr    = atoi(argv[0]);
-  }
-  return 0;
-  NotUsed = NULL;
-  azColName = NULL;
-}
-
-static int NumberOfCustomObjectsCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  printf("[NumberOfCustomObjectsCallback] argc:%d, CallbackNodeIndex:%d\n", argc, CallbackNodeIndex);
-
-  if ((argc == 1) && (CallbackNodeIndex != -1) && (argv != NULL))
-  {
-    if (argv[0] != NULL)
-    {
-      OnlineNodeInformation[CallbackNodeIndex].NumberOfCustomObjects  = atoi(argv[0]);
-      if (OnlineNodeInformation[CallbackNodeIndex].NumberOfCustomObjects>0)
-      {
-        OnlineNodeInformation[CallbackNodeIndex].SensorReceiveFunction = new SENSOR_RECEIVE_FUNCTION_STRUCT[OnlineNodeInformation[CallbackNodeIndex].NumberOfCustomObjects];
-        OnlineNodeInformation[CallbackNodeIndex].ObjectInformation = new OBJECT_INFORMATION_STRUCT[OnlineNodeInformation[CallbackNodeIndex].NumberOfCustomObjects];
-        for (int cntObject=0; cntObject<OnlineNodeInformation[CallbackNodeIndex].NumberOfCustomObjects; cntObject++)
-        {
-          OnlineNodeInformation[CallbackNodeIndex].SensorReceiveFunction[cntObject].FunctionNr = -1;
-          OnlineNodeInformation[CallbackNodeIndex].SensorReceiveFunction[cntObject].LastChangedTime = 0;
-          OnlineNodeInformation[CallbackNodeIndex].SensorReceiveFunction[cntObject].PreviousLastChangedTime = 0;
-          OnlineNodeInformation[CallbackNodeIndex].SensorReceiveFunction[cntObject].TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-          OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[cntObject].AxumFunctionNr = -1;
-        }
-      }
-
-      printf("Number of custom objects: %d\n", OnlineNodeInformation[CallbackNodeIndex].NumberOfCustomObjects);
-    }
-  }
-  return 0;
-  NotUsed = NULL;
-  azColName = NULL;
-}
-
-static int ObjectInformationCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  int i;
-  int           ObjectNr = 0;
-  char          Description[32]="";
-  unsigned char   Services;
-  unsigned char   SensorDataType;
-  unsigned char   SensorDataSize;
-  float       SensorDataMinimal;
-  float       SensorDataMaximal;
-  unsigned char   ActuatorDataType;
-  unsigned char   ActuatorDataSize;
-  float       ActuatorDataMinimal;
-  float       ActuatorDataMaximal;
-  float       ActuatorDataDefault;
-
-  for (i=0; i<argc; i++)
-  {
-    if (argv[i])
-    {
-      if (strcmp(azColName[i],"Object Number") == 0)
-      {
-        ObjectNr = atoi(argv[i]);
-      }
-      else if (strcmp(azColName[i],"Object Description") == 0)
-      {
-        strncpy(Description, argv[i], 32);
-      }
-      else if (strcmp(azColName[i],"Object Services") == 0)
-      {
-        Services = atoi(argv[i]);
-      }
-      else if (strcmp(azColName[i],"Sensor Data Type") == 0)
-      {
-        SensorDataType = atoi(argv[i]);
-      }
-      else if (strcmp(azColName[i],"Sensor Data Size") == 0)
-      {
-        SensorDataSize = atoi(argv[i]);
-      }
-      else if (strcmp(azColName[i],"Sensor Data Minimal") == 0)
-      {
-        SensorDataMinimal = atof(argv[i]);
-      }
-      else if (strcmp(azColName[i],"Sensor Data Maximal") == 0)
-      {
-        SensorDataMaximal = atof(argv[i]);
-      }
-      else if (strcmp(azColName[i],"Actuator Data Type") == 0)
-      {
-        ActuatorDataType = atoi(argv[i]);
-      }
-      else if (strcmp(azColName[i],"Actuator Data Size") == 0)
-      {
-        ActuatorDataSize = atoi(argv[i]);
-      }
-      else if (strcmp(azColName[i],"Actuator Data Minimal") == 0)
-      {
-        ActuatorDataMinimal = atof(argv[i]);
-      }
-      else if (strcmp(azColName[i],"Actuator Data Maximal") == 0)
-      {
-        ActuatorDataMaximal = atof(argv[i]);
-      }
-      else if (strcmp(azColName[i],"Actuator Data Default") == 0)
-      {
-        ActuatorDataDefault = atof(argv[i]);
-      }
-    }
-    else
-    {  //no data in database
-      if (strcmp(azColName[i],"Object Number") == 0)
-      {
-        ObjectNr = 0;
-      }
-      else if (strcmp(azColName[i],"Object Description") == 0)
-      {
-        Description[0] = 0;
-      }
-      else if (strcmp(azColName[i],"Object Services") == 0)
-      {
-        Services = 0;
-      }
-      else if (strcmp(azColName[i],"Sensor Data Type") == 0)
-      {
-        SensorDataType = NO_DATA_DATATYPE;
-      }
-      else if (strcmp(azColName[i],"Sensor Data Size") == 0)
-      {
-        SensorDataSize = 0;
-      }
-      else if (strcmp(azColName[i],"Sensor Data Minimal") == 0)
-      {
-        SensorDataMinimal = 0;
-      }
-      else if (strcmp(azColName[i],"Sensor Data Maximal") == 0)
-      {
-        SensorDataMaximal = 0;
-      }
-      else if (strcmp(azColName[i],"Actuator Data Type") == 0)
-      {
-        ActuatorDataType = NO_DATA_DATATYPE;
-      }
-      else if (strcmp(azColName[i],"Actuator Data Size") == 0)
-      {
-        ActuatorDataSize = 0;
-      }
-      else if (strcmp(azColName[i],"Actuator Data Minimal") == 0)
-      {
-        ActuatorDataMinimal = 0;
-      }
-      else if (strcmp(azColName[i],"Actuator Data Maximal") == 0)
-      {
-        ActuatorDataMaximal = 0;
-      }
-      else if (strcmp(azColName[i],"Actuator Data Default") == 0)
-      {
-        ActuatorDataDefault = 0;
-      }
-    }
-  }
-
-  if (OnlineNodeInformation[CallbackNodeIndex].ObjectInformation != NULL)
-  {
-    if (ObjectNr >= 1024)
-    {
-      strncpy(OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].Description, Description, 32);
-
-      OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].Services = Services;
-      OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].SensorDataType = SensorDataType;
-      OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].SensorDataSize = SensorDataSize;
-      OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].SensorDataMinimal = SensorDataMinimal;
-      OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].SensorDataMaximal = SensorDataMaximal;
-      OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].ActuatorDataType = ActuatorDataType;
-      OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].ActuatorDataSize = ActuatorDataSize;
-      OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].ActuatorDataMinimal = ActuatorDataMinimal;
-      OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].ActuatorDataMaximal = ActuatorDataMaximal;
-      OnlineNodeInformation[CallbackNodeIndex].ObjectInformation[ObjectNr-1024].ActuatorDataDefault = ActuatorDataDefault;
-    }
-  }
-
-  return 0;
-  NotUsed = NULL;
-}
-
+#ifdef SQLITE3
 static int NodeConfigurationCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
 {
   int i;
@@ -2236,6 +2019,7 @@ static int NodeDefaultsCallback(void *IndexOfSender, int argc, char **argv, char
 
   return 0;
 }
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -2246,19 +2030,6 @@ int main(int argc, char *argv[])
   fd_set readfs;
 
   init(argc, argv);
-
-  if (sqlite3_open("/var/lib/axum/axum-engine.sqlite3", &axum_engine_db))
-  {
-    printf("Can't open database: axum-engine.sqlite3");
-    sqlite3_close(axum_engine_db);
-    return 1;
-  }
-  if (sqlite3_open("/var/lib/axum/node-templates.sqlite3", &node_templates_db))
-  {
-    printf("Can't open database: node-templates.sqlite");
-    sqlite3_close(node_templates_db);
-    return 1;
-  }
 
   db_check_engine_functions();
   
@@ -2945,8 +2716,8 @@ int main(int argc, char *argv[])
 
   dsp_close();
 
-  sqlite3_close(node_templates_db);
-  sqlite3_close(axum_engine_db);
+//  sqlite3_close(node_templates_db);
+//  sqlite3_close(axum_engine_db);
   CloseNetwork(NetworkFileDescriptor);
   CloseSTDIN(&oldtio, oldflags);
 
@@ -3053,18 +2824,18 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
         if (Data[2] == MAMBANET_OBJECT_ACTION_INFORMATION_RESPONSE)
         {   // object information response
-          printf("--- Object information ---\r\n");
-          printf("ObjectNr          : %d\r\n", ObjectNr);
+          printf("--- Object information ---\n");
+          printf("ObjectNr          : %d\n", ObjectNr);
           if (Data[3] == OBJECT_INFORMATION_DATATYPE)
           {
             char TempString[256] = "";
             strncpy(TempString, (char *)&Data[5], 32);
             TempString[32] = 0;
-            printf("Description       : %s\r\n", TempString);
+            printf("Description       : %s\n", TempString);
             int cntData=32;
 
             unsigned char Service = Data[5+cntData++];
-            printf("Service           : %d\r\n", Service);
+            printf("Service           : %d\n", Service);
 
             unsigned char DataType = Data[5+cntData++];
             unsigned char DataSize = Data[5+cntData++];
@@ -3076,54 +2847,54 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
             {
             case NO_DATA_DATATYPE:
             {
-              printf("NO_DATA\r\n");
+              printf("NO_DATA\n");
             }
             break;
             case UNSIGNED_INTEGER_DATATYPE:
             {
-              printf("UNSIGNED_INTEGER\r\n");
+              printf("UNSIGNED_INTEGER\n");
             }
             break;
             case SIGNED_INTEGER_DATATYPE:
             {
-              printf("SIGNED_INTEGER\r\n");
+              printf("SIGNED_INTEGER\n");
             }
             break;
             case STATE_DATATYPE:
             {
-              printf("STATE\r\n");
+              printf("STATE\n");
             }
             break;
             case OCTET_STRING_DATATYPE:
             {
-              printf("OCTET_STRING\r\n");
+              printf("OCTET_STRING\n");
             }
             break;
             case FLOAT_DATATYPE:
             {
-              printf("FLOAT\r\n");
+              printf("FLOAT\n");
             }
             break;
             case BIT_STRING_DATATYPE:
             {
-              printf("BIT_STRING\r\n");
+              printf("BIT_STRING\n");
             }
             break;
             case OBJECT_INFORMATION_DATATYPE:
             {
-              printf("OBJECT_INFORMATION\r\n");
+              printf("OBJECT_INFORMATION\n");
             }
             break;
             }
             if (Data2ASCIIString(TempString, DataType, DataSize, PtrData) == 0)
             {
-              printf("Sensor minimal    : %s\r\n", TempString);
+              printf("Sensor minimal    : %s\n", TempString);
             }
             PtrData = &Data[5+cntData];
             cntData += DataSize;
             if (Data2ASCIIString(TempString, DataType, DataSize, PtrData) == 0)
             {
-              printf("Sensor maximal    : %s\r\n", TempString);
+              printf("Sensor maximal    : %s\n", TempString);
             }
 
             DataType = Data[5+cntData++];
@@ -3136,62 +2907,62 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
             {
             case NO_DATA_DATATYPE:
             {
-              printf("NO_DATA\r\n");
+              printf("NO_DATA\n");
             }
             break;
             case UNSIGNED_INTEGER_DATATYPE:
             {
-              printf("UNSIGNED_INTEGER\r\n");
+              printf("UNSIGNED_INTEGER\n");
             }
             break;
             case SIGNED_INTEGER_DATATYPE:
             {
-              printf("SIGNED_INTEGER\r\n");
+              printf("SIGNED_INTEGER\n");
             }
             break;
             case STATE_DATATYPE:
             {
-              printf("STATE\r\n");
+              printf("STATE\n");
             }
             break;
             case OCTET_STRING_DATATYPE:
             {
-              printf("OCTET_STRING\r\n");
+              printf("OCTET_STRING\n");
             }
             break;
             case FLOAT_DATATYPE:
             {
-              printf("FLOAT\r\n");
+              printf("FLOAT\n");
             }
             break;
             case BIT_STRING_DATATYPE:
             {
-              printf("BIT_STRING\r\n");
+              printf("BIT_STRING\n");
             }
             break;
             case OBJECT_INFORMATION_DATATYPE:
             {
-              printf("OBJECT_INFORMATION\r\n");
+              printf("OBJECT_INFORMATION\n");
             }
             break;
             }
 
             if (Data2ASCIIString(TempString, DataType, DataSize, PtrData) == 0)
             {
-              printf("Actuator minimal  : %s\r\n", TempString);
+              printf("Actuator minimal  : %s\n", TempString);
             }
             PtrData = &Data[5+cntData];
             cntData += DataSize;
             if (Data2ASCIIString(TempString, DataType, DataSize, PtrData) == 0)
             {
-              printf("Actuator maximal  : %s\r\n", TempString);
+              printf("Actuator maximal  : %s\n", TempString);
             }
-            printf("\r\n");
+            printf("\n");
           }
           else if (Data[3] == 0)
           {
-            printf("No data\r\n");
-            printf("\r\n");
+            printf("No data\n");
+            printf("\n");
           }
         }
         else if (Data[2] == MAMBANET_OBJECT_ACTION_SENSOR_DATA_RESPONSE)
@@ -3203,21 +2974,18 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
           {
           case NO_DATA_DATATYPE:
           {
-            printf(" - No data\r\n");
+            printf(" - No data\n");
           }
           break;
           case UNSIGNED_INTEGER_DATATYPE:
           {
             if (Data2ASCIIString(TempString,Data[3], Data[4], &Data[5]) == 0)
             {
-              printf(" - unsigned int: %s\r\n", TempString);
+              printf(" - unsigned int: %s\n", TempString);
             }
 
             if (ObjectNr == 7)
             {   //Major firmware id
-              char TableName[32];
-              char SQLQuery[8192];
-
               printf("FirmwareMajorRevision: %d, Do check node information\n", Data[5]);
 
               if ((OnlineNodeInformation[IndexOfSender].ManufacturerID == 0x0001) &&
@@ -3271,54 +3039,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
               {
                 OnlineNodeInformation[IndexOfSender].FirmwareMajorRevision = Data[5];
 
-                CallbackNodeIndex = IndexOfSender;
-                sprintf(TableName, "node_info_%04x_%04x_%02x_0100", OnlineNodeInformation[IndexOfSender].ManufacturerID, OnlineNodeInformation[IndexOfSender].ProductID, 0x01);
-
-                //Get Number of objects
-                printf("Get Number of objects\n");
-                sprintf(SQLQuery,   "SELECT \"Sensor Data Value\" FROM %s WHERE \"Object Number\" = 11;", TableName);
-                char *zErrMsg;
-                if (sqlite3_exec(node_templates_db, SQLQuery, NumberOfCustomObjectsCallback, 0, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
-
-                printf("Get all required object data: %s\n", TableName);
-                //Get all required object data
-                sprintf(SQLQuery,   "SELECT * FROM %s;", TableName);
-                if (sqlite3_exec(node_templates_db, SQLQuery, ObjectInformationCallback, 0, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
-
-                printf("Get slot number ObjectNr if available: %s\n", TableName);
-                //Get slot number ObjectNr if available
-                sprintf(SQLQuery,   "SELECT \"Object Number\" FROM %s WHERE \"Object description\" = \"Slot number\";", TableName);
-                if (sqlite3_exec(node_templates_db, SQLQuery, SlotNumberObjectCallback, 0, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
-
-                printf("Get input channel count ObjectNr if available: %s\n", TableName);
-                //Get input channel count ObjectNr if available
-                sprintf(SQLQuery,   "SELECT \"Object Number\" FROM %s WHERE \"Object description\" = \"Input channel count\";", TableName);
-                if (sqlite3_exec(node_templates_db, SQLQuery, InputChannelCountObjectCallback, 0, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
-
-                printf("Get output channel count ObjectNr if available: %s\n", TableName);
-                //Get output channel count ObjectNr if available
-                sprintf(SQLQuery,   "SELECT \"Object Number\" FROM %s WHERE \"Object description\" = \"Output channel count\";", TableName);
-                if (sqlite3_exec(node_templates_db, SQLQuery, OutputChannelCountObjectCallback, 0, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
+                db_read_template_info(&OnlineNodeInformation[IndexOfSender]);
 
                 if (OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr != -1)
                 {
@@ -3333,59 +3054,18 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   TransmitBuffer[cntTransmitBuffer++] = ObjectNumber&0xFF;
                   TransmitBuffer[cntTransmitBuffer++] = MAMBANET_OBJECT_ACTION_GET_SENSOR_DATA;
                   TransmitBuffer[cntTransmitBuffer++] = NO_DATA_DATATYPE;
-                  //TransmitBuffer[cntTransmitBuffer++] = 0;
 
                   SendMambaNetMessage(OnlineNodeInformation[IndexOfSender].MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, 1, TransmitBuffer, cntTransmitBuffer);
                 }
 
-                printf("Make or get node defaults\n");
-                //Make or get node defaults
-                sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS defaults_node_%08lx	\
-												(																\
-													\"Object Number\" int PRIMARY KEY,				\
-													\"Default Data\" VARCHAR(64)										\
-												);\n", FromAddress);
-
-                if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
-
-                sprintf(SQLQuery, "	SELECT * FROM defaults_node_%08lx;\n", FromAddress);
-                if (sqlite3_exec(axum_engine_db, SQLQuery, NodeDefaultsCallback, (void *)&IndexOfSender, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
-
-                printf("Make or get node configuration\n");
-                //Make or get node configuration
-                sprintf(SQLQuery, "	CREATE TABLE IF NOT EXISTS configuration_node_%08lx	\
-												(																	\
-													\"Object Number\" int PRIMARY KEY,						\
-													Function int												\
-												);\n", FromAddress);
-
-                if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
-
-
-                sprintf(SQLQuery, "	SELECT * FROM configuration_node_%08lx;\n", FromAddress);
-                if (sqlite3_exec(axum_engine_db, SQLQuery, NodeConfigurationCallback, (void *)&IndexOfSender, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
+                db_read_node_defaults(&OnlineNodeInformation[IndexOfSender]);
+                
+                db_read_node_configuration(&OnlineNodeInformation[IndexOfSender]);
               }
             }
-            if (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr)
+            if ((ObjectNr>=1024) && (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr))
             {
               printf("0x%08lX @Slot: %d\n", FromAddress, Data[5]+1);
-              char SQLQuery[8192];
 
               for (int cntSlot=0; cntSlot<42; cntSlot++)
               {
@@ -3395,26 +3075,14 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   {
                     AxumData.RackOrganization[cntSlot] = 0;
 
-                    sprintf(SQLQuery,   "UPDATE rack_organization SET MambaNetAddress = 0, InputChannelCount = 0, OutputChannelCount = 0 WHERE SlotNr = %d;", cntSlot+1);
-                    char *zErrMsg;
-                    if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-                    {
-                      printf("SQL error: %s\n", zErrMsg);
-                      sqlite3_free(zErrMsg);
-                    }
+                    db_update_rack_organization(cntSlot, 0, 0, 0);
                   }
                 }
               }
               AxumData.RackOrganization[Data[5]] = FromAddress;
 
-              sprintf(SQLQuery,   "UPDATE rack_organization SET MambaNetAddress = %ld WHERE SlotNr = %d;", FromAddress, Data[5]+1);
-              char *zErrMsg;
-              if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-              {
-                printf("SQL error: %s\n", zErrMsg);
-                sqlite3_free(zErrMsg);
-              }
-
+              db_update_rack_organization(Data[5], FromAddress, 0, 0); 
+              
               //if a slot number exists, check the number of input/output channels.
               if (OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr != -1)
               {
@@ -3502,33 +3170,17 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
             }
             else if (OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr != -1)
             {
+#ifdef SQLITE3
               printf("Check for Channel Counts: %d, %d\n", OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr, OnlineNodeInformation[IndexOfSender].OutputChannelCountObjectNr);
               if (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr)
               {
-                char SQLQuery[8192];
-                sprintf(SQLQuery,   "UPDATE rack_organization SET InputChannelCount = %d WHERE MambaNetAddress = %ld;", Data[5], FromAddress);
-                char *zErrMsg;
-                printf(SQLQuery);
-                printf("\n" );
-                if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
+                db_update_rack_organization_input_ch_cnt(FromAddress, Data[5]); 
               }
               else if (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].OutputChannelCountObjectNr)
               {
-                char SQLQuery[8192];
-                sprintf(SQLQuery,   "UPDATE rack_organization SET OutputChannelCount = %d WHERE MambaNetAddress = %ld;", Data[5], FromAddress);
-                char *zErrMsg;
-                printf(SQLQuery);
-                printf("\n" );
-                if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-                {
-                  printf("SQL error: %s\n", zErrMsg);
-                  sqlite3_free(zErrMsg);
-                }
+                db_update_rack_organization_output_ch_cnt(FromAddress, Data[5]);
               }
+#endif
             }
           }
           break;
@@ -8874,22 +8526,6 @@ void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *Address
   case ADDRESS_TABLE_ENTRY_TIMEOUT:
   {
     printf("ADDRESS_TABLE_ENTRY_TIMEOUT\n");
-
-    if (OnlineNodeInformation[Index].SlotNumberObjectNr != -1)
-    {
-      printf("remove 0x%08X @Slot: %d\n", OnlineNodeInformation[Index].MambaNetAddress, OnlineNodeInformation[Index].SlotNumberObjectNr);
-      char SQLQuery[8192];
-
-      sprintf(SQLQuery,   "UPDATE rack_organization SET MambaNetAddress = 0, InputChannelCount = 0, OutputChannelCount = 0 WHERE SlotNr = %d;", OnlineNodeInformation[Index].SlotNumberObjectNr);
-      printf(SQLQuery);
-      printf("\n");
-      char *zErrMsg;
-      if (sqlite3_exec(axum_engine_db, SQLQuery, callback, 0, &zErrMsg) != SQLITE_OK)
-      {
-        printf("SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-      }
-    }
 
     OnlineNodeInformation[Index].MambaNetAddress                = 0;
     OnlineNodeInformation[Index].ManufacturerID                 = 0;
@@ -15025,11 +14661,11 @@ void *thread(void *vargp)
       //Last parameter is ObjectNr
       ObjectNr = atoi(TempBuffer);
 
+#ifdef SQLITE3
       if (NodeConfigurationChanged)
       {
         char SQLQuery[8192];
         char *zErrMsg;
-
         //Do refresh configuration table
         sprintf(SQLQuery, "	SELECT * FROM configuration_node_%08x WHERE \"Object Number\" = %d;\n", MambaNetAddress, ObjectNr);
 
@@ -15173,6 +14809,7 @@ void *thread(void *vargp)
           sqlite3_free(zErrMsg);
         }
       }
+#endif
     }
   }
 
