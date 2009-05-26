@@ -157,6 +157,16 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
   if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPGW+1024, dat);
   if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPGW+1024, dat);
   if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPGW+1024, dat);
+
+  /* make the changes active */
+  if(object == OBJ_IPGW) {
+    system("/etc/rc.d/network rtdown gateway");
+    system("/etc/rc.d/network rtup gateway");
+  } else
+    /* NOTE: we do not call ifdown first, because this will also take
+     *   down the ethernet device and all MambaNet communication */
+    system("/etc/rc.d/network ifup eth0");
+
   return 0;
 }
 
