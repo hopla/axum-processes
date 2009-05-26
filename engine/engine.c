@@ -2325,7 +2325,6 @@ int main(int argc, char *argv[])
   
   //position to db
   db_read_db_to_position();
-  //TODO: make opposite table 
   
   printf("Axum engine process started, version 2.0\n");
 

@@ -8,6 +8,7 @@
 
 extern AXUM_DATA_STRUCT AxumData;
 extern unsigned short int dB2Position[1500];
+extern float Position2dB[1024];
 
 int insert_engine_function(int type, int function_number, const char *name, int rcv_type, int xmt_type)
 {
@@ -1267,6 +1268,9 @@ int db_read_dest_config()
 int db_read_db_to_position()
 {
   int cntRow;
+  unsigned short int cntPosition;
+  unsigned int db_array_pointer;
+  float dB;
 
   PGresult *qres = sql_exec("SELECT db, position FROM db_to_position", 1, 0, NULL);
   if (qres == NULL)
@@ -1275,13 +1279,23 @@ int db_read_db_to_position()
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
-    float db;
-    unsigned int db_array_pointer;
-
-    sscanf(PQgetvalue(qres, cntRow, 0), "%f", &db);
-    db_array_pointer = (db*10)+1400;
+    sscanf(PQgetvalue(qres, cntRow, 0), "%f", &dB);
+    db_array_pointer = (dB*10)+1400;
 
     sscanf(PQgetvalue(qres, cntRow, 1), "%hd", &dB2Position[db_array_pointer]);
+  }
+
+  dB = -140;
+  for (cntPosition=0; cntPosition<1024; cntPosition++)
+  {
+    for (db_array_pointer=0; db_array_pointer<1500; db_array_pointer++)
+    {
+      if (dB2Position[db_array_pointer] == cntPosition)
+      {
+        dB = ((float)(db_array_pointer-1400))/10;
+      }
+      Position2dB[cntPosition] = dB;
+    }
   }
   return 1;
 }
