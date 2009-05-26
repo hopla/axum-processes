@@ -19,9 +19,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <pthread.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <unistd.h>
 #include <signal.h>
@@ -29,17 +28,15 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/select.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
 #include <sys/time.h>
-#include <net/if_arp.h>
-#include <net/if.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include <mbn.h>
+#include <pthread.h>
 
 #define DEFAULT_UNIX_PATH "/tmp/axum-gateway"
-#define DEFAULT_DATA_PATH "/var/lib/axum/axum-gateway.ip"
+#define DEFAULT_DATA_PATH "/etc/conf.d/ip"
 
 #ifndef UNIX_PATH_MAX
 # define UNIX_PATH_MAX 108
@@ -48,9 +45,11 @@
 #define nodestr(n) (n == eth ? "eth" : n == can ? "can" : "tcp")
 
 #define OBJ_IPADDR   0
-#define OBJ_CANNODES 1
-#define OBJ_ETHNODES 2
-#define OBJ_TCPNODES 3
+#define OBJ_IPNET    1
+#define OBJ_IPGW     2
+#define OBJ_CANNODES 3
+#define OBJ_ETHNODES 4
+#define OBJ_TCPNODES 5
 
 
 struct mbn_node_info this_node = {
@@ -59,9 +58,9 @@ struct mbn_node_info this_node = {
   "Axum MambaNet Gateway",
   0x0001, 0x000D, 0x0001,   /* UniqueMediaAccessId */
   0, 0,    /* Hardware revision */
-  2, 1,    /* Firmware revision */
+  3, 1,    /* Firmware revision */
   0, 0,    /* FPGAFirmware revision */
-  4,       /* NumberOfObjects */
+  6,       /* NumberOfObjects */
   0,       /* DefaultEngineAddr */
   {0,0,0}, /* Hardwareparent */
   0        /* Service request */
@@ -70,70 +69,56 @@ struct mbn_node_info this_node = {
 struct mbn_handler *eth, *can, *tcp;
 int verbose;
 char ieth[50], data_path[1000];
+unsigned int net_ip, net_mask, net_gw;
 
 
-void set_ip(unsigned int ip) {
-  struct ifreq ir;
-  struct sockaddr_in *si = (struct sockaddr_in *)&(ir.ifr_addr);
-  int s;
+void net_read() {
   FILE *f;
+  char buf[500];
+  char ip[20];
 
-  /* set ip */
-  if((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+  net_ip = net_mask = net_gw = 0;
+  if((f = fopen(data_path, "r")) == NULL)
     return;
-  si->sin_addr.s_addr = htonl(ip);
-  si->sin_family = AF_INET;
-  strcpy(ir.ifr_name, ieth);
-  if(ioctl(s, SIOCSIFADDR, &ir) < 0)
-    return;
-  /* set flags */
-  if(ip > 0) {
-    strcpy(ir.ifr_name, ieth);
-    if(ioctl(s, SIOCGIFFLAGS, &ir) < 0)
-      return;
-    ir.ifr_flags |= (IFF_UP | IFF_RUNNING);
-    strcpy(ir.ifr_name, ieth);
-    if(ioctl(s, SIOCSIFFLAGS, &ir) < 0)
-      return;
+  while(fgets(buf, 500, f) != NULL) {
+    if(sscanf(buf, " net_ip=\" %[0-9.]s \"", ip) == 1)
+      net_ip = ntohl(inet_addr(ip));
+    if(sscanf(buf, " net_mask=\" %[0-9.]s \"", ip) == 1)
+      net_mask = ntohl(inet_addr(ip));
+    if(sscanf(buf, " net_gw=\" %[0-9.]s \"", ip) == 1)
+      net_gw = ntohl(inet_addr(ip));
   }
-  if(verbose)
-    printf("IP Set to %08X\n", ip);
-
-  /* save to data file (silently ignoring errors) */
-  if((f = fopen(data_path, "w")) != NULL) {
-    fprintf(f, "%08X\n", ip);
-    fclose(f);
-  }
+  fclose(f);
 }
 
-/* doesn't do IPv6 */
-unsigned int get_ip() {
-  struct ifreq ir;
-  FILE *f;
-  int s;
-  unsigned int r;
 
-  /* try to get an IP from the data file first */
-  if((f = fopen(data_path, "r")) == NULL)
-    goto from_system;
-  if(fscanf(f, "%08x", &r) != 1)
-    goto from_system;
-  /* and set the IP */
-  set_ip(r);
-  return r;
+void net_write() {
+  char tmppath[1025], buf[500];
+  struct in_addr a;
+  FILE *r, *w;
 
-  /* otherwise, get current setting */
-from_system:
-  if((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-    return 0;
-  strcpy(ir.ifr_name, ieth);
-  if(ioctl(s, SIOCGIFADDR, &ir, sizeof(struct ifreq)) < 0)
-    return 0;
-  close(s);
-
-  if(((struct sockaddr *)&(ir.ifr_addr))->sa_family == AF_INET)
-    return ntohl(((struct sockaddr_in *)&(ir.ifr_addr))->sin_addr.s_addr);
-  return 0;
+  if((r = fopen(data_path, "r")) == NULL)
+    return;
+  sprintf(tmppath, "%s~", data_path);
+  if((w = fopen(tmppath, "w")) == NULL)
+    return;
+  while(fgets(buf, 500, r) != NULL) {
+    if(!strncmp(buf, "net_ip=\"", 8)) {
+      a.s_addr = ntohl(net_ip);
+      fprintf(w, "net_ip=\"%s\"\n", inet_ntoa(a));
+    } else if(!strncmp(buf, "net_mask=\"", 8)) {
+      a.s_addr = ntohl(net_mask);
+      fprintf(w, "net_mask=\"%s\"\n", inet_ntoa(a));
+    } else if(!strncmp(buf, "net_gw=\"", 8)) {
+      a.s_addr = ntohl(net_gw);
+      fprintf(w, "net_gw=\"%s\"\n", inet_ntoa(a));
+    } else
+      fprintf(w, "%s", buf);
+  }
+  fclose(r);
+  fclose(w);
+  if(rename(tmppath, data_path) == -1 && verbose)
+    printf("Renaming %s to %s: %s\n", tmppath, data_path, strerror(errno));
 }
 
 
@@ -151,9 +136,27 @@ void SynchroniseDateTime(struct mbn_handler *mbn, time_t time) {
 
 
 int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_data dat) {
-  if(object != OBJ_IPADDR+1024 || mbn != eth)
+  object -= 1024;
+  if(mbn != eth || object > OBJ_IPGW)
     return 1;
-  set_ip(dat.UInt);
+  net_read();
+  if(object == OBJ_IPADDR) net_ip   = dat.UInt;
+  if(object == OBJ_IPNET)  net_mask = dat.UInt;
+  if(object == OBJ_IPGW)   net_gw   = dat.UInt;
+  net_write();
+
+  dat.UInt = net_ip;
+  if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPADDR+1024, dat);
+  if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPADDR+1024, dat);
+  if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPADDR+1024, dat);
+  dat.UInt = net_mask;
+  if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPNET+1024, dat);
+  if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPNET+1024, dat);
+  if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPNET+1024, dat);
+  dat.UInt = net_gw;
+  if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPGW+1024, dat);
+  if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPGW+1024, dat);
+  if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPGW+1024, dat);
   return 0;
 }
 
@@ -297,7 +300,7 @@ void setcallbacks(struct mbn_handler *mbn) {
 
 void init(int argc, char **argv, char *upath) {
   struct mbn_interface *itf = NULL;
-  struct mbn_object obj[4];
+  struct mbn_object obj[6];
   char err[MBN_ERRSIZE], ican[50], tport[10];
   unsigned short parent[3] = {0,0,0};
   int c, itfcount = 0;
@@ -383,8 +386,11 @@ void init(int argc, char **argv, char *upath) {
     exit(1);
   }
 
+  net_read();
   /* objects */
-  obj[OBJ_IPADDR]   = MBN_OBJ("IP Address", MBN_DATATYPE_NODATA, MBN_DATATYPE_UINT, 4, 0, ~0, 0, ieth[0] ? get_ip() : 0);
+  obj[OBJ_IPADDR]   = MBN_OBJ("IP Address", MBN_DATATYPE_NODATA, MBN_DATATYPE_UINT, 4, 0, ~0, 0, net_ip);
+  obj[OBJ_IPNET]    = MBN_OBJ("IP Netmask", MBN_DATATYPE_NODATA, MBN_DATATYPE_UINT, 4, 0, ~0, 0, net_mask);
+  obj[OBJ_IPGW]     = MBN_OBJ("IP Gateway", MBN_DATATYPE_NODATA, MBN_DATATYPE_UINT, 4, 0, ~0, 0, net_gw);
   obj[OBJ_CANNODES] = MBN_OBJ("CAN Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_TCPNODES] = MBN_OBJ("TCP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
