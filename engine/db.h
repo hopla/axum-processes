@@ -16,6 +16,7 @@ int db_read_extern_src_config();
 int db_read_talkback_config();
 int db_read_global_config();
 int db_read_dest_config();
+int db_read_db_to_position();
 
 int db_load_engine_functions();
 void db_lock(int);

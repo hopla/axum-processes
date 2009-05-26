@@ -7,6 +7,7 @@
 #include <string.h>
 
 extern AXUM_DATA_STRUCT AxumData;
+extern unsigned short int dB2Position[1500];
 
 int insert_engine_function(int type, int function_number, const char *name, int rcv_type, int xmt_type)
 {
@@ -1262,6 +1263,29 @@ int db_read_dest_config()
   }
   return 1;
 }
+
+int db_read_db_to_position()
+{
+  int cntRow;
+
+  PGresult *qres = sql_exec("SELECT db, position FROM db_to_position", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    float db;
+    unsigned int db_array_pointer;
+
+    sscanf(PQgetvalue(qres, cntRow, 0), "%f", &db);
+    db_array_pointer = (db*10)+1400;
+
+    sscanf(PQgetvalue(qres, cntRow, 1), "%hd", &dB2Position[db_array_pointer]);
+  }
+  return 1;
+}
+
 /*
 int db_load_engine_functions() {
   PGresult *qres;

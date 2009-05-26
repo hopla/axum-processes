@@ -169,7 +169,7 @@ AXUM_FUNCTION_INFORMATION_STRUCT *DestinationFunctions[NUMBER_OF_DESTINATIONS][N
 AXUM_FUNCTION_INFORMATION_STRUCT *GlobalFunctions[NUMBER_OF_GLOBAL_FUNCTIONS];
 
 float Position2dB[1024];
-int dB2Position[1500];
+unsigned short int dB2Position[1500];
 unsigned int PulseTime;
 
 bool ExitApplication = 0;
@@ -2132,79 +2132,6 @@ static int DestinationConfigurationCallback(void *NotUsed, int argc, char **argv
   NotUsed = NULL;
 }
 
-static int PositionTodBCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  int i;
-  int Position = -1;
-  float dB = -140;
-
-  for (i=0; i<argc; i++)
-  {
-    if (argv[i])
-    {
-      //printf(azColName[i]);
-      //printf(" - ");
-      //printf(argv[i]);
-      //printf("\n");
-      if (strcmp(azColName[i],"position") == 0)
-      {
-        Position = atoi(argv[i]);
-      }
-      else if (strcmp(azColName[i],"db") == 0)
-      {
-        dB = atof(argv[i]);
-      }
-    }
-  }
-
-  if (Position != -1)
-  {
-    Position2dB[Position] = dB;
-  }
-
-  return 0;
-  NotUsed = NULL;
-}
-
-static int dBToPositionCallback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-  int i;
-  int Position = -1;
-  int dB = -1;
-
-  for (i=0; i<argc; i++)
-  {
-    if (argv[i])
-    {
-      //printf(azColName[i]);
-      //printf(" - ");
-      //printf(argv[i]);
-      //printf("\n");
-
-      if (strcmp(azColName[i],"db") == 0)
-      {
-        double Temp = atof(argv[i])*10;
-        dB = Temp+1400;
-      }
-      else if (strcmp(azColName[i],"position") == 0)
-      {
-        Position = atoi(argv[i]);
-      }
-    }
-  }
-
-  if ((dB >= 0) && (dB<1500))
-  {
-    if ((Position>=0) && (Position<1024))
-    {
-      dB2Position[dB] = Position;
-    }
-  }
-
-  return 0;
-  NotUsed = NULL;
-}
-
 static int NodeDefaultsCallback(void *IndexOfSender, int argc, char **argv, char **azColName)
 {
   int i;
@@ -2320,7 +2247,6 @@ int main(int argc, char *argv[])
 
   init(argc, argv);
 
-  char *zErrMsg;
   if (sqlite3_open("/var/lib/axum/axum-engine.sqlite3", &axum_engine_db))
   {
     printf("Can't open database: axum-engine.sqlite3");
@@ -2398,20 +2324,10 @@ int main(int argc, char *argv[])
   db_read_dest_config();
   
   //position to db
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM position_to_db;", PositionTodBCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  //db to position
-  if (sqlite3_exec(axum_engine_db, "SELECT * FROM db_to_position;", dBToPositionCallback, 0, &zErrMsg) != SQLITE_OK)
-  {
-    printf("SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
-  }
-
-  printf("Axum engine process started, version 1.0\r\n");
+  db_read_db_to_position();
+  //TODO: make opposite table 
+  
+  printf("Axum engine process started, version 2.0\n");
 
 //Update default values...
   for (int cntModule=0; cntModule<128; cntModule++)
