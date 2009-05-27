@@ -139,7 +139,8 @@ int db_setnode(unsigned long addr, struct db_node *node) {
               active = $6, parent = $7, setname = $8, refresh = $9, firstseen = 'epoch'::timestamptz\
               + $10 * '1 second'::interval, lastseen = 'epoch'::timestamptz + $11 * '1 second'::interval,\
               addr_requests = $12 WHERE addr = $13"
-         : "INSERT INTO addresses VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, 'epoch'::timestamptz\
+         : "INSERT INTO addresses (addr, name, id, engine_addr, services, active, parent, setname, refresh,\
+              firstseen, lastseen, addr_requests) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, 'epoch'::timestamptz\
               + $10 * '1 second'::interval, 'epoch'::timestamptz + $11 * '1 second'::interval, $12)",
     0, addr ? 13 : 12, params);
   if(qs == 0)
