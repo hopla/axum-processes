@@ -6,6 +6,7 @@
 --  $ psql -U axum <schema.sql
 --  $ psql -U axum <db_to_position.sql
 --  $ psql -U axum <defaults.sql
+--  $ psql -U axum <functions.sql
 --  $ psql -U axum <triggers.sql
 
 

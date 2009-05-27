@@ -5,8 +5,6 @@
 
 int  db_init(char *, char *);
 void db_free();
-int db_check_engine_functions();
-int db_insert_engine_functions(const char *table, int function_number, const char *name, int rcv_type, int xmt_type); 
 int db_read_slot_config();
 int db_read_src_config(unsigned short int first_src, unsigned short int last_src);
 int db_read_module_config(unsigned char first_mod, unsigned char last_mod);

@@ -313,8 +313,6 @@ int main(int argc, char *argv[])
 
   init(argc, argv);
 
-  db_check_engine_functions();
-  
 //**************************************************************/
 //Initialize AXUM Data
 //**************************************************************/
