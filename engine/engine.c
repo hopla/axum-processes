@@ -349,10 +349,10 @@ int main(int argc, char *argv[])
 
   //Slot configuration, former rack organization
   db_read_slot_config();
-
+  
   //Source configuration
   db_read_src_config(1, 1280);
-  
+
   //module_configuration
   db_read_module_config(1, 128);
   
@@ -377,9 +377,9 @@ int main(int argc, char *argv[])
   //position to db
   db_read_db_to_position();
   
-  printf("Axum engine process started, version 2.0\n");
+  log_write("Axum engine process started, version 2.0");
 
-//Update default values...
+  //Update default values of EQ to the current values
   for (int cntModule=0; cntModule<128; cntModule++)
   {
     for (int cntEQBand=0; cntEQBand<6; cntEQBand++)

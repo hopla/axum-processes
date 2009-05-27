@@ -26,12 +26,14 @@ int db_read_slot_config()
   {
     short int slot_nr;
     unsigned long int addr;
+    int cntField;
     //short int input_ch_count, output_ch_count;
 
-    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &slot_nr);
-    sscanf(PQgetvalue(qres, cntRow, 1), "%ld", &addr);
-    //sscanf(PQgetvalue(qres, cntRow, 2), "%hd", &input_ch_count);
-    //sscanf(PQgetvalue(qres, cntRow, 4), "%hd", &output_ch_count);
+    cntField=0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &slot_nr);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%ld", &addr);
+    //sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &input_ch_count);
+    //sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &output_ch_count);
 
     AxumData.RackOrganization[slot_nr-1] = addr;
   }
@@ -63,43 +65,45 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   {
     short int number;
     unsigned char cntModule;
+    int cntField;
 
-    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &number);
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[number-1];
     
-    sscanf(PQgetvalue(qres, cntRow, 1), "%s", SourceData->SourceName);
-    sscanf(PQgetvalue(qres, cntRow, 2), "%d", &SourceData->InputData[0].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &SourceData->InputData[0].SubChannel); 
-    sscanf(PQgetvalue(qres, cntRow, 4), "%d", &SourceData->InputData[1].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, 5), "%c", &SourceData->InputData[1].SubChannel); 
-    sscanf(PQgetvalue(qres, cntRow, 6), "%c", &SourceData->Phantom); 
-    sscanf(PQgetvalue(qres, cntRow, 7), "%c", &SourceData->Pad); 
-    sscanf(PQgetvalue(qres, cntRow, 8), "%f", &SourceData->Gain); 
-    sscanf(PQgetvalue(qres, cntRow, 9), "%c", &SourceData->Redlight[0]); 
-    sscanf(PQgetvalue(qres, cntRow, 10), "%c", &SourceData->Redlight[1]); 
-    sscanf(PQgetvalue(qres, cntRow, 11), "%c", &SourceData->Redlight[2]); 
-    sscanf(PQgetvalue(qres, cntRow, 12), "%c", &SourceData->Redlight[3]); 
-    sscanf(PQgetvalue(qres, cntRow, 13), "%c", &SourceData->Redlight[4]); 
-    sscanf(PQgetvalue(qres, cntRow, 14), "%c", &SourceData->Redlight[5]); 
-    sscanf(PQgetvalue(qres, cntRow, 15), "%c", &SourceData->Redlight[6]); 
-    sscanf(PQgetvalue(qres, cntRow, 16), "%c", &SourceData->Redlight[7]); 
-    sscanf(PQgetvalue(qres, cntRow, 17), "%c", &SourceData->MonitorMute[0]);
-    sscanf(PQgetvalue(qres, cntRow, 18), "%c", &SourceData->MonitorMute[1]);
-    sscanf(PQgetvalue(qres, cntRow, 19), "%c", &SourceData->MonitorMute[2]);
-    sscanf(PQgetvalue(qres, cntRow, 20), "%c", &SourceData->MonitorMute[3]);
-    sscanf(PQgetvalue(qres, cntRow, 2l), "%c", &SourceData->MonitorMute[4]);
-    sscanf(PQgetvalue(qres, cntRow, 22), "%c", &SourceData->MonitorMute[5]);
-    sscanf(PQgetvalue(qres, cntRow, 23), "%c", &SourceData->MonitorMute[6]);
-    sscanf(PQgetvalue(qres, cntRow, 24), "%c", &SourceData->MonitorMute[7]);
-    sscanf(PQgetvalue(qres, cntRow, 25), "%c", &SourceData->MonitorMute[8]);
-    sscanf(PQgetvalue(qres, cntRow, 26), "%c", &SourceData->MonitorMute[9]);
-    sscanf(PQgetvalue(qres, cntRow, 27), "%c", &SourceData->MonitorMute[10]);
-    sscanf(PQgetvalue(qres, cntRow, 28), "%c", &SourceData->MonitorMute[11]);
-    sscanf(PQgetvalue(qres, cntRow, 29), "%c", &SourceData->MonitorMute[12]);
-    sscanf(PQgetvalue(qres, cntRow, 30), "%c", &SourceData->MonitorMute[13]);
-    sscanf(PQgetvalue(qres, cntRow, 31), "%c", &SourceData->MonitorMute[14]);
-    sscanf(PQgetvalue(qres, cntRow, 32), "%c", &SourceData->MonitorMute[15]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", SourceData->SourceName);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[0].MambaNetAddress); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->InputData[0].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[1].MambaNetAddress); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->InputData[1].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Phantom); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Pad); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Gain); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[0]); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[1]); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[2]); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[3]); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[4]); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[5]); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[6]); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[7]); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[0]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[1]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[2]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[3]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[4]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[5]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[6]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[7]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[8]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[9]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[10]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[11]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[12]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[13]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[14]);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[15]);
 
     for (cntModule=0; cntModule<128; cntModule++)
     {
@@ -451,39 +455,42 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     short int number;
-    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &number);
+    int cntField;
+
+    cntField=0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_BUSS_MASTER_DATA_STRUCT *BussMasterData = &AxumData.BussMasterData[number-1];
     
-    sscanf(PQgetvalue(qres, cntRow, 1), "%s", BussMasterData->Label);
-    sscanf(PQgetvalue(qres, cntRow, 2), "%c", &BussMasterData->PreModuleOn); 
-    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->PreModuleLevel); 
-    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->PreModuleBalance); 
-    sscanf(PQgetvalue(qres, cntRow, 3), "%f", &BussMasterData->Level); 
-    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->On); 
-    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->Interlock); 
-    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->GlobalBussReset); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", BussMasterData->Label);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->PreModuleOn); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->PreModuleLevel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->PreModuleBalance); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &BussMasterData->Level); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->On); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->Interlock); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->GlobalBussReset); 
 
-    unsigned int FunctionNrToSent = 0x01000000 | (((number-1)<<12)&0xFFF000);
-    CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_PRE);
-    CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_LEVEL);
-    CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_ON_OFF);
-    CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_LABEL);
-
-    for (int cntModule=0; cntModule<128; cntModule++)
+    if (AxumApplicationAndDSPInitialized)
     {
-      if (AxumApplicationAndDSPInitialized)
+      unsigned int FunctionNrToSent = 0x01000000 | (((number-1)<<12)&0xFFF000);
+      CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_PRE);
+      CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_ON_OFF);
+      CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_LABEL);
+
+      for (int cntModule=0; cntModule<128; cntModule++)
       {
         SetAxum_BussLevels(cntModule);
       }
-    }
 
-    for (int cntDestination=0; cntDestination<=1280; cntDestination++)
-    {
-      if (AxumData.DestinationData[cntDestination].Source == number)
+      for (int cntDestination=0; cntDestination<=1280; cntDestination++)
       {
-        FunctionNrToSent = 0x06000000 | (cntDestination<<12);
-        CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_SOURCE);
+        if (AxumData.DestinationData[cntDestination].Source == number)
+        {
+          FunctionNrToSent = 0x06000000 | (cntDestination<<12);
+          CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_SOURCE);
+        }
       }
     }
   }
@@ -506,7 +513,7 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
   sprintf(str[0], "%hd", first_mon_buss);
   sprintf(str[1], "%hd", last_mon_buss);
 
-  PGresult *qres = sql_exec("SELECT number, label, interlock, default_selection, buss_1_2, buss_3_4, buss_5_6, buss_7_8, buss_9_10, buss_11_12, buss_13_14, buss_15_!6, buss_17_18, buss_19_20, buss_21_22, buss_23_24, buss_25_26, buss_27_28, buss_29_30, buss_31_32, dim_level FROM monitor_buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
+  PGresult *qres = sql_exec("SELECT number, label, interlock, default_selection, buss_1_2, buss_3_4, buss_5_6, buss_7_8, buss_9_10, buss_11_12, buss_13_14, buss_15_16, buss_17_18, buss_19_20, buss_21_22, buss_23_24, buss_25_26, buss_27_28, buss_29_30, buss_31_32, dim_level FROM monitor_buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     return 0;
@@ -750,18 +757,21 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     short int number;
-    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &number);
+    int cntField;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_DESTINATION_DATA_STRUCT *DestinationData = &AxumData.DestinationData[number-1];
     
-    sscanf(PQgetvalue(qres, cntRow, 1), "%s", DestinationData->DestinationName);
-    sscanf(PQgetvalue(qres, cntRow, 2), "%d", &DestinationData->OutputData[0].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, 3), "%c", &DestinationData->OutputData[0].SubChannel); 
-    sscanf(PQgetvalue(qres, cntRow, 4), "%d", &DestinationData->OutputData[1].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, 5), "%c", &DestinationData->OutputData[1].SubChannel); 
-    sscanf(PQgetvalue(qres, cntRow, 6), "%f", &DestinationData->Level); 
-    sscanf(PQgetvalue(qres, cntRow, 7), "%d", &DestinationData->Source); 
-    sscanf(PQgetvalue(qres, cntRow, 8), "%d", &DestinationData->MixMinusSource); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", DestinationData->DestinationName);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[0].MambaNetAddress); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &DestinationData->OutputData[0].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[1].MambaNetAddress); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &DestinationData->OutputData[1].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DestinationData->Level); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->Source); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->MixMinusSource); 
 
     if (AxumApplicationAndDSPInitialized)
     {
@@ -858,22 +868,25 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     unsigned short int ObjectNr;
-    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
+    int cntField;
+
+    cntField=0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &ObjectNr);
     if (ObjectNr >= 1024)
     {
       OBJECT_INFORMATION_STRUCT *obj_info = &node_info->ObjectInformation[ObjectNr-1024];
 
-      sscanf(PQgetvalue(qres, cntRow, 1), "%s", &obj_info->Description[0]);
-      sscanf(PQgetvalue(qres, cntRow, 2), "%c", &obj_info->Services);
-      sscanf(PQgetvalue(qres, cntRow, 3), "%c", &obj_info->SensorDataType);
-      sscanf(PQgetvalue(qres, cntRow, 4), "%c", &obj_info->SensorDataSize);
-      sscanf(PQgetvalue(qres, cntRow, 5), "%f", &obj_info->SensorDataMinimal);
-      sscanf(PQgetvalue(qres, cntRow, 6), "%f", &obj_info->SensorDataMaximal);
-      sscanf(PQgetvalue(qres, cntRow, 7), "%c", &obj_info->ActuatorDataType);
-      sscanf(PQgetvalue(qres, cntRow, 8), "%c", &obj_info->ActuatorDataSize);
-      sscanf(PQgetvalue(qres, cntRow, 9), "%f", &obj_info->ActuatorDataMinimal);
-      sscanf(PQgetvalue(qres, cntRow, 10), "%f", &obj_info->ActuatorDataMaximal);
-      sscanf(PQgetvalue(qres, cntRow, 11), "%f", &obj_info->ActuatorDataDefault);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", &obj_info->Description[0]);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &obj_info->Services);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &obj_info->SensorDataType);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &obj_info->SensorDataSize);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->SensorDataMinimal);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->SensorDataMaximal);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &obj_info->ActuatorDataType);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &obj_info->ActuatorDataSize);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataMinimal);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataMaximal);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataDefault);
       
       if (strcmp("Slot number", &obj_info->Description[0]) == 0)
       { 
@@ -1075,7 +1088,7 @@ int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsign
     unsigned int TotalFunctionNr = -1;
 
     sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
-    sscanf(PQgetvalue(qres, cntRow, 0), "(%c,%hd,%hd)", &type, &seq_nr, &func_nr);
+    sscanf(PQgetvalue(qres, cntRow, 1), "(%c,%hd,%hd)", &type, &seq_nr, &func_nr);
     TotalFunctionNr = (((unsigned int)type)<<24)|(((unsigned int)seq_nr)<<12)|func_nr;
     
 
