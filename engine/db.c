@@ -10,6 +10,7 @@ extern AXUM_DATA_STRUCT AxumData;
 extern unsigned short int dB2Position[1500];
 extern float Position2dB[1024];
 extern DEFAULT_NODE_OBJECTS_STRUCT AxumEngineDefaultObjects;
+extern int AxumApplicationAndDSPInitialized;
 
 int insert_engine_function(int type, int function_number, const char *name, int rcv_type, int xmt_type)
 {
@@ -23,6 +24,7 @@ int insert_engine_function(int type, int function_number, const char *name, int 
     return 0;
   }
 
+  PQclear(qres);
   return 1;    
 }
 
@@ -834,6 +836,7 @@ int db_check_engine_functions()
     insert_source_functions();
     insert_destination_functions();
   }
+  PQclear(qres);
   return 1;
 }
 
@@ -841,7 +844,6 @@ int db_read_slot_config()
 {
   int cntRow;
 
-  //PGresult *qres = sql_exec("SELECT slot_nr, addr, input_ch_cnt, output_ch_cnt FROM rack_organization", 1, 0, NULL);
   PGresult *qres = sql_exec("SELECT slot_nr, addr FROM slot_config", 1, 0, NULL);
   if (qres == NULL)
   {
@@ -860,14 +862,26 @@ int db_read_slot_config()
 
     AxumData.RackOrganization[slot_nr-1] = addr;
   }
+  PQclear(qres);
   return 1;
 }
 
-int db_read_src_config()
+int db_read_src_config(unsigned short int first_src, unsigned short int last_src)
 {
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
   int cntRow;
 
-  PGresult *qres = sql_exec("SELECT number, label, input1_addr, input1_sub_ch, input2_addr, input2_sub_ch, phantom, pad, gain, redlight1, redlight2, redlight3, redlight4, redlight5, redlight6, redlight7, redlight8, monitormute1, monitormute2, monitormute3, monitormute4, monitormute5, monitormute6, monitormute7, monitormute8, monitormute9, monitormute10, monitormute11, monitormute12, monitormute13, monitormute14, monitormute15, monitormute16 FROM src_config", 1, 0, NULL);
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_src);
+  sprintf(str[1], "%hd", last_src);
+
+  PGresult *qres = sql_exec("SELECT number, label, input1_addr, input1_sub_ch, input2_addr, input2_sub_ch, phantom, pad, gain, redlight1, redlight2, redlight3, redlight4, redlight5, redlight6, redlight7, redlight8, monitormute1, monitormute2, monitormute3, monitormute4, monitormute5, monitormute6, monitormute7, monitormute8, monitormute9, monitormute10, monitormute11, monitormute12, monitormute13, monitormute14, monitormute15, monitormute16 FROM src_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     return 0;
@@ -875,6 +889,8 @@ int db_read_src_config()
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     short int number;
+    unsigned char cntModule;
+
     sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &number);
 
     AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[number-1];
@@ -911,13 +927,40 @@ int db_read_src_config()
     sscanf(PQgetvalue(qres, cntRow, 30), "%c", &SourceData->MonitorMute[13]);
     sscanf(PQgetvalue(qres, cntRow, 31), "%c", &SourceData->MonitorMute[14]);
     sscanf(PQgetvalue(qres, cntRow, 32), "%c", &SourceData->MonitorMute[15]);
+
+    for (cntModule=0; cntModule<128; cntModule++)
+    {
+      if (AxumData.ModuleData[cntModule].Source == number)
+      {
+        SetAxum_ModuleSource(cntModule);
+        SetAxum_ModuleMixMinus(cntModule);
+
+        unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+      }
+    }
   }
+  PQclear(qres);
   return 1;
 }
 
-int db_read_module_config()
+int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
 {
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
   int cntRow;
+
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_mod);
+  sprintf(str[1], "%hd", last_mod);
 
   PGresult *qres = sql_exec("SELECT number,               \
                                     source_a,             \
@@ -1045,8 +1088,9 @@ int db_read_module_config()
                                     buss_31_32_on_off,      \
                                     buss_31_32_pre_post,    \
                                     buss_31_32_balance,     \
-                                    buss_31_32_assignment,  \
-                                    ", 1, 0, NULL);
+                                    buss_31_32_assignment   \
+                                    FROM module_config      \
+                                    WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     return 0;
@@ -1057,12 +1101,17 @@ int db_read_module_config()
     unsigned int cntField;
     unsigned char cntEQ;
     unsigned char cntBuss;
+    float OldLevel;
+    unsigned char OldOn;
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[number-1];
-    
+   
+    OldLevel = ModuleData->FaderLevel;
+    OldOn = ModuleData->On;
+
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceA);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceB);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->InsertSource);
@@ -1095,15 +1144,133 @@ int db_read_module_config()
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Buss[cntBuss].Balance);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->Buss[cntBuss].Active);
     }
+
+    if (number>0)
+    {
+      int ModuleNr = number-1;
+
+      //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 1))
+      { //All or input
+        if (AxumApplicationAndDSPInitialized)
+        {
+          SetNewSource(ModuleNr, ModuleData->SourceA, 1, 1);
+  
+          SetAxum_ModuleInsertSource(ModuleNr);
+  
+          //Set fader level and On;
+          float NewLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
+          int NewOn = AxumData.ModuleData[ModuleNr].On;
+  
+          SetAxum_BussLevels(ModuleNr);
+  
+          unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_OFF);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON_OFF);
+  
+          if (AxumData.ModuleData[ModuleNr].Source > 0)
+          {
+            FunctionNrToSent = 0x05000000 | ((AxumData.ModuleData[ModuleNr].Source-1)<<12);
+            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON);
+            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_OFF);
+            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
+            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
+            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+          }
+  
+          FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+  
+          if (((OldLevel<=-80) && (NewLevel>-80)) ||
+              ((OldLevel>-80) && (NewLevel<=-80)) ||
+              (OldOn != NewOn))
+          { //fader on changed
+            DoAxum_ModuleStatusChanged(ModuleNr);
+          }
+        }
+      }
+
+      //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 2))
+      { //All or eq
+        for (int cntBand=0; cntBand<6; cntBand++)
+        {
+          if (AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level>AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range)
+          {
+            AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level = AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range;
+          }
+          else if (AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level < -AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range)
+          {
+            AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level = AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range;
+          }
+  
+          if (AxumApplicationAndDSPInitialized)
+          {
+            SetAxum_EQ(ModuleNr, cntBand);
+  
+            unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_LEVEL+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL))));
+            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_FREQUENCY+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY))));
+            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH))));
+            //CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_SLOPE+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_SLOPE-MODULE_FUNCTION_EQ_BAND_1_SLOPE))));
+            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_TYPE+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_TYPE-MODULE_FUNCTION_EQ_BAND_1_TYPE))));
+          }
+        }
+  
+        unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+      }
+
+      //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 3))
+      { //All or busses
+        for (int cntBuss=0; cntBuss<16; cntBuss++)
+        {
+          if (AxumApplicationAndDSPInitialized)
+          {
+            SetAxum_BussLevels(ModuleNr);
+  
+            SetBussOnOff(ModuleNr, cntBuss, 1);//use interlock
+  
+            unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_LEVEL);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_PRE);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_BALANCE);
+
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+          }
+        }
+      }
+    }
   }
+  PQclear(qres);
   return 1;
 }
 
-int db_read_buss_config()
+int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
 {
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
   int cntRow;
 
-  PGresult *qres = sql_exec("SELECT number, label, pre_on, pre_level, pre_balance, level, on_off, interlock, global_reset FROM buss_config", 1, 0, NULL);
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_buss);
+  sprintf(str[1], "%hd", last_buss);
+
+  PGresult *qres = sql_exec("SELECT number, label, pre_on, pre_level, pre_balance, level, on_off, interlock, global_reset FROM buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     return 0;
@@ -1123,15 +1290,50 @@ int db_read_buss_config()
     sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->On); 
     sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->Interlock); 
     sscanf(PQgetvalue(qres, cntRow, 3), "%c", &BussMasterData->GlobalBussReset); 
+
+    unsigned int FunctionNrToSent = 0x01000000 | (((number-1)<<12)&0xFFF000);
+    CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_PRE);
+    CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_LEVEL);
+    CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_ON_OFF);
+    CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_LABEL);
+
+    for (int cntModule=0; cntModule<128; cntModule++)
+    {
+      if (AxumApplicationAndDSPInitialized)
+      {
+        SetAxum_BussLevels(cntModule);
+      }
+    }
+
+    for (int cntDestination=0; cntDestination<=1280; cntDestination++)
+    {
+      if (AxumData.DestinationData[cntDestination].Source == number)
+      {
+        FunctionNrToSent = 0x06000000 | (cntDestination<<12);
+        CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_SOURCE);
+      }
+    }
   }
+  PQclear(qres);
   return 1;
 }
 
-int db_read_monitor_buss_config()
+int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last_mon_buss)
 {
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
   int cntRow;
 
-  PGresult *qres = sql_exec("SELECT number, label, interlock, default_selection, buss_1_2, buss_3_4, buss_5_6, buss_7_8, buss_9_10, buss_11_12, buss_13_14, buss_15_!6, buss_17_18, buss_19_20, buss_21_22, buss_23_24, buss_25_26, buss_27_28, buss_29_30, buss_31_32, dim_level FROM monitor_buss_config", 1, 0, NULL);
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_mon_buss);
+  sprintf(str[1], "%hd", last_mon_buss);
+
+  PGresult *qres = sql_exec("SELECT number, label, interlock, default_selection, buss_1_2, buss_3_4, buss_5_6, buss_7_8, buss_9_10, buss_11_12, buss_13_14, buss_15_!6, buss_17_18, buss_19_20, buss_21_22, buss_23_24, buss_25_26, buss_27_28, buss_29_30, buss_31_32, dim_level FROM monitor_buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     return 0;
@@ -1155,15 +1357,46 @@ int db_read_monitor_buss_config()
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &MonitorData->AutoSwitchingBuss[cntMonitorBuss]); 
     }
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &MonitorData->SwitchingDimLevel); 
+
+    if (AxumApplicationAndDSPInitialized)
+    {
+      int MonitorBussNr = number-1;
+      SetAxum_MonitorBuss(MonitorBussNr);
+
+      unsigned int FunctionNrToSent = 0x02000000 | ((MonitorBussNr<<12)&0xFFF000);
+      if (AxumData.Monitor[MonitorBussNr].DefaultSelection<16)
+      {
+        int MixingBussNr = AxumData.Monitor[MonitorBussNr].DefaultSelection;
+        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+MixingBussNr));
+      }
+      else if (AxumData.Monitor[MonitorBussNr].DefaultSelection<24)
+      {
+        int ExtNr = AxumData.Monitor[MonitorBussNr].DefaultSelection-16;
+        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
+      }
+      CheckObjectsToSent(FunctionNrToSent | MONITOR_BUSS_FUNCTION_LABEL);
+    }
   }
+  PQclear(qres);
   return 1;
 }
 
-int db_read_extern_src_config()
+int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_dsp_card)
 {
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
   int cntRow;
 
-  PGresult *qres = sql_exec("SELECT number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8 FROM extern_src_config", 1, 0, NULL);
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_dsp_card);
+  sprintf(str[1], "%hd", last_dsp_card);
+  
+  PGresult *qres = sql_exec("SELECT number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8 FROM extern_src_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     return 0;
@@ -1183,15 +1416,32 @@ int db_read_extern_src_config()
     { 
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ExternSource->Ext[cntExternSource]); 
     }
+    
+    if (AxumApplicationAndDSPInitialized)
+    {
+      SetAxum_ExternSources(number-1);
+    }
   }
+  PQclear(qres);
   return 1;
 }
 
-int db_read_talkback_config()
+int db_read_talkback_config(unsigned char first_tb, unsigned char last_tb)
 {
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
   int cntRow;
 
-  PGresult *qres = sql_exec("SELECT number, source FROM talkback_config", 1, 0, NULL);
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_tb);
+  sprintf(str[1], "%hd", last_tb);
+
+  PGresult *qres = sql_exec("SELECT number, source FROM talkback_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     return 0;
@@ -1200,18 +1450,13 @@ int db_read_talkback_config()
   {
     short int number;
     unsigned int cntField;
-    unsigned int cntExternSource;
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
-
-    AXUM_EXTERN_SOURCE_DATA_STRUCT *ExternSource = &AxumData.ExternSource[number-1];
-    
-    for (cntExternSource=0; cntExternSource<8; cntExternSource++)
-    { 
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ExternSource->Ext[cntExternSource]); 
-    }
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &AxumData.Talkback[number-1].Source);
+    SetAxum_TalkbackSource(number-1);
   }
+  PQclear(qres);
   return 1;
 }
 
@@ -1234,15 +1479,97 @@ int db_read_global_config()
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &AxumData.ExternClock);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.Headroom);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.LevelReserve);
+
+    if (AxumApplicationAndDSPInitialized)
+    {
+      SetDSPCard_Interpolation();
+    }
+    SetBackplane_Clock();
+
+    int cntModule;
+    for (cntModule=0; cntModule<128; cntModule++)
+    {
+      unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
+
+      for (int cntBand=0; cntBand<6; cntBand++)
+      {
+        if (AxumApplicationAndDSPInitialized)
+        {
+          SetAxum_EQ(cntModule, cntBand);
+        }
+      }
+
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_3_4_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_5_6_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_7_8_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_9_10_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_11_12_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_13_14_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_15_16_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_17_18_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_19_20_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_21_22_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_23_24_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_25_26_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_27_28_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_29_30_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_31_32_LEVEL);
+
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+    }
+
+    int cntBuss;
+    for (cntBuss=0; cntModule<16; cntBuss++)
+    {
+      unsigned int FunctionNrToSent = 0x01000000 | ((cntBuss<<12)&0xFFF000);
+      CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_LEVEL);
+    }
+
+    for (cntBuss=0; cntModule<16; cntBuss++)
+    {
+      unsigned int FunctionNrToSent = 0x02000000 | ((cntBuss<<12)&0xFFF000);
+      CheckObjectsToSent(FunctionNrToSent | MONITOR_BUSS_FUNCTION_PHONES_LEVEL);
+      CheckObjectsToSent(FunctionNrToSent | MONITOR_BUSS_FUNCTION_SPEAKER_LEVEL);
+    }
+
+    int cntDestination;
+    for (cntDestination=0; cntDestination<1280; cntDestination++)
+    {
+      unsigned int FunctionNrToSent = 0x06000000 | ((cntDestination<<12)&0xFFF000);
+      CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_LEVEL);
+    }
+
+    unsigned int FunctionNrToSent = 0x04000000;
+    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
+    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
+    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
+    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
+
   }
   return 1;
 }
 
-int db_read_dest_config()
+int db_read_dest_config(unsigned short int first_dest, unsigned short int last_dest)
 {
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
   int cntRow;
 
-  PGresult *qres = sql_exec("SELECT number, label, output1_addr, output1_sub_ch, output2_addr, output2_sub_ch, level, source, mix_minus_source FROM dest_config", 1, 0, NULL);
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_dest);
+  sprintf(str[1], "%hd", last_dest);
+
+  PGresult *qres = sql_exec("SELECT number, label, output1_addr, output1_sub_ch, output2_addr, output2_sub_ch, level, source, mix_minus_source FROM dest_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     return 0;
@@ -1262,6 +1589,17 @@ int db_read_dest_config()
     sscanf(PQgetvalue(qres, cntRow, 6), "%f", &DestinationData->Level); 
     sscanf(PQgetvalue(qres, cntRow, 7), "%d", &DestinationData->Source); 
     sscanf(PQgetvalue(qres, cntRow, 8), "%d", &DestinationData->MixMinusSource); 
+
+    if (AxumApplicationAndDSPInitialized)
+    {
+      SetAxum_DestinationSource(number-1);
+    }
+
+    //Check destinations
+    unsigned int DisplayFunctionNr = 0x06000000 | ((number-1)<<12);
+    CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_LABEL);
+    CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_LEVEL);
+    CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_SOURCE);
   }
   return 1;
 }
@@ -1381,21 +1719,23 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
   return 0;
 }
 
-int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info)
+int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj)
 {
-  char str[1][32];
-  const char *params[1];
+  char str[3][32];
+  const char *params[3];
   int cntParams;
   int cntRow;
 
-  for (cntParams=0; cntParams<1; cntParams++)
+  for (cntParams=0; cntParams<3; cntParams++)
   {
     params[cntParams] = (const char *)str[cntParams];
   }
 
   sprintf(str[0], "%d", node_info->MambaNetAddress);
+  sprintf(str[1], "%d", first_obj);
+  sprintf(str[2], "%d", last_obj);
  
-  PGresult *qres = sql_exec("SELECT object, data FROM defaults WHERE addr=$1", 0, 1, params);
+  PGresult *qres = sql_exec("SELECT object, data FROM defaults WHERE addr=$1 AND object>=$2 AND object<=$3", 0, 1, params);
   if (qres == NULL)
   {
     return 0;
@@ -1531,10 +1871,60 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info)
   return 1;
 }
 
-int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info)
+int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj)
 {
+  char str[3][32];
+  const char *params[3];
+  int cntParams;
+  int cntRow;
+
+  for (cntParams=0; cntParams<3; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%d", node_info->MambaNetAddress);
+  sprintf(str[1], "%hd", first_obj);
+  sprintf(str[2], "%hd", last_obj);
+ 
+  PGresult *qres = sql_exec("SELECT object, func FROM defaults WHERE addr=$1 AND object>=$2 AND object<=$3", 0, 1, params);
+  if (qres == NULL)
+  {
+    return 0;
+  }
+  
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    unsigned short int ObjectNr = -1;
+    unsigned char type;
+    unsigned short int seq_nr;
+    unsigned short int func_nr;
+    unsigned int TotalFunctionNr = -1;
+
+    sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
+    sscanf(PQgetvalue(qres, cntRow, 0), "(%c,%hd,%hd)", &type, &seq_nr, &func_nr);
+    TotalFunctionNr = (((unsigned int)type)<<24)|(((unsigned int)seq_nr)<<12)|func_nr;
+    
+
+    if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->NumberOfCustomObjects))
+    {
+      if (node_info->SensorReceiveFunction != NULL)
+      { 
+        SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[ObjectNr-1024];
+        
+        sensor_rcv_func->FunctionNr = TotalFunctionNr;
+        sensor_rcv_func->LastChangedTime = 0;
+        sensor_rcv_func->PreviousLastChangedTime = 0;
+        sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
+      }
+      MakeObjectListPerFunction(TotalFunctionNr);
+
+      CheckObjectsToSent(TotalFunctionNr, node_info->MambaNetAddress);
+      delay_ms(1);
+    }
+  }
+  PQclear(qres);
   return 1;
-  node_info = NULL;
 }
 
 int db_update_rack_organization(unsigned char slot_nr, unsigned long int addr, unsigned char input_ch_cnt, unsigned char output_ch_cnt)
@@ -1559,6 +1949,7 @@ int db_update_rack_organization(unsigned char slot_nr, unsigned long int addr, u
     return 0;
   }
 
+  PQclear(qres);
   return 1; 
 }
 
@@ -1581,7 +1972,7 @@ int db_update_rack_organization_input_ch_cnt(unsigned long int addr, unsigned ch
   {
     return 0;
   }
-
+  PQclear(qres);
   return 1; 
 }
 
@@ -1604,7 +1995,7 @@ int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned c
   {
     return 0;
   }
-
+  PQclear(qres);
   return 1; 
 }
  
