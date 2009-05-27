@@ -1,11 +1,3 @@
--- T A B L E S
-
-CREATE TABLE db_to_position (
-  db float PRIMARY KEY CHECK(db >= -140.0 AND db < 10.0),
-  position smallint CHECK(position >= 0 AND position < 1024)
-);
-
--- D A T A
 
 INSERT INTO db_to_position (db, position) VALUES (-140.0, 0);
 INSERT INTO db_to_position (db, position) VALUES (-139.9, 0);
@@ -1507,3 +1499,4 @@ INSERT INTO db_to_position (db, position) VALUES (9.6, 1015);
 INSERT INTO db_to_position (db, position) VALUES (9.7, 1017);
 INSERT INTO db_to_position (db, position) VALUES (9.8, 1019);
 INSERT INTO db_to_position (db, position) VALUES (9.9, 1021);
+

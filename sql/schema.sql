@@ -3,14 +3,16 @@
 --
 --  $ createuser -U postgres -S -D -R axum
 --  $ createdb -U postgres axum -O axum
---  $ psql -U axum <axum-database.sql
+--  $ psql -U axum <schema.sql
+--  $ psql -U axum <db_to_position.sql
+--  $ psql -U axum <defaults.sql
+--  $ psql -U axum <triggers.sql
 
 
 -- General TODO list (not too important)
 --  - Operator classes for the custom types
 --  - More sanity checking (NULL values on custom types)
 --  - Foreign key: configuration(func) -> functions(func)
---  - db_to_position or position_to_db table
 --  - more triggers
 
 
@@ -289,37 +291,37 @@ CREATE TABLE module_config (
 CREATE TABLE buss_config (
   number smallint NOT NULL CHECK(number>=1 AND number<=16) PRIMARY KEY,
   label varchar(32) NOT NULL,
-  pre_on boolean NOT NULL,
-  pre_level boolean NOT NULL,
-  pre_balance boolean NOT NULL,
-  level float NOT NULL,
-  on_off boolean NOT NULL,
-  interlock boolean NOT NULL,
-  global_reset boolean NOT NULL
+  pre_on boolean NOT NULL DEFAULT FALSE,
+  pre_level boolean NOT NULL DEFAULT FALSE,
+  pre_balance boolean NOT NULL DEFAULT FALSE,
+  level float NOT NULL DEFAULT 0.0,
+  on_off boolean NOT NULL DEFAULT TRUE,
+  interlock boolean NOT NULL DEFAULT FALSE,
+  global_reset boolean NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE monitor_buss_config (
   number smallint NOT NULL CHECK(number>=1 AND number<=16) PRIMARY KEY,
   label varchar(32) NOT NULL,
-  interlock boolean NOT NULL,
-  default_selection smallint NOT NULL,
-  buss_1_2 boolean NOT NULL,
-  buss_3_4 boolean NOT NULL,
-  buss_5_6 boolean NOT NULL,
-  buss_7_8 boolean NOT NULL,
-  buss_9_10 boolean NOT NULL,
-  buss_11_12 boolean NOT NULL,
-  buss_13_14 boolean NOT NULL,
-  buss_15_16 boolean NOT NULL,
-  buss_17_18 boolean NOT NULL,
-  buss_19_20 boolean NOT NULL,
-  buss_21_22 boolean NOT NULL,
-  buss_23_24 boolean NOT NULL,
-  buss_25_26 boolean NOT NULL,
-  buss_27_28 boolean NOT NULL,
-  buss_29_30 boolean NOT NULL,
-  buss_31_32 boolean NOT NULL,
-  dim_level float NOT NULL
+  interlock boolean NOT NULL DEFAULT TRUE,
+  default_selection smallint NOT NULL DEFAULT 0,
+  buss_1_2 boolean NOT NULL DEFAULT FALSE,
+  buss_3_4 boolean NOT NULL DEFAULT FALSE,
+  buss_5_6 boolean NOT NULL DEFAULT FALSE,
+  buss_7_8 boolean NOT NULL DEFAULT FALSE,
+  buss_9_10 boolean NOT NULL DEFAULT FALSE,
+  buss_11_12 boolean NOT NULL DEFAULT FALSE,
+  buss_13_14 boolean NOT NULL DEFAULT FALSE,
+  buss_15_16 boolean NOT NULL DEFAULT FALSE,
+  buss_17_18 boolean NOT NULL DEFAULT FALSE,
+  buss_19_20 boolean NOT NULL DEFAULT FALSE,
+  buss_21_22 boolean NOT NULL DEFAULT FALSE,
+  buss_23_24 boolean NOT NULL DEFAULT FALSE,
+  buss_25_26 boolean NOT NULL DEFAULT FALSE,
+  buss_27_28 boolean NOT NULL DEFAULT FALSE,
+  buss_29_30 boolean NOT NULL DEFAULT FALSE,
+  buss_31_32 boolean NOT NULL DEFAULT FALSE,
+  dim_level float NOT NULL DEFAULT -20.0
 );
 
 CREATE TABLE extern_src_config (
@@ -358,6 +360,11 @@ CREATE TABLE dest_config (
   mix_minus_source integer NOT NULL
 );
 
+CREATE TABLE db_to_position (
+  db float PRIMARY KEY CHECK(db >= -140.0 AND db < 10.0),
+  position smallint CHECK(position >= 0 AND position < 1024)
+);
+
 
 
 
@@ -376,156 +383,4 @@ ALTER TABLE dest_config   ADD FOREIGN KEY (output1_addr) REFERENCES addresses (a
 ALTER TABLE dest_config   ADD FOREIGN KEY (output2_addr) REFERENCES addresses (addr);
 ALTER TABLE dest_config   ADD FOREIGN KEY (mix_minus_source) REFERENCES addresses (addr);
 
-
-
-
--- P R O C E D U R E S
-
-CREATE OR REPLACE FUNCTION notify_changes() RETURNS trigger AS $$
-BEGIN
-  -- remove changes older than an hour
-  DELETE FROM recent_changes WHERE timestamp < (NOW() - INTERVAL '1 hour');
-  -- send notify
-  NOTIFY change;
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER recent_changes_notify AFTER INSERT ON recent_changes FOR EACH STATEMENT EXECUTE PROCEDURE notify_changes();
-
-
-CREATE OR REPLACE FUNCTION addresses_changed() RETURNS trigger AS $$
-BEGIN
-  IF TG_OP = 'DELETE' THEN
-    INSERT INTO recent_changes (change, arguments) VALUES ('address_removed', OLD.addr::text);
-  ELSIF TG_OP = 'UPDATE' THEN
-    IF (OLD.id).man <> (NEW.id).man OR (OLD.id).prod <> (NEW.id).prod OR (OLD.id).id <> (NEW.id).id THEN
-      RAISE EXCEPTION 'Changing addresses.id is not allowed';
-    END IF;
-    IF OLD.engine_addr <> NEW.engine_addr THEN
-      INSERT INTO recent_changes (change, arguments) VALUES ('address_set_engine', NEW.addr::text);
-    END IF;
-    IF OLD.addr <> NEW.addr THEN
-      INSERT INTO recent_changes (change, arguments) VALUES ('address_set_addr', OLD.addr::text||' '||NEW.addr::text);
-    END IF;
-    IF OLD.name <> NEW.name THEN
-      UPDATE addresses SET setname = TRUE WHERE addr = NEW.addr;
-    END IF;
-    IF OLD.setname = FALSE AND NEW.setname = TRUE THEN
-      INSERT INTO recent_changes (change, arguments) VALUES ('address_set_name', NEW.addr::text);
-    END IF;
-    IF OLD.refresh = FALSE AND NEW.refresh = TRUE THEN
-      INSERT INTO recent_changes (change, arguments) VALUES ('address_refresh', NEW.addr::text);
-    END IF;
-  END IF;
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-
-CREATE OR REPLACE FUNCTION templates_changed() RETURNS trigger AS $$
-DECLARE
-  arg text;
-BEGIN
-  arg := OLD.man_id || ' ' || OLD.prod_id || ' ' || OLD.firm_major;
-  -- the argument of the templates_removed change don't include the object number,
-  -- so if we delete multiple rows from the same (man_id,prod_id,firm_id), make
-  -- sure to only insert one row into the recent_changes table
-  PERFORM 1 FROM recent_changes WHERE change = 'template_removed' AND arguments = arg AND timestamp = NOW();
-  IF NOT FOUND THEN
-    INSERT INTO recent_changes (change, arguments) VALUES('template_removed', arg);
-  END IF;
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION slot_config_changed() RETURNS trigger AS $$
-BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('slot_config_changed', NEW.slot_nr::text);
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION src_config_changed() RETURNS trigger AS $$
-BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('src_config_changed', NEW.number::text);
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION module_config_changed() RETURNS trigger AS $$
-BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('module_config_changed', NEW.number::text);
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION buss_config_changed() RETURNS trigger AS $$
-BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('buss_config_changed', NEW.number::text);
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION monitor_buss_config_changed() RETURNS trigger AS $$
-BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('monitor_buss_config_changed', NEW.number::text);
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION extern_src_config_changed() RETURNS trigger AS $$
-BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('extern_src_config_changed', NEW.number::text);
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION talkback_config_changed() RETURNS trigger AS $$
-BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('talkback_config_changed', NEW.number::text);
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION global_config_changed() RETURNS trigger AS $$
-BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('global_config_changed', '');
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION dest_config_changed() RETURNS trigger AS $$
-BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('dest_config_changed', NEW.number::text);
-  RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-
-
-
--- T R I G G E R S
-
-CREATE TRIGGER template_change_notify     AFTER DELETE ON templates           FOR EACH ROW EXECUTE PROCEDURE templates_changed();
-CREATE TRIGGER addresses_change_notify    AFTER DELETE OR UPDATE ON addresses FOR EACH ROW EXECUTE PROCEDURE addresses_changed();
-CREATE TRIGGER slot_config_notify         AFTER UPDATE ON slot_config         FOR EACH ROW EXECUTE PROCEDURE slot_config_changed();
-CREATE TRIGGER src_config_notify          AFTER UPDATE ON src_config          FOR EACH ROW EXECUTE PROCEDURE src_config_changed();
-CREATE TRIGGER module_config_notify       AFTER UPDATE ON module_config       FOR EACH ROW EXECUTE PROCEDURE module_config_changed();
-CREATE TRIGGER buss_config_notify         AFTER UPDATE ON buss_config         FOR EACH ROW EXECUTE PROCEDURE buss_config_changed();
-CREATE TRIGGER monitor_buss_config_notify AFTER UPDATE ON monitor_buss_config FOR EACH ROW EXECUTE PROCEDURE monitor_buss_config_changed();
-CREATE TRIGGER extern_src_config_notify   AFTER UPDATE ON extern_src_config   FOR EACH ROW EXECUTE PROCEDURE extern_src_config_changed();
-CREATE TRIGGER talkback_config_notify     AFTER UPDATE ON talkback_config     FOR EACH ROW EXECUTE PROCEDURE talkback_config_changed();
-CREATE TRIGGER global_config_notify       AFTER UPDATE ON global_config       FOR EACH ROW EXECUTE PROCEDURE global_config_changed();
-CREATE TRIGGER dest_config_notify         AFTER UPDATE ON dest_config         FOR EACH ROW EXECUTE PROCEDURE dest_config_changed();
 
