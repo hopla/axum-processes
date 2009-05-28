@@ -3,8 +3,8 @@
 #ifndef _db_h
 #define _db_h
 
-int  db_init(char *, char *);
-void db_free();
+void db_open(char *dbstr);
+int db_get_fd();
 int db_read_slot_config();
 int db_read_src_config(unsigned short int first_src, unsigned short int last_src);
 int db_read_module_config(unsigned char first_mod, unsigned char last_mod);
@@ -26,5 +26,6 @@ int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned c
 
 int db_load_engine_functions();
 void db_lock(int);
+void db_close();
 
 #endif

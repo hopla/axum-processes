@@ -50,8 +50,6 @@
 #include <sys/sem.h>
 #include <sys/msg.h>
 
-#include <libpq-fe.h>       //postgres library
-
 #define DEFAULT_GTW_PATH    "/tmp/axum-gateway"
 #define DEFAULT_ETH_DEV     "eth0"
 #define DEFAULT_DB_STR      "dbname='axum' user='axum'"
@@ -174,7 +172,6 @@ bool dump_packages;                 //To debug the incoming data
 
 int NetworkFileDescriptor;          //identifies the used network device
 int DatabaseFileDescriptor;
-extern PGconn *sqldb;
 
 unsigned char EthernetReceiveBuffer[4096];
 int cntEthernetReceiveBufferTop;
@@ -275,7 +272,7 @@ void init(int argc, char **argv)
   daemonize();
   log_open();
   //hwparent(&this_node);
-  sql_open(dbstr, 0, NULL);
+  db_open(dbstr);
 
   /* initialize the MambaNet node */
 /*  if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
@@ -482,6 +479,7 @@ int main(int argc, char *argv[])
     pthread_t tid;
     pthread_create(&tid, NULL, thread, NULL);
 
+    DatabaseFileDescriptor = db_get_fd();
     DatabaseFileDescriptor = PQsocket(sql_conn);
     if(DatabaseFileDescriptor < 0) {
       //log_write("Invalid PostgreSQL socket!");
@@ -1002,7 +1000,7 @@ int main(int argc, char *argv[])
   CloseSTDIN(&oldtio, oldflags);
 
   log_write("Closing Engine");
-  sql_close();
+  db_close();
   log_close();
 
   return 0;

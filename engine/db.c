@@ -12,6 +12,15 @@ extern float Position2dB[1024];
 extern DEFAULT_NODE_OBJECTS_STRUCT AxumEngineDefaultObjects;
 extern int AxumApplicationAndDSPInitialized;
 
+void db_open(char *dbstr)
+{
+  sql_open(dbstr, 0, NULL);
+}
+
+int db_get_fd()
+{
+  return PQsocket(sql_conn);
+}
 
 int db_read_slot_config()
 {
@@ -1183,6 +1192,11 @@ int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned c
   }
   PQclear(qres);
   return 1; 
+}
+
+void db_close()
+{
+  sql_close();
 }
  
  /*
