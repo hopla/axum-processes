@@ -480,7 +480,6 @@ int main(int argc, char *argv[])
     pthread_create(&tid, NULL, thread, NULL);
 
     DatabaseFileDescriptor = db_get_fd();
-    DatabaseFileDescriptor = PQsocket(sql_conn);
     if(DatabaseFileDescriptor < 0) {
       //log_write("Invalid PostgreSQL socket!");
       ExitApplication = 1;
@@ -983,7 +982,7 @@ int main(int argc, char *argv[])
         //Test if the database notifier generated an event.
         if (FD_ISSET(DatabaseFileDescriptor, &readfs))
         {
-          sql_processnotifies(); 
+          db_processnotifies();
         } 
       }
     }

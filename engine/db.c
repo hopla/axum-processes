@@ -12,14 +12,33 @@ extern float Position2dB[1024];
 extern DEFAULT_NODE_OBJECTS_STRUCT AxumEngineDefaultObjects;
 extern int AxumApplicationAndDSPInitialized;
 
+struct sql_notify notifies[] = {
+  { (char *)"templates_changed",            db_event_templates_changed},
+  { (char *)"addresses_changed",            db_event_addresses_changed},
+  { (char *)"slot_config_changed",          db_event_slot_config_changed},
+  { (char *)"src_config_changed",           db_event_src_config_changed},
+  { (char *)"module_config_changed",        db_event_module_config_changed},
+  { (char *)"buss_config_changed",          db_event_buss_config_changed},
+  { (char *)"monitor_buss_config_changed",  db_event_monitor_buss_config_changed},
+  { (char *)"extern_src_config_changed",    db_event_extern_src_config_changed},
+  { (char *)"talkback_config_changed",      db_event_talkback_config_changed},
+  { (char *)"global_config_changed",        db_event_global_config_changed},
+  { (char *)"dest_config_changed",          db_event_dest_config_changed}
+};
+
 void db_open(char *dbstr)
 {
-  sql_open(dbstr, 0, NULL);
+  sql_open(dbstr, 11, notifies);
 }
 
 int db_get_fd()
 {
-  return PQsocket(sql_conn);
+  int fd = PQsocket(sql_conn);
+  if (fd < 0)
+  {
+    log_write("db_get_fd/PQsocket error, no server connection is currently open");  
+  }
+  return fd;
 }
 
 int db_read_slot_config()
@@ -1194,6 +1213,11 @@ int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned c
   return 1; 
 }
 
+void db_processnotifies()
+{
+  sql_processnotifies(); 
+}
+
 void db_close()
 {
   sql_close();
@@ -1240,3 +1264,107 @@ int db_load_engine_functions() {
   return row_count;
 }
 */
+
+
+//*********************************************
+// NOTIFY EVENTS
+//*********************************************
+
+void db_event_templates_changed(char myself, char *arg)
+{
+  //No implementation
+  arg = NULL;
+  myself=0;
+}
+
+void db_event_addresses_changed(char myself, char *arg)
+{
+  //No implementation
+  arg = NULL;
+  myself=0;
+}
+
+void db_event_slot_config_changed(char myself, char *arg)
+{
+  db_read_slot_config();
+  arg = NULL;
+  myself=0;
+}
+
+void db_event_src_config_changed(char myself, char *arg)
+{
+  unsigned short int number;
+
+  sscanf(arg, "%hd", &number);
+  db_read_src_config(number, number);
+
+  myself=0;
+}
+
+void db_event_module_config_changed(char myself, char *arg)
+{
+  unsigned char number;
+
+  sscanf(arg, "%c", &number);
+  db_read_module_config(number, number);
+
+  myself=0;
+}
+
+void db_event_buss_config_changed(char myself, char *arg)
+{
+  unsigned char number;
+
+  sscanf(arg, "%c", &number);
+  db_read_buss_config(number, number);
+
+  myself=0;
+}
+
+void db_event_monitor_buss_config_changed(char myself, char *arg)
+{
+  unsigned char number;
+
+  sscanf(arg, "%c", &number);
+  db_read_monitor_buss_config(number, number);
+
+  myself=0;
+}
+
+void db_event_extern_src_config_changed(char myself, char *arg)
+{
+  unsigned char number;
+
+  sscanf(arg, "%c", &number);
+  db_read_extern_src_config(number, number);
+
+  myself=0;
+}
+
+void db_event_talkback_config_changed(char myself, char *arg)
+{
+  unsigned char number;
+
+  sscanf(arg, "%c", &number);
+  db_read_talkback_config(number, number);
+
+  myself=0;
+}
+
+void db_event_global_config_changed(char myself, char *arg)
+{
+  db_read_global_config();
+
+  arg = NULL;
+  myself=0;
+}
+
+void db_event_dest_config_changed(char myself, char *arg)
+{
+  unsigned short int number;
+
+  sscanf(arg, "%hd", &number);
+  db_read_dest_config(number, number);
+
+  myself=0;
+}

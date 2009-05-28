@@ -24,8 +24,25 @@ int db_update_rack_organization(unsigned char slot_nr, unsigned long int addr, u
 int db_update_rack_organization_input_ch_cnt(unsigned long int addr, unsigned char cnt); 
 int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned char cnt);
 
-int db_load_engine_functions();
 void db_lock(int);
+void db_processnotifies();
 void db_close();
+
+//int db_load_engine_functions();
+
+void db_processnotifies();
+
+//notify callbacks
+void db_event_templates_changed(char myself, char *arg);
+void db_event_addresses_changed(char myself, char *arg);
+void db_event_slot_config_changed(char myself, char *arg);
+void db_event_src_config_changed(char myself, char *arg);
+void db_event_module_config_changed(char myself, char *arg);
+void db_event_buss_config_changed(char myself, char *arg);
+void db_event_monitor_buss_config_changed(char myself, char *arg);
+void db_event_extern_src_config_changed(char myself, char *arg);
+void db_event_talkback_config_changed(char myself, char *arg);
+void db_event_global_config_changed(char myself, char *arg);
+void db_event_dest_config_changed(char myself, char *arg);
 
 #endif
