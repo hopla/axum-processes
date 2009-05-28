@@ -53,13 +53,11 @@ int dsp_open()
   fd = open("/dev/pci2040", O_RDWR);
   if (fd<0)
   {
-    log_write("PCI2040 open error!");
+    fprintf(stderr, "PCI2040 open error.\n");
     return 0; 
   }
   else
   {
-    log_write("PCI2040 opened!");
-
     pci2040_ioctl_linux pci2040_ioctl_message;
 
     PCI2040_DUMP_CONFIG_REGS HPIConfigurationRegisters;
@@ -92,18 +90,18 @@ int dsp_open()
 
       if (!ProgramEEPROM(fd))
       {
-        log_write("PCI card not initialized by EEPROM !\nThe card is initialized!\nEEPROM programming failed\n");
+        fprintf(stderr, "PCI card not initialized by EEPROM !\nThe card is initialized!\nEEPROM programming failed\n");
         return 0;
       }
       else
       {
-        log_write("PCI card not initialized by EEPROM !\nThe card is initialized and the EEPROM programmed!\n");
+        fprintf(stderr, "PCI card not initialized by EEPROM !\nThe card is initialized and the EEPROM programmed!\n");
         return 0;
       }
     }
     else if ((HPIConfigurationRegisters.MiscControl&0xC000)==0xC000)
     {
-      log_write("PCI card is initialized but the EEPROM gives an error!\nThe EEPROM is NOT programmed !\n");
+      fprintf(stderr, "PCI card is initialized but the EEPROM gives an error!\nThe EEPROM is NOT programmed !\n");
       return 0;
     }
     else
@@ -206,7 +204,7 @@ int dsp_open()
       FILE *DSPMappings = fopen("/var/lib/axum/dsp/AxumModule.map", "r");
       if (DSPMappings == NULL)
       {
-        log_write("Module DSP Mappings open error");
+        fprintf(stderr, "Module DSP Mappings open error\n");
         return 0;
       }
       else
@@ -295,13 +293,12 @@ int dsp_open()
           }
         }
         fclose(DSPMappings);
-        log_write("Module DSP Mappings imported");
       }
 
       int DSPFirmware = open("/var/lib/axum/dsp/AxumModule.b0", O_RDONLY);
       if (DSPFirmware<0)
       {
-        log_write("Module DSP Firmware open error");
+        fprintf(stderr, "Module DSP Firmware open error\n");
         return 0;
       }
       else
@@ -332,7 +329,6 @@ int dsp_open()
           *PtrDSP_HPIA[cntDSP] = 0x10000714;
           *PtrDSP_HPID[cntDSP] = ModuleDSPEntryPoint;
         }
-        log_write("Module DSP firmware loaded");
       }
 
 //-------------------------------------------------------------------------
@@ -341,7 +337,7 @@ int dsp_open()
       DSPMappings = fopen("/var/lib/axum/dsp/AxumSumming.map", "r");
       if (DSPMappings == NULL)
       {
-        log_write("Summing DSP Mappings open error!");
+        fprintf(stderr, "Summing DSP Mappings open error.\n");
         return 0;
       }
       else
@@ -405,13 +401,12 @@ int dsp_open()
           }
         }
         fclose(DSPMappings);
-        log_write("Summing DSP Mappings imported");
       }
 
       DSPFirmware = open("/var/lib/axum/dsp/AxumSumming.b0", O_RDONLY);
       if (DSPFirmware<0)
       {
-        log_write("Summing DSP Firmware open error");
+        fprintf(stderr, "Summing DSP Firmware open error.\n");
         return 0;
       }
       else
@@ -439,8 +434,6 @@ int dsp_open()
           *PtrDSP_HPIA[cntDSP] = 0x10000714;
           *PtrDSP_HPID[cntDSP] = SummingDSPEntryPoint;
         }
-
-        log_write("Module DSP firmware loaded");
       }
 
 //-------------------------------------------------------------------------
@@ -449,7 +442,7 @@ int dsp_open()
       DSPMappings = fopen("/var/lib/axum/dsp/AxumFX1.map", "r");
       if (DSPMappings == NULL)
       {
-        log_write("FX DSP Mappings open error");
+        fprintf(stderr, "FX DSP Mappings open error.\n");
         return 0;
       }
       else
@@ -481,13 +474,12 @@ int dsp_open()
           }
         }
         fclose(DSPMappings);
-        log_write("FX DSP Mappings imported");
       }
 
       DSPFirmware = open("/var/lib/axum/dsp/AxumFX1.b0", O_RDONLY);
       if (DSPFirmware<0)
       {
-        log_write("FX DSP Firmware open error");
+        fprintf(stderr, "FX DSP Firmware open error\n");
         return 0;
       }
       else
@@ -515,8 +507,6 @@ int dsp_open()
           *PtrDSP_HPIA[cntDSP] = 0x10000714;
           *PtrDSP_HPID[cntDSP] = FXDSPEntryPoint;
         }
-
-        log_write("FX DSP firmware loaded");
       }
 
       for (int cntDSP=0; cntDSP<4; cntDSP++)
@@ -525,7 +515,6 @@ int dsp_open()
         *PtrDSP_HPIA[cntDSP] = 0x10000718;
         *PtrDSP_HPID[cntDSP] = 0x00000001;
       }
-      log_write("DSPs running.");
     }
   }
 

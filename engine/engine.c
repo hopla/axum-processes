@@ -273,6 +273,12 @@ void init(int argc, char **argv)
   log_open();
   //hwparent(&this_node);
   db_open(dbstr);
+  
+  if (!dsp_open())
+  {
+    exit(1);
+  }
+  
 
   /* initialize the MambaNet node */
 /*  if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
@@ -315,10 +321,6 @@ int main(int argc, char *argv[])
 //**************************************************************/
   initialize_axum_data_struct();
 
-  if (!dsp_open())
-  {
-    exit(1);
-  }
   /*   SetDSPCard_Interpolation();
 
       printf("Start initialize Parameters in DSPs\n");
