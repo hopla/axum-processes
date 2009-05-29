@@ -165,8 +165,6 @@ float Position2dB[1024];
 unsigned short int dB2Position[1500];
 unsigned int PulseTime;
 
-bool ExitApplication = 0;
-
 unsigned char TraceValue;           //To set the MambaNet trace (0x01=packets, 0x02=address table)
 bool dump_packages;                 //To debug the incoming data
 
@@ -470,8 +468,7 @@ int main(int argc, char *argv[])
     pthread_t tid;
     pthread_create(&tid, NULL, thread, NULL);
 
-    ExitApplication = false;
-    while (!ExitApplication)
+    while (!main_quit)
     {
       //Set the sources which wakes the idle-wait process 'select'
       //Standard input (keyboard) and network.
@@ -12462,7 +12459,7 @@ void *thread(void *vargp)
   MSG_STRUCT TempMessage;
   int msgsz = sizeof(MSG_STRUCT) - sizeof(long int);
 
-  while (!ExitApplication)
+  while (!main_quit)
   {
     int BytesReceived = msgrcv(ID, &TempMessage, msgsz, 0, 0);
     if (BytesReceived == -1)
