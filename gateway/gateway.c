@@ -81,11 +81,11 @@ void net_read() {
   if((f = fopen(data_path, "r")) == NULL)
     return;
   while(fgets(buf, 500, f) != NULL) {
-    if(sscanf(buf, " net_ip=\" %[0-9.]s \"", ip) == 1)
+    if(sscanf(buf, "net_ip=\" %[0-9.]s \"", ip) == 1)
       net_ip = ntohl(inet_addr(ip));
-    if(sscanf(buf, " net_mask=\" %[0-9.]s \"", ip) == 1)
+    if(sscanf(buf, "net_mask=\" %[0-9.]s \"", ip) == 1)
       net_mask = ntohl(inet_addr(ip));
-    if(sscanf(buf, " net_gw=\" %[0-9.]s \"", ip) == 1)
+    if(sscanf(buf, "net_gw=\" %[0-9.]s \"", ip) == 1)
       net_gw = ntohl(inet_addr(ip));
   }
   fclose(f);
