@@ -276,19 +276,31 @@ void init(int argc, char **argv)
   DatabaseFileDescriptor = db_get_fd();
   if(DatabaseFileDescriptor < 0) 
   {
-    printf("Invalid PostgreSQL socket");
+    printf("Invalid PostgreSQL socket\n");
     log_close();
     exit(1);
   }
   
   if (!dsp_open())
   {
-    log_close();
     db_close();
+    log_close();
+    exit(1);
+  }
+
+  NetworkFileDescriptor = -1;
+  InitializeMambaNetStack(&AxumEngineDefaultObjects, AxumEngineCustomObjectInformation, NR_OF_STATIC_OBJECTS);
+
+  NetworkFileDescriptor = SetupNetwork(ethdev, LocalMACAddress);
+  if (NetworkFileDescriptor < 0)
+  {
+    printf("Error opening network interface: %s\n", ethdev);
+    db_close();
+    log_close();
+    dsp_close();
     exit(1);
   }
   
-
   /* initialize the MambaNet node */
 /*  if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
     fprintf(stderr, "Opening %s: %s\n", ethdev, err);
@@ -317,9 +329,6 @@ void init(int argc, char **argv)
 
 int main(int argc, char *argv[])
 {
-  struct termios oldtio;
-  int oldflags;
-
   int maxfd;
   fd_set readfs;
 
@@ -398,15 +407,6 @@ int main(int argc, char *argv[])
     }
   }
 
-  //initalize global variables
-  TTYDevice[0]                    = 0x00;
-  NetworkInterface[0]         = 0x00;
-  NetworkFileDescriptor       = -1;
-  dump_packages                   = 0;
-  TraceValue                      = 0x00;
-  InitializeMambaNetStack(&AxumEngineDefaultObjects, AxumEngineCustomObjectInformation, NR_OF_STATIC_OBJECTS);
-//  AxumEngineDefaultObjects.MambaNetAddress = 0x202;
-
   InitalizeAllObjectListPerFunction();
 
   for (int cntAddress=0; cntAddress<ADDRESS_TABLE_SIZE; cntAddress++)
@@ -430,34 +430,14 @@ int main(int argc, char *argv[])
     OnlineNodeInformation[cntAddress].ObjectInformation       = NULL;
   }
 
-  //get command line arguments
-  GetCommandLineArguments(argc, argv, TTYDevice, NetworkInterface, &TraceValue);
-  ChangeMambaNetStackTrace(TraceValue);
-
-  //Change stdin (keyboard) settings to be 'character-driven' instead of line.
-  SetupSTDIN(&oldtio, &oldflags);
-
-  //Setup Network if serial port name is given.
-  if (NetworkInterface[0] == 0x00)
-  {
-    printf("No network interface found.\r\n");
-  }
-  else
-  {
-    NetworkFileDescriptor = SetupNetwork(NetworkInterface, LocalMACAddress);
-    if (NetworkFileDescriptor >= 0)
-    {
-      printf("using network interface device: %s [%02X:%02X:%02X:%02X:%02X:%02X].\r\n", NetworkInterface, LocalMACAddress[0], LocalMACAddress[1], LocalMACAddress[2], LocalMACAddress[3], LocalMACAddress[4], LocalMACAddress[5]);
-    }
-  }
+  log_write("using network interface device: %s [%02X:%02X:%02X:%02X:%02X:%02X].\n", NetworkInterface, LocalMACAddress[0], LocalMACAddress[1], LocalMACAddress[2], LocalMACAddress[3], LocalMACAddress[4], LocalMACAddress[5]);
 
   //Only one interface may be open for a application
   if (NetworkFileDescriptor>=0)
   {
-
-//**************************************************************/
-//Initialize Timer
-//**************************************************************/
+    //**************************************************************/
+    //Initialize Timer
+    //**************************************************************/
     struct itimerval MillisecondTimeOut;
     struct sigaction signal_action;
     sigset_t old_sigmask;
@@ -482,26 +462,20 @@ int main(int argc, char *argv[])
 
 
     //initalize maxfd for the idle-wait process 'select'
-    maxfd = STDIN_FILENO;
-    if (NetworkFileDescriptor > maxfd)
-      maxfd = NetworkFileDescriptor;
+    maxfd = NetworkFileDescriptor;
+    if (DatabaseFileDescriptor > maxfd)
+      maxfd = DatabaseFileDescriptor;
     maxfd++;
 
     pthread_t tid;
     pthread_create(&tid, NULL, thread, NULL);
 
-    DatabaseFileDescriptor = db_get_fd();
-    if(DatabaseFileDescriptor < 0) {
-      log_write("Invalid PostgreSQL socket!");
-      ExitApplication = 1;
-    }
-
+    ExitApplication = false;
     while (!ExitApplication)
     {
       //Set the sources which wakes the idle-wait process 'select'
       //Standard input (keyboard) and network.
       FD_ZERO(&readfs);
-      FD_SET(STDIN_FILENO, &readfs);
       FD_SET(NetworkFileDescriptor, &readfs);
       FD_SET(DatabaseFileDescriptor, &readfs);
 
@@ -512,329 +486,9 @@ int main(int argc, char *argv[])
       {//no error or non-blocked signal)
 //          perror("pselect:");
       }
+
       if (ReturnValue != -1)
       {//no error or non-blocked signal)
-        //Test if stdin (keyboard) generated an event.
-        if (FD_ISSET(STDIN_FILENO, &readfs))
-        {
-          unsigned char ReadedChar = getchar();
-          switch (ReadedChar)
-          {
-          case ' ':
-          {
-            VUMeter = !VUMeter;
-            if (VUMeter)
-            {
-              printf("VU Meter\n");
-            }
-            else
-            {
-              printf("PPM Meter\n");
-            }
-          }
-          break;
-          case '1':
-          case '2':
-          case '3':
-          case '4':
-          case '5':
-          case '6':
-          case '7':
-          case '8':
-          case '9':
-          {
-            MeterFrequency = ReadedChar-'1';
-            //AudioFrom = (ReadedChar-'0');
-            //printf("Selected Audio from: %d\n", AudioFrom);
-          }
-          break;
-          case '0':
-          {
-            MeterFrequency = 10;
-            //AudioFrom = (ReadedChar-'0');
-            //printf("Selected Audio from: %d\n", AudioFrom);
-          }
-          break;
-          case '+':
-          {
-          }
-          break;
-          case '-':
-          {
-          }
-          break;
-//                      case '1':
-//                      {
-//                          ChangeMambaNetStackTrace(0x01);
-//                      }
-//                      break;
-//                      case '2':
-//                      {
-//                          ChangeMambaNetStackTrace(0x02);
-//                      }
-//                      break;
-          case 'D':
-          case 'd':
-          {   //turn on/off packet dumps
-            dump_packages = !dump_packages;
-          }
-          break;
-          case 'Q':
-          case 'q':
-          {   //exit the program
-            ExitApplication = 1;
-          }
-          break;
-          case 'f':
-          case 'F':
-          {
-            unsigned char TransmitData[128];
-            unsigned int ObjectNr=1112;
-
-            TransmitData[0] = (ObjectNr>>8)&0xFF;
-            TransmitData[1] = ObjectNr&0xFF;
-            TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;//Set actuator
-            TransmitData[3] = FLOAT_DATATYPE;
-            TransmitData[4] = 1;
-            TransmitData[5] = 0xE7;
-
-            SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 6);
-          }
-          break;
-          case 'g':
-          case 'G':
-          {
-            unsigned char TransmitData[128];
-            unsigned int ObjectNr=1112;
-
-            TransmitData[0] = (ObjectNr>>8)&0xFF;
-            TransmitData[1] = ObjectNr&0xFF;
-            TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;//Set actuator
-            TransmitData[3] = FLOAT_DATATYPE;
-            TransmitData[4] = 1;
-            TransmitData[5] = 0x26;
-
-            SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 6);
-          }
-          break;
-          case 'h':
-          case 'H':
-          case 'j':
-          case 'J':
-          {
-            unsigned char TransmitData[128];
-            unsigned int ObjectNr=1112;
-
-#define FLOAT_SIZE 2
-
-            TransmitData[0] = (ObjectNr>>8)&0xFF;
-            TransmitData[1] = ObjectNr&0xFF;
-            TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;//Set actuator
-            TransmitData[3] = FLOAT_DATATYPE;
-            TransmitData[4] = FLOAT_SIZE;
-
-            if ((ReadedChar == 'j') || (ReadedChar == 'J'))
-            {
-              cntFloatDebug += 0.25;
-            }
-            else
-            {
-              cntFloatDebug -= 0.25;
-            }
-            if (cntFloatDebug > 22)
-            {
-              cntFloatDebug = 22;
-            }
-            else if (cntFloatDebug < -96)
-            {
-              cntFloatDebug = -96;
-            }
-            printf("float32: %f ", cntFloatDebug);
-            printf("[0x%08X]\r\n", *((unsigned int *)&cntFloatDebug));
-
-            if (Float2VariableFloat(cntFloatDebug, FLOAT_SIZE, &TransmitData[5]) == 0)
-            {
-              float TemporyFloat;
-
-              VariableFloat2Float(&TransmitData[5], FLOAT_SIZE, &TemporyFloat);
-              if (FLOAT_SIZE == 1)
-              {
-                printf("hex: 0x%02X => %f\r\n", TransmitData[5], TemporyFloat);
-              }
-              else if (FLOAT_SIZE == 2)
-              {
-                printf("hex: 0x%02X%02X => %f\r\n", TransmitData[5], TransmitData[6], TemporyFloat);
-              }
-              else if (FLOAT_SIZE == 4)
-              {
-                printf("hex: 0x%02X%02X%02X%02X => %f\r\n", TransmitData[5], TransmitData[6], TransmitData[7], TransmitData[8], TemporyFloat);
-              }
-              SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 5+FLOAT_SIZE);
-            }
-            else
-            {
-              printf("can't convert[0x%08X]\r\n", *((unsigned int *)&cntFloatDebug));
-            }
-          }
-          break;
-          case 'A':
-          case 'a':
-          {   //debug: fader open
-            //unsigned char Data[2];
-            //unsigned int Position = 1023;
-            ////Data[0] = (Position>>8)&0xFF;
-            //Data[1] = Position&0xFF;
-
-            //SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, MAMBANET_OBJECT_MESSAGETYPE, Data, 2);
-
-            unsigned char TransmitData[128];
-            unsigned int ObjectNr=1024;
-
-            TransmitData[0] = (ObjectNr>>8)&0xFF;
-            TransmitData[1] = ObjectNr&0xFF;
-            TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
-            TransmitData[3] = OCTET_STRING_DATATYPE;//Octet string
-            TransmitData[4] = 5;//Size
-            if (ReadedChar == 'A')
-            {
-              TransmitData[5] = 'A';
-              TransmitData[6] = 'N';
-              TransmitData[7] = 'T';
-              TransmitData[8] = 'O';
-              TransmitData[9] = 'N';
-            }
-            else
-            {
-              TransmitData[5] = 'a';
-              TransmitData[6] = 'n';
-              TransmitData[7] = 't';
-              TransmitData[8] = 'o';
-              TransmitData[9] = 'n';
-            }
-
-            SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 10);
-          }
-          break;
-          case 'Z':
-          case 'z':
-          {   //debug: fader close
-//                      unsigned char Data[2];
-//                      unsigned int Position = 0;
-//                      Data[0] = (Position>>8)&0xFF;
-//                      Data[1] = Position&0xFF;
-//
-//                      SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, MAMBANET_OBJECT_MESSAGETYPE, Data, 2);
-            unsigned char TransmitData[128];
-            unsigned int ObjectNr=1040;
-
-            TransmitData[0] = (ObjectNr>>8)&0xFF;
-            TransmitData[1] = ObjectNr&0xFF;
-            TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;//Set actuator
-            TransmitData[3] = STATE_DATATYPE;
-            TransmitData[4] = 1;
-            if (ReadedChar == 'Z')
-            {
-              TransmitData[5] = 1;
-            }
-            else
-            {
-              TransmitData[5] = 0;
-            }
-
-            SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 6);
-          }
-          break;
-          case 's':
-          case 'S':
-          {
-            unsigned char TransmitData[128];
-            unsigned int ObjectNr=1072;
-
-            TransmitData[0] = (ObjectNr>>8)&0xFF;
-            TransmitData[1] = ObjectNr&0xFF;
-            TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
-            TransmitData[3] = STATE_DATATYPE;
-            TransmitData[4] = 1;
-
-            if (ReadedChar == 'S')
-            {
-              TransmitData[5] = 1;
-            }
-            else
-            {
-              TransmitData[5] = 0;
-            }
-
-            SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 6);
-          }
-          break;
-          case 'P':
-          case 'p':
-          case 'L':
-          case 'l':
-          {
-            unsigned char TransmitData[128];
-            unsigned int ObjectNr=1104;
-
-            TransmitData[0] = (ObjectNr>>8)&0xFF;
-            TransmitData[1] = ObjectNr&0xFF;
-            TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
-            TransmitData[3] = UNSIGNED_INTEGER_DATATYPE;
-            TransmitData[4] = 2;
-
-            if ((ReadedChar == 'p') || (ReadedChar == 'P'))
-            {
-              TransmitData[5] = 1023>>8;
-              TransmitData[6] = 1023&0xFF;
-            }
-            else
-            {
-              TransmitData[5] = 0;
-              TransmitData[6] = 0;
-            }
-
-            SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 7);
-          }
-          break;
-          case 'I':
-          case 'i':
-          {
-            unsigned char TransmitData[128];
-            unsigned int ObjectNr= cntDebugObject++;
-
-            TransmitData[0] = (ObjectNr>>8)&0xFF;
-            TransmitData[1] = ObjectNr&0xFF;
-            TransmitData[2] = MAMBANET_OBJECT_ACTION_GET_INFORMATION;
-            TransmitData[3] = NO_DATA_DATATYPE;
-
-            SendMambaNetMessage(0x00000103, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 4);
-          }
-          break;
-          case 'N':
-          case 'n':
-          {
-            unsigned char TransmitData[128];
-            unsigned int ObjectNr= cntDebugNodeObject++;
-            if (cntDebugNodeObject>12)
-            {
-              cntDebugNodeObject=0;
-            }
-
-            TransmitData[0] = (ObjectNr>>8)&0xFF;
-            TransmitData[1] = ObjectNr&0xFF;
-            TransmitData[2] = MAMBANET_OBJECT_ACTION_GET_SENSOR_DATA;
-            TransmitData[3] = NO_DATA_DATATYPE;
-
-            SendMambaNetMessage(0x00000103, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 4);
-          }
-          break;
-          default:
-          {
-          }
-          break;
-          }
-        }
-
         //Test if the network generated an event.
         if (FD_ISSET(NetworkFileDescriptor, &readfs))
         {
@@ -998,16 +652,11 @@ int main(int argc, char *argv[])
       }
     }
   }
-  printf("Closing Axum engine process...\r\n");
-
   DeleteAllObjectListPerFunction();
 
   dsp_close();
 
-//  sqlite3_close(node_templates_db);
-//  sqlite3_close(axum_engine_db);
   CloseNetwork(NetworkFileDescriptor);
-  CloseSTDIN(&oldtio, oldflags);
 
   log_write("Closing Engine");
   db_close();
@@ -6623,25 +6272,15 @@ void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned cha
   if (NetworkFileDescriptor >= 0)
   {
     int CharactersSend = 0;
-    unsigned char cntRetry=0;
 
-    while ((CharactersSend < buffersize) && (cntRetry<10))
+    while (CharactersSend < buffersize)
     {
       CharactersSend = sendto(NetworkFileDescriptor, buffer, buffersize, 0, (struct sockaddr *) &socket_address, sizeof(socket_address));
-
-      if (cntRetry != 0)
-      {
-        printf("[NET] Retry %d\r\n", cntRetry++);
-      }
     }
 
     if (CharactersSend < 0)
     {
-      perror("cannot send data.\r\n");
-    }
-    else
-    {
-//          TRACE_PACKETS("[ETHERNET] SendMambaMessage(0x%08X, 0x%08X, 0x%04X, %d)", ToAddress, FromAddress, MessageType, DataLength);
+      log_write("sendto error: cannot send data.");
     }
   }
 }

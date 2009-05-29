@@ -23,6 +23,8 @@
 
 #define DEFAULT_TIME_BEFORE_MOMENTARY 750
 
+#define bool unsigned char
+
 enum FilterType {OFF=0, HPF=1, LOWSHELF=2, PEAKINGEQ=3, HIGHSHELF=4, LPF=5, BPF=6, NOTCH=7};
 
 //**************************************************************/
