@@ -13,7 +13,7 @@
 -- General TODO list (not too important)
 --  - Operator classes for the custom types
 --  - More sanity checking (NULL values on custom types)
---  - Foreign key: configuration(func) -> functions(func)
+--  - Foreign key: node_config(func) -> functions(func)
 --  - more triggers
 
 
@@ -372,7 +372,7 @@ CREATE TABLE db_to_position (
 
 -- F O R E I G N   K E Y S
 
-ALTER TABLE configuration ADD FOREIGN KEY (addr) REFERENCES addresses (addr);
+ALTER TABLE node_config ADD FOREIGN KEY (addr) REFERENCES addresses (addr);
 ALTER TABLE defaults      ADD FOREIGN KEY (addr) REFERENCES addresses (addr);
 ALTER TABLE slot_config   ADD FOREIGN KEY (addr) REFERENCES addresses (addr);
 ALTER TABLE src_config    ADD FOREIGN KEY (input1_addr) REFERENCES addresses (addr);
