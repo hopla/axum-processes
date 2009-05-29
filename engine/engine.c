@@ -273,9 +273,18 @@ void init(int argc, char **argv)
   log_open();
   //hwparent(&this_node);
   db_open(dbstr);
+  DatabaseFileDescriptor = db_get_fd();
+  if(DatabaseFileDescriptor < 0) 
+  {
+    printf("Invalid PostgreSQL socket");
+    log_close();
+    exit(1);
+  }
   
   if (!dsp_open())
   {
+    log_close();
+    db_close();
     exit(1);
   }
   
@@ -483,7 +492,7 @@ int main(int argc, char *argv[])
 
     DatabaseFileDescriptor = db_get_fd();
     if(DatabaseFileDescriptor < 0) {
-      //log_write("Invalid PostgreSQL socket!");
+      log_write("Invalid PostgreSQL socket!");
       ExitApplication = 1;
     }
 
@@ -3762,7 +3771,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   printf("Monitor source %d on/off\n", FunctionNr);
                   if (Data[3] == STATE_DATATYPE)
                   {
-                    unsigned char *MonitorSwitchState;
+                    bool *MonitorSwitchState;
                     unsigned long TempData = 0;
 
                     for (int cntByte=0; cntByte<Data[4]; cntByte++)

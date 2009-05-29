@@ -38,13 +38,13 @@ typedef struct
 {
   char SourceName[32];
   AXUM_INPUT_DATA_STRUCT InputData[8];
-  char Redlight[8];
-  char MonitorMute[16];
+  bool Redlight[8];
+  bool MonitorMute[16];
   char Active;
 
   char Start;
-  char Phantom;
-  char Pad;
+  bool Phantom;
+  bool Pad;
   float Gain;
   char Alert;
 } AXUM_SOURCE_DATA_STRUCT;
@@ -108,32 +108,32 @@ typedef struct
   int SourceB;
   int InsertSource;
   unsigned char Insert;
-  char InsertOnOffA;
-  char InsertOnOffB;
+  bool InsertOnOffA;
+  bool InsertOnOffB;
   float Gain;
-  unsigned char PhaseReverse;
+  bool PhaseReverse;
   AXUM_EQ_BAND_DATA_STRUCT Filter;
-  char FilterOnOffA;
-  char FilterOnOffB;
+  bool FilterOnOffA;
+  bool FilterOnOffB;
   AXUM_EQ_BAND_DATA_STRUCT EQBand[6];
-  char EQOn;
-  char EQOnOffA;
-  char EQOnOffB;
+  bool EQOn;
+  bool EQOnOffA;
+  bool EQOnOffB;
 
   char Dynamics;
-  char DynamicsOn;
-  char DynamicsOnOffA;
-  char DynamicsOnOffB;
+  bool DynamicsOn;
+  bool DynamicsOnOffA;
+  bool DynamicsOnOffB;
 
   int Panorama;
   char Mono;
   float FaderLevel;
-  unsigned char FaderTouch;
-  unsigned char On;
-  unsigned char Cough;
+  bool FaderTouch;
+  bool On;
+  bool Cough;
 
-  char Signal;
-  char Peak;
+  bool Signal;
+  bool Peak;
 
   AXUM_BUSS_DATA_STRUCT Buss[16];
 
@@ -142,22 +142,22 @@ typedef struct
 typedef struct
 {
   char Label[32];
-  char Interlock;
+  bool Interlock;
   char DefaultSelection;
-  char AutoSwitchingBuss[16];
+  bool AutoSwitchingBuss[16];
   float SwitchingDimLevel;
 
-  unsigned char Buss[16];
-  unsigned char Ext[8];
+  bool Buss[16];
+  bool Ext[8];
 
   float PhonesLevel;
   float SpeakerLevel;
 
-  unsigned char Dim;
-  unsigned char Mute;
-  unsigned char Mono;
-  unsigned char Phase;
-  unsigned char Talkback[16];
+  bool Dim;
+  bool Mute;
+  bool Mono;
+  bool Phase;
+  bool Talkback[16];
 } AXUM_MONITOR_OUTPUT_DATA_STRUCT;
 
 typedef struct
@@ -169,14 +169,14 @@ typedef struct
 {
   float Level;
   char Label[32];
-  unsigned char On;
+  bool On;
 
-  unsigned char PreModuleOn;
-  unsigned char PreModuleLevel;
-  unsigned char PreModuleBalance;
+  bool PreModuleOn;
+  bool PreModuleLevel;
+  bool PreModuleBalance;
 
-  unsigned char Interlock;
-  unsigned char GlobalBussReset;
+  bool Interlock;
+  bool GlobalBussReset;
 } AXUM_BUSS_MASTER_DATA_STRUCT;
 
 typedef struct
@@ -192,18 +192,18 @@ typedef struct
   AXUM_MODULE_DATA_STRUCT ModuleData[128];
   AXUM_BUSS_MASTER_DATA_STRUCT BussMasterData[16];
 
-  char Control1Mode;
-  char Control2Mode;
-  char Control3Mode;
-  char Control4Mode;
-  char MasterControl1Mode;
-  char MasterControl2Mode;
-  char MasterControl3Mode;
-  char MasterControl4Mode;
+  bool Control1Mode;
+  bool Control2Mode;
+  bool Control3Mode;
+  bool Control4Mode;
+  bool MasterControl1Mode;
+  bool MasterControl2Mode;
+  bool MasterControl3Mode;
+  bool MasterControl4Mode;
 
-  unsigned char Redlight[8];
+  bool Redlight[8];
   unsigned int Samplerate;
-  unsigned char ExternClock;
+  bool ExternClock;
   float Headroom;
   float LevelReserve;
 
@@ -217,7 +217,7 @@ typedef struct
 //**************************************************************/
 typedef struct
 {
-  unsigned char On;
+  bool On;
   float Level;
   unsigned int Frequency;
   float Bandwidth;
@@ -228,21 +228,21 @@ typedef struct
 typedef struct
 {
   int Percent;
-  unsigned char On;
+  bool On;
 } DSPCARD_DYNAMICS_DATA_STRUCT;
 
 typedef struct
 {
   float Level;
-  unsigned char On;
+  bool On;
 } DSPCARD_BUSS_DATA_STRUCT;
 
 typedef struct
 {
   int Source;
   float Gain;
-  unsigned char PhaseReverse;
-  unsigned char Insert;
+  bool PhaseReverse;
+  bool Insert;
   DSPCARD_EQ_BAND_DATA_STRUCT Filter;
   DSPCARD_EQ_BAND_DATA_STRUCT EQBand[6];
 
@@ -261,7 +261,7 @@ typedef struct
 typedef struct
 {
   float Level;
-  unsigned char On;
+  bool On;
 } DSPCARD_BUSS_MASTER_DATA_STRUCT;
 
 typedef struct

@@ -105,33 +105,33 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->InputData[0].SubChannel); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[1].MambaNetAddress); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->InputData[1].SubChannel); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Phantom); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Pad); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Gain); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[0]); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[1]); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[2]); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[3]); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[4]); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[5]); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[6]); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->Redlight[7]); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[0]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[1]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[2]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[3]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[4]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[5]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[6]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[7]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[8]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[9]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[10]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[11]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[12]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[13]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[14]);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->MonitorMute[15]);
+    SourceData->Phantom = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->Pad = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->Gain = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->Redlight[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f"); 
+    SourceData->Redlight[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->Redlight[2] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->Redlight[3] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->Redlight[4] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->Redlight[5] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->Redlight[6] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->Redlight[7] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[2] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[3] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[4] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[5] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[6] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[7] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[8] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[9] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[10] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[11] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[12] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[13] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[14] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    SourceData->MonitorMute[15] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     for (cntModule=0; cntModule<128; cntModule++)
     {
@@ -320,12 +320,13 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceA);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceB);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->InsertSource);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->InsertOnOffA);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->InsertOnOffB);
+    ModuleData->InsertOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    ModuleData->InsertOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    ModuleData->InsertOnOffB = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->Gain);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Filter.Frequency);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->FilterOnOffA);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->FilterOnOffB);
+    ModuleData->FilterOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    ModuleData->FilterOnOffB = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     for (cntEQ=0; cntEQ<6; cntEQ++)
     {
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Range);
@@ -334,20 +335,20 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Slope);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", (char *)&ModuleData->EQBand[cntEQ].Type);
     }
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->EQOnOffA);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->EQOnOffB);
+    ModuleData->EQOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    ModuleData->EQOnOffB = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->Dynamics);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->DynamicsOnOffA);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->DynamicsOnOffB);
+    ModuleData->DynamicsOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    ModuleData->DynamicsOnOffB = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->FaderLevel);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->On);
+    ModuleData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     for (cntBuss=0; cntBuss<16; cntBuss++)
     {
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->Buss[cntBuss].Level);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->Buss[cntBuss].On);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->Buss[cntBuss].PreModuleLevel);
+      ModuleData->Buss[cntBuss].On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      ModuleData->Buss[cntBuss].PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Buss[cntBuss].Balance);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->Buss[cntBuss].Active);
+      ModuleData->Buss[cntBuss].Active = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     }
 
     if (number>0)
@@ -491,13 +492,13 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
     AXUM_BUSS_MASTER_DATA_STRUCT *BussMasterData = &AxumData.BussMasterData[number-1];
     
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", BussMasterData->Label);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->PreModuleOn); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->PreModuleLevel); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->PreModuleBalance); 
+    BussMasterData->PreModuleOn = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    BussMasterData->PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    BussMasterData->PreModuleBalance = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &BussMasterData->Level); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->On); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->Interlock); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &BussMasterData->GlobalBussReset); 
+    BussMasterData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    BussMasterData->Interlock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f"); 
+    BussMasterData->GlobalBussReset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f"); 
 
     if (AxumApplicationAndDSPInitialized)
     {
@@ -558,11 +559,11 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
     AXUM_MONITOR_OUTPUT_DATA_STRUCT *MonitorData = &AxumData.Monitor[number-1];
     
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", MonitorData->Label);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &MonitorData->Interlock); 
+    MonitorData->Interlock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &MonitorData->DefaultSelection); 
     for (cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
     { 
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &MonitorData->AutoSwitchingBuss[cntMonitorBuss]); 
+      MonitorData->AutoSwitchingBuss[cntMonitorBuss] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     }
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &MonitorData->SwitchingDimLevel); 
 
@@ -684,7 +685,7 @@ int db_read_global_config()
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &AxumData.Samplerate);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &AxumData.ExternClock);
+    AxumData.ExternClock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.Headroom);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.LevelReserve);
 
