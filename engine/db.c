@@ -866,9 +866,9 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
   //Determine number of objects for memory reservation
   sprintf(str[0], "%hd", node_info->ManufacturerID);
   sprintf(str[1], "%hd", node_info->ProductID);
-  sprintf(str[2], "%c", node_info->FirmwareMajorRevision);
- 
-  PGresult *qres = sql_exec("SELECT COUNT(*) FROM templates WHERE man_id=$1, prod_id=$2, firm_major=$3", 0, 3, params);
+  sprintf(str[2], "%hd", node_info->FirmwareMajorRevision);
+  log_write("man_id:%s, prod_id:%s, firm_major:%s", str[0], str[1], str[2]); 
+  PGresult *qres = sql_exec("SELECT COUNT(*) FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
   if (qres == NULL)
   {
     return 0;
@@ -889,7 +889,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
   }
 
   //Load all object information (e.g. for range-convertion).
-  qres = sql_exec("SELECT number, desc, services, sensor_type, sensor_size, sensor_min, sensor_max, actuator_type, actuator_size, actuator_min, actuatar_max, actuator_def FROM templates WHERE man_id=$1, prod_id=$2, firm_major=$3", 0, 3, params);
+  qres = sql_exec("SELECT number, desc, services, sensor_type, sensor_size, sensor_min, sensor_max, actuator_type, actuator_size, actuator_min, actuatar_max, actuator_def FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
   if (qres == NULL)
   {
     return 0;
@@ -950,7 +950,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   sprintf(str[1], "%d", first_obj);
   sprintf(str[2], "%d", last_obj);
  
-  PGresult *qres = sql_exec("SELECT object, data FROM defaults WHERE addr=$1 AND object>=$2 AND object<=$3", 0, 1, params);
+  PGresult *qres = sql_exec("SELECT object, data FROM defaults WHERE addr=$1 AND object>=$2 AND object<=$3", 0, 3, params);
   if (qres == NULL)
   {
     return 0;
@@ -1102,7 +1102,7 @@ int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsign
   sprintf(str[1], "%hd", first_obj);
   sprintf(str[2], "%hd", last_obj);
  
-  PGresult *qres = sql_exec("SELECT object, func FROM defaults WHERE addr=$1 AND object>=$2 AND object<=$3", 0, 1, params);
+  PGresult *qres = sql_exec("SELECT object, func FROM node_config WHERE addr=$1 AND object>=$2 AND object<=$3", 0, 3, params);
   if (qres == NULL)
   {
     return 0;
@@ -1182,7 +1182,7 @@ int db_update_rack_organization_input_ch_cnt(unsigned long int addr, unsigned ch
   sprintf(str[0], "%c", cnt);
   sprintf(str[1], "%ld", addr);
 
-  PGresult *qres = sql_exec("UPDATE rack_organization SET InputChannelCount=$1, WHERE MambaNetAddress=$2", 1, 2, params);
+  PGresult *qres = sql_exec("UPDATE rack_organization SET InputChannelCount=$1 WHERE MambaNetAddress=$2", 1, 2, params);
   if (qres == NULL)
   {
     return 0;
@@ -1205,7 +1205,7 @@ int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned c
   sprintf(str[0], "%c", cnt);
   sprintf(str[1], "%ld", addr);
 
-  PGresult *qres = sql_exec("UPDATE rack_organization SET OutputChannelCount=$1, WHERE MambaNetAddress=$2", 1, 2, params);
+  PGresult *qres = sql_exec("UPDATE rack_organization SET OutputChannelCount=$1 WHERE MambaNetAddress=$2", 1, 2, params);
   if (qres == NULL)
   {
     return 0;
