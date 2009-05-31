@@ -889,7 +889,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
   }
 
   //Load all object information (e.g. for range-convertion).
-  qres = sql_exec("SELECT number, desc, services, sensor_type, sensor_size, sensor_min, sensor_max, actuator_type, actuator_size, actuator_min, actuatar_max, actuator_def FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
+  qres = sql_exec("SELECT number, description, services, sensor_type, sensor_size, sensor_min, sensor_max, actuator_type, actuator_size, actuator_min, actuator_max, actuator_def FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
   if (qres == NULL)
   {
     return 0;
