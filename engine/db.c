@@ -950,7 +950,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   sprintf(str[1], "%d", first_obj);
   sprintf(str[2], "%d", last_obj);
  
-  PGresult *qres = sql_exec("SELECT object, data FROM defaults WHERE addr=$1 AND object>=$2 AND object<=$3", 0, 3, params);
+  PGresult *qres = sql_exec("SELECT object, data FROM defaults WHERE addr=$1 AND object>=$2 AND object<=$3", 1, 3, params);
   if (qres == NULL)
   {
     return 0;
@@ -1102,7 +1102,7 @@ int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsign
   sprintf(str[1], "%hd", first_obj);
   sprintf(str[2], "%hd", last_obj);
  
-  PGresult *qres = sql_exec("SELECT object, func FROM node_config WHERE addr=$1 AND object>=$2 AND object<=$3", 0, 3, params);
+  PGresult *qres = sql_exec("SELECT object, func FROM node_config WHERE addr=$1 AND object>=$2 AND object<=$3", 1, 3, params);
   if (qres == NULL)
   {
     return 0;
