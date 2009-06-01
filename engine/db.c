@@ -6,6 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define LOG_DEBUG_ENABLED
+
+#ifdef LOG_DEBUG_ENABLED
+  #define LOG_DEBUG(...) log_write(__VA_ARGS__)
+#else
+  #define LOG_DEBUG(...)
+#endif
+
 extern AXUM_DATA_STRUCT AxumData;
 extern unsigned short int dB2Position[1500];
 extern float Position2dB[1024];
@@ -28,16 +36,23 @@ struct sql_notify notifies[] = {
 
 void db_open(char *dbstr)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   sql_open(dbstr, 11, notifies);
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 int db_get_fd()
 {
+  LOG_DEBUG("[%s] enter", __func__);
+
   int fd = PQsocket(sql_conn);
   if (fd < 0)
   {
-    log_write("db_get_fd/PQsocket error, no server connection is currently open");  
+    LOG_DEBUG("db_get_fd/PQsocket error, no server connection is currently open");  
   }
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return fd;
 }
 
@@ -45,9 +60,12 @@ int db_read_slot_config()
 {
   int cntRow;
 
+  LOG_DEBUG("[%s] enter", __func__);
+
   PGresult *qres = sql_exec("SELECT slot_nr, addr FROM slot_config", 1, 0, NULL);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -66,6 +84,9 @@ int db_read_slot_config()
     AxumData.RackOrganization[slot_nr-1] = addr;
   }
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -75,6 +96,8 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   const char *params[2];
   int cntParams;
   int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<2; cntParams++)
   {
@@ -87,6 +110,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   PGresult *qres = sql_exec("SELECT number, label, input1_addr, input1_sub_ch, input2_addr, input2_sub_ch, phantom, pad, gain, redlight1, redlight2, redlight3, redlight4, redlight5, redlight6, redlight7, redlight8, monitormute1, monitormute2, monitormute3, monitormute4, monitormute5, monitormute6, monitormute7, monitormute8, monitormute9, monitormute10, monitormute11, monitormute12, monitormute13, monitormute14, monitormute15, monitormute16 FROM src_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -149,6 +173,9 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     }
   }
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -158,6 +185,8 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
   const char *params[2];
   int cntParams;
   int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<2; cntParams++)
   {
@@ -298,6 +327,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
                                     WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -458,6 +488,9 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
     }
   }
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -467,6 +500,8 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
   const char *params[2];
   int cntParams;
   int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<2; cntParams++)
   {
@@ -479,6 +514,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
   PGresult *qres = sql_exec("SELECT number, label, pre_on, pre_level, pre_balance, level, on_off, interlock, global_reset FROM buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -524,6 +560,9 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
     }
   }
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -533,6 +572,8 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
   const char *params[2];
   int cntParams;
   int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<2; cntParams++)
   {
@@ -545,6 +586,7 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
   PGresult *qres = sql_exec("SELECT number, label, interlock, default_selection, buss_1_2, buss_3_4, buss_5_6, buss_7_8, buss_9_10, buss_11_12, buss_13_14, buss_15_16, buss_17_18, buss_19_20, buss_21_22, buss_23_24, buss_25_26, buss_27_28, buss_29_30, buss_31_32, dim_level FROM monitor_buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -587,6 +629,9 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
     }
   }
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -596,6 +641,8 @@ int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_d
   const char *params[2];
   int cntParams;
   int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<2; cntParams++)
   {
@@ -608,6 +655,7 @@ int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_d
   PGresult *qres = sql_exec("SELECT number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8 FROM extern_src_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -632,6 +680,9 @@ int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_d
     }
   }
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -641,6 +692,8 @@ int db_read_talkback_config(unsigned char first_tb, unsigned char last_tb)
   const char *params[2];
   int cntParams;
   int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<2; cntParams++)
   {
@@ -653,6 +706,7 @@ int db_read_talkback_config(unsigned char first_tb, unsigned char last_tb)
   PGresult *qres = sql_exec("SELECT number, source FROM talkback_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -666,6 +720,9 @@ int db_read_talkback_config(unsigned char first_tb, unsigned char last_tb)
     SetAxum_TalkbackSource(number-1);
   }
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -673,10 +730,13 @@ int db_read_global_config()
 {
   int cntRow;
 
+  LOG_DEBUG("[%s] enter", __func__);
+
   PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve FROM global_config", 1, 0, NULL);
 
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -760,6 +820,9 @@ int db_read_global_config()
     CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
 
   }
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -769,6 +832,8 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
   const char *params[2];
   int cntParams;
   int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<2; cntParams++)
   {
@@ -781,6 +846,7 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
   PGresult *qres = sql_exec("SELECT number, label, output1_addr, output1_sub_ch, output2_addr, output2_sub_ch, level, source, mix_minus_source FROM dest_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -813,6 +879,9 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
     CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_LEVEL);
     CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_SOURCE);
   }
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -823,9 +892,12 @@ int db_read_db_to_position()
   unsigned int db_array_pointer;
   float dB;
 
+  LOG_DEBUG("[%s] enter", __func__);
+
   PGresult *qres = sql_exec("SELECT db, position FROM db_to_position", 1, 0, NULL);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -848,6 +920,9 @@ int db_read_db_to_position()
       Position2dB[cntPosition] = dB;
     }
   }
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -858,6 +933,8 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
   int cntParams;
   int cntRow;
 
+  LOG_DEBUG("[%s] enter", __func__);
+
   for (cntParams=0; cntParams<3; cntParams++)
   {
     params[cntParams] = (const char *)str[cntParams];
@@ -867,10 +944,11 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
   sprintf(str[0], "%hd", node_info->ManufacturerID);
   sprintf(str[1], "%hd", node_info->ProductID);
   sprintf(str[2], "%hd", node_info->FirmwareMajorRevision);
-  log_write("man_id:%s, prod_id:%s, firm_major:%s", str[0], str[1], str[2]); 
+  LOG_DEBUG("man_id:%s, prod_id:%s, firm_major:%s", str[0], str[1], str[2]); 
   PGresult *qres = sql_exec("SELECT COUNT(*) FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   sscanf(PQgetvalue(qres, 0, 0), "%d", &node_info->NumberOfCustomObjects);
@@ -892,6 +970,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
   qres = sql_exec("SELECT number, description, services, sensor_type, sensor_size, sensor_min, sensor_max, actuator_type, actuator_size, actuator_min, actuator_max, actuator_def FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -931,7 +1010,10 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
       }
     }
   }
-  return 0;
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
 }
 
 int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj)
@@ -940,6 +1022,8 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   const char *params[3];
   int cntParams;
   int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<3; cntParams++)
   {
@@ -953,6 +1037,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   PGresult *qres = sql_exec("SELECT object, data FROM defaults WHERE addr=$1 AND object>=$2 AND object<=$3", 1, 3, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   
@@ -1083,6 +1168,9 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
       }
     }
   }
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -1092,6 +1180,8 @@ int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsign
   const char *params[3];
   int cntParams;
   int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<3; cntParams++)
   {
@@ -1105,6 +1195,7 @@ int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsign
   PGresult *qres = sql_exec("SELECT object, func FROM node_config WHERE addr=$1 AND object>=$2 AND object<=$3", 1, 3, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   
@@ -1139,6 +1230,9 @@ int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsign
     }
   }
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1;
 }
 
@@ -1147,6 +1241,8 @@ int db_update_rack_organization(unsigned char slot_nr, unsigned long int addr, u
   char str[4][32];
   const char *params[4];
   int cntParams;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<4; cntParams++)
   {
@@ -1161,10 +1257,14 @@ int db_update_rack_organization(unsigned char slot_nr, unsigned long int addr, u
   PGresult *qres = sql_exec("UPDATE rack_organization SET MambaNetAddress = $2, InputChannelCount = $3, OutputChannelCount = $4 WHERE SlotNr = $1", 1, 4, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
 
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1; 
 }
 
@@ -1173,6 +1273,8 @@ int db_update_rack_organization_input_ch_cnt(unsigned long int addr, unsigned ch
   char str[2][32];
   const char *params[2];
   int cntParams;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<2; cntParams++)
   {
@@ -1185,9 +1287,13 @@ int db_update_rack_organization_input_ch_cnt(unsigned long int addr, unsigned ch
   PGresult *qres = sql_exec("UPDATE rack_organization SET InputChannelCount=$1 WHERE MambaNetAddress=$2", 1, 2, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1; 
 }
 
@@ -1196,6 +1302,8 @@ int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned c
   char str[2][32];
   const char *params[2];
   int cntParams;
+
+  LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<2; cntParams++)
   {
@@ -1208,20 +1316,28 @@ int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned c
   PGresult *qres = sql_exec("UPDATE rack_organization SET OutputChannelCount=$1 WHERE MambaNetAddress=$2", 1, 2, params);
   if (qres == NULL)
   {
+    LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
   PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
   return 1; 
 }
 
 void db_processnotifies()
 {
+  LOG_DEBUG("[%s] enter", __func__);
   sql_processnotifies(); 
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_close()
 {
+  LOG_DEBUG("[%s] enter", __func__);
   sql_close();
+  LOG_DEBUG("[%s] leave", __func__);
 }
  
  /*
@@ -1273,99 +1389,121 @@ int db_load_engine_functions() {
 
 void db_event_templates_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   //No implementation
   arg = NULL;
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_event_addresses_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   //No implementation
   arg = NULL;
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_event_slot_config_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   db_read_slot_config();
   arg = NULL;
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_event_src_config_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   unsigned short int number;
 
   sscanf(arg, "%hd", &number);
   db_read_src_config(number, number);
 
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_event_module_config_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   unsigned char number;
 
   sscanf(arg, "%c", &number);
   db_read_module_config(number, number);
 
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_event_buss_config_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   unsigned char number;
 
   sscanf(arg, "%c", &number);
   db_read_buss_config(number, number);
 
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_event_monitor_buss_config_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   unsigned char number;
 
   sscanf(arg, "%c", &number);
   db_read_monitor_buss_config(number, number);
 
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_event_extern_src_config_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   unsigned char number;
 
   sscanf(arg, "%c", &number);
   db_read_extern_src_config(number, number);
 
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_event_talkback_config_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   unsigned char number;
 
   sscanf(arg, "%c", &number);
   db_read_talkback_config(number, number);
 
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_event_global_config_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   db_read_global_config();
 
   arg = NULL;
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
 
 void db_event_dest_config_changed(char myself, char *arg)
 {
+  LOG_DEBUG("[%s] enter", __func__);
   unsigned short int number;
 
   sscanf(arg, "%hd", &number);
   db_read_dest_config(number, number);
 
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
 }
