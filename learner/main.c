@@ -322,9 +322,11 @@ int mObjectInformationResponse(struct mbn_handler *m, struct mbn_message *msg, u
     minmax(str[14], nfo->ActuatorType, nfo->ActuatorDefault);
   }
 
+  sql_lock(1);
   sql_exec("INSERT INTO templates (man_id, prod_id, firm_major, number, description, services, sensor_type, sensor_size,\
     sensor_min, sensor_max, actuator_type, actuator_size, actuator_min, actuator_max, actuator_def)\
     VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)", 0, 15, params);
+  sql_lock(0);
 
   return 0;
   m++;
