@@ -62,14 +62,22 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION defaults_changed() RETURNS trigger AS $$
 BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('defaults_changed', NEW.addr);
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('defaults_changed', OLD.addr::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('defaults_changed', NEW.addr::text);
+  END IF;
   RETURN NULL;
 END
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION node_config_changed() RETURNS trigger AS $$
 BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('node_config_changed', NEW.addr);
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('node_config_changed', OLD.addr::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('node_config_changed', NEW.addr::text);
+  END IF;
   RETURN NULL;
 END
 $$ LANGUAGE plpgsql;

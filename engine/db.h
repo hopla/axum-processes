@@ -47,6 +47,6 @@ void db_event_talkback_config_changed(char myself, char *arg);
 void db_event_global_config_changed(char myself, char *arg);
 void db_event_dest_config_changed(char myself, char *arg);
 void db_event_node_config_changed(char myself, char *arg);
-void db_event_defaults_changed(char myself, char *arg);
+//void db_event_defaults_changed(char myself, char *arg);
 
 #endif

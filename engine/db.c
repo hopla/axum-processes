@@ -20,6 +20,8 @@ extern float Position2dB[1024];
 extern DEFAULT_NODE_OBJECTS_STRUCT AxumEngineDefaultObjects;
 extern int AxumApplicationAndDSPInitialized;
 
+extern PGconn *sql_conn;
+
 struct sql_notify notifies[] = {
   { (char *)"templates_changed",            db_event_templates_changed},
   { (char *)"addresses_changed",            db_event_addresses_changed},
@@ -33,13 +35,13 @@ struct sql_notify notifies[] = {
   { (char *)"global_config_changed",        db_event_global_config_changed},
   { (char *)"dest_config_changed",          db_event_dest_config_changed},
   { (char *)"node_config_changed",          db_event_node_config_changed},
-  { (char *)"defaults_changed",             db_event_defaults_changed},
+//  { (char *)"defaults_changed",             db_event_defaults_changed},
 };
 
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 13, notifies);
+  sql_open(dbstr, 12, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1041,7 +1043,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
-  
+
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     bool sent_default_data = false;
@@ -1181,8 +1183,30 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   const char *params[3];
   int cntParams;
   int cntRow;
+  unsigned int cntObject;
+  unsigned char *ObjectConfigChanged;
 
   LOG_DEBUG("[%s] enter", __func__);
+
+  if (first_obj>last_obj)
+  {
+    unsigned short int dummy = first_obj;
+    first_obj = last_obj;
+    last_obj = dummy;
+  }
+  //to make sure we can do 'if <'
+  last_obj++;
+
+  ObjectConfigChanged = new unsigned char[last_obj-first_obj];
+  if (ObjectConfigChanged == NULL)
+  {
+    log_write("[%s] Error no memory available for array ObjectConfigChanged", __func__);
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  log_write("sizeof(ObjectConfigChanged) = %d", last_obj-first_obj);
+
+  memset(ObjectConfigChanged, 0, last_obj-first_obj);
 
   for (cntParams=0; cntParams<3; cntParams++)
   {
@@ -1196,8 +1220,18 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   PGresult *qres = sql_exec("SELECT object, func FROM node_config WHERE addr=$1 AND object>=$2 AND object<=$3", 1, 3, params);
   if (qres == NULL)
   {
+    delete[] ObjectConfigChanged;
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
+  }
+
+  for (cntObject=first_obj; cntObject<last_obj; cntObject++)
+  {
+    if (node_info->SensorReceiveFunction[cntObject-1024].FunctionNr != ((unsigned int)-1))
+    {
+      node_info->SensorReceiveFunction[cntObject-1024].FunctionNr = -1;
+      ObjectConfigChanged[cntObject-1024] = 1;
+    }
   }
   
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -1218,19 +1252,33 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
       if (node_info->SensorReceiveFunction != NULL)
       { 
         SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[ObjectNr-1024];
-        
-        sensor_rcv_func->FunctionNr = TotalFunctionNr;
-        sensor_rcv_func->LastChangedTime = 0;
-        sensor_rcv_func->PreviousLastChangedTime = 0;
-        sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-      }
-      MakeObjectListPerFunction(TotalFunctionNr);
 
-      CheckObjectsToSent(TotalFunctionNr, node_info->MambaNetAddress);
+        if (sensor_rcv_func->FunctionNr != TotalFunctionNr)
+        {
+          sensor_rcv_func->FunctionNr = TotalFunctionNr;
+          sensor_rcv_func->LastChangedTime = 0;
+          sensor_rcv_func->PreviousLastChangedTime = 0;
+          sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
+          ObjectConfigChanged[cntObject] = 1;
+        }
+      }
+    }
+  }
+
+  for (cntObject=first_obj; cntObject<last_obj; cntObject++)
+  {
+    if (ObjectConfigChanged[cntObject-1024])
+    {
+      SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[cntObject-1024];
+      MakeObjectListPerFunction(sensor_rcv_func->FunctionNr);
+
+      CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
       delay_ms(1);
     }
   }
   PQclear(qres);
+
+  delete[] ObjectConfigChanged;
 
   LOG_DEBUG("[%s] leave", __func__);
 
@@ -1377,6 +1425,7 @@ int db_empty_slot_config()
 void db_processnotifies()
 {
   LOG_DEBUG("[%s] enter", __func__);
+  PQconsumeInput(sql_conn);  
   sql_processnotifies(); 
   LOG_DEBUG("[%s] leave", __func__);
 }
@@ -1576,6 +1625,7 @@ void db_event_node_config_changed(char myself, char *arg)
   LOG_DEBUG("[%s] leave", __func__);
 }
 
+/*
 void db_event_defaults_changed(char myself, char *arg)
 {
   LOG_DEBUG("[%s] enter", __func__);
@@ -1595,4 +1645,4 @@ void db_event_defaults_changed(char myself, char *arg)
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
 }
-
+*/

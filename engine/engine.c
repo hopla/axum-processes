@@ -896,9 +896,11 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   SendMambaNetMessage(OnlineNodeInformation[IndexOfSender].MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, 1, TransmitBuffer, cntTransmitBuffer);
                 }
 
-                db_read_node_defaults(&OnlineNodeInformation[IndexOfSender], 0, OnlineNodeInformation[IndexOfSender].NumberOfCustomObjects+1024);
-                
-                db_read_node_config(&OnlineNodeInformation[IndexOfSender], 0, OnlineNodeInformation[IndexOfSender].NumberOfCustomObjects+1024);
+                if (OnlineNodeInformation[IndexOfSender].NumberOfCustomObjects>0)
+                {
+                  db_read_node_defaults(&OnlineNodeInformation[IndexOfSender], 1024, OnlineNodeInformation[IndexOfSender].NumberOfCustomObjects+1024);
+                  db_read_node_config(&OnlineNodeInformation[IndexOfSender], 1024, OnlineNodeInformation[IndexOfSender].NumberOfCustomObjects+1024);
+                }
               }
             }
             if ((ObjectNr>=1024) && (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr))
