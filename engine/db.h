@@ -20,9 +20,11 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info);
 int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj);
 int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj);
 
-int db_update_rack_organization(unsigned char slot_nr, unsigned long int addr, unsigned char input_ch_cnt, unsigned char output_ch_cnt);
-int db_update_rack_organization_input_ch_cnt(unsigned long int addr, unsigned char cnt); 
-int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned char cnt);
+int db_insert_slot_config(unsigned char slot_nr, unsigned long int addr, unsigned char input_ch_cnt, unsigned char output_ch_cnt);
+int db_delete_slot_config(unsigned char slot_nr);
+int db_update_slot_config_input_ch_cnt(unsigned long int addr, unsigned char cnt); 
+int db_update_slot_config_output_ch_cnt(unsigned long int addr, unsigned char cnt);
+int db_empty_slot_config();
 
 void db_lock(int);
 void db_processnotifies();

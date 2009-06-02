@@ -50,6 +50,14 @@
 #include <sys/sem.h>
 #include <sys/msg.h>
 
+#define LOG_DEBUG_ENABLED
+
+#ifdef LOG_DEBUG_ENABLED
+  #define LOG_DEBUG(...) log_write(__VA_ARGS__)
+#else
+  #define LOG_DEBUG(...)
+#endif
+
 #define DEFAULT_GTW_PATH    "/tmp/axum-gateway"
 #define DEFAULT_ETH_DEV     "eth0"
 #define DEFAULT_DB_STR      "dbname='axum' user='axum'"
@@ -363,7 +371,7 @@ int main(int argc, char *argv[])
   log_write("Parameters in DSPs initialized");
 
   //Slot configuration, former rack organization
-  db_read_slot_config();
+  db_empty_slot_config();
   
   //Source configuration
   db_read_src_config(1, 1280);
@@ -428,7 +436,7 @@ int main(int argc, char *argv[])
     OnlineNodeInformation[cntAddress].ObjectInformation       = NULL;
   }
 
-  log_write("using network interface device: %s [%02X:%02X:%02X:%02X:%02X:%02X].\n", NetworkInterface, LocalMACAddress[0], LocalMACAddress[1], LocalMACAddress[2], LocalMACAddress[3], LocalMACAddress[4], LocalMACAddress[5]);
+  log_write("using network interface device: %s [%02X:%02X:%02X:%02X:%02X:%02X]", NetworkInterface, LocalMACAddress[0], LocalMACAddress[1], LocalMACAddress[2], LocalMACAddress[3], LocalMACAddress[4], LocalMACAddress[5]);
 
   //Only one interface may be open for a application
   if (NetworkFileDescriptor>=0)
@@ -804,7 +812,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
         else if (Data[2] == MAMBANET_OBJECT_ACTION_SENSOR_DATA_RESPONSE)
         {   // sensor response
           char TempString[256] = "";
-          printf("Sensor response, ObjectNr %d", ObjectNr);
 
           switch (Data[3])
           {
@@ -822,8 +829,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
             if (ObjectNr == 7)
             {   //Major firmware id
-              printf("FirmwareMajorRevision: %d, Do check node information\n", Data[5]);
-
               if ((OnlineNodeInformation[IndexOfSender].ManufacturerID == 0x0001) &&
                   (OnlineNodeInformation[IndexOfSender].ProductID == 0x000C) &&
                   (Data[5] == 1))
@@ -870,7 +875,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   }
                 }
               }
-
               if (OnlineNodeInformation[IndexOfSender].FirmwareMajorRevision == -1)
               {
                 OnlineNodeInformation[IndexOfSender].FirmwareMajorRevision = Data[5];
@@ -882,8 +886,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   unsigned char TransmitBuffer[64];
                   unsigned char cntTransmitBuffer;
                   unsigned int ObjectNumber = OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr;
-
-                  printf("Get Slot Number @ ObjectNr: %d\n", ObjectNumber);
 
                   cntTransmitBuffer = 0;
                   TransmitBuffer[cntTransmitBuffer++] = (ObjectNumber>>8)&0xFF;
@@ -901,8 +903,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
             }
             if ((ObjectNr>=1024) && (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr))
             {
-              printf("0x%08lX @Slot: %d\n", FromAddress, Data[5]+1);
-
               for (int cntSlot=0; cntSlot<42; cntSlot++)
               {
                 if (cntSlot != Data[5])
@@ -911,13 +911,14 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   {
                     AxumData.RackOrganization[cntSlot] = 0;
 
-                    db_update_rack_organization(cntSlot, 0, 0, 0);
+                    db_delete_slot_config(cntSlot);
                   }
                 }
               }
               AxumData.RackOrganization[Data[5]] = FromAddress;
 
-              db_update_rack_organization(Data[5], FromAddress, 0, 0); 
+              log_write("0x%08lX found at slot: %d", FromAddress, Data[5]+1);
+              db_insert_slot_config(Data[5], FromAddress, 0, 0); 
               
               //if a slot number exists, check the number of input/output channels.
               if (OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr != -1)
@@ -1009,11 +1010,11 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
               printf("Check for Channel Counts: %d, %d\n", OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr, OnlineNodeInformation[IndexOfSender].OutputChannelCountObjectNr);
               if (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr)
               {
-                db_update_rack_organization_input_ch_cnt(FromAddress, Data[5]); 
+                db_update_slot_config_input_ch_cnt(FromAddress, Data[5]); 
               }
               else if (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].OutputChannelCountObjectNr)
               {
-                db_update_rack_organization_output_ch_cnt(FromAddress, Data[5]);
+                db_update_slot_config_output_ch_cnt(FromAddress, Data[5]);
               }
             }
           }

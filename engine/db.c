@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LOG_DEBUG_ENABLED
+//#define LOG_DEBUG_ENABLED
 
 #ifdef LOG_DEBUG_ENABLED
   #define LOG_DEBUG(...) log_write(__VA_ARGS__)
@@ -1235,7 +1235,7 @@ int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsign
   return 1;
 }
 
-int db_update_rack_organization(unsigned char slot_nr, unsigned long int addr, unsigned char input_ch_cnt, unsigned char output_ch_cnt)
+int db_insert_slot_config(unsigned char slot_nr, unsigned long int addr, unsigned char input_ch_cnt, unsigned char output_ch_cnt)
 {
   char str[4][32];
   const char *params[4];
@@ -1250,10 +1250,39 @@ int db_update_rack_organization(unsigned char slot_nr, unsigned long int addr, u
 
   sprintf(str[0], "%d", slot_nr+1);
   sprintf(str[1], "%ld", addr);
-  sprintf(str[2], "%c", input_ch_cnt);
-  sprintf(str[3], "%c", output_ch_cnt);
+  sprintf(str[2], "%d", input_ch_cnt);
+  sprintf(str[3], "%d", output_ch_cnt);
+
+  PGresult *qres = sql_exec("INSERT INTO slot_config (slot_nr, addr, input_ch_cnt, output_ch_cnt) VALUES ($1, $2, $3, $4)", 0, 4, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1; 
+}
+
+int db_delete_slot_config(unsigned char slot_nr)
+{
+  char str[1][32];
+  const char *params[1];
+  int cntParams;
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<1; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%d", slot_nr+1);
   
-  PGresult *qres = sql_exec("UPDATE rack_organization SET MambaNetAddress = $2, InputChannelCount = $3, OutputChannelCount = $4 WHERE SlotNr = $1", 1, 4, params);
+  PGresult *qres = sql_exec("DELETE FROM slot_config WHERE slot_nr=$1", 0, 1, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -1267,7 +1296,7 @@ int db_update_rack_organization(unsigned char slot_nr, unsigned long int addr, u
   return 1; 
 }
 
-int db_update_rack_organization_input_ch_cnt(unsigned long int addr, unsigned char cnt)
+int db_update_slot_config_input_ch_cnt(unsigned long int addr, unsigned char cnt)
 {
   char str[2][32];
   const char *params[2];
@@ -1280,10 +1309,10 @@ int db_update_rack_organization_input_ch_cnt(unsigned long int addr, unsigned ch
     params[cntParams] = (const char *)str[cntParams];
   }
 
-  sprintf(str[0], "%c", cnt);
+  sprintf(str[0], "%d", cnt);
   sprintf(str[1], "%ld", addr);
 
-  PGresult *qres = sql_exec("UPDATE rack_organization SET InputChannelCount=$1 WHERE MambaNetAddress=$2", 1, 2, params);
+  PGresult *qres = sql_exec("UPDATE slot_config SET input_ch_cnt=$1 WHERE addr=$2", 0, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -1296,7 +1325,7 @@ int db_update_rack_organization_input_ch_cnt(unsigned long int addr, unsigned ch
   return 1; 
 }
 
-int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned char cnt)
+int db_update_slot_config_output_ch_cnt(unsigned long int addr, unsigned char cnt)
 {
   char str[2][32];
   const char *params[2];
@@ -1309,15 +1338,33 @@ int db_update_rack_organization_output_ch_cnt(unsigned long int addr, unsigned c
     params[cntParams] = (const char *)str[cntParams];
   }
 
-  sprintf(str[0], "%c", cnt);
+  sprintf(str[0], "%d", cnt);
   sprintf(str[1], "%ld", addr);
 
-  PGresult *qres = sql_exec("UPDATE rack_organization SET OutputChannelCount=$1 WHERE MambaNetAddress=$2", 1, 2, params);
+  PGresult *qres = sql_exec("UPDATE slot_config SET output_ch_cnt=$1 WHERE addr=$2", 0, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1; 
+}
+
+int db_empty_slot_config()
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  PGresult *qres = sql_exec("TRUNCATE slot_config", 0, 0, NULL); 
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  LOG_DEBUG("[%s] leave", __func__);
+  
   PQclear(qres);
 
   LOG_DEBUG("[%s] leave", __func__);
