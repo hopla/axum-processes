@@ -507,20 +507,6 @@ int main(int argc, char *argv[])
               //PACKET_MULTICAST
               //PACKET_OTHERHOST:
               //PACKET_OUTGOING:
-//                              if (fromAddress.sll_pkttype == PACKET_OUTGOING)
-//                              {
-//                                  //Check MAC-Address, if not addressed to us drop it.
-//                                  printf("%02X:%02X:%02X:%02X:%02X:%02X\r\n", fromAddress.sll_addr[0], fromAddress.sll_addr[1], fromAddress.sll_addr[2], fromAddress.sll_addr[3], fromAddress.sll_addr[4], fromAddress.sll_addr[5]);
-//                                  if  (   !(  (LocalMACAddress[0] == fromAddress.sll_addr[0]) &&
-//                                              (LocalMACAddress[1] == fromAddress.sll_addr[1]) &&
-//                                              (LocalMACAddress[2] == fromAddress.sll_addr[2]) &&
-//                                              (LocalMACAddress[3] == fromAddress.sll_addr[3]) &&
-//                                              (LocalMACAddress[4] == fromAddress.sll_addr[4]) &&
-//                                              (LocalMACAddress[5] == fromAddress.sll_addr[5])))
-//                                  {
-//                                      AllowedToProcess = 0;
-//                                  }
-//                              }
 
               if (AllowedToProcess)
               {
@@ -556,90 +542,6 @@ int main(int argc, char *argv[])
             }
             numRead = recvfrom(NetworkFileDescriptor, buffer, 2048, 0, (struct sockaddr *)&fromAddress, (socklen_t *)&fromlen);
           }
-
-          /*                      unsigned int cnt;
-                                  unsigned char buffer[2048];
-                                 int numRead = recv(NetworkFileDescriptor, buffer, 2048, 0);
-                                  while (numRead>0)
-                                  {   // bytes received, check the ethernet protocol.
-                                      if ((buffer[12] == 0x88) && (buffer[13] == 0x20))
-                                      {
-                                          char AllowedToProcess = 1;
-                                          unsigned char SourceHardwareAddress[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-                                          SourceHardwareAddress[0] = buffer[6];
-                                          SourceHardwareAddress[1] = buffer[7];
-                                          SourceHardwareAddress[2] = buffer[8];
-                                          SourceHardwareAddress[3] = buffer[9];
-                                          SourceHardwareAddress[4] = buffer[10];
-                                          SourceHardwareAddress[5] = buffer[11];
-                                          //If MambaNet over ethernet
-                                          //eventual you can check the type of a packet
-                                          //fromAddress.sll_pkttype:
-                                          //PACKET_HOST
-                                          //PACKET_BROADCAST
-                                          //PACKET_MULTICAST
-                                          //PACKET_OTHERHOST:
-                                          //PACKET_OUTGOING:
-          //                              if (fromAddress.sll_pkttype == PACKET_OUTGOING)
-          //                              {
-          //                                  //Check MAC-Address, if not addressed to us drop it.
-          //                                  printf("%02X:%02X:%02X:%02X:%02X:%02X\r\n", fromAddress.sll_addr[0], fromAddress.sll_addr[1], fromAddress.sll_addr[2], fromAddress.sll_addr[3], fromAddress.sll_addr[4], fromAddress.sll_addr[5]);
-          //                                  if  (   !(  (LocalMACAddress[0] == fromAddress.sll_addr[0]) &&
-          //                                              (LocalMACAddress[1] == fromAddress.sll_addr[1]) &&
-          //                                              (LocalMACAddress[2] == fromAddress.sll_addr[2]) &&
-          //                                              (LocalMACAddress[3] == fromAddress.sll_addr[3]) &&
-          //                                              (LocalMACAddress[4] == fromAddress.sll_addr[4]) &&
-          //                                              (LocalMACAddress[5] == fromAddress.sll_addr[5])))
-          //                                  {
-          //                                      AllowedToProcess = 0;
-          //                                  }
-          //                              }
-
-                                          if (AllowedToProcess)
-                                          {
-                                              for (cnt=14; cnt<numRead; cnt++)
-                                              {
-                                                  EthernetReceiveBuffer[cntEthernetReceiveBufferTop++] = buffer[cnt];
-                                                  if (cntEthernetReceiveBufferTop>4095)
-                                                  {
-                                                      cntEthernetReceiveBufferTop = 0;
-                                                  }
-                                              }
-
-                                              while (cntEthernetReceiveBufferTop != cntEthernetReceiveBufferBottom)
-                                              {
-                                                  unsigned char ReadedByte = EthernetReceiveBuffer[cntEthernetReceiveBufferBottom++];
-                                                  if (cntEthernetReceiveBufferBottom>4095)
-                                                  {
-                                                      cntEthernetReceiveBufferBottom = 0;
-                                                  }
-
-                                                  switch (ReadedByte)
-                                                  {
-                                                      case 0x80:
-                                                      case 0x81:
-                                                      {
-                                                          cntEthernetMambaNetDecodeBuffer = 0;
-                                                          EthernetMambaNetDecodeBuffer[cntEthernetMambaNetDecodeBuffer++] = ReadedByte;
-                                                      }
-                                                      break;
-                                                      case 0xFF:
-                                                      {
-                                                          EthernetMambaNetDecodeBuffer[cntEthernetMambaNetDecodeBuffer++] = ReadedByte;
-                                                          DecodeRawMambaNetMessage(EthernetMambaNetDecodeBuffer, cntEthernetMambaNetDecodeBuffer, EthernetInterfaceIndex, SourceHardwareAddress);
-                                                      }
-                                                      break;
-                                                      default:
-                                                      {
-                                                          EthernetMambaNetDecodeBuffer[cntEthernetMambaNetDecodeBuffer++] = ReadedByte;
-                                                      }
-                                                      break;
-                                                  }
-                                              }
-                                          }
-                                      }
-                                     numRead = recv(NetworkFileDescriptor, buffer, 2048, 0);
-                                  }*/
         }
         //Test if the database notifier generated an event.
         if (FD_ISSET(DatabaseFileDescriptor, &readfs))
@@ -1275,176 +1177,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   {
                     SetNewSource(ModuleNr, CurrentSource, 0, 1);
                   }
-                  /*
-                                                  int OldSource = AxumData.ModuleData[ModuleNr].Source;
-                                                  if (OldSource != CurrentSource)
-                                                  {
-                                                    int OldSourceActive = 0;
-                                                    if (AxumData.ModuleData[ModuleNr].On)
-                                                    {
-                                                      if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
-                                                      {
-                                                        OldSourceActive = 1;
-                                                      }
-                                                    }
-
-                                                    if (!OldSourceActive)
-                                                    {
-                                                      AxumData.ModuleData[ModuleNr].Source = CurrentSource;
-                                                                      SetAxum_ModuleSource(ModuleNr);
-                                                      SetAxum_ModuleMixMinus(ModuleNr);
-
-                                                      unsigned int FunctionNrToSent = (ModuleNr<<12);
-                                                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-                                                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-                                                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-                                                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-
-                                                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_A);
-                                                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_B);
-
-                                                      if (OldSource != 0)
-                                                      {
-                                                        FunctionNrToSent = 0x05000000 | ((OldSource-1)<<12);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
-                                                      }
-
-                                                      if (CurrentSource != 0)
-                                                      {
-                                                        FunctionNrToSent = 0x05000000 | ((CurrentSource-1)<<12);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON_OFF);
-                                                          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
-                                                      }
-
-                                                      for (int cntModule=0; cntModule<128; cntModule++)
-                                                      {
-                                                        if (AxumData.ModuleData[cntModule].Source == AxumData.ModuleData[ModuleNr].Source)
-                                                        {
-                                                            FunctionNrToSent = (cntModule<<12);
-                                                            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE);
-                                                            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_PHANTOM);
-                                                            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_PAD);
-                                                            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
-                                                            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_GAIN_LEVEL_RESET);
-                                                            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_START);
-                                                            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_STOP);
-                                                            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_START_STOP);
-                                                            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_ALERT);
-                                                        }
-                                                      }
-                                                    }
-                                                  }*/
                 }
                 break;
                 case MODULE_FUNCTION_SOURCE_PHANTOM:
@@ -2424,8 +2156,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       TempData |= Data[5+cntByte];
                     }
 
-                    //AxumData.ModuleData[ModuleNr].FaderLevel = (((float)118*TempData)/(SensorDataMaximal-SensorDataMinimal))-96;
-
                     int Position = (TempData*1023)/(SensorDataMaximal-SensorDataMinimal);
                     float dB = Position2dB[Position];
                     dB -= AxumData.LevelReserve;
@@ -2741,145 +2471,6 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                     }
 
                     SetBussOnOff(ModuleNr, BussNr, TempData);
-                    /*SetAxum_BussLevels(ModuleNr);
-                    SetAxum_ModuleMixMinus(ModuleNr);
-
-                    CheckObjectsToSent(SensorReceiveFunctionNumber);
-
-                    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-
-                    if (AxumData.ModuleData[ModuleNr].Source != 0)
-                    {
-                    int SourceNr = AxumData.ModuleData[ModuleNr].Source-1;
-                    FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-                    CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
-                    CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
-                    CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
-                    }
-
-                    //Do interlock
-                    if ((AxumData.BussMasterData[BussNr].Interlock) && (TempData))
-                    {
-                    for (int cntModule=0; cntModule<128; cntModule++)
-                    {
-                    if (ModuleNr != cntModule)
-                    {
-                        if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
-                    {
-                    AxumData.ModuleData[cntModule].Buss[BussNr].On = 0;
-
-                            SetAxum_BussLevels(cntModule);
-                    SetAxum_ModuleMixMinus(cntModule);
-
-                        unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
-                    CheckObjectsToSent(FunctionNrToSent | FunctionNr);
-
-                        FunctionNrToSent = ((cntModule<<12)&0xFFF000);
-                        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-                        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-                          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-                          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-
-                    if (AxumData.ModuleData[cntModule].Source != 0)
-                    {
-                    int SourceNr = AxumData.ModuleData[cntModule].Source-1;
-                    FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-                          CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
-                          CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
-                          CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
-                    }
-                    }
-                    }
-                    }
-                    }
-
-                    //Check buss reset
-                    FunctionNrToSent = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_BUSS_1_2_RESET+(BussNr*(GLOBAL_FUNCTION_BUSS_3_4_RESET-GLOBAL_FUNCTION_BUSS_1_2_RESET))));
-
-                    //Check active buss auto switching
-                    char BussActive = 0;
-                    for (int cntModule=0; cntModule<128; cntModule++)
-                    {
-                    if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
-                    {
-                    BussActive = 1;
-                    }
-                    }
-
-                    //Set data, make functional after eventual monitor mute is set
-                    for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
-                    {
-                    if (AxumData.Monitor[cntMonitorBuss].AutoSwitchingBuss[BussNr])
-                    {
-                    AxumData.Monitor[cntMonitorBuss].Buss[BussNr] = BussActive;
-                    }
-                    }
-
-                    for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
-                    {
-                    unsigned int MonitorBussActive = 0;
-                    int cntBuss;
-                    for (cntBuss=0; cntBuss<16; cntBuss++)
-                    {
-                    if (AxumData.Monitor[cntMonitorBuss].Buss[cntBuss])
-                    {
-                    MonitorBussActive = 1;
-                    }
-                    }
-                    int cntExt;
-                    for (cntExt=0; cntExt<8; cntExt++)
-                    {
-                    if (AxumData.Monitor[cntMonitorBuss].Ext[cntExt])
-                    {
-                    MonitorBussActive = 1;
-                    }
-                    }
-
-                    if (!MonitorBussActive)
-                    {
-                    int DefaultSelection = AxumData.Monitor[cntMonitorBuss].DefaultSelection;
-                    if (DefaultSelection<16)
-                    {
-                    int BussNr = DefaultSelection;
-                    AxumData.Monitor[cntMonitorBuss].Buss[BussNr] = 1;
-
-                    unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
-                    CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+BussNr));
-                    }
-                    else if (DefaultSelection<24)
-                    {
-                    int ExtNr = DefaultSelection-16;
-                    AxumData.Monitor[cntMonitorBuss].Buss[ExtNr] = 1;
-
-                    unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
-                    CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
-                    }
-                    }
-                    }
-
-                    if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-                    (AxumData.BussMasterData[BussNr].PreModuleLevel))
-                    {
-                    printf("Have to check monitor routing and muting\n");
-                    DoAxum_ModulePreStatusChanged(BussNr);
-                    }
-
-                    //make functional because the eventual monitor mute is already set
-                    for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
-                    {
-                    if (AxumData.Monitor[cntMonitorBuss].AutoSwitchingBuss[BussNr])
-                    {
-                     SetAxum_MonitorBuss(cntMonitorBuss);
-
-                    unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
-                    CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+BussNr));
-                    }
-                    }*/
                   }
                 }
                 break;
@@ -3749,13 +3340,11 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         TempData |= Data[5+cntByte];
                       }
 
-///                                                AxumData.Monitor[MonitorBussNr].PhonesLevel = (((float)118*TempData)/1023)-96;
                       float SensorDataMinimal = OnlineNodeInformation[IndexOfSender].ObjectInformation[ObjectNr-1024].SensorDataMinimal;
                       float SensorDataMaximal = OnlineNodeInformation[IndexOfSender].ObjectInformation[ObjectNr-1024].SensorDataMaximal;
 
                       int Position = (TempData*1023)/(SensorDataMaximal-SensorDataMinimal);
                       float dB = Position2dB[Position];
-                      //dB -= AxumData.LevelReserve;
                       dB +=10; //20dB reserve
 
                       AxumData.Monitor[MonitorBussNr].PhonesLevel = dB;
@@ -3906,13 +3495,11 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         TempData |= Data[5+cntByte];
                       }
 
-                      //AxumData.Monitor[MonitorBussNr].SpeakerLevel = (((float)118*TempData)/1023)-96;
                       float SensorDataMinimal = OnlineNodeInformation[IndexOfSender].ObjectInformation[ObjectNr-1024].SensorDataMinimal;
                       float SensorDataMaximal = OnlineNodeInformation[IndexOfSender].ObjectInformation[ObjectNr-1024].SensorDataMaximal;
 
                       int Position = (TempData*1023)/(SensorDataMaximal-SensorDataMinimal);
                       float dB = Position2dB[Position];
-                      //dB -= AxumData.LevelReserve;
                       dB += 10;
 
                       AxumData.Monitor[MonitorBussNr].SpeakerLevel = dB;
@@ -6282,57 +5869,6 @@ void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned cha
   }
 }
 
-/*
-void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16])
-{
-    unsigned char TransmitBuffer[2048];
-
-    TransmitBuffer[0] = hardware_address[0];
-    TransmitBuffer[1] = hardware_address[1];
-    TransmitBuffer[2] = hardware_address[2];
-    TransmitBuffer[3] = hardware_address[3];
-    TransmitBuffer[4] = hardware_address[4];
-    TransmitBuffer[5] = hardware_address[5];
-    TransmitBuffer[6] = LocalMACAddress[0];
-    TransmitBuffer[7] = LocalMACAddress[1];
-    TransmitBuffer[8] = LocalMACAddress[2];
-    TransmitBuffer[9] = LocalMACAddress[3];
-    TransmitBuffer[10] = LocalMACAddress[4];
-    TransmitBuffer[11] = LocalMACAddress[5];
-    TransmitBuffer[12] = 0x88;
-    TransmitBuffer[13] = 0x20;
-    for (int cntBuffer=0; cntBuffer<buffersize; cntBuffer++)
-    {
-        TransmitBuffer[14+cntBuffer] = buffer[cntBuffer];
-    }
-
-    if (NetworkFileDescriptor >= 0)
-    {
-        int CharactersSend = 0;
-        unsigned char cntRetry=0;
-
-        while ((CharactersSend < buffersize) && (cntRetry<10))
-        {
-            CharactersSend = send(NetworkFileDescriptor, TransmitBuffer, 14+buffersize, 0);
-
-            if (cntRetry != 0)
-            {
-                printf("[NET] Retry %d\r\n", cntRetry++);
-            }
-        }
-
-        if (CharactersSend < 0)
-        {
-            perror("cannot send data.\r\n");
-        }
-        else
-        {
-//          TRACE_PACKETS("[ETHERNET] SendMambaMessage(0x%08X, 0x%08X, 0x%04X, %d)", ToAddress, FromAddress, MessageType, DataLength);
-        }
-    }
-}
-*/
-
 void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigned long int FromAddress, unsigned char Ack, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress)
 {
   unsigned char MessageProcessed = 0;
@@ -6419,7 +5955,6 @@ void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *Address
       TransmitBuffer[cntTransmitBuffer++] = ObjectNumber&0xFF;
       TransmitBuffer[cntTransmitBuffer++] = MAMBANET_OBJECT_ACTION_GET_SENSOR_DATA;
       TransmitBuffer[cntTransmitBuffer++] = NO_DATA_DATATYPE;
-      //TransmitBuffer[cntTransmitBuffer++] = 0;
 
       SendMambaNetMessage(AddressTable[Index].MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, 1, TransmitBuffer, cntTransmitBuffer);
       printf("Get firmware 0x%08lX\n", AddressTable[Index].MambaNetAddress);
@@ -6639,7 +6174,6 @@ void Timer100HzDone(int Value)
         TransmitBuffer[cntTransmitBuffer++] = ObjectNumber&0xFF;
         TransmitBuffer[cntTransmitBuffer++] = MAMBANET_OBJECT_ACTION_GET_SENSOR_DATA;
         TransmitBuffer[cntTransmitBuffer++] = NO_DATA_DATATYPE;
-        //TransmitBuffer[cntTransmitBuffer++] = 0;
 
         SendMambaNetMessage(OnlineNodeInformation[cntIndex].MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, 1, TransmitBuffer, cntTransmitBuffer);
         printf("timer: Get firmware 0x%08X\n", OnlineNodeInformation[cntIndex].MambaNetAddress);
@@ -7075,14 +6609,7 @@ bool ProgramEEPROM(int fd)
 
 float CalculateEQ(float *Coefficients, float Gain, int Frequency, float Bandwidth, float Slope, FilterType Type)
 {
-  //TODO: Add your source code here
-  // [0] = CoefficientZero0;
-  // [1] = CoefficientZero1;
-  // [2] = CoefficientZero2;
-  // [3] = CoefficientPole0;
-  // [4] = CoefficientPole1;
-  // [5] = CoefficientPole2;
-  double a0=1, a1=0 ,a2=0;    //<- Zero coefficients
+  double a0=1, a1=0 ,a2=0; //<- Zero coefficients
   double b0=1, b1=0 ,b2=0; //<- Pole coefficients
   unsigned char Zolzer = 1;
   unsigned int FSamplerate = AxumData.Samplerate;
@@ -7462,7 +6989,6 @@ void SetDSPCard_Interpolation()
   Value = *((float *)PtrDSP_HPID[2]);
   printf("VUReleaseFactor[2] %g\n", Value);
 
-//  float PhaseRelease = ((0.0002*AxumData.Samplerate)/48000);
   float PhaseRelease = ((0.0002*48000)/AxumData.Samplerate);
   *PtrDSP_HPIA[2] = SummingDSPPhaseRelease;
   *((float *)PtrDSP_HPID[2]) = PhaseRelease;
@@ -7497,10 +7023,7 @@ void SetDSPCard_EQ(unsigned int DSPCardChannelNr, unsigned char BandNr)
     a2 = Coefs[2]/Coefs[3];
     b1 = Coefs[4]/Coefs[3];
     b2 = Coefs[5]/Coefs[3];
-
-    //printf("%f | %f | %f | %f | %f | %f\n", Coefs[0], Coefs[1], Coefs[2], Coefs[3], Coefs[4], Coefs[5]);
   }
-//  printf("DSPCardNr: %d, DSPNr: %d, DSPChannelNr: %d\n", DSPCardNr, DSPNr, DSPChannelNr);
 
   //MuteX implementation?
   if (DSPCardNr == 0)
@@ -7941,14 +7464,9 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
 void SetAxum_ModuleSource(unsigned int ModuleNr)
 {
   unsigned int FirstDSPChannelNr = ModuleNr<<1;
-//    unsigned char DSPCardNr = FirstDSPChannelNr/64;
   unsigned char DSPCardNr = (FirstDSPChannelNr/64);
-  //unsigned char DSPNr = (FirstDSPChannelNr%64)/32;
-  //unsigned char DSPChannelNr = FirstDSPChannelNr%32;
 
   unsigned int ToChannelNr = 480+(DSPCardNr*5*32)+FirstDSPChannelNr%64;
-
-//    printf("Card:%d, DSPNr:%d, DSPChannelNr:%d ToCh:%d Source:%d,%d\n", DSPCardNr, DSPNr, DSPChannelNr, ToChannelNr, AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].Input[0], AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].Input[1]);
 
   if (AxumData.ModuleData[ModuleNr].Source == 0)
   {
@@ -8007,7 +7525,6 @@ void SetAxum_ModuleSource(unsigned int ModuleNr)
 void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
 {
   unsigned char DSPCardNr = MonitorBussPerFourNr;
-//    unsigned char DSPCardNr = 4-MonitorBussPerFourNr;
 
   //four stereo busses
   for (int cntExt=0; cntExt<4; cntExt++)
@@ -8073,7 +7590,6 @@ void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
 void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
 {
   unsigned int FirstDSPChannelNr = ModuleNr<<1;
-//   unsigned char DSPCardNr = FirstDSPChannelNr/64;
   unsigned char DSPCardNr = (FirstDSPChannelNr/64);
   unsigned char DSPCardChannelNr = FirstDSPChannelNr%64;
 
@@ -8132,14 +7648,9 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
 void SetAxum_ModuleInsertSource(unsigned int ModuleNr)
 {
   unsigned int FirstDSPChannelNr = ModuleNr<<1;
-//    unsigned char DSPCardNr = FirstDSPChannelNr/64;
   unsigned char DSPCardNr = (FirstDSPChannelNr/64);
-  //unsigned char DSPNr = (FirstDSPChannelNr%64)/32;
-  //unsigned char DSPChannelNr = FirstDSPChannelNr%32;
 
   unsigned int ToChannelNr = 480+64+(DSPCardNr*5*32)+FirstDSPChannelNr%64;
-
-//    printf("Card:%d, DSPNr:%d, DSPChannelNr:%d ToCh:%d Source:%d,%d\n", DSPCardNr, DSPNr, DSPChannelNr, ToChannelNr, AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].Input[0], AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].Input[1]);
 
   if (AxumData.ModuleData[ModuleNr].InsertSource == 0)
   {
@@ -8403,7 +7914,6 @@ void SetAxum_TalkbackSource(unsigned int TalkbackNr)
     printf("Talkback src: Module insert out %d\n", ModuleNr+1);
 
     unsigned char DSPCardNr = (ModuleNr/32);
-    //unsigned char DSPNr = (ModuleNr%32)/16;
 
     unsigned int FirstDSPChannelNr = 481+(DSPCardNr*5*32);
 
@@ -8415,7 +7925,6 @@ void SetAxum_TalkbackSource(unsigned int TalkbackNr)
     int SourceNr = AxumData.Talkback[TalkbackNr].Source-161;
     printf("Talkback src: Source %d\n", SourceNr);
 
-    //Get slot number from MambaNet Address
     //Get slot number from MambaNet Address
     FromChannel1 = 0;
     FromChannel2 = 0;
@@ -8472,59 +7981,6 @@ void SetAxum_TalkbackSource(unsigned int TalkbackNr)
   }
 }
 
-
-
-/*void SetModule_Switch(unsigned int SwitchNr, unsigned int ModuleNr, unsigned char State)
-{
-    int ObjectNr = 1040+(SwitchNr*4)+ModuleNr-FirstModuleOnSurface;
-    unsigned char TransmitData[32];
-
-    TransmitData[0] = (ObjectNr>>8)&0xFF;
-    TransmitData[1] = ObjectNr&0xFF;
-    TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
-    TransmitData[3] = STATE_DATATYPE;
-    TransmitData[4] = 1;
-    TransmitData[5] = State&0xFF;
-
-    SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 6);
-}
-
-void SetCRM_Switch(unsigned int SwitchNr, unsigned char State)
-{
-    int ObjectNr = 1024+SwitchNr;
-    unsigned char TransmitData[32];
-
-    TransmitData[0] = (ObjectNr>>8)&0xFF;
-    TransmitData[1] = ObjectNr&0xFF;
-    TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
-    TransmitData[3] = STATE_DATATYPE;
-    TransmitData[4] = 1;
-    TransmitData[5] = State&0xFF;
-
-    SendMambaNetMessage(0x00000034, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 6);
-}
-
-void SetCRM_LEDBar(char NrOfLEDs)
-{
-    int ObjectNr = 1080;
-    unsigned char TransmitData[32];
-    unsigned char Mask = 0x00;
-
-    for (char cntBit=0; cntBit<NrOfLEDs; cntBit++)
-    {
-        Mask |= 0x01<<cntBit;
-    }
-
-    TransmitData[0] = (ObjectNr>>8)&0xFF;
-    TransmitData[1] = ObjectNr&0xFF;
-    TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
-    TransmitData[3] = BIT_STRING_DATATYPE;
-    TransmitData[4] = 1;
-    TransmitData[5] = Mask;
-
-    SendMambaNetMessage(0x00000034, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 6);
-}*/
-
 void SetAxum_BussMasterLevels()
 {
   for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
@@ -8562,155 +8018,6 @@ void SetDSP_BussMasterLevels()
     }
   }
 }
-
-/*
-void SetCRM()
-{
-    for (int cntSwitch=0; cntSwitch<16; cntSwitch++)
-    {
-        if (cntSwitch == AxumData.Control1Mode)
-        {
-            SetCRM_Switch(cntSwitch, 1);
-        }
-        else
-        {
-            SetCRM_Switch(cntSwitch, 0);
-        }
-    }
-
-    for (int cntSwitch=0; cntSwitch<6; cntSwitch++)
-    {
-//        if (cntSwitch == AxumData.MasterControl1Mode)
-//        {
-//            SetCRM_Switch(16+cntSwitch, 1);
-//        }
-//        else
-        {
-            SetCRM_Switch(16+cntSwitch, 0);
-        }
-    }
-
-    float *BussMasterLevel = NULL;
-    switch (AxumData.MasterControl1Mode)
-    {
-        case 0:
-        { //Prog master level
-            BussMasterLevel = &AxumData.ProgMasterLevel;
-        }
-        break;
-        case 1:
-        { //Sub master level
-            BussMasterLevel = &AxumData.SubMasterLevel;
-        }
-        break;
-        case 2:
-        { //CUE master level
-            BussMasterLevel = &AxumData.CUEMasterLevel;
-        }
-        break;
-        case 3:
-        { //Comm master level
-            BussMasterLevel = &AxumData.CommMasterLevel;
-        }
-        break;
-        case 4:
-        { //Aux 1 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[0];
-        }
-        break;
-        case 5:
-        { //Aux 2 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[1];
-        }
-        break;
-        case 6:
-        { //Aux 3 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[2];
-        }
-        break;
-        case 7:
-        { //Aux 4 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[3];
-        }
-        break;
-        case 8:
-        { //Aux 5 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[4];
-        }
-        break;
-        case 9:
-        { //Aux 6 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[5];
-        }
-        break;
-        case 10:
-        { //Aux 7 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[6];
-        }
-        break;
-        case 11:
-        { //Aux 8 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[7];
-        }
-        break;
-        case 12:
-        { //Aux 9 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[8];
-        }
-        break;
-        case 13:
-        { //Aux 10 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[9];
-        }
-        break;
-        case 14:
-        { //Aux 11 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[10];
-        }
-        break;
-        case 15:
-        { //Aux 12 master level
-            BussMasterLevel = &AxumData.AuxMasterLevel[11];
-        }
-        break;
-    }
-
-    if (BussMasterLevel != NULL)
-    {
-        SetCRM_LEDBar((*BussMasterLevel+140)/(150/7));
-    }
-
-    SetCRM_Switch(22, AxumData.Monitor[0].Prog);
-    SetCRM_Switch(23, AxumData.Monitor[0].Sub);
-    SetCRM_Switch(24, AxumData.Monitor[0].Aux[0]);
-    SetCRM_Switch(25, AxumData.Monitor[0].Aux[1]);
-    SetCRM_Switch(26, AxumData.Monitor[0].Aux[2]);
-    SetCRM_Switch(27, AxumData.Monitor[0].Aux[3]);
-    SetCRM_Switch(28, AxumData.Monitor[0].Comm);
-    SetCRM_Switch(29, AxumData.Monitor[0].CUE);
-    SetCRM_Switch(30, AxumData.Monitor[0].Ext[0]);
-    SetCRM_Switch(31, AxumData.Monitor[0].Ext[1]);
-    SetCRM_Switch(32, AxumData.Monitor[0].Ext[2]);
-    SetCRM_Switch(33, AxumData.Monitor[0].Ext[3]);
-    SetCRM_Switch(34, AxumData.Monitor[0].Dim);
-    SetCRM_Switch(35, AxumData.Monitor[0].Mute);
-
-    SetCRM_Switch(36, AxumData.Monitor[1].Prog);
-    SetCRM_Switch(37, AxumData.Monitor[1].Sub);
-    SetCRM_Switch(38, AxumData.Monitor[1].Aux[0]);
-    SetCRM_Switch(39, AxumData.Monitor[1].Aux[1]);
-    SetCRM_Switch(40, AxumData.Monitor[1].Aux[2]);
-    SetCRM_Switch(41, AxumData.Monitor[1].Aux[3]);
-    SetCRM_Switch(42, AxumData.Monitor[1].Comm);
-    SetCRM_Switch(43, AxumData.Monitor[1].CUE);
-    SetCRM_Switch(44, AxumData.Monitor[1].Ext[0]);
-    SetCRM_Switch(45, AxumData.Monitor[1].Ext[1]);
-    SetCRM_Switch(46, AxumData.Monitor[1].Ext[2]);
-    SetCRM_Switch(47, AxumData.Monitor[1].Ext[3]);
-    SetCRM_Switch(48, AxumData.Monitor[1].Dim);
-    SetCRM_Switch(49, AxumData.Monitor[1].Mute);
-}
-*/
 
 void SetDSPCard_MonitorChannel(unsigned int MonitorChannelNr)
 {
@@ -8877,52 +8184,10 @@ void SetAxum_MonitorBuss(unsigned int MonitorBussNr)
 
   DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].MasterLevel = 0;
   DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].MasterLevel = 0;
-  /*    if (AxumData.Monitor[MonitorBussNr].Dim)
-      {
-          DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].MasterLevel -= 10;
-          DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].MasterLevel -= 10;
-      }
-
-      if (AxumData.Monitor[MonitorBussNr].Mute)
-      {
-          DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].MasterLevel = -140;
-          DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].MasterLevel = -140;
-      }*/
 
   SetDSPCard_MonitorChannel(DSPCardMonitorChannelNr+0);
   SetDSPCard_MonitorChannel(DSPCardMonitorChannelNr+1);
 }
-
-/*void SetModule_LEDs(unsigned int LEDNr, unsigned int ModuleNr, unsigned char State)
-{
-    int ObjectNr = 1072+(LEDNr*4)+ModuleNr-FirstModuleOnSurface;
-    unsigned char TransmitData[32];
-
-    TransmitData[0] = (ObjectNr>>8)&0xFF;
-    TransmitData[1] = ObjectNr&0xFF;
-    TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
-    TransmitData[3] = STATE_DATATYPE;
-    TransmitData[4] = 1;
-    TransmitData[5] = State&0xFF;
-
-    SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 6);
-}
-
-void SetModule_Fader(unsigned int ModuleNr, unsigned int Position)
-{
-    int ObjectNr = 1104+ModuleNr-FirstModuleOnSurface;
-    unsigned char TransmitData[32];
-
-    TransmitData[0] = (ObjectNr>>8)&0xFF;
-    TransmitData[1] = ObjectNr&0xFF;
-    TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
-    TransmitData[3] = UNSIGNED_INTEGER_DATATYPE;
-    TransmitData[4] = 2;
-    TransmitData[5] = (Position>>8)&0xFF;
-    TransmitData[6] = Position&0xFF;
-
-    SendMambaNetMessage(0x00000002, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 7);
-}*/
 
 void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress)
 {
@@ -8967,11 +8232,6 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
   }
   while (WalkAxumFunctionInformationStruct != NULL)
   {
-//    if (((SensorReceiveFunctionNumber&0xFF000FFF) != 0x0200001e) && ((SensorReceiveFunctionNumber&0xFF000FFF) != 0x0200001f))
-//    {
-//      printf("0x%08lx connected to 0x%08lx, ObjectNr: %d\n", SensorReceiveFunctionNumber, WalkAxumFunctionInformationStruct->MambaNetAddress, WalkAxumFunctionInformationStruct->ObjectNr);
-//    }
-
     if ((MambaNetAddress == 0x00000000) || (MambaNetAddress == WalkAxumFunctionInformationStruct->MambaNetAddress))
     {
       SentDataToObject(SensorReceiveFunctionNumber, WalkAxumFunctionInformationStruct->MambaNetAddress, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ActuatorDataType, WalkAxumFunctionInformationStruct->ActuatorDataSize, WalkAxumFunctionInformationStruct->ActuatorDataMinimal, WalkAxumFunctionInformationStruct->ActuatorDataMaximal);
@@ -12247,10 +11507,7 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
           {
             if (OnlineNodeInformation[cntNodes].ObjectInformation[cntObject].ActuatorDataType != NO_DATA_DATATYPE)
             {
-//              printf("0x%08lx connected to 0x%08lx, ObjectNr: %d - %s\n", SensorReceiveFunctionNumber, OnlineNodeInformation[cntNodes].MambaNetAddress, 1024+cntObject, OnlineNodeInformation[cntNodes].ObjectInformation[cntObject].Description);
-
               AXUM_FUNCTION_INFORMATION_STRUCT *AxumFunctionInformationStructToAdd = new AXUM_FUNCTION_INFORMATION_STRUCT;
-//              printf("0x%08lx pointer\n", AxumFunctionInformationStructToAdd);
 
               AxumFunctionInformationStructToAdd->MambaNetAddress = OnlineNodeInformation[cntNodes].MambaNetAddress;
               AxumFunctionInformationStructToAdd->ObjectNr = 1024+cntObject;
@@ -12338,7 +11595,6 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
   }
   while (WalkAxumFunctionInformationStruct != NULL)
   {
-//    printf("0x%08lx connected to 0x%08lx, ObjectNr: %d\n", SensorReceiveFunctionNumber, WalkAxumFunctionInformationStruct->MambaNetAddress, WalkAxumFunctionInformationStruct->ObjectNr);
     WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
   }
 }
@@ -12761,176 +12017,6 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         }
       }
       SetNewSource(ModuleNr, CurrentSource, 0, 0);
-      /*
-              int OldSource = AxumData.ModuleData[ModuleNr].Source;
-              if (OldSource != CurrentSource)
-              {
-                int OldSourceActive = 0;
-                if (AxumData.ModuleData[ModuleNr].On)
-                {
-                  if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
-                  {
-                    OldSourceActive = 1;
-                  }
-                }
-
-                if (!OldSourceActive)
-                {
-                  AxumData.ModuleData[ModuleNr].Source = CurrentSource;
-
-                      SetAxum_ModuleSource(ModuleNr);
-                  SetAxum_ModuleMixMinus(ModuleNr);
-
-                  unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-
-                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_A);
-                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_B);
-
-                  if (OldSource != 0)
-                  {
-                    FunctionNrToSent = 0x05000000 | ((OldSource-1)<<12);
-                    CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
-                    CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON_OFF);          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
-                  }
-
-                  if (CurrentSource != 0)
-                  {
-                    FunctionNrToSent = 0x05000000 | ((CurrentSource-1)<<12);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
-                    CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON_OFF);          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
-                      CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
-                  }
-
-                  for (int cntModule=0; cntModule<128; cntModule++)
-                  {
-                    if (AxumData.ModuleData[cntModule].Source == AxumData.ModuleData[ModuleNr].Source)
-                    {
-                      FunctionNrToSent = (cntModule<<12);
-                      CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE);
-                        CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_PHANTOM);
-                        CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_PAD);
-                        CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
-                        CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_GAIN_LEVEL_RESET);
-                        CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_START);
-                        CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_STOP);
-                        CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_START_STOP);
-                        CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_ALERT);
-                    }
-                  }
-                }
-              }*/
     }
     break;
     case MODULE_CONTROL_MODE_SOURCE_GAIN:
@@ -12948,9 +12034,6 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         {
           AxumData.SourceData[SourceNr].Gain = 75;
         }
-        //CONTROL 1 sent later in loop...
-        //CheckObjectsToSent(SensorReceiveFunctionNumber);
-
 
         unsigned int DisplayFunctionNr = 0x05000000 | (SourceNr<<12);
         CheckObjectsToSent(DisplayFunctionNr+SOURCE_FUNCTION_GAIN);
