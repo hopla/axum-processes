@@ -31,13 +31,15 @@ struct sql_notify notifies[] = {
   { (char *)"extern_src_config_changed",    db_event_extern_src_config_changed},
   { (char *)"talkback_config_changed",      db_event_talkback_config_changed},
   { (char *)"global_config_changed",        db_event_global_config_changed},
-  { (char *)"dest_config_changed",          db_event_dest_config_changed}
+  { (char *)"dest_config_changed",          db_event_dest_config_changed},
+  { (char *)"node_config_changed",          db_event_node_config_changed},
+  { (char *)"defaults_changed",             db_event_defaults_changed},
 };
 
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 11, notifies);
+  sql_open(dbstr, 13, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1173,7 +1175,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   return 1;
 }
 
-int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj)
+int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj)
 {
   char str[3][32];
   const char *params[3];
@@ -1553,3 +1555,44 @@ void db_event_dest_config_changed(char myself, char *arg)
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
 }
+
+void db_event_node_config_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned long int addr;
+
+  sscanf(arg, "%ld", &addr);
+
+  ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(addr);
+  if (node_info == NULL)
+  {
+    log_write("No node information for address: %08lX", addr);
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return;
+  }
+  db_read_node_config(node_info, 1024, node_info->NumberOfCustomObjects+1024);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_defaults_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned long int addr;
+
+  sscanf(arg, "%ld", &addr);
+
+  ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(addr);
+  if (node_info == NULL)
+  {
+    log_write("No node information for address: %08lX", addr);
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return;
+  }
+  db_read_node_defaults(node_info, 1024, node_info->NumberOfCustomObjects+1024);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+

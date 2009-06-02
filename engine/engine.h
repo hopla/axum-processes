@@ -439,4 +439,6 @@ void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock);
 
 void initialize_axum_data_struct();
 
+ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr);
+
 #endif

@@ -898,7 +898,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                 db_read_node_defaults(&OnlineNodeInformation[IndexOfSender], 0, OnlineNodeInformation[IndexOfSender].NumberOfCustomObjects+1024);
                 
-                db_read_node_configuration(&OnlineNodeInformation[IndexOfSender], 0, OnlineNodeInformation[IndexOfSender].NumberOfCustomObjects+1024);
+                db_read_node_config(&OnlineNodeInformation[IndexOfSender], 0, OnlineNodeInformation[IndexOfSender].NumberOfCustomObjects+1024);
               }
             }
             if ((ObjectNr>=1024) && (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr))
@@ -1034,7 +1034,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
             float DataMaximal = OnlineNodeInformation[IndexOfSender].ObjectInformation[ObjectNr-1024].SensorDataMaximal;
 
             char TempString[256] = "";
-            printf("Sensor changed, ObjectNr %d -> Sensor receive function %08x", ObjectNr, SensorReceiveFunctionNumber);
+            log_write("Sensor changed, ObjectNr %d -> Sensor receive function %08x", ObjectNr, SensorReceiveFunctionNumber);
 
             if (SensorReceiveFunctionNumber != -1)
             {
@@ -11842,7 +11842,7 @@ void *thread(void *vargp)
 
       if (NodeConfigurationChanged)
       {
-        //Do refresh configuration table
+        //Do refresh configjration table
         int IndexOfSender = -1;
         for (unsigned int cntIndex=0; cntIndex<AddressTableCount; cntIndex++)
         {
@@ -11859,7 +11859,7 @@ void *thread(void *vargp)
           OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].LastChangedTime = 0;
           OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].PreviousLastChangedTime = 0;
           OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-          db_read_node_configuration(&OnlineNodeInformation[IndexOfSender], ObjectNr, ObjectNr);
+          db_read_node_config(&OnlineNodeInformation[IndexOfSender], ObjectNr, ObjectNr);
 
           if (OldFunction >= 0)
           {
@@ -14693,4 +14693,27 @@ void initialize_axum_data_struct()
     AxumData.ExternSource[cntMonitor].Ext[6] = 0;
     AxumData.ExternSource[cntMonitor].Ext[7] = 0;
   }
+}
+
+ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
+{
+  unsigned int Index;
+  unsigned char cntIndex;
+  unsigned char NodeFound;
+
+  NodeFound = 0;
+  for (cntIndex=0; cntIndex<AddressTableCount; cntIndex++)
+  {
+    if (OnlineNodeInformation[cntIndex].MambaNetAddress == addr)
+    {
+      Index = cntIndex;
+      NodeFound = 1;
+    }
+  }
+
+  if (!NodeFound == -1)
+  {
+    return NULL;
+  }
+  return &OnlineNodeInformation[Index];
 }

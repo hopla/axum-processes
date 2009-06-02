@@ -18,7 +18,7 @@ int db_read_db_to_position();
 
 int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info);
 int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj);
-int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj);
+int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj);
 
 int db_insert_slot_config(unsigned char slot_nr, unsigned long int addr, unsigned char input_ch_cnt, unsigned char output_ch_cnt);
 int db_delete_slot_config(unsigned char slot_nr);
@@ -46,5 +46,7 @@ void db_event_extern_src_config_changed(char myself, char *arg);
 void db_event_talkback_config_changed(char myself, char *arg);
 void db_event_global_config_changed(char myself, char *arg);
 void db_event_dest_config_changed(char myself, char *arg);
+void db_event_node_config_changed(char myself, char *arg);
+void db_event_defaults_changed(char myself, char *arg);
 
 #endif
