@@ -531,7 +531,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
 
     AXUM_BUSS_MASTER_DATA_STRUCT *BussMasterData = &AxumData.BussMasterData[number-1];
     
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", BussMasterData->Label);
+    strncpy(BussMasterData->Label, PQgetvalue(qres, cntRow, cntField++), 32);
     BussMasterData->PreModuleOn = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->PreModuleBalance = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -603,8 +603,9 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_MONITOR_OUTPUT_DATA_STRUCT *MonitorData = &AxumData.Monitor[number-1];
-    
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", MonitorData->Label);
+  
+    strncpy(MonitorData->Label, PQgetvalue(qres, cntRow, cntField++), 32);
+
     MonitorData->Interlock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &MonitorData->DefaultSelection); 
     for (cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
@@ -863,7 +864,7 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
 
     AXUM_DESTINATION_DATA_STRUCT *DestinationData = &AxumData.DestinationData[number-1];
     
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", DestinationData->DestinationName);
+    strncpy(DestinationData->DestinationName, PQgetvalue(qres, cntRow, cntField++), 32); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[0].MambaNetAddress); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[0].SubChannel); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[1].MambaNetAddress); 
