@@ -124,11 +124,11 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
 
     AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[number-1];
     
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", SourceData->SourceName);
+    strncpy(SourceData->SourceName, PQgetvalue(qres, cntRow, cntField++), 32);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[0].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->InputData[0].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->InputData[0].SubChannel); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[1].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &SourceData->InputData[1].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->InputData[1].SubChannel); 
     SourceData->Phantom = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Pad = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Gain = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -363,11 +363,11 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->EQBand[cntEQ].Frequency);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Bandwidth);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Slope);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", (char *)&ModuleData->EQBand[cntEQ].Type);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&ModuleData->EQBand[cntEQ].Type);
     }
     ModuleData->EQOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     ModuleData->EQOnOffB = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ModuleData->Dynamics);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &ModuleData->Dynamics);
     ModuleData->DynamicsOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     ModuleData->DynamicsOnOffB = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->FaderLevel);
@@ -602,7 +602,7 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
     
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", MonitorData->Label);
     MonitorData->Interlock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &MonitorData->DefaultSelection); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &MonitorData->DefaultSelection); 
     for (cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
     { 
       MonitorData->AutoSwitchingBuss[cntMonitorBuss] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -861,9 +861,9 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
     
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", DestinationData->DestinationName);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[0].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &DestinationData->OutputData[0].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[0].SubChannel); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[1].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &DestinationData->OutputData[1].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[1].SubChannel); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DestinationData->Level); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->Source); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->MixMinusSource); 
@@ -944,7 +944,6 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
   sprintf(str[0], "%hd", node_info->ManufacturerID);
   sprintf(str[1], "%hd", node_info->ProductID);
   sprintf(str[2], "%hd", node_info->FirmwareMajorRevision);
-  LOG_DEBUG("man_id:%s, prod_id:%s, firm_major:%s", str[0], str[1], str[2]); 
   PGresult *qres = sql_exec("SELECT COUNT(*) FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
   if (qres == NULL)
   {
@@ -984,14 +983,14 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
     {
       OBJECT_INFORMATION_STRUCT *obj_info = &node_info->ObjectInformation[ObjectNr-1024];
 
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%s", &obj_info->Description[0]);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &obj_info->Services);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &obj_info->SensorDataType);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &obj_info->SensorDataSize);
+      strncpy(&obj_info->Description[0], PQgetvalue(qres, cntRow, cntField++), 32);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->Services);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->SensorDataType);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->SensorDataSize);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->SensorDataMinimal);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->SensorDataMaximal);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &obj_info->ActuatorDataType);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &obj_info->ActuatorDataSize);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->ActuatorDataType);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->ActuatorDataSize);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataMinimal);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataMaximal);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataDefault);
@@ -1208,7 +1207,7 @@ int db_read_node_configuration(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsign
     unsigned int TotalFunctionNr = -1;
 
     sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
-    sscanf(PQgetvalue(qres, cntRow, 1), "(%c,%hd,%hd)", &type, &seq_nr, &func_nr);
+    sscanf(PQgetvalue(qres, cntRow, 1), "(%hhd,%hd,%hd)", &type, &seq_nr, &func_nr);
     TotalFunctionNr = (((unsigned int)type)<<24)|(((unsigned int)seq_nr)<<12)|func_nr;
     
 
@@ -1431,7 +1430,7 @@ void db_event_module_config_changed(char myself, char *arg)
   LOG_DEBUG("[%s] enter", __func__);
   unsigned char number;
 
-  sscanf(arg, "%c", &number);
+  sscanf(arg, "%hhd", &number);
   db_read_module_config(number, number);
 
   myself=0;
@@ -1443,7 +1442,7 @@ void db_event_buss_config_changed(char myself, char *arg)
   LOG_DEBUG("[%s] enter", __func__);
   unsigned char number;
 
-  sscanf(arg, "%c", &number);
+  sscanf(arg, "%hhd", &number);
   db_read_buss_config(number, number);
 
   myself=0;
@@ -1455,7 +1454,7 @@ void db_event_monitor_buss_config_changed(char myself, char *arg)
   LOG_DEBUG("[%s] enter", __func__);
   unsigned char number;
 
-  sscanf(arg, "%c", &number);
+  sscanf(arg, "%hhd", &number);
   db_read_monitor_buss_config(number, number);
 
   myself=0;
@@ -1467,7 +1466,7 @@ void db_event_extern_src_config_changed(char myself, char *arg)
   LOG_DEBUG("[%s] enter", __func__);
   unsigned char number;
 
-  sscanf(arg, "%c", &number);
+  sscanf(arg, "%hhd", &number);
   db_read_extern_src_config(number, number);
 
   myself=0;
@@ -1479,7 +1478,7 @@ void db_event_talkback_config_changed(char myself, char *arg)
   LOG_DEBUG("[%s] enter", __func__);
   unsigned char number;
 
-  sscanf(arg, "%c", &number);
+  sscanf(arg, "%hhd", &number);
   db_read_talkback_config(number, number);
 
   myself=0;
