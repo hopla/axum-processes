@@ -296,6 +296,7 @@ typedef struct
   float       ActuatorDataMinimal;
   float       ActuatorDataMaximal;
   float       ActuatorDataDefault;
+  float       CurrentActuatorDataDefault;
 
   unsigned int  AxumFunctionNr;
 } OBJECT_INFORMATION_STRUCT;

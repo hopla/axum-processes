@@ -35,13 +35,13 @@ struct sql_notify notifies[] = {
   { (char *)"global_config_changed",        db_event_global_config_changed},
   { (char *)"dest_config_changed",          db_event_dest_config_changed},
   { (char *)"node_config_changed",          db_event_node_config_changed},
-//  { (char *)"defaults_changed",             db_event_defaults_changed},
+  { (char *)"defaults_changed",             db_event_defaults_changed},
 };
 
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 12, notifies);
+  sql_open(dbstr, 13, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -931,7 +931,7 @@ int db_read_db_to_position()
   return 1;
 }
 
-int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
+int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned char in_powerup_state)
 {
   char str[3][32];
   const char *params[3];
@@ -999,6 +999,10 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataMinimal);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataMaximal);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataDefault);
+      if (in_powerup_state)
+      {
+        obj_info->CurrentActuatorDataDefault = obj_info->ActuatorDataDefault; 
+      }
       
       if (strcmp("Slot number", &obj_info->Description[0]) == 0)
       { 
@@ -1047,7 +1051,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
 
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
-    bool sent_default_data = false;
+    bool send_default_data = false;
     unsigned short int ObjectNr = -1;
     sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
 
@@ -1070,13 +1074,13 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             unsigned long int DataValue;
             sscanf(PQgetvalue(qres, cntRow, 0), "(%ld,,,)", &DataValue);
 
-            if (DataValue != obj_info->ActuatorDataDefault)
+            if (obj_info->CurrentActuatorDataDefault != obj_info->ActuatorDataDefault)
             {
               TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
               for (int cntByte=0; cntByte<obj_info->ActuatorDataSize; cntByte++)
               {
                 TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
-                sent_default_data = true;
+                send_default_data = true;
               }
             }            
           }
@@ -1086,14 +1090,15 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             long int DataValue;
             sscanf(PQgetvalue(qres, cntRow, 0), "(%ld,,,)", &DataValue);
 
-            if (DataValue != obj_info->ActuatorDataDefault)
+            if (DataValue != obj_info->CurrentActuatorDataDefault)
             {
               TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
               for (int cntByte=0; cntByte<obj_info->ActuatorDataSize; cntByte++)
               {
                 TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
-                sent_default_data = true;
               }
+              send_default_data = true;
+              obj_info->CurrentActuatorDataDefault = DataValue;
             }            
           }
           break;
@@ -1113,7 +1118,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             {
               TransmitData[cntTransmitData++] = OctetString[cntChar];
             }
-            sent_default_data = true;
+            send_default_data = true;
           }
           break;
           case FLOAT_DATATYPE:
@@ -1121,7 +1126,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             float DataValue;
             sscanf(PQgetvalue(qres, cntRow, 0), "(,%f,,)", &DataValue);
             
-            if (DataValue != obj_info->ActuatorDataDefault)
+            if (DataValue != obj_info->CurrentActuatorDataDefault)
             {
               TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
 
@@ -1129,7 +1134,8 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               {
                 cntTransmitData += cntTransmitData;
               }
-              sent_default_data = true;
+              send_default_data = true;
+              obj_info->CurrentActuatorDataDefault = DataValue;
             }
             break;
             case BIT_STRING_DATATYPE:
@@ -1159,12 +1165,13 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               {
                 TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
               }
-              sent_default_data = true;
+              send_default_data = true;
+              obj_info->CurrentActuatorDataDefault = DataValue;
             }
             break;
           }
           
-          if (sent_default_data)
+          if (send_default_data)
           {
             SendMambaNetMessage(node_info->MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, cntTransmitData);
           } 
@@ -1205,7 +1212,6 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
-  log_write("sizeof(ObjectConfigChanged) = %d", last_obj-first_obj);
 
   memset(ObjectConfigChanged, 0, last_obj-first_obj);
 
@@ -1626,7 +1632,6 @@ void db_event_node_config_changed(char myself, char *arg)
   LOG_DEBUG("[%s] leave", __func__);
 }
 
-/*
 void db_event_defaults_changed(char myself, char *arg)
 {
   LOG_DEBUG("[%s] enter", __func__);
@@ -1646,4 +1651,3 @@ void db_event_defaults_changed(char myself, char *arg)
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
 }
-*/

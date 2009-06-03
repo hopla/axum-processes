@@ -879,7 +879,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
               {
                 OnlineNodeInformation[IndexOfSender].FirmwareMajorRevision = Data[5];
 
-                db_read_template_info(&OnlineNodeInformation[IndexOfSender]);
+                db_read_template_info(&OnlineNodeInformation[IndexOfSender], 1);
 
                 if (OnlineNodeInformation[IndexOfSender].SlotNumberObjectNr != -1)
                 {
