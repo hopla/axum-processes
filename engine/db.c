@@ -130,9 +130,11 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     
     strncpy(SourceData->SourceName, PQgetvalue(qres, cntRow, cntField++), 32);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[0].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->InputData[0].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->InputData[0].SubChannel);
+    SourceData->InputData[0].SubChannel--; 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[1].MambaNetAddress); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->InputData[1].SubChannel); 
+    SourceData->InputData[1].SubChannel--; 
     SourceData->Phantom = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Pad = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Gain = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -866,9 +868,11 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
     
     strncpy(DestinationData->DestinationName, PQgetvalue(qres, cntRow, cntField++), 32); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[0].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[0].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[0].SubChannel);
+    DestinationData->OutputData[0].SubChannel--;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[1].MambaNetAddress); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[1].SubChannel); 
+    DestinationData->OutputData[1].SubChannel--;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DestinationData->Level); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->Source); 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->MixMinusSource); 
