@@ -1,10 +1,15 @@
 include ../Makefile.inc
-OUTPUT=axum-gateway
+OBJECTS+=gateway.o if_scan.o
+HEADERS+=if_scan.h
+TARGET=axum-gateway
 
-all: ${OUTPUT}
+all: ${TARGET}
 
-${OUTPUT}: gateway.c
-	gcc ${CFLAGS} gateway.c ${LFLAGS} -o ${OUTPUT}
+${TARGET}: ${OBJECTS} Makefile
+	gcc ${OBJECTS} ${LFLAGS} -o ${TARGET}
+
+%.o: %.c ${HEADERS} Makefile
+	gcc ${CFLAGS} -c $*.c
 
 clean:
-	rm -f ${OUTPUT}
+	rm -rf ${OBJECTS} ${TARGET}

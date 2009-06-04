@@ -16,6 +16,7 @@
 
 #define MBN_VARARG
 #include "common.h"
+#include "if_scan.h"
 
 #include <stdio.h>
 #include <string.h>
