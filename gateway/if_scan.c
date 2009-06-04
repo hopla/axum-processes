@@ -18,8 +18,58 @@
 #include "mbn.h"
 #include "if_scan.h"
 
-void *(*scan_receive)(void *) = NULL;
-void *(*scan_send)(void *) = NULL;
+#define B250000 0010004
+#ifndef AF_CAN
+# define AF_CAN 29
+#endif
+#ifndef PF_CAN
+# define PF_CAN AF_CAN
+#endif
+
+#define ADDLSTSIZE 1000 /* assume we don't have more than 1000 nodes on one CAN bus */
+#define TXBUFLEN   5000 /* maxumum number of mambanet messages in the send buffer */
+#define TXDELAY    1024 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
+#define HWPARTIMEOUT 10 /* timeout for receiving the hardware parent, in seconds */
+
+struct can_ifaddr;
+
+struct can_queue {
+  int length, canid;
+  unsigned char *buf;
+};
+
+struct can_data {
+  unsigned char tty_mode;
+  int fd;
+  int sock;
+  int ifindex;
+  pthread_t rxthread, txthread;
+  pthread_mutex_t *txmutex;
+  int txstart;
+  struct can_ifaddr *addrs[ADDLSTSIZE];
+  struct can_queue *tx[TXBUFLEN];
+};
+
+struct can_ifaddr {
+  int addr;
+  int seq; /* next sequence ID we should receive */
+  unsigned char buf[MBN_MAX_MESSAGE_SIZE+8]; /* fragmented MambaNet message */
+  struct can_data *lnk; /* so we have access to the addrs list */
+  int lnkindex; /* so we know where in the list we are */
+};
+
+int scan_open_sock(char *ifname, struct can_data *dat, char *err);
+int scan_open_tty(char *ifname, struct can_data *dat, char *err);
+int scan_init(struct mbn_interface *, char *);
+int scan_hwparent(int, unsigned short *, char *);
+void scan_free(struct mbn_interface *);
+void scan_free_addr(void *);
+void *scan_send(void *);
+int scan_transmit(struct mbn_interface *, unsigned char *, int, void *, char *);
+int scan_read(struct can_frame *frame, struct mbn_interface *itf);
+
+void *scan_receive(void *);
+void scan_write(struct can_frame *frame, struct mbn_interface *itf);
 
 struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *parent, char *err) {
   struct mbn_interface *itf;
@@ -36,14 +86,10 @@ struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *paren
   if(dat->tty_mode) {
     if(scan_open_tty(ifname, dat, err))
       error++;
-    scan_receive = scan_tty_receive;
-    scan_send = scan_tty_send;
   }
   else {
     if(scan_open_sock(ifname, dat, err))
       error++;
-    scan_receive = scan_can_receive;
-    scan_send = scan_can_send;
   }
 
   /* wait for hardware parent */
@@ -150,11 +196,6 @@ int scan_init(struct mbn_interface *itf, char *err) {
   struct can_data *dat = (struct can_data *)itf->data;
   int i;
 
-  if ((scan_receive == NULL) && (scan_send == NULL)) {
-    sprintf(err, "scan rcv or send functions are not assigned");
-    return 1;
-  }
-
   dat->txmutex = malloc(sizeof(pthread_mutex_t));
   pthread_mutex_init(dat->txmutex, NULL);  
   if((i = pthread_create(&(dat->rxthread), NULL, scan_receive, (void *)itf)) != 0) {
@@ -233,77 +274,67 @@ void scan_free_addr(void *ptr) {
   free(ptr);
 }
 
-
-void *scan_can_receive(void *ptr) {
-  struct mbn_interface *itf = (struct mbn_interface *)ptr;
+int scan_read(struct can_frame *frame, struct mbn_interface *itf)
+{
   struct can_data *dat = (struct can_data *)itf->data;
-  struct can_frame frame;
-  char err[MBN_ERRSIZE];
   int n, ai, bcast, src, dest, seq;
 
-  while((n = read(dat->sock, &frame, sizeof(struct can_frame))) >= 0 && n == (int)sizeof(struct can_frame)) {
-    /* ignore flags - assume all incoming frames are correct */
-    frame.can_id &= CAN_ERR_MASK;
+  /* ignore flags - assume all incoming frames are correct */
+  frame->can_id &= CAN_ERR_MASK;
 
-    /* parse CAN id */
-    bcast = (frame.can_id>>28) & 0x0001;
-    dest  = (frame.can_id>>16) & 0x0FFF;
-    src   = (frame.can_id>> 4) & 0x0FFF;
-    seq   =  frame.can_id      & 0x000F;
+  /* parse CAN id */
+  bcast = (frame->can_id>>28) & 0x0001;
+  dest  = (frame->can_id>>16) & 0x0FFF;
+  src   = (frame->can_id>> 4) & 0x0FFF;
+  seq   =  frame->can_id      & 0x000F;
 
-    /* ignore if it's not for us */
-    if(!(dest == 1 || (bcast && dest == 0)))
-      continue;
+  /* ignore if it's not for us */
+  if(!(dest == 1 || (bcast && dest == 0)))
+     return 0;
 
-    /* look for existing ifaddr struct */
-    n = -2;
-    for(ai=0;ai<ADDLSTSIZE;ai++) {
-      if(dat->addrs[ai] != NULL && dat->addrs[ai]->addr == src)
-        break;
-      else if(n == -2 && dat->addrs[ai] == NULL)
-        n = ai;
-    }
-    /* not found, create new one */
-    if(ai == ADDLSTSIZE) {
-      if(n == -2)
-        break;
-      dat->addrs[n] = malloc(sizeof(struct can_ifaddr));
-      dat->addrs[n]->lnk = dat;
-      dat->addrs[n]->lnkindex = n;
-      dat->addrs[n]->addr = src;
-      dat->addrs[n]->seq = 0;
-      ai = n;
-    }
-
-    /* check sequence ID */
-    if(seq > 15 || dat->addrs[ai]->seq != seq) {
-      printf("Incorrect sequence ID (%d == %d)\n", seq, dat->addrs[ai]->seq);
-      continue;
-    }
-
-    /* fill buffer */
-    memcpy((void *)&(dat->addrs[ai]->buf[seq*8]), (void *)frame.data, 8);
-
-    /* check for completeness of the message */
-    for(n=0;n<8;n++)
-      if(frame.data[n] == 0xFF)
-        break;
-    if(n == 8) {
-      dat->addrs[ai]->seq++;
-    } else {
-      dat->addrs[ai]->seq = 0;
-      mbnProcessRawMessage(itf, dat->addrs[ai]->buf, seq*8+n+1, (void *)dat->addrs[ai]);
-    }
+  /* look for existing ifaddr struct */
+  n = -2;
+  for(ai=0;ai<ADDLSTSIZE;ai++) {
+    if(dat->addrs[ai] != NULL && dat->addrs[ai]->addr == src)
+      break;
+    else if(n == -2 && dat->addrs[ai] == NULL)
+      n = ai;
+  }
+  /* not found, create new one */
+  if(ai == ADDLSTSIZE) {
+    if(n == -2)
+      return 1;
+    dat->addrs[n] = malloc(sizeof(struct can_ifaddr));
+    dat->addrs[n]->lnk = dat;
+    dat->addrs[n]->lnkindex = n;
+    dat->addrs[n]->addr = src;
+    dat->addrs[n]->seq = 0;
+    ai = n;
   }
 
-  sprintf(err, "Read from CAN failed: %s",
-    n == -1 ? strerror(errno) : n == -2 ? "Too many nodes on the bus" : "Incorrect CAN frame size");
-  mbnInterfaceReadError(itf, err);
-  return NULL;
+  /* check sequence ID */
+  if(seq > 15 || dat->addrs[ai]->seq != seq) {
+    printf("Incorrect sequence ID (%d == %d)\n", seq, dat->addrs[ai]->seq);
+    return 0;
+  }
+
+  /* fill buffer */
+  memcpy((void *)&(dat->addrs[ai]->buf[seq*8]), (void *)frame->data, 8);
+
+  /* check for completeness of the message */
+  for(n=0;n<8;n++)
+    if(frame->data[n] == 0xFF)
+      break;
+  if(n == 8) {
+    dat->addrs[ai]->seq++;
+  } else {
+    dat->addrs[ai]->seq = 0;
+    mbnProcessRawMessage(itf, dat->addrs[ai]->buf, seq*8+n+1, (void *)dat->addrs[ai]);
+  }
+  return 0;
 }
 
-
-void *scan_can_send(void *ptr) {
+void *scan_send(void *ptr) {
   struct mbn_interface *itf = (struct mbn_interface *)ptr;
   struct can_data *dat = (struct can_data *)itf->data;
   struct can_frame frame;
@@ -324,8 +355,8 @@ void *scan_can_send(void *ptr) {
         frame.can_id |= i;
         memset((void *)frame.data, 0, 8);
         memcpy((void *)frame.data, &(q->buf[i*8]), i*8+8 > q->length ? q->length-i*8 : 8);
-        if(write(dat->sock, (void *)&frame, sizeof(struct can_frame)) < (int)sizeof(struct can_frame))
-          fprintf(stderr, "send: %s", strerror(errno));
+
+        scan_write(&frame, itf);
       }
       dat->tx[dat->txstart] = NULL;
       if(++dat->txstart >= TXBUFLEN)
@@ -372,12 +403,38 @@ int scan_transmit(struct mbn_interface *itf, unsigned char *buffer, int length, 
   return 0;
 }
 
-void *scan_tty_receive(void *ptr) {
+/* CAN/TTY send/receive wrapper functions */
+void *scan_receive(void *ptr) {
+  struct mbn_interface *itf = (struct mbn_interface *)ptr;
+  struct can_data *dat = (struct can_data *)itf->data;
+  struct can_frame frame;
+  char err[MBN_ERRSIZE];
+  int n;
+
+  if(dat->tty_mode) {
+    /* TODO: Implement receive code for the TTY */
+  }
+  else {
+    while((n = read(dat->sock, &frame, sizeof(struct can_frame))) >= 0 && n == (int)sizeof(struct can_frame)) {
+      scan_read(&frame, itf);
+    }
+  }
+
+  sprintf(err, "Read from CAN failed: %s",
+    n == -1 ? strerror(errno) : n == -2 ? "Too many nodes on the bus" : "Incorrect CAN frame size");
+  mbnInterfaceReadError(itf, err);
   return NULL;
 }
 
+void scan_write(struct can_frame *frame, struct mbn_interface *itf)
+{
+  struct can_data *dat = (struct can_data *)itf->data;
 
-void *scan_tty_send(void *ptr) {
-  return NULL;
+  if(dat->tty_mode) {
+    /* TODO: Implement transmit code for the TTY */
+  }
+  else {
+    if(write(dat->sock, (void *)&frame, sizeof(struct can_frame)) < (int)sizeof(struct can_frame))
+      fprintf(stderr, "send: %s", strerror(errno));
+  }
 }
-
