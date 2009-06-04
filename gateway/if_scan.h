@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 
+#define B250000 0010004
 #ifndef AF_CAN
 # define AF_CAN 29
 #endif
@@ -23,6 +24,8 @@ struct can_queue {
 };
 
 struct can_data {
+  unsigned char tty_mode;
+  int fd;
   int sock;
   int ifindex;
   pthread_t rxthread, txthread;
@@ -40,13 +43,17 @@ struct can_ifaddr {
   int lnkindex; /* so we know where in the list we are */
 };
 
+int scan_open_sock(char *ifname, struct can_data *dat, char *err);
+int scan_open_tty(char *ifname, struct can_data *dat, char *err);
 int scan_init(struct mbn_interface *, char *);
 int scan_hwparent(int, unsigned short *, char *);
 void scan_free(struct mbn_interface *);
 void scan_free_addr(void *);
-void *scan_receive(void *);
-void *scan_send(void *);
+void *scan_can_receive(void *);
+void *scan_can_send(void *);
 int scan_transmit(struct mbn_interface *, unsigned char *, int, void *, char *);
+void *scan_tty_receive(void *);
+void *scan_tty_send(void *);
 
 struct mbn_interface * MBN_EXPORT mbnCANOpen(char *, unsigned short *, char *);
 

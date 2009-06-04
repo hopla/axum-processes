@@ -327,7 +327,7 @@ void init(int argc, char **argv, char *upath) {
       /* can interface */
       case 'c':
         if(strlen(optarg) > 49) {
-          fprintf(stderr, "CAN interface name too long\n");
+          fprintf(stderr, "CAN interface/TTY device name too long\n");
           exit(1);
         }
         strcpy(ican, optarg);
@@ -382,7 +382,7 @@ void init(int argc, char **argv, char *upath) {
       default:
         fprintf(stderr, "Usage: %s [-v] [-c dev] [-e dev] [-t port] [-u path] [-d path] [-i id]\n", argv[0]);
         fprintf(stderr, "  -v       Print verbose output to stdout\n");
-        fprintf(stderr, "  -c dev   CAN device\n");
+        fprintf(stderr, "  -c dev   CAN device or TTY device\n");
         fprintf(stderr, "  -e dev   Ethernet device\n");
         fprintf(stderr, "  -t port  TCP port (0 = use default)\n");
         fprintf(stderr, "  -u path  Path to UNIX socket\n");

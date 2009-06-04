@@ -13,39 +13,37 @@
 #include <linux/if_arp.h>
 #include <linux/can.h>
 
+#include <termios.h>
+
 #include "mbn.h"
 #include "if_scan.h"
+
+void *(*scan_receive)(void *) = NULL;
+void *(*scan_send)(void *) = NULL;
 
 struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *parent, char *err) {
   struct mbn_interface *itf;
   struct can_data *dat;
-  struct ifreq ifr;
-  struct sockaddr_can addr;
   int error = 0;
 
   itf = (struct mbn_interface *)calloc(1, sizeof(struct mbn_interface));
   dat = (struct can_data *)calloc(1, sizeof(struct can_data));
 
-  /* create socket */
-  if((dat->sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
-    sprintf(err, "socket(): %s", strerror(errno));
-    error++;
+  if (strchr(ifname,'/') != NULL) {
+    dat->tty_mode = 1;
   }
 
-  /* get interface index */
-  strcpy(ifr.ifr_name, ifname);
-  if(!error && ioctl(dat->sock, SIOCGIFINDEX, &ifr) < 0) {
-    sprintf(err, "Couldn't find can interface: %s", strerror(errno));
-    error++;
-  } else
-    dat->ifindex = ifr.ifr_ifindex;
-
-  /* bind */
-  addr.can_family = AF_CAN;
-  addr.can_ifindex = dat->ifindex;
-  if(!error && bind(dat->sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_can)) < 0) {
-    sprintf(err, "Couldn't bind socket: %s", strerror(errno));
-    error++;
+  if(dat->tty_mode) {
+    if(scan_open_tty(ifname, dat, err))
+      error++;
+    scan_receive = scan_tty_receive;
+    scan_send = scan_tty_send;
+  }
+  else {
+    if(scan_open_sock(ifname, dat, err))
+      error++;
+    scan_receive = scan_can_receive;
+    scan_send = scan_can_send;
   }
 
   /* wait for hardware parent */
@@ -68,13 +66,97 @@ struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *paren
   return itf;
 }
 
+int scan_open_sock(char *ifname, struct can_data *dat, char *err) {
+  struct sockaddr_can addr;
+  struct ifreq ifr;
+
+  /* create socket */
+  if((dat->sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
+    sprintf(err, "socket(): %s", strerror(errno));
+    return 1;
+  }
+
+  /* get interface index */
+  strcpy(ifr.ifr_name, ifname);
+  if(ioctl(dat->sock, SIOCGIFINDEX, &ifr) < 0) {
+    sprintf(err, "Couldn't find can interface: %s", strerror(errno));
+    return 1;
+  } else
+    dat->ifindex = ifr.ifr_ifindex;
+
+  /* bind */
+  addr.can_family = AF_CAN;
+  addr.can_ifindex = dat->ifindex;
+  if(bind(dat->sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_can)) < 0) {
+    sprintf(err, "Couldn't bind socket: %s", strerror(errno));
+    return 1;
+  }
+  return 0;
+}
+
+int scan_open_tty(char *ifname, struct can_data *dat, char *err) {
+  struct termios tio;
+  int fd;
+
+  /* open serial device */
+  dat->fd = open(ifname, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK); 
+  if (dat->fd<0) {
+    sprintf(err, "Couldn't open port: %s", strerror(errno));
+    return 1;
+  }
+  
+  /* set the FNDELAY for this device */
+  if (fcntl(dat->fd, F_SETFL, FNDELAY | O_NONBLOCK) == -1) {
+    sprintf(err, "Couldn't not set FNDELAY: %s", strerror(errno));
+    close(dat->fd);
+    return 1;
+  }
+
+  /* get the attributes */
+  if (tcgetattr(fd, &tio) != 0) {
+    sprintf(err, "Couldn't get attribs: %s", strerror(errno));
+    close(dat->fd);
+    return 1;
+  }
+
+  /* change the atrributes to use a baudrate of 500000 */
+  if (cfsetspeed(&tio, B250000) != 0) {
+    sprintf(err, "could not set baudrate to 250000: %s", strerror(errno));
+    close(dat->fd);
+    return 1;
+  }
+
+  /* Change the atrributes to disable local echo, line processing etc. */
+  tio.c_cflag &= ~CRTSCTS;
+  tio.c_cflag |= (CLOCAL | CREAD);
+  tio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+  tio.c_oflag &= ~OPOST;
+  tio.c_cc[VMIN] = 0;
+  tio.c_cc[VTIME] = 10;
+
+  /* make raw */
+  tio.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+
+  /* set the attributes. */
+  if (tcsetattr(fd, TCSANOW, &tio) != 0) {
+    sprintf(err, "Couldn't set attribs: %s", strerror(errno));
+    close(dat->fd);
+    return 1;
+  }
+  return 0;
+}
 
 int scan_init(struct mbn_interface *itf, char *err) {
   struct can_data *dat = (struct can_data *)itf->data;
   int i;
 
+  if ((scan_receive == NULL) && (scan_send == NULL)) {
+    sprintf(err, "scan rcv or send functions are not assigned");
+    return 1;
+  }
+
   dat->txmutex = malloc(sizeof(pthread_mutex_t));
-  pthread_mutex_init(dat->txmutex, NULL);
+  pthread_mutex_init(dat->txmutex, NULL);  
   if((i = pthread_create(&(dat->rxthread), NULL, scan_receive, (void *)itf)) != 0) {
     sprintf(err, "Can't create rxthread: %s (%d)", strerror(i), i);
     return 1;
@@ -85,7 +167,6 @@ int scan_init(struct mbn_interface *itf, char *err) {
   }
   return 0;
 }
-
 
 int scan_hwparent(int sock, unsigned short *par, char *err) {
   struct can_frame frame;
@@ -153,7 +234,7 @@ void scan_free_addr(void *ptr) {
 }
 
 
-void *scan_receive(void *ptr) {
+void *scan_can_receive(void *ptr) {
   struct mbn_interface *itf = (struct mbn_interface *)ptr;
   struct can_data *dat = (struct can_data *)itf->data;
   struct can_frame frame;
@@ -222,7 +303,7 @@ void *scan_receive(void *ptr) {
 }
 
 
-void *scan_send(void *ptr) {
+void *scan_can_send(void *ptr) {
   struct mbn_interface *itf = (struct mbn_interface *)ptr;
   struct can_data *dat = (struct can_data *)itf->data;
   struct can_frame frame;
@@ -291,4 +372,12 @@ int scan_transmit(struct mbn_interface *itf, unsigned char *buffer, int length, 
   return 0;
 }
 
+void *scan_tty_receive(void *ptr) {
+  return NULL;
+}
+
+
+void *scan_tty_send(void *ptr) {
+  return NULL;
+}
 
