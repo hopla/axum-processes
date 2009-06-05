@@ -44,3 +44,12 @@ INSERT INTO monitor_buss_config (number, label) VALUES (14, 'Std 13');
 INSERT INTO monitor_buss_config (number, label) VALUES (15, 'Std 14');
 INSERT INTO monitor_buss_config (number, label) VALUES (16, 'Std 15');
 
+
+-- extern_src_config
+
+INSERT INTO extern_src_config (number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8) VALUES(1, 0, 0, 0, 0, 0, 0, 0, 0);
+INSERT INTO extern_src_config (number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8) VALUES(2, 0, 0, 0, 0, 0, 0, 0, 0);
+INSERT INTO extern_src_config (number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8) VALUES(3, 0, 0, 0, 0, 0, 0, 0, 0);
+INSERT INTO extern_src_config (number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8) VALUES(4, 0, 0, 0, 0, 0, 0, 0, 0);
+
+
