@@ -26,11 +26,12 @@
 # define PF_CAN AF_CAN
 #endif
 
-#define ADDLSTSIZE 1000 /* assume we don't have more than 1000 nodes on one CAN bus */
-#define TXBUFLEN   5000 /* maxumum number of mambanet messages in the send buffer */
-#define CAN_TXDELAY    1024 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
-#define TTY_TXDELAY    2048 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
-#define HWPARTIMEOUT 10 /* timeout for receiving the hardware parent, in seconds */
+#define ADDLSTSIZE    1000 /* assume we don't have more than 1000 nodes on one CAN bus */
+#define TXBUFLEN      5000 /* maxumum number of mambanet messages in the send buffer */
+#define CAN_TXDELAY   1024 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
+#define TTY_TXDELAY   2048 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
+#define HWPARTIMEOUT  10   /* timeout for receiving the hardware parent, in seconds */
+#define CIRBUFLENGTH  4096 /* Length of serial decoding buffer */ 
 
 struct can_ifaddr;
 
@@ -50,6 +51,10 @@ struct can_data {
   int txstart;
   struct can_ifaddr *addrs[ADDLSTSIZE];
   struct can_queue *tx[TXBUFLEN];
+  unsigned char msgbuf[13];
+  unsigned char msgbufi;
+  unsigned char cirbuf[CIRBUFLENGTH];
+  unsigned int cirbufb, cirbuft;
 };
 
 struct can_ifaddr {
@@ -63,14 +68,15 @@ struct can_ifaddr {
 int scan_open_sock(char *ifname, struct can_data *dat, char *err);
 int scan_open_tty(char *ifname, struct can_data *dat, char *err);
 int scan_init(struct mbn_interface *, char *);
-int scan_hwparent(int, unsigned short *, char *);
+int scan_hwparent(struct mbn_interface *, unsigned short *, char *);
 void scan_free(struct mbn_interface *);
 void scan_free_addr(void *);
 void *scan_send(void *);
 int scan_transmit(struct mbn_interface *, unsigned char *, int, void *, char *);
-int scan_read(struct can_frame *frame, struct mbn_interface *itf);
+int scan_parse(struct can_frame *frame, struct mbn_interface *itf);
 
 void *scan_receive(void *);
+int scan_read(struct can_frame *frame, struct mbn_interface *itf);
 void scan_write(struct can_frame *frame, struct mbn_interface *itf);
 
 struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *parent, char *err) {
@@ -81,7 +87,7 @@ struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *paren
   itf = (struct mbn_interface *)calloc(1, sizeof(struct mbn_interface));
   dat = (struct can_data *)calloc(1, sizeof(struct can_data));
 
-  if (strchr(ifname,'/') != NULL) {
+  if(strchr(ifname,'/') != NULL) {
     dat->tty_mode = 1;
   }
 
@@ -95,8 +101,10 @@ struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *paren
   }
 
   /* wait for hardware parent */
+  itf->data = (void *)dat;
+
   if(!error && parent != NULL) {
-    if(scan_hwparent(dat->sock, parent, err))
+    if(scan_hwparent(itf, parent, err))
       error++;
   }
 
@@ -106,7 +114,6 @@ struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *paren
     return NULL;
   }
 
-  itf->data = (void *)dat;
   itf->cb_init = scan_init;
   itf->cb_free = scan_free;
   itf->cb_transmit = scan_transmit;
@@ -205,21 +212,28 @@ int scan_init(struct mbn_interface *itf, char *err) {
   return 0;
 }
 
-int scan_hwparent(int sock, unsigned short *par, char *err) {
+int scan_hwparent(struct mbn_interface *itf, unsigned short *par, char *err) {
+  struct can_data *dat = (struct can_data *)itf->data;
   struct can_frame frame;
   struct timeval tv, end;
   int n;
   fd_set rd;
+  int desc;
 
   gettimeofday(&end, NULL);
   end.tv_sec += HWPARTIMEOUT;
   tv.tv_sec = 0;
   tv.tv_usec = 500000;
 
+  if (dat->tty_mode)
+    desc = dat->fd;
+  else
+    desc = dat->sock;
+
   while(1) {
     FD_ZERO(&rd);
-    FD_SET(sock, &rd);
-    n = select(sock+1, &rd, NULL, NULL, &tv);
+    FD_SET(desc, &rd);
+    n = select(desc+1, &rd, NULL, NULL, &tv);
     /* handle errors */
     if(n < 0) {
       sprintf(err, "Checking read state: %s", strerror(errno));
@@ -227,7 +241,7 @@ int scan_hwparent(int sock, unsigned short *par, char *err) {
     }
     /* received frame, check for ID */
     if(n > 0) {
-      n = read(sock, &frame, sizeof(struct can_frame));
+      n = scan_read(&frame, itf);
       if(n < 0 || n != (int)sizeof(struct can_frame)) {
         sprintf(err, "Reading from network: %s", strerror(errno));
         return 1;
@@ -270,7 +284,7 @@ void scan_free_addr(void *ptr) {
   free(ptr);
 }
 
-int scan_read(struct can_frame *frame, struct mbn_interface *itf)
+int scan_parse(struct can_frame *frame, struct mbn_interface *itf)
 {
   struct can_data *dat = (struct can_data *)itf->data;
   int n, ai, bcast, src, dest, seq;
@@ -399,54 +413,79 @@ int scan_transmit(struct mbn_interface *itf, unsigned char *buffer, int length, 
   return 0;
 }
 
-/* CAN/TTY send/receive wrapper functions */
 void *scan_receive(void *ptr) {
   struct mbn_interface *itf = (struct mbn_interface *)ptr;
-  struct can_data *dat = (struct can_data *)itf->data;
   struct can_frame frame;
-  char err[MBN_ERRSIZE];
-  unsigned char rcvbuf[4096];
-  unsigned char msgbuf[13];
-  unsigned char msgbufi;
 
+  while (1)
+  {
+    if (scan_read(&frame, itf) == sizeof(struct can_frame))
+    {
+      scan_parse(&frame, itf);
+    }
+  }
+
+  return NULL;
+}
+
+/* CAN/TTY send/receive wrapper functions */
+int scan_read(struct can_frame *frame, struct mbn_interface *itf)
+{
+  struct can_data *dat = (struct can_data *)itf->data;
+  unsigned char rcvbuf[128];
+  unsigned char rcvbyte;
   int n, i, i2;
 
   if(dat->tty_mode) {
-    while((n = read(dat->fd, &rcvbuf, 4096)) >= 0) {
+    if (dat->cirbuft == dat->cirbufb) {
+      n = read(dat->fd, &rcvbuf, 128);
       for(i=0; i<n; i++) {
-        if(rcvbuf[i] == 0xE0)
-          msgbufi=0;
-        if(msgbufi<13)
-          msgbuf[msgbufi++] = rcvbuf[i];
-        else {
-          fprintf(stderr, "Error in format of TTY message\n");
-          msgbufi=14;
-        }
-        if((rcvbuf[i] == 0xE1) && (msgbufi==13)) {
-          frame.can_id = msgbuf[1]&0x1F;
-          frame.can_id <<= 7;
-          frame.can_id |= msgbuf[2]&0x7F;
-          frame.can_id <<= 4;
-          frame.can_id |= msgbuf[3]&0x0F;
-          frame.can_id |= 0x10000;
-          for (i2=0; i2<8; i2++)
-            frame.data[i2] = msgbuf[4+i2];
+        dat->cirbuf[dat->cirbuft++]=rcvbuf[i];
+        if (dat->cirbuft>(CIRBUFLENGTH-1))
+          dat->cirbuft=0;
+      }
+    }
 
-          scan_read(&frame, itf);
+    n = -1;
+    while ((n==-1) && (dat->cirbufb != dat->cirbuft))
+    {
+      rcvbyte = dat->cirbuf[dat->cirbufb++];
+      if (dat->cirbufb>(CIRBUFLENGTH-1))
+        dat->cirbufb=0;
+
+      if(rcvbyte == 0xE0)
+        dat->msgbufi=0;
+      if(dat->msgbufi<13)
+        dat->msgbuf[dat->msgbufi++] = rcvbyte;
+      else {
+          fprintf(stderr, "Error in format of TTY message\n");
+          dat->msgbufi=14;
         }
+      if((rcvbyte == 0xE1) && (dat->msgbufi==13)) {
+        //check for can control msg
+        if(dat->msgbuf[1]&0x40) {
+          frame->can_id = 0x0FFFFFF1;
+        }
+        else {
+          frame->can_id = dat->msgbuf[1]&0x1F;
+          frame->can_id <<= 7;
+          frame->can_id |= dat->msgbuf[2]&0x7F;
+          frame->can_id <<= 4;
+          frame->can_id |= dat->msgbuf[3]&0x0F;
+          frame->can_id |= 0x10000;
+        }
+        for (i2=0; i2<8; i2++)
+          frame->data[i2] = dat->msgbuf[4+i2];
+        n = sizeof(struct can_frame);
       }
     }
   }
   else {
-    while((n = read(dat->sock, &frame, sizeof(struct can_frame))) >= 0 && n == (int)sizeof(struct can_frame)) {
-      scan_read(&frame, itf);
+    if (((n = read(dat->sock, &frame, sizeof(struct can_frame))) < 0) && (n != (int)sizeof(struct can_frame))) {
+      n=-1;
     }
   }
-
-  sprintf(err, "Read from CAN failed: %s",
-    n == -1 ? strerror(errno) : n == -2 ? "Too many nodes on the bus" : "Incorrect CAN frame size");
-  mbnInterfaceReadError(itf, err);
-  return NULL;
+  return n;
 }
 
 void scan_write(struct can_frame *frame, struct mbn_interface *itf)
