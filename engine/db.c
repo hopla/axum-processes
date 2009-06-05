@@ -953,6 +953,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
   sprintf(str[0], "%hd", node_info->ManufacturerID);
   sprintf(str[1], "%hd", node_info->ProductID);
   sprintf(str[2], "%hd", node_info->FirmwareMajorRevision);
+
   PGresult *qres = sql_exec("SELECT COUNT(*) FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
   if (qres == NULL)
   {
@@ -973,7 +974,6 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
       node_info->ObjectInformation[cntObject].AxumFunctionNr = -1;
     }
   }
-
   //Load all object information (e.g. for range-convertion).
   qres = sql_exec("SELECT number, description, services, sensor_type, sensor_size, sensor_min, sensor_max, actuator_type, actuator_size, actuator_min, actuator_max, actuator_def FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
   if (qres == NULL)
@@ -988,7 +988,8 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
 
     cntField=0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &ObjectNr);
-    if (ObjectNr >= 1024)
+
+    if ((ObjectNr >= 1024) && (ObjectNr < (1024+node_info->NumberOfCustomObjects)))
     {
       OBJECT_INFORMATION_STRUCT *obj_info = &node_info->ObjectInformation[ObjectNr-1024];
 
@@ -1021,6 +1022,13 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
         node_info->OutputChannelCountObjectNr = ObjectNr;
       }
     }
+    else
+    {
+      if (ObjectNr >= (1024+node_info->NumberOfCustomObjects))
+      {
+        log_write("[template error] ObjectNr to high for 'row count'");
+      }      
+    }
   }
 
   LOG_DEBUG("[%s] leave", __func__);
@@ -1041,6 +1049,15 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   {
     params[cntParams] = (const char *)str[cntParams];
   }
+
+  if (first_obj>last_obj)
+  {
+    unsigned short int dummy = first_obj;
+    first_obj = last_obj;
+    last_obj = dummy;
+  }
+  //to make sure we can do 'if <'
+  last_obj++;
 
   sprintf(str[0], "%d", node_info->MambaNetAddress);
   sprintf(str[1], "%d", first_obj);
