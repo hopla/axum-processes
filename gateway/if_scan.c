@@ -60,9 +60,6 @@ struct can_ifaddr {
   int lnkindex; /* so we know where in the list we are */
 };
 
-unsigned char msg_buf[13];
-unsigned char msg_buf_idx;
-
 int scan_open_sock(char *ifname, struct can_data *dat, char *err);
 int scan_open_tty(char *ifname, struct can_data *dat, char *err);
 int scan_init(struct mbn_interface *, char *);
@@ -416,35 +413,35 @@ void *scan_receive(void *ptr) {
   struct can_data *dat = (struct can_data *)itf->data;
   struct can_frame frame;
   char err[MBN_ERRSIZE];
-  unsigned char rcv_buf[128];
+  unsigned char rcvbuf[4096];
+  unsigned char msgbuf[13];
+  unsigned char msgbufi;
+
   int n, i, i2;
 
   if(dat->tty_mode) {
-    /* TODO: Implement receive code for the TTY */
-    while((n = read(dat->fd, &rcv_buf, 64))) {
-      for (i=0; i<n; i++) {
-        switch (rcv_buf[i]) {
-          case 0xE0: {
-            msg_buf_idx=0;
-          }
-          break;
-          case 0xE1: {
-            if(msg_buf_idx == 12) {
-              /* TODO: convert to can_frame and do scan_read(&frame, itf)*/
-              frame.can_id = msg_buf[1]&0x7F;
-              frame.can_id <<= 7;
-              frame.can_id |= msg_buf[2]&0x7F;
-              frame.can_id <<= 4;
-              frame.can_id |= msg_buf[3]&0x0F;
-              for (i2=0; i2<8; i2++)
-                frame.data[i2] = msg_buf[4+i2];
-
-              scan_read(&frame, itf);
-            }
-          }
-          break;
+    while((n = read(dat->fd, &rcvbuf, 4096)) >= 0) {
+      for(i=0; i<n; i++) {
+        if(rcvbuf[i] == 0xE0)
+          msgbufi=0;
+        if(msgbufi<13)
+          msgbuf[msgbufi++] = rcvbuf[i];
+        else {
+          fprintf(stderr, "Error in format of TTY message\n");
+          msgbufi=14;
         }
-        msg_buf[msg_buf_idx++] = rcv_buf[i];
+        if((rcvbuf[i] == 0xE1) && (msgbufi==13)) {
+          frame.can_id = msgbuf[1]&0x1F;
+          frame.can_id <<= 7;
+          frame.can_id |= msgbuf[2]&0x7F;
+          frame.can_id <<= 4;
+          frame.can_id |= msgbuf[3]&0x0F;
+          frame.can_id |= 0x10000;
+          for (i2=0; i2<8; i2++)
+            frame.data[i2] = msgbuf[4+i2];
+
+          scan_read(&frame, itf);
+        }
       }
     }
   }
@@ -463,19 +460,19 @@ void *scan_receive(void *ptr) {
 void scan_write(struct can_frame *frame, struct mbn_interface *itf)
 {
   struct can_data *dat = (struct can_data *)itf->data;
-  unsigned char xmt_buf[13];
+  unsigned char xmtbuf[13];
   unsigned char i;
 
   if(dat->tty_mode) {
-    xmt_buf[0] = 0xE0;
-    xmt_buf[1] = (frame->can_id>>23)&0x7F;
-    xmt_buf[2] = (frame->can_id>>16)&0x7F;
-    xmt_buf[3] = frame->can_id&0x0F;
+    xmtbuf[0] = 0xE0;
+    xmtbuf[1] = (frame->can_id>>23)&0x1F;
+    xmtbuf[2] = (frame->can_id>>16)&0x7F;
+    xmtbuf[3] = frame->can_id&0x0F;
     for (i=0; i<8; i++)
-      xmt_buf[4+i] = frame->data[i];
-    xmt_buf[12] = 0xE1;
+      xmtbuf[4+i] = frame->data[i];
+    xmtbuf[12] = 0xE1;
 
-    if (write(dat->fd, xmt_buf, 13) < 13)
+    if (write(dat->fd, xmtbuf, 13) < 13)
       fprintf(stderr, "TTY send: %s", strerror(errno));
                                                                                                                 
   }
