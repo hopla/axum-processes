@@ -28,7 +28,8 @@
 
 #define ADDLSTSIZE 1000 /* assume we don't have more than 1000 nodes on one CAN bus */
 #define TXBUFLEN   5000 /* maxumum number of mambanet messages in the send buffer */
-#define TXDELAY    1024 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
+#define CAN_TXDELAY    1024 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
+#define TTY_TXDELAY    2048 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
 #define HWPARTIMEOUT 10 /* timeout for receiving the hardware parent, in seconds */
 
 struct can_ifaddr;
@@ -40,6 +41,7 @@ struct can_queue {
 
 struct can_data {
   unsigned char tty_mode;
+  int txdly;
   int fd;
   int sock;
   int ifindex;
@@ -140,6 +142,7 @@ int scan_open_sock(char *ifname, struct can_data *dat, char *err) {
     sprintf(err, "Couldn't bind socket: %s", strerror(errno));
     return 1;
   }
+  dat->txdly = CAN_TXDELAY;
   return 0;
 }
 
@@ -192,6 +195,7 @@ int scan_open_tty(char *ifname, struct can_data *dat, char *err) {
     close(dat->fd);
     return 1;
   }
+  dat->txdly = TTY_TXDELAY;
   return 0;
 }
 
@@ -367,7 +371,7 @@ void *scan_send(void *ptr) {
       free(q->buf);
       free(q);
       tv.tv_sec = 0;
-      tv.tv_usec = TXDELAY*i;
+      tv.tv_usec = dat->txdly*i;
     } else {
       tv.tv_sec = 0;
       tv.tv_usec = 10000;
