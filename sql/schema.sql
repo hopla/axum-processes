@@ -8,6 +8,7 @@
 --  $ psql -U axum <defaults.sql
 --  $ psql -U axum <functions.sql
 --  $ psql -U axum <triggers.sql
+--  $ psql -U axum <util.sql
 
 
 -- General TODO list (not too important)
@@ -377,11 +378,7 @@ ALTER TABLE defaults      ADD FOREIGN KEY (addr) REFERENCES addresses (addr);
 ALTER TABLE slot_config   ADD FOREIGN KEY (addr) REFERENCES addresses (addr);
 ALTER TABLE src_config    ADD FOREIGN KEY (input1_addr) REFERENCES addresses (addr);
 ALTER TABLE src_config    ADD FOREIGN KEY (input2_addr) REFERENCES addresses (addr);
-ALTER TABLE module_config ADD FOREIGN KEY (source_a) REFERENCES src_config (number);
-ALTER TABLE module_config ADD FOREIGN KEY (source_b) REFERENCES src_config (number);
-ALTER TABLE module_config ADD FOREIGN KEY (insert_source) REFERENCES src_config (number);
 ALTER TABLE dest_config   ADD FOREIGN KEY (output1_addr) REFERENCES addresses (addr);
 ALTER TABLE dest_config   ADD FOREIGN KEY (output2_addr) REFERENCES addresses (addr);
-ALTER TABLE dest_config   ADD FOREIGN KEY (mix_minus_source) REFERENCES addresses (addr);
 
 
