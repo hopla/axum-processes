@@ -145,24 +145,16 @@ int scan_open_sock(char *ifname, struct can_data *dat, char *err) {
 
 int scan_open_tty(char *ifname, struct can_data *dat, char *err) {
   struct termios tio;
-  int fd;
 
   /* open serial device */
-  dat->fd = open(ifname, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK); 
+  dat->fd = open(ifname, O_RDWR | O_NOCTTY); 
   if (dat->fd<0) {
     sprintf(err, "Couldn't open port: %s", strerror(errno));
     return 1;
   }
-  
-  /* set the FNDELAY for this device */
-  if (fcntl(dat->fd, F_SETFL, FNDELAY | O_NONBLOCK) == -1) {
-    sprintf(err, "Couldn't not set FNDELAY: %s", strerror(errno));
-    close(dat->fd);
-    return 1;
-  }
 
   /* get the attributes */
-  if (tcgetattr(fd, &tio) != 0) {
+  if (tcgetattr(dat->fd, &tio) != 0) {
     sprintf(err, "Couldn't get attribs: %s", strerror(errno));
     close(dat->fd);
     return 1;
@@ -187,7 +179,7 @@ int scan_open_tty(char *ifname, struct can_data *dat, char *err) {
   tio.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
 
   /* set the attributes. */
-  if (tcsetattr(fd, TCSANOW, &tio) != 0) {
+  if (tcsetattr(dat->fd, TCSANOW, &tio) != 0) {
     sprintf(err, "Couldn't set attribs: %s", strerror(errno));
     close(dat->fd);
     return 1;
