@@ -1325,7 +1325,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
           sensor_rcv_func->LastChangedTime = 0;
           sensor_rcv_func->PreviousLastChangedTime = 0;
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-          ObjectConfigChanged[cntObject] = 1;
+          ObjectConfigChanged[ObjectNr-1024] = 1;
         }
       }
     }
