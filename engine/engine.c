@@ -1043,7 +1043,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
             float DataMaximal = OnlineNodeInformation[IndexOfSender].ObjectInformation[ObjectNr-1024].SensorDataMaximal;
 
             char TempString[256] = "";
-            log_write("Sensor changed, ObjectNr %d -> Sensor receive function %08x", ObjectNr, SensorReceiveFunctionNumber);
+            printf("Sensor changed, ObjectNr %d -> Sensor receive function %08x", ObjectNr, SensorReceiveFunctionNumber);
 
             if (SensorReceiveFunctionNumber != -1)
             {
