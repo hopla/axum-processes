@@ -53,3 +53,22 @@ INSERT INTO extern_src_config (number, ext1, ext2, ext3, ext4, ext5, ext6, ext7,
 INSERT INTO extern_src_config (number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8) VALUES(4, 0, 0, 0, 0, 0, 0, 0, 0);
 
 
+-- talkback_config
+
+INSERT INTO talkback_config (number, source) VALUES (1, 0);
+INSERT INTO talkback_config (number, source) VALUES (2, 0);
+INSERT INTO talkback_config (number, source) VALUES (3, 0);
+INSERT INTO talkback_config (number, source) VALUES (4, 0);
+INSERT INTO talkback_config (number, source) VALUES (5, 0);
+INSERT INTO talkback_config (number, source) VALUES (6, 0);
+INSERT INTO talkback_config (number, source) VALUES (7, 0);
+INSERT INTO talkback_config (number, source) VALUES (8, 0);
+INSERT INTO talkback_config (number, source) VALUES (9, 0);
+INSERT INTO talkback_config (number, source) VALUES (10, 0);
+INSERT INTO talkback_config (number, source) VALUES (11, 0);
+INSERT INTO talkback_config (number, source) VALUES (12, 0);
+INSERT INTO talkback_config (number, source) VALUES (13, 0);
+INSERT INTO talkback_config (number, source) VALUES (14, 0);
+INSERT INTO talkback_config (number, source) VALUES (15, 0);
+INSERT INTO talkback_config (number, source) VALUES (16, 0);
+
