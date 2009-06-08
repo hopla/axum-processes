@@ -357,9 +357,9 @@ CREATE TABLE dest_config (
   output1_sub_ch smallint NOT NULL CHECK(output1_sub_ch>=0 AND output1_sub_ch<32),
   output2_addr integer NOT NULL,
   output2_sub_ch smallint NOT NULL CHECK(output2_sub_ch>=0 AND output2_sub_ch<32),
-  level float NOT NULL,
-  source integer NOT NULL,
-  mix_minus_source integer NOT NULL
+  level float NOT NULL DEFAULT 0,
+  source integer NOT NULL DEFAULT 0,
+  mix_minus_source integer NOT NULL DEFAULT 0
 );
 
 CREATE TABLE db_to_position (
