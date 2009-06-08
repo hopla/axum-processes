@@ -39,6 +39,22 @@ struct sql_notify notifies[] = {
   { (char *)"defaults_changed",             db_event_defaults_changed},
 };
 
+double read_minmax(char *mambanet_minmax)
+{
+  int value_int;
+  float value_float;
+
+  if (sscanf(mambanet_minmax, "(%d,)", &value_int) == 1)
+  {
+    return (double)value_int;
+  } 
+  else if (sscanf(mambanet_minmax, "(,%f)", &value_float) == 1)
+  {
+    return (double)value_float;
+  }
+  return 0;
+}
+
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
@@ -1032,13 +1048,22 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->Services);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->SensorDataType);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->SensorDataSize);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->SensorDataMinimal);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->SensorDataMaximal);
+      obj_info->SensorDataMinimal = read_minmax(PQgetvalue(qres, cntRow, cntField++));
+      obj_info->SensorDataMaximal = read_minmax(PQgetvalue(qres, cntRow, cntField++));
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->ActuatorDataType);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->ActuatorDataSize);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataMinimal);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataMaximal);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &obj_info->ActuatorDataDefault);
+      obj_info->ActuatorDataMinimal = read_minmax(PQgetvalue(qres, cntRow, cntField++));
+      obj_info->ActuatorDataMaximal = read_minmax(PQgetvalue(qres, cntRow, cntField++)); 
+      obj_info->ActuatorDataDefault = read_minmax(PQgetvalue(qres, cntRow, cntField++)); 
+          
+         
+/*      if (ObjectNr == 1104)
+      {
+        fprintf(stderr, "min:%f\n", obj_info->ActuatorDataMinimal);
+        fprintf(stderr, "max:%f\n", obj_info->ActuatorDataMaximal);
+        fprintf(stderr, "def:%f\n", obj_info->ActuatorDataDefault);
+      }*/
+
       if (in_powerup_state)
       {
         obj_info->CurrentActuatorDataDefault = obj_info->ActuatorDataDefault; 
