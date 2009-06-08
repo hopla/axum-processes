@@ -41,7 +41,7 @@ struct get_action {
 };
 struct get_action *get_queue = NULL;
 /* deadlock warning: don't use sql_lock() within this mutex */
-pthread_mutex_t get_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t get_queue_mutex;
 
 /* simple node info list, temporary place for getting the number
  * ob objects and firmware major revision */
@@ -150,6 +150,8 @@ int remove_queue(unsigned long addr, unsigned short obj) {
 
 int add_node(unsigned long addr) {
   int i;
+
+  pthread_mutex_lock(&get_queue_mutex);
   /* first, check if it's already in the list */
   for(i=0; i<nodesl; i++)
     if(nodes[i].addr == addr)
@@ -172,6 +174,7 @@ int add_node(unsigned long addr) {
   /* and now get the major firmware version and number of objects */
   add_queue(0, addr, MBN_NODEOBJ_FWMAJOR);
   add_queue(0, addr, MBN_NODEOBJ_NUMBEROFOBJECTS);
+  pthread_mutex_unlock(&get_queue_mutex);
   return i;
 }
 
@@ -280,7 +283,7 @@ int mObjectInformationResponse(struct mbn_handler *m, struct mbn_message *msg, u
   int i, fwmajor = -1;
 
   /* the lacking -e is intentional, to make the log aligned with the other messages */
-  log_write("InformationRespons: %08X[%5d]", msg->AddressFrom, obj);
+  log_write("InformationRespons: %08lX[%5d]", msg->AddressFrom, obj);
   if(!remove_queue(msg->AddressFrom, obj))
     return 1;
 
@@ -334,7 +337,7 @@ int mObjectInformationResponse(struct mbn_handler *m, struct mbn_message *msg, u
 
 
 void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
-  log_write("AcknowledgeTimeout: %08X[%5d] get %s", msg->AddressTo, msg->Message.Object.Number,
+  log_write("AcknowledgeTimeout: %08lX[%5d] get %s", msg->AddressTo, msg->Message.Object.Number,
     msg->Message.Object.Action == MBN_OBJ_ACTION_GET_INFO ? "object information" : "sensor data");
   remove_queue(msg->AddressTo, msg->Message.Object.Number);
   return;
@@ -343,7 +346,7 @@ void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
 
 
 void mObjectError(struct mbn_handler *m, struct mbn_message *msg, unsigned short obj, char *err) {
-  log_write("ObjectError       : %08X[%5d] = %s", msg->AddressFrom, obj, err);
+  log_write("ObjectError       : %08lX[%5d] = %s", msg->AddressFrom, obj, err);
   remove_queue(msg->AddressFrom, obj);
   return;
   m++;
@@ -368,7 +371,12 @@ void template_removed(char myself, char *arg) {
 void init(int argc, char *argv[]) {
   char dbstr[256], ethdev[50], err[MBN_ERRSIZE];
   struct mbn_interface *itf;
+  pthread_mutexattr_t mattr;
   int c;
+
+  pthread_mutexattr_init(&mattr);
+  pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init(&get_queue_mutex, &mattr);
 
   static struct sql_notify notifies[] = {
     { "template_removed",  template_removed }
@@ -459,15 +467,15 @@ int main(int argc, char *argv[]) {
   while(!main_quit) {
     /* poll PG socket (we don't need to receive the events asynchronously,
      * so just polling instead of waiting is fine here) */
+    sql_lock(1);
     tv.tv_sec = tv.tv_usec = 0;
     FD_ZERO(&rd);
     FD_SET(PQsocket(sql_conn), &rd);
     if(select(PQsocket(sql_conn)+1, &rd, NULL, NULL, &tv) > 0) {
-      sql_lock(1);
       PQconsumeInput(sql_conn);
       sql_processnotifies();
-      sql_lock(0);
     }
+    sql_lock(0);
 
     /* process queue */
     process_queue();
