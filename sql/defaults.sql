@@ -72,3 +72,8 @@ INSERT INTO talkback_config (number, source) VALUES (14, 0);
 INSERT INTO talkback_config (number, source) VALUES (15, 0);
 INSERT INTO talkback_config (number, source) VALUES (16, 0);
 
+
+-- module_config
+
+INSERT INTO module_config (number) SELECT * FROM generate_series(1, 128);
+
