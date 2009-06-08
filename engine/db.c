@@ -827,6 +827,7 @@ int db_read_global_config()
     CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
 
   }
+  PQclear(qres);
 
   LOG_DEBUG("[%s] leave", __func__);
 
@@ -889,6 +890,8 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
     CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_SOURCE);
   }
 
+  PQclear(qres);
+
   LOG_DEBUG("[%s] leave", __func__);
 
   return 1;
@@ -929,6 +932,8 @@ int db_read_db_to_position()
       Position2dB[cntPosition] = dB;
     }
   }
+
+  PQclear(qres);
 
   LOG_DEBUG("[%s] leave", __func__);
 
@@ -974,6 +979,8 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
       node_info->ObjectInformation[cntObject].AxumFunctionNr = -1;
     }
   }
+  PQclear(qres);
+
   //Load all object information (e.g. for range-convertion).
   qres = sql_exec("SELECT number, description, services, sensor_type, sensor_size, sensor_min, sensor_max, actuator_type, actuator_size, actuator_min, actuator_max, actuator_def FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
   if (qres == NULL)
@@ -1030,6 +1037,8 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
       }      
     }
   }
+
+  PQclear(qres);
 
   LOG_DEBUG("[%s] leave", __func__);
 
@@ -1200,6 +1209,8 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
       }
     }
   }
+
+  PQclear(qres);
 
   LOG_DEBUG("[%s] leave", __func__);
 
@@ -1441,8 +1452,6 @@ int db_empty_slot_config()
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
-  LOG_DEBUG("[%s] leave", __func__);
-  
   PQclear(qres);
 
   LOG_DEBUG("[%s] leave", __func__);
