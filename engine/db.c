@@ -946,6 +946,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
   const char *params[3];
   int cntParams;
   int cntRow;
+  int maxobjnr; 
 
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -959,13 +960,40 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
   sprintf(str[1], "%hd", node_info->ProductID);
   sprintf(str[2], "%hd", node_info->FirmwareMajorRevision);
 
-  PGresult *qres = sql_exec("SELECT COUNT(*) FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
+  PGresult *qres = sql_exec("(                                                                                  \
+                               SELECT number+1 FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3  \
+                               EXCEPT                                                                           \
+                               SELECT number FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3    \
+                             )                                                                                  \
+                             EXCEPT                                                                             \
+                             SELECT MAX(number)+1 FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
-  sscanf(PQgetvalue(qres, 0, 0), "%d", &node_info->NumberOfCustomObjects);
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    log_write("No template info found for obj %s at man_id=%d, prod_id=%d, firm_major=%d", PQgetvalue(qres, cntRow, 0), node_info->ManufacturerID, node_info->ProductID, node_info->FirmwareMajorRevision);
+  }
+  PQclear(qres);
+
+  qres = sql_exec("SELECT MAX(number) FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+
+  node_info->NumberOfCustomObjects = 0; 
+  if (PQntuples(qres))
+  {
+    if (sscanf(PQgetvalue(qres, 0, 0), "%d", &maxobjnr) == 1)
+    {
+      node_info->NumberOfCustomObjects = maxobjnr-1023; 
+    }
+  }
+
   if (node_info->NumberOfCustomObjects>0)
   {
     node_info->SensorReceiveFunction = new SENSOR_RECEIVE_FUNCTION_STRUCT[node_info->NumberOfCustomObjects];
@@ -1033,7 +1061,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
     {
       if (ObjectNr >= (1024+node_info->NumberOfCustomObjects))
       {
-        log_write("[template error] ObjectNr to high for 'row count'");
+        log_write("[template error] ObjectNr %d to high for 'row count' (man_id:%04X, prod_id:%04X)", ObjectNr, node_info->ManufacturerID, node_info->ProductID);
       }      
     }
   }
