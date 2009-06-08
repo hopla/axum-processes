@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 //#define LOG_DEBUG_ENABLED
 
@@ -915,7 +916,7 @@ int db_read_db_to_position()
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     sscanf(PQgetvalue(qres, cntRow, 0), "%f", &dB);
-    db_array_pointer = (dB*10)+1400;
+    db_array_pointer = floor((dB*10)+0.5)+1400;
 
     sscanf(PQgetvalue(qres, cntRow, 1), "%hd", &dB2Position[db_array_pointer]);
   }
@@ -927,10 +928,10 @@ int db_read_db_to_position()
     {
       if (dB2Position[db_array_pointer] == cntPosition)
       {
-        dB = ((float)(db_array_pointer-1400))/10;
+        dB = ((float)((int)db_array_pointer-1400))/10;
       }
-      Position2dB[cntPosition] = dB;
     }
+    Position2dB[cntPosition] = dB;
   }
 
   PQclear(qres);
