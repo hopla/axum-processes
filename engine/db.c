@@ -1004,7 +1004,6 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
       node_info->SensorReceiveFunction[cntObject].LastChangedTime = 0;
       node_info->SensorReceiveFunction[cntObject].PreviousLastChangedTime = 0;
       node_info->SensorReceiveFunction[cntObject].TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-      node_info->ObjectInformation[cntObject].AxumFunctionNr = -1;
     }
   }
   PQclear(qres);
