@@ -374,7 +374,6 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceB);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->InsertSource);
     ModuleData->InsertOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    ModuleData->InsertOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     ModuleData->InsertOnOffB = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->Gain);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Filter.Frequency);
