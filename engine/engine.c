@@ -117,6 +117,8 @@ CUSTOM_OBJECT_INFORMATION_STRUCT AxumEngineCustomObjectInformation[NR_OF_STATIC_
 CUSTOM_OBJECT_INFORMATION_STRUCT AxumEngineCustomObjectInformation[1];
 #endif
 
+int verbose = 0;
+
 int AxumApplicationAndDSPInitialized = 0;
 
 int cntDebugObject=1024;
@@ -231,7 +233,7 @@ void init(int argc, char **argv)
   strcpy(hwparent_path, DEFAULT_GTW_PATH);
 
   /* parse options */
-  while((c = getopt(argc, argv, "e:d:l:g:i:")) != -1) {
+  while((c = getopt(argc, argv, "e:d:l:g:i:v")) != -1) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
@@ -264,6 +266,9 @@ void init(int argc, char **argv)
       case 'l':
         strcpy(log_file, optarg);
         break;
+      case 'v':
+        verbose = 1;
+        break;
       default:
         fprintf(stderr, "Usage: %s [-e dev] [-u path] [-g path] [-d str] [-l path] [-i id]\n", argv[0]);
         fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
@@ -271,12 +276,16 @@ void init(int argc, char **argv)
         fprintf(stderr, "  -g path  Hardware parent or path to gateway socket.\n");
         fprintf(stderr, "  -l path  Path to log file.\n");
         fprintf(stderr, "  -d str   PostgreSQL database connection options.\n");
+        fprintf(stderr, "  -v       Verbose output.\n");
         exit(1);
     }
   }
 
-  daemonize();
-  log_open();
+  if (!verbose)
+    daemonize();
+
+  if (!verbose)
+    log_open();
   //hwparent(&this_node);
   db_open(dbstr);
   DatabaseFileDescriptor = db_get_fd();
@@ -328,7 +337,8 @@ void init(int argc, char **argv)
   mbnSetErrorCallback(mbn, mError);
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
   */
-  daemonize_finish();
+  if (!verbose)
+    daemonize_finish();
   log_write("-----------------------");
   log_write("Axum Engine Initialized");
 }
@@ -8237,6 +8247,8 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
   {
     if ((MambaNetAddress == 0x00000000) || (MambaNetAddress == WalkAxumFunctionInformationStruct->MambaNetAddress))
     {
+      if (verbose)
+        printf("Send function %08x data to addr: %08x, obj: %d\n", SensorReceiveFunctionNumber, WalkAxumFunctionInformationStruct->MambaNetAddress, WalkAxumFunctionInformationStruct->ObjectNr); 
       SentDataToObject(SensorReceiveFunctionNumber, WalkAxumFunctionInformationStruct->MambaNetAddress, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ActuatorDataType, WalkAxumFunctionInformationStruct->ActuatorDataSize, WalkAxumFunctionInformationStruct->ActuatorDataMinimal, WalkAxumFunctionInformationStruct->ActuatorDataMaximal);
     }
     WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
