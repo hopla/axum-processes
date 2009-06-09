@@ -242,15 +242,17 @@ int scan_hwparent(struct mbn_interface *itf, unsigned short *par, char *err) {
     /* received frame, check for ID */
     if(n > 0) {
       n = scan_read(&frame, itf);
-      if(n < 0 || n != (int)sizeof(struct can_frame)) {
-        sprintf(err, "Reading from network: %s", strerror(errno));
-        return 1;
-      }
-      if((frame.can_id & CAN_ERR_MASK & 0xFFFF000F) == 0x0FFF0001) {
-        par[0] = ((unsigned short)frame.data[0]<<8) | frame.data[1];
-        par[1] = ((unsigned short)frame.data[2]<<8) | frame.data[3];
-        par[2] = ((unsigned short)frame.data[4]<<8) | frame.data[5];
-        return 0;
+      if(n) {
+        if(n < 0 || n != (int)sizeof(struct can_frame)) {
+          sprintf(err, "Reading from network: %s", strerror(errno));
+          return 1;
+        }
+        if((frame.can_id & CAN_ERR_MASK & 0xFFFF000F) == 0x0FFF0001) {
+          par[0] = ((unsigned short)frame.data[0]<<8) | frame.data[1];
+          par[1] = ((unsigned short)frame.data[2]<<8) | frame.data[3];
+          par[2] = ((unsigned short)frame.data[4]<<8) | frame.data[5];
+          return 0;
+        }
       }
     }
     /* no parent found, check for timeout and try again */
@@ -446,8 +448,8 @@ int scan_read(struct can_frame *frame, struct mbn_interface *itf)
       }
     }
 
-    n = -1;
-    while ((n==-1) && (dat->cirbufb != dat->cirbuft))
+    n = 0;
+    while ((n==0) && (dat->cirbufb != dat->cirbuft))
     {
       rcvbyte = dat->cirbuf[dat->cirbufb++];
       if (dat->cirbufb>(CIRBUFLENGTH-1))
