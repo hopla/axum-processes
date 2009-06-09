@@ -349,19 +349,13 @@ typedef struct
 
 float CalculateEQ(float *Coefficients, float Gain, int Frequency, float Bandwidth, float Slope, FilterType Type);
 
-//function to read the command line in this applications format
-void GetCommandLineArguments(int argc, char *argv[], char *TTYDevice, char *NetworkInterface, unsigned char *TraceValue);
-
-//requiered function for the MambaNet stack.
+//required function for the MambaNet stack.
 void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int FromAddress, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress=NULL);
 
 //debug function
 void dump_block(const unsigned char *block, unsigned int length);
 
-void SetupSTDIN(struct termios *oldtio, int *oldflags);
 int SetupNetwork(char *NetworkInterface, unsigned char *LocalMACAddress);
-
-void CloseSTDIN(struct termios *oldtio, int oldflags);
 void CloseNetwork(int NetworkFileDescriptor);
 
 void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16]);
@@ -372,6 +366,7 @@ void Timer100HzDone(int Value);
 
 int delay_ms(double sleep_time);
 int delay_us(double sleep_time);
+
 bool ProgramEEPROM(int fd);
 
 void SetDSPCard_EQ(unsigned int DSPCardChannelNr, unsigned char BandNr);
@@ -394,21 +389,13 @@ void SetAxum_TalkbackSource(unsigned int TalkbackNr);
 
 void SetModule_Switch(unsigned int SwitchNr, unsigned int ModuleNr, unsigned char State);
 
-//void SetModule(unsigned int ModuleNr);
-void SetCRM_Switch(unsigned int SwitchNr, unsigned char State);
-void SetCRM_LEDBar(char NrOfLEDs);
-
 void SetAxum_BussMasterLevels();
 void SetDSP_BussMasterLevels();
-//void SetCRM();
 
 void SetDSPCard_Interpolation();
 
 void SetDSPCard_MonitorChannel(unsigned int DSPCardMonitorChannelNr);
 void SetAxum_MonitorBuss(unsigned int MonitorBussNr);
-
-void SetModule_LEDs(unsigned int LEDNr, unsigned int ModuleNr, unsigned char State);
-void SetModule_Fader(unsigned int ModuleNr, unsigned int Position);
 
 void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress=0x00000000);
 void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);

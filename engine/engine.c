@@ -456,7 +456,6 @@ int main(int argc, char *argv[])
     //**************************************************************/
     struct itimerval MillisecondTimeOut;
     struct sigaction signal_action;
-    sigset_t old_sigmask;
 
     cntBroadcastPing = 6;
 
@@ -491,11 +490,6 @@ int main(int argc, char *argv[])
 
       // block (process is in idle mode) until input becomes available
       int ReturnValue = select(maxfd, &readfs, NULL, NULL, NULL);
-      if (ReturnValue == -1)
-      {//no error or non-blocked signal)
-//          perror("pselect:");
-      }
-
       if (ReturnValue != -1)
       {//no error or non-blocked signal)
         //Test if the network generated an event.
@@ -574,71 +568,6 @@ int main(int argc, char *argv[])
   log_close();
 
   return 0;
-}
-
-
-//This functions checks the commandline arguments and stores
-//them in the corresponding variables.
-void GetCommandLineArguments(int argc, char *argv[], char *TTYDevice, char *NetworkInterface, unsigned char *TraceValue)
-{
-  int cnt;
-
-  for (cnt=0; cnt<argc; cnt++)
-  {
-    if (argv[cnt][0] == '-')
-    {
-      switch (argv[cnt][1])
-      {
-      case '1':
-      {
-        *TraceValue |= 1;
-      }
-      break;
-      case '2':
-      {
-        *TraceValue |= 2;
-      }
-      break;
-      case '3':
-      {
-        *TraceValue |= 3;
-      }
-      break;
-      case 'T':
-      {
-        if (argv[cnt][2] != 0x00)
-        {
-          strcpy(TTYDevice, &argv[cnt][2]);
-        }
-        else
-        {
-          if (cnt<(argc-1))
-          {
-            cnt++;
-            strcpy(TTYDevice, argv[cnt]);
-          }
-        }
-      }
-      break;
-      case 'N':
-      {
-        if (argv[cnt][2] != 0x00)
-        {
-          strcpy(NetworkInterface, &argv[cnt][2]);
-        }
-        else
-        {
-          if (cnt<(argc-1))
-          {
-            cnt++;
-            strcpy(NetworkInterface, argv[cnt]);
-          }
-        }
-      }
-      break;
-      }
-    }
-  }
 }
 
 //MambaNetMessageReceived is called from the MambaNet stack.
@@ -5612,65 +5541,6 @@ void dump_block(const unsigned char *block, unsigned int length)
     printf("%s\r\n",linebuf);
   }
 }
-
-//Function that initializes stdin
-//Actually not a 'stack' functionality but usefull in the axum.
-//
-//  - termios oldtio must be declared before put in this fucntion.
-//   when you are finished using stdin the struct must be parameter
-//   of the CloseSTDIN(...) function.
-//  - oldflags must be declared before put in this function.
-//   when you are finished using stdin the struct must be parameter
-//   of the CloseSTDIN(...) function.
-void SetupSTDIN(struct termios *oldtio, int *oldflags)
-{
-  struct termios tio;
-
-  //Get all attributes of the stdin
-  if (tcgetattr(STDIN_FILENO, &tio) != 0)
-  {
-    perror("error in tcgetattr from stdin");
-  }
-
-  //store the current attributes to set back if we leave the process.
-  memcpy(oldtio, &tio, sizeof(struct termios));
-
-  //do not use line-interpetation and/or echo features of the tty.
-  tio.c_lflag &= ~(ICANON | ECHO);
-
-  // Set the new attributes for stdin
-  if (tcsetattr(STDIN_FILENO, TCSANOW, &tio) != 0)
-  {
-    perror("error in tcsetattr from stdin.\r\n");
-  }
-
-  // Get the currently set flags for stdin, remember them to set back later.
-  *oldflags = fcntl(STDIN_FILENO, F_GETFL);
-  if (*oldflags < 0)
-  {
-    perror("error in fcntl(STDIN_FILENO, F_GETFL)");
-  }
-
-  // Set the O_NONBLOCK flag for stdin
-  if (fcntl(STDIN_FILENO, F_SETFL, *oldflags | O_NONBLOCK)<0)
-  {
-    perror("error in fcntl(STDIN_FILENO, F_SETFL)");
-  }
-}
-
-//Function that initializes stdin
-//Actually not a 'stack' functionality but usefull in the axum.
-//
-//This functions sets back the oldtio and oldflags for stdin.
-void CloseSTDIN(struct termios *oldtio, int oldflags)
-{
-  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, oldtio) != 0)
-  {
-    perror("error in tcsetattr from stdin.");
-  }
-  fcntl(STDIN_FILENO, F_SETFL, oldflags);
-}
-
 
 //This function opens a network interface and set the
 //interface Axum/MambaNet compatible settings:
