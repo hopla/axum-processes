@@ -472,8 +472,6 @@ int main(int argc, char *argv[])
     signal_action.sa_handler = Timer100HzDone;
     sigaction(SIGALRM, &signal_action, 0);
 
-    sigprocmask(SIG_UNBLOCK, &signal_action.sa_mask, &old_sigmask);
-
     setitimer(ITIMER_REAL, &MillisecondTimeOut, NULL);
 
 
@@ -492,8 +490,7 @@ int main(int argc, char *argv[])
       FD_SET(DatabaseFileDescriptor, &readfs);
 
       // block (process is in idle mode) until input becomes available
-//            int ReturnValue = select(maxfd, &readfs, NULL, NULL, NULL);
-      int ReturnValue = pselect(maxfd, &readfs, NULL, NULL, NULL, &old_sigmask);
+      int ReturnValue = select(maxfd, &readfs, NULL, NULL, NULL);
       if (ReturnValue == -1)
       {//no error or non-blocked signal)
 //          perror("pselect:");
