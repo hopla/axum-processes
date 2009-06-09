@@ -10,6 +10,7 @@ BEGIN
     SELECT COUNT(*) FROM slot_config s
      JOIN addresses a ON a.addr = s.addr
      WHERE (id).man = 1 AND (id).prod = 20
+       AND s.slot_nr >= 16 AND s.slot_nr <= 20
     ), 0);
   RETURN r;
 END
