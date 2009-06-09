@@ -193,7 +193,7 @@ void init(int argc, char **argv)
   char ethdev[50];
   char dbstr[256];
   int c;
-
+  
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbstr, DEFAULT_DB_STR);
   strcpy(log_file, DEFAULT_LOG_FILE);
@@ -253,7 +253,12 @@ void init(int argc, char **argv)
 
   if (!verbose)
     log_open();
+  
+  log_write("----------------------------");
+  log_write("Try to start the Axum engine");
+ 
   //hwparent(&this_node);
+
   db_open(dbstr);
   DatabaseFileDescriptor = db_get_fd();
   if(DatabaseFileDescriptor < 0) 
@@ -307,7 +312,6 @@ void init(int argc, char **argv)
   */
   if (!verbose)
     daemonize_finish();
-  log_write("-----------------------");
   log_write("Axum Engine Initialized");
 }
 

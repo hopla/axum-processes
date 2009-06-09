@@ -52,13 +52,18 @@ bool dsp_program_eeprom(int fd);
 
 DSP_HANDLER_STRUCT *dsp_open()
 {
+  int cntDSPCard;
+  int cntDSP;
+  int DSPCardCount;
+  int dsp_initialized;
+  
   DSP_HANDLER_STRUCT *dsp_handler;
   LOG_DEBUG("[%s] enter", __func__);
 
   dsp_handler = (DSP_HANDLER_STRUCT *) calloc(1, sizeof(DSP_HANDLER_STRUCT));
   if (dsp_handler == NULL)
   {
-    log_write("Couldn't allocate memory for 'dsp_handler'");
+    fprintf(stderr, "Couldn't allocate memory for 'dsp_handler'");
     return NULL;
   }
 
@@ -66,7 +71,31 @@ DSP_HANDLER_STRUCT *dsp_open()
   dsp_init((char *)"/dev/pci2040_1", &dsp_handler->dspcard[1]);
   dsp_init((char *)"/dev/pci2040_2", &dsp_handler->dspcard[2]);
   dsp_init((char *)"/dev/pci2040_3", &dsp_handler->dspcard[3]);
+ 
+  DSPCardCount = 0; 
+  for (cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
+  {
+    dsp_initialized = true;
+    for (cntDSP=0; cntDSP<4; cntDSP++)
+    {
+      if (dsp_handler->dspcard[cntDSPCard].dsp_regs[cntDSP].HPIA == NULL)
+      {
+        dsp_initialized = false;
+      }
+    }
 
+    if (dsp_initialized)
+    {
+      DSPCardCount++;
+    }
+  }
+  if (!DSPCardCount)
+  {
+    fprintf(stderr, "No DSP card found.");
+    return NULL;
+  }
+  log_write("%d DSP card(s) found", DSPCardCount);
+  
   return dsp_handler;
 }
 
@@ -78,7 +107,6 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
   fd = open(devname, O_RDWR);
   if (fd<0)
   {
-    fprintf(stderr, "PCI2040 open error on device '%s'.\n", devname);
     return 0; 
   }
   
