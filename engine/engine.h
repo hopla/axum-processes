@@ -214,71 +214,6 @@ typedef struct
   AXUM_TALKBACK_STRUCT Talkback[16];
 } AXUM_DATA_STRUCT;
 
-//**************************************************************/
-//DSP Data definitions
-//**************************************************************/
-typedef struct
-{
-  bool On;
-  float Level;
-  unsigned int Frequency;
-  float Bandwidth;
-  float Slope;
-  FilterType Type;
-} DSPCARD_EQ_BAND_DATA_STRUCT;
-
-typedef struct
-{
-  int Percent;
-  bool On;
-} DSPCARD_DYNAMICS_DATA_STRUCT;
-
-typedef struct
-{
-  float Level;
-  bool On;
-} DSPCARD_BUSS_DATA_STRUCT;
-
-typedef struct
-{
-  int Source;
-  float Gain;
-  bool PhaseReverse;
-  bool Insert;
-  DSPCARD_EQ_BAND_DATA_STRUCT Filter;
-  DSPCARD_EQ_BAND_DATA_STRUCT EQBand[6];
-
-  DSPCARD_DYNAMICS_DATA_STRUCT Dynamics;
-
-  DSPCARD_BUSS_DATA_STRUCT Buss[32];
-
-} DSPCARD_CHANNEL_DATA_STRUCT;
-
-typedef struct
-{
-  float Level[48];
-  float MasterLevel;
-} DSPCARD_MONITOR_CHANNEL_DATA_STRUCT;
-
-typedef struct
-{
-  float Level;
-  bool On;
-} DSPCARD_BUSS_MASTER_DATA_STRUCT;
-
-typedef struct
-{
-  int Buss;
-} DSPCARD_MIXMINUS_DATA_STRUCT;
-
-typedef struct
-{
-  DSPCARD_CHANNEL_DATA_STRUCT ChannelData[64];
-  DSPCARD_BUSS_MASTER_DATA_STRUCT BussMasterData[32];
-  DSPCARD_MONITOR_CHANNEL_DATA_STRUCT MonitorChannelData[8];
-  DSPCARD_MIXMINUS_DATA_STRUCT MixMinusData[64];
-} DSPCARD_DATA_STRUCT;
-
 
 //**************************************************************/
 //MambaNet Node information definitions
@@ -367,13 +302,6 @@ void Timer100HzDone(int Value);
 int delay_ms(double sleep_time);
 int delay_us(double sleep_time);
 
-bool ProgramEEPROM(int fd);
-
-void SetDSPCard_EQ(unsigned int DSPCardChannelNr, unsigned char BandNr);
-void SetDSPCard_ChannelProcessing(unsigned int DSPCardChannelNr);
-void SetDSPCard_BussLevels(unsigned int DSPCardChannelNr);
-void SetDSPCard_MixMinus(unsigned int DSPCardChannelNr);
-
 void SetBackplane_Source(unsigned int FormInputNr, unsigned int ChannelNr);
 void SetBackplane_Clock();
 
@@ -390,11 +318,6 @@ void SetAxum_TalkbackSource(unsigned int TalkbackNr);
 void SetModule_Switch(unsigned int SwitchNr, unsigned int ModuleNr, unsigned char State);
 
 void SetAxum_BussMasterLevels();
-void SetDSP_BussMasterLevels();
-
-void SetDSPCard_Interpolation();
-
-void SetDSPCard_MonitorChannel(unsigned int DSPCardMonitorChannelNr);
 void SetAxum_MonitorBuss(unsigned int MonitorBussNr);
 
 void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress=0x00000000);

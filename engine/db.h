@@ -1,5 +1,3 @@
-
-
 #ifndef _db_h
 #define _db_h
 

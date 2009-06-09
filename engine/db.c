@@ -1,5 +1,6 @@
 #include "common.h"
 #include "engine.h"
+#include "dsp.h"
 #include "db.h"
 
 #include <stdio.h>
@@ -20,6 +21,7 @@ extern unsigned short int dB2Position[1500];
 extern float Position2dB[1024];
 extern DEFAULT_NODE_OBJECTS_STRUCT AxumEngineDefaultObjects;
 extern int AxumApplicationAndDSPInitialized;
+extern DSP_HANDLER_STRUCT *dsp_handler;
 
 extern PGconn *sql_conn;
 
@@ -774,7 +776,7 @@ int db_read_global_config()
 
     if (AxumApplicationAndDSPInitialized)
     {
-      SetDSPCard_Interpolation();
+      dsp_set_interpolation(dsp_handler, AxumData.Samplerate);
     }
     SetBackplane_Clock();
 

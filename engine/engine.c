@@ -127,42 +127,14 @@ float cntFloatDebug = 0;
 
 unsigned char VUMeter = 0;
 unsigned char MeterFrequency = 5; //20Hz
-unsigned int ModuleDSPEntryPoint                = 0x00000000;
-unsigned int ModuleDSPRoutingFrom               = 0x00000000;
-unsigned int ModuleDSPUpdate_InputGainFactor    = 0x00000000;
-unsigned int ModuleDSPUpdate_LevelFactor        = 0x00000000;
-unsigned int ModuleDSPFilterCoefficients        = 0x00000000;
-unsigned int ModuleDSPEQCoefficients            = 0x00000000;
-unsigned int ModuleDSPDynamicsOriginalFactor    = 0x00000000;
-unsigned int ModuleDSPDynamicsProcessedFactor   = 0x00000000;
-unsigned int ModuleDSPMeterPPM                  = 0x00000000;
-unsigned int ModuleDSPMeterVU                   = 0x00000000;
-unsigned int ModuleDSPPhaseRMS                  = 0x00000000;
-unsigned int ModuleDSPSmoothFactor              = 0x00000000;
-unsigned int ModuleDSPPPMReleaseFactor          = 0x00000000;
-unsigned int ModuleDSPVUReleaseFactor           = 0x00000000;
-unsigned int ModuleDSPRMSReleaseFactor          = 0x00000000;
-
-unsigned int SummingDSPEntryPoint               = 0x00000000;
-unsigned int SummingDSPUpdate_MatrixFactor      = 0x00000000;
-unsigned int SummingDSPBussMeterPPM             = 0x00000000;
-unsigned int SummingDSPBussMeterVU              = 0x00000000;
-unsigned int SummingDSPPhaseRMS                 = 0x00000000;
-unsigned int SummingDSPSelectedMixMinusBuss     = 0x00000000;
-unsigned int SummingDSPSmoothFactor             = 0x00000000;
-unsigned int SummingDSPVUReleaseFactor          = 0x00000000;
-unsigned int SummingDSPPhaseRelease             = 0x00000000;
-
-unsigned int FXDSPEntryPoint                    = 0x00000000;
-
-int FirstModuleOnSurface = 0;
 
 AXUM_DATA_STRUCT AxumData;
 
 float SummingdBLevel[48];
 unsigned int BackplaneMambaNetAddress = 0x00000000;
 
-DSPCARD_DATA_STRUCT DSPCardData[4];
+//DSPCARD_DATA_STRUCT DSPCardData[4];
+DSP_HANDLER_STRUCT *dsp_handler;
 
 AXUM_FUNCTION_INFORMATION_STRUCT *SourceFunctions[NUMBER_OF_SOURCES][NUMBER_OF_SOURCE_FUNCTIONS];
 AXUM_FUNCTION_INFORMATION_STRUCT *ModuleFunctions[NUMBER_OF_MODULES][NUMBER_OF_MODULE_FUNCTIONS];
@@ -191,11 +163,6 @@ char TTYDevice[256];                    //Buffer to store the serial device name
 char NetworkInterface[256];     //Buffer to store the networ device name
 
 unsigned char LocalMACAddress[6];  //Buffer to store local MAC Address
-
-volatile unsigned long *PtrDSP_HPIC[4] = {NULL,NULL,NULL,NULL};
-volatile unsigned long *PtrDSP_HPIA[4] = {NULL,NULL,NULL,NULL};
-volatile unsigned long *PtrDSP_HPIDAutoIncrement[4] = {NULL,NULL,NULL,NULL};
-volatile unsigned long *PtrDSP_HPID[4] = {NULL,NULL,NULL,NULL};
 
 int EthernetInterfaceIndex = -1;
 
@@ -295,8 +262,9 @@ void init(int argc, char **argv)
     log_close();
     exit(1);
   }
-  
-  if (!dsp_open())
+ 
+  dsp_handler = dsp_open(); 
+  if (dsp_handler == NULL)
   {
     db_close();
     log_close();
@@ -312,7 +280,7 @@ void init(int argc, char **argv)
     printf("Error opening network interface: %s\n", ethdev);
     db_close();
     log_close();
-    dsp_close();
+    dsp_close(dsp_handler);
     exit(1);
   }
   
@@ -559,7 +527,7 @@ int main(int argc, char *argv[])
   }
   DeleteAllObjectListPerFunction();
 
-  dsp_close();
+  dsp_close(dsp_handler);
 
   CloseNetwork(NetworkFileDescriptor);
 
@@ -5893,136 +5861,76 @@ void Timer100HzDone(int Value)
   if ((cntMillisecondTimer-PreviousCount_LevelMeter)>MeterFrequency)
   {
     PreviousCount_LevelMeter = cntMillisecondTimer;
-
-    if (PtrDSP_HPIA[2] != NULL)
+    dsp_read_buss_meters(dsp_handler, SummingdBLevel);
+    
+    //buss audio level
+    for (int cntBuss=0; cntBuss<16; cntBuss++)
     {
-      //VU or PPM
-      //float dBLevel[48];
-      for (int cntChannel=0; cntChannel<48; cntChannel++)
-      {
-        unsigned int MeterAddress = SummingDSPBussMeterPPM+cntChannel*4;
-        if (VUMeter)
-        {
-          MeterAddress = SummingDSPBussMeterVU+cntChannel*4;
-        }
+      CheckObjectsToSent(0x01000000 | (cntBuss<<12) | BUSS_FUNCTION_AUDIO_LEVEL_LEFT);
+      CheckObjectsToSent(0x01000000 | (cntBuss<<12) | BUSS_FUNCTION_AUDIO_LEVEL_RIGHT);
+    }
 
-        *PtrDSP_HPIA[2] = MeterAddress;
-        float LinearLevel = *((float *)PtrDSP_HPID[2]);
-        if (!VUMeter)
-        {
-          *((float *)PtrDSP_HPID[2]) = 0;
-        }
-        if (LinearLevel != 0)
-        {
-          SummingdBLevel[cntChannel] = 20*log10(LinearLevel/2147483647);
-        }
-        else
-        {
-          SummingdBLevel[cntChannel] = -2000;
-        }
-      }
-
-      //buss audio level
-      for (int cntBuss=0; cntBuss<16; cntBuss++)
-      {
-        CheckObjectsToSent(0x01000000 | (cntBuss<<12) | BUSS_FUNCTION_AUDIO_LEVEL_LEFT);
-        CheckObjectsToSent(0x01000000 | (cntBuss<<12) | BUSS_FUNCTION_AUDIO_LEVEL_RIGHT);
-      }
-
-      //monitor buss audio level
-      for (int cntMonitorBuss=0; cntMonitorBuss<2; cntMonitorBuss++)
-      {
-        CheckObjectsToSent(0x02000000 | (cntMonitorBuss<<12) | MONITOR_BUSS_FUNCTION_AUDIO_LEVEL_LEFT);
-        CheckObjectsToSent(0x02000000 | (cntMonitorBuss<<12) | MONITOR_BUSS_FUNCTION_AUDIO_LEVEL_RIGHT);
-      }
+    //monitor buss audio level
+    for (int cntMonitorBuss=0; cntMonitorBuss<2; cntMonitorBuss++)
+    {
+      CheckObjectsToSent(0x02000000 | (cntMonitorBuss<<12) | MONITOR_BUSS_FUNCTION_AUDIO_LEVEL_LEFT);
+      CheckObjectsToSent(0x02000000 | (cntMonitorBuss<<12) | MONITOR_BUSS_FUNCTION_AUDIO_LEVEL_RIGHT);
     }
   }
 
   if ((cntMillisecondTimer-PreviousCount_SignalDetect)>10)
   {
+    float dBLevel[256];
     PreviousCount_SignalDetect = cntMillisecondTimer;
-
-    if (PtrDSP_HPIA[0] != NULL)
+    dsp_read_module_meters(dsp_handler, dBLevel);
+      
+    for (int cntModule=0; cntModule<128; cntModule++)
     {
-      float dBLevel[256];
+      int FirstChannelNr = cntModule<<1;
+      unsigned int DisplayFunctionNumber;
 
-      for (int cntChannel=0; cntChannel<32; cntChannel++)
-      {
-        *PtrDSP_HPIA[0] = ModuleDSPMeterPPM+cntChannel*4;
-        float LinearLevel = *((float *)PtrDSP_HPID[0]);
-        *((float *)PtrDSP_HPID[0]) = 0;
-        if (LinearLevel != 0)
+      if ((dBLevel[FirstChannelNr]>-70) || (dBLevel[FirstChannelNr+1]>-70))
+      {   //Signal
+        if (!AxumData.ModuleData[cntModule].Signal)
         {
-          dBLevel[cntChannel] = 20*log10(LinearLevel/2147483647);
-        }
-        else
-        {
-          dBLevel[cntChannel] = -2000;
-        }
-      }
-      for (int cntChannel=0; cntChannel<32; cntChannel++)
-      {
-        *PtrDSP_HPIA[1] = ModuleDSPMeterPPM+cntChannel*4;
-        float LinearLevel = *((float *)PtrDSP_HPID[1]);
-        *((float *)PtrDSP_HPID[1]) = 0;
-        if (LinearLevel != 0)
-        {
-          dBLevel[32+cntChannel] = 20*log10(LinearLevel/2147483647);
-        }
-        else
-        {
-          dBLevel[32+cntChannel] = -2000;
-        }
-      }
+          AxumData.ModuleData[cntModule].Signal = 1;
 
-      for (int cntModule=FirstModuleOnSurface; cntModule<128; cntModule++)
-      {
-        int FirstChannelNr = cntModule<<1;
-        unsigned int DisplayFunctionNumber;
+          DisplayFunctionNumber = (cntModule<<12) | MODULE_FUNCTION_SIGNAL;
+          CheckObjectsToSent(DisplayFunctionNumber);
+        }
 
-        if ((dBLevel[FirstChannelNr]>-70) || (dBLevel[FirstChannelNr+1]>-70))
-        {   //Signal
-          if (!AxumData.ModuleData[cntModule].Signal)
+        if ((dBLevel[FirstChannelNr]>-3) || (dBLevel[FirstChannelNr+1]>-3))
+        {   //Peak
+          if (!AxumData.ModuleData[cntModule].Peak)
           {
-            AxumData.ModuleData[cntModule].Signal = 1;
-
-            DisplayFunctionNumber = (cntModule<<12) | MODULE_FUNCTION_SIGNAL;
+            AxumData.ModuleData[cntModule].Peak = 1;
+            DisplayFunctionNumber = (cntModule<<12) | MODULE_FUNCTION_PEAK;
             CheckObjectsToSent(DisplayFunctionNumber);
           }
-
-          if ((dBLevel[FirstChannelNr]>-3) || (dBLevel[FirstChannelNr+1]>-3))
-          {   //Peak
-            if (!AxumData.ModuleData[cntModule].Peak)
-            {
-              AxumData.ModuleData[cntModule].Peak = 1;
-              DisplayFunctionNumber = (cntModule<<12) | MODULE_FUNCTION_PEAK;
-              CheckObjectsToSent(DisplayFunctionNumber);
-            }
-          }
-          else
-          {
-            if (AxumData.ModuleData[cntModule].Peak)
-            {
-              AxumData.ModuleData[cntModule].Peak = 0;
-              DisplayFunctionNumber = (cntModule<<12) | MODULE_FUNCTION_PEAK;
-              CheckObjectsToSent(DisplayFunctionNumber);
-            }
-          }
         }
         else
         {
-          if (AxumData.ModuleData[cntModule].Signal)
+          if (AxumData.ModuleData[cntModule].Peak)
           {
-            AxumData.ModuleData[cntModule].Signal = 0;
-            DisplayFunctionNumber = (cntModule<<12) | MODULE_FUNCTION_SIGNAL;
+            AxumData.ModuleData[cntModule].Peak = 0;
+            DisplayFunctionNumber = (cntModule<<12) | MODULE_FUNCTION_PEAK;
             CheckObjectsToSent(DisplayFunctionNumber);
+          }
+        }
+      }
+      else
+      {
+        if (AxumData.ModuleData[cntModule].Signal)
+        {
+          AxumData.ModuleData[cntModule].Signal = 0;
+          DisplayFunctionNumber = (cntModule<<12) | MODULE_FUNCTION_SIGNAL;
+          CheckObjectsToSent(DisplayFunctionNumber);
 
-            if (AxumData.ModuleData[cntModule].Peak)
-            {
-              AxumData.ModuleData[cntModule].Peak = 0;
-              DisplayFunctionNumber = (cntModule<<12) | MODULE_FUNCTION_PEAK;
-              CheckObjectsToSent(DisplayFunctionNumber);
-            }
+          if (AxumData.ModuleData[cntModule].Peak)
+          {
+            AxumData.ModuleData[cntModule].Peak = 0;
+            DisplayFunctionNumber = (cntModule<<12) | MODULE_FUNCTION_PEAK;
+            CheckObjectsToSent(DisplayFunctionNumber);
           }
         }
       }
@@ -6141,347 +6049,6 @@ int delay_us(double sleep_time)
     }
   }
   return 0;
-}
-
-bool ProgramEEPROM(int fd)
-{
-  struct
-  {
-    unsigned char SubClass;
-    unsigned char BaseClass;
-    unsigned char SubSysByte0;
-    unsigned char SubSysByte1;
-    unsigned char SubSysByte2;
-    unsigned char SubSysByte3;
-    unsigned char GPIOSelect;
-    unsigned char RSVD_0;
-    unsigned char RSVD_1;
-    unsigned char MiscCtrlByte0;
-    unsigned char MiscCtrlByte1;
-    unsigned char Diagnostic;
-    unsigned char HPI_ImpByte0;
-    unsigned char RSVD_2;
-    unsigned char HPI_DWByte0;
-    unsigned char RSVD_3;
-    unsigned char RSVD[16];
-  } EEpromRegisters;
-
-  EEpromRegisters.SubClass = 0x80;
-  EEpromRegisters.BaseClass = 0x06;
-  EEpromRegisters.SubSysByte0 = 0x00;
-  EEpromRegisters.SubSysByte1 = 0x00;
-  EEpromRegisters.SubSysByte2 = 0x00;
-  EEpromRegisters.SubSysByte3 = 0x00;
-  EEpromRegisters.GPIOSelect = 0x3C;
-  EEpromRegisters.RSVD_0 = 0x00;
-  EEpromRegisters.RSVD_1 = 0x00;
-  EEpromRegisters.MiscCtrlByte0 = 0x27;
-  EEpromRegisters.MiscCtrlByte1 = 0x00;
-  EEpromRegisters.Diagnostic = 0x00;
-  EEpromRegisters.HPI_ImpByte0 = 0x0F; //(Axum-RACK-DSP is 0x0F)
-  EEpromRegisters.RSVD_2 = 0x00;
-  EEpromRegisters.HPI_DWByte0 = 0x0F;
-  EEpromRegisters.RSVD_3 = 0x00;
-
-  pci2040_ioctl_linux pci2040_ioctl_message;
-  PCI2040_WRITE_REG  reg;
-
-  reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
-  //Clock High & Data High
-  reg.DataVal = 0x03;
-
-  pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-  pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-  pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-  ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-  delay_us(5);
-
-  ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-
-  //ByteWrite to EEPROM
-  for (unsigned char cntByte=0; cntByte<32; cntByte++)
-  {
-    //StartCondition (Data goes Low (bit 1) & Clock stays high (bit 0))
-    reg.DataVal &= 0xFD;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //I2C Address
-    for (int cntBit=0; cntBit<8; cntBit++)
-    {
-      unsigned char Mask = 0x80>>cntBit;
-
-      //Clock Low
-      reg.DataVal &= 0xFE;
-      pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-      pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-      pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-      ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
-
-      //Set I2C Address
-      if (0xA0 & Mask)
-        reg.DataVal |= 0x02;
-      else
-        reg.DataVal &= 0xFD;
-
-      pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-      pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-      pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-      ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
-
-      //Clock High
-      reg.DataVal |= 0x01;
-      pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-      pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-      pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-      ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
-    }
-    //Acknowledge
-    //Clock Low & Data sould be an input
-    reg.DataVal &= 0xFE;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //Change data for input
-    reg.Regoff = ENUM_GPBDATADIR_OFFSET;
-    reg.DataVal = 0x01;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
-
-    //Clock High
-    reg.DataVal |= 0x01;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //Clock Low
-    reg.DataVal &= 0xFE;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //Change Data for Output
-    reg.Regoff = ENUM_GPBDATADIR_OFFSET;
-    reg.DataVal = 0x03;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
-    //EEProm Address
-    for (int cntBit=0; cntBit<8; cntBit++)
-    {
-      unsigned char Mask = 0x80>>cntBit;
-
-      //Clock Low
-      reg.DataVal &= 0xFE;
-      pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-      pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-      pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-      ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
-
-      //Set EEPROM Address
-      if (cntByte & Mask)
-        reg.DataVal |= 0x02;
-      else
-        reg.DataVal &= 0xFD;
-      pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-      pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-      pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-      ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
-
-      //Clock High
-      reg.DataVal |= 0x01;
-      pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-      pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-      pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-      ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
-    }
-    //Acknowledge
-    //Clock Low & Data sould be an input
-    reg.DataVal &= 0xFE;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //Change data for input
-    reg.Regoff = ENUM_GPBDATADIR_OFFSET;
-    reg.DataVal = 0x01;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
-    //Clock High
-    reg.DataVal |= 0x01;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //Clock Low
-    reg.DataVal &= 0xFE;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //Change Data for Output
-    reg.Regoff = ENUM_GPBDATADIR_OFFSET;
-    reg.DataVal = 0x03;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
-    //EEProm Data
-    for (int cntBit=0; cntBit<8; cntBit++)
-    {
-      unsigned char Mask = 0x80>>cntBit;
-
-      //Clock Low
-      reg.DataVal &= 0xFE;
-      pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-      pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-      pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-      ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
-
-      //Set EEPROM Data
-      if (((unsigned char *)&EEpromRegisters.SubClass)[cntByte] & Mask)
-        reg.DataVal |= 0x02;
-      else
-        reg.DataVal &= 0xFD;
-      pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-      pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-      pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-      ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
-
-      //Clock High
-      reg.DataVal |= 0x01;
-      pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-      pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-      pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-      ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
-    }
-    //Acknowledge
-    //Clock Low & Data sould be an input
-    reg.DataVal &= 0xFE;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //Change data for input
-    reg.Regoff = ENUM_GPBDATADIR_OFFSET;
-    reg.DataVal = 0x01;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
-    //Clock High
-    reg.DataVal |= 0x01;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //Clock Low
-    reg.DataVal &= 0xFE;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //Change Data for Output
-    reg.Regoff = ENUM_GPBDATADIR_OFFSET;
-    reg.DataVal = 0x03;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
-    //Stopbit
-
-    //Data Low
-    reg.DataVal &= 0xFD;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-    //Data High
-    reg.DataVal |= 0x02;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
-
-    //Clock High
-    reg.DataVal |= 0x01;
-    pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
-    pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
-    ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-  }
-  return true;
 }
 
 float CalculateEQ(float *Coefficients, float Gain, int Frequency, float Bandwidth, float Slope, FilterType Type)
@@ -6796,277 +6363,6 @@ float CalculateEQ(float *Coefficients, float Gain, int Frequency, float Bandwidt
   return a0/b0;
 }
 
-void SetDSPCard_Interpolation()
-{
-  float AdjustedOffset = (0.002*48000)/AxumData.Samplerate;
-  float SmoothFactor = (1-AdjustedOffset);
-
-  float Value;
-
-  //DSP1
-  *PtrDSP_HPIA[0] = ModuleDSPSmoothFactor;
-  *((float *)PtrDSP_HPID[0]) = SmoothFactor;
-  Value = *((float *)PtrDSP_HPID[0]);
-  printf("SmoothFactor[0] %g\n", Value);
-
-  AdjustedOffset = (0.1*48000)/AxumData.Samplerate;
-  float PPMReleaseFactor = (1-AdjustedOffset);
-  *PtrDSP_HPIA[0] = ModuleDSPPPMReleaseFactor;
-  *((float *)PtrDSP_HPID[0]) = PPMReleaseFactor;
-  Value = *((float *)PtrDSP_HPID[0]);
-  printf("PPMReleaseFactor[0] %g\n", Value);
-
-  AdjustedOffset = (0.00019186*48000)/AxumData.Samplerate;
-  float VUReleaseFactor = (1-AdjustedOffset);
-  *PtrDSP_HPIA[0] = ModuleDSPVUReleaseFactor;
-  *((float *)PtrDSP_HPID[0]) = VUReleaseFactor;
-  Value = *((float *)PtrDSP_HPID[0]);
-  printf("VUReleaseFactor[0] %g\n", Value);
-
-  AdjustedOffset = (0.00043891*48000)/AxumData.Samplerate;
-  float RMSReleaseFactor = (1-AdjustedOffset);
-  *PtrDSP_HPIA[0] = ModuleDSPRMSReleaseFactor;
-  *((float *)PtrDSP_HPID[0]) = RMSReleaseFactor;
-  Value = *((float *)PtrDSP_HPID[0]);
-  printf("RMSReleaseFactor[0] %g\n", Value);
-
-  //DSP2
-  *PtrDSP_HPIA[1] = ModuleDSPSmoothFactor;
-  *((float *)PtrDSP_HPID[1]) = SmoothFactor;
-  Value = *((float *)PtrDSP_HPID[1]);
-  printf("SmoothFactor[1] %g\n", Value);
-
-  *PtrDSP_HPIA[1] = ModuleDSPPPMReleaseFactor;
-  *((float *)PtrDSP_HPID[1]) = PPMReleaseFactor;
-  Value = *((float *)PtrDSP_HPID[1]);
-  printf("PPMReleaseFactor[1] %g\n", Value);
-
-  *PtrDSP_HPIA[1] = ModuleDSPVUReleaseFactor;
-  *((float *)PtrDSP_HPID[1]) = VUReleaseFactor;
-  Value = *((float *)PtrDSP_HPID[1]);
-  printf("VUReleaseFactor[1] %g\n", Value);
-
-  *PtrDSP_HPIA[1] = ModuleDSPRMSReleaseFactor;
-  *((float *)PtrDSP_HPID[1]) = RMSReleaseFactor;
-  Value = *((float *)PtrDSP_HPID[1]);
-  printf("RMSReleaseFactor[1] %g\n", Value);
-
-
-  AdjustedOffset = (0.002*48000)/AxumData.Samplerate;
-  SmoothFactor = (1-(AdjustedOffset*4)); //*4 for interpolation
-  *PtrDSP_HPIA[2] = SummingDSPSmoothFactor;
-  *((float *)PtrDSP_HPID[2]) = SmoothFactor;
-  SmoothFactor = *((float *)PtrDSP_HPID[2]);
-  printf("SmoothFactor[2] %g\n", SmoothFactor);
-
-  AdjustedOffset = (0.001*48000)/AxumData.Samplerate;
-  VUReleaseFactor = (1-AdjustedOffset);
-  *PtrDSP_HPIA[2] = SummingDSPVUReleaseFactor;
-  *((float *)PtrDSP_HPID[2]) = VUReleaseFactor;
-  Value = *((float *)PtrDSP_HPID[2]);
-  printf("VUReleaseFactor[2] %g\n", Value);
-
-  float PhaseRelease = ((0.0002*48000)/AxumData.Samplerate);
-  *PtrDSP_HPIA[2] = SummingDSPPhaseRelease;
-  *((float *)PtrDSP_HPID[2]) = PhaseRelease;
-  Value = *((float *)PtrDSP_HPID[2]);
-  printf("PhaseRelease[2] %g\n", Value);
-}
-
-void SetDSPCard_EQ(unsigned int DSPCardChannelNr, unsigned char BandNr)
-{
-  float Coefs[6];
-  float a0 = 1;
-  float a1 = 0;
-  float a2 = 0;
-  float b1 = 0;
-  float b2 = 0;
-  unsigned char DSPCardNr = (DSPCardChannelNr/64);
-  unsigned char DSPNr = (DSPCardChannelNr%64)/32;
-  unsigned char DSPChannelNr = DSPCardChannelNr%32;
-
-  if (DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].EQBand[BandNr].On)
-  {
-    float           Level               = DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].EQBand[BandNr].Level;
-    unsigned int    Frequency           = DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].EQBand[BandNr].Frequency;
-    float           Bandwidth           = DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].EQBand[BandNr].Bandwidth;
-    float           Slope               = DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].EQBand[BandNr].Slope;
-    FilterType      Type                = DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].EQBand[BandNr].Type;
-
-    CalculateEQ(Coefs, Level, Frequency, Bandwidth, Slope, Type);
-
-    a0 = Coefs[0]/Coefs[3];
-    a1 = Coefs[1]/Coefs[3];
-    a2 = Coefs[2]/Coefs[3];
-    b1 = Coefs[4]/Coefs[3];
-    b2 = Coefs[5]/Coefs[3];
-  }
-
-  //MuteX implementation?
-  if (DSPCardNr == 0)
-  {
-    *PtrDSP_HPIA[DSPNr] = ModuleDSPEQCoefficients+(((DSPChannelNr*5)+(BandNr*32*5))*4);
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = -b1;
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = -b2;
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = a0;
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = a1;
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = a2;
-  }
-}
-
-void SetDSPCard_ChannelProcessing(unsigned int DSPCardChannelNr)
-{
-  unsigned char DSPCardNr = (DSPCardChannelNr/64);
-  unsigned char DSPNr = (DSPCardChannelNr%64)/32;
-  unsigned char DSPChannelNr = DSPCardChannelNr%32;
-
-  if (DSPCardNr == 0)
-  {
-    //Routing from (0: Gain input is default '0'->McASPA)
-
-    //Routing from (1: EQ input is '2'->Gain output or '1'->McASPB)
-    *PtrDSP_HPIA[DSPNr] = ModuleDSPRoutingFrom+((1*32*4)+(DSPChannelNr*4));
-    if (DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Insert)
-    {
-      *((int *)PtrDSP_HPID[DSPNr]) = 1;
-    }
-    else
-    {
-      *((int *)PtrDSP_HPID[DSPNr]) = 2;
-    }
-
-    //Routing from (3: McASPA input (insert out) is '5'->Level output)
-    *PtrDSP_HPIA[DSPNr] = ModuleDSPRoutingFrom+((3*32*4)+(DSPChannelNr*4));
-    *((int *)PtrDSP_HPID[DSPNr]) = 2;
-
-    //Routing from (3: McASPA input (insert out) is '2'->Gain output)
-//      *PtrDSP_HPIA[DSPNr] = ModuleDSPRoutingFrom+((3*32*4)+(DSPChannelNr*4));
-//      *((int *)PtrDSP_HPID[DSPNr]) = 2;
-
-    //Routing from (5: level meter input is '0'->McASPA  or '1'->McASPB)
-    *PtrDSP_HPIA[DSPNr] = ModuleDSPRoutingFrom+((5*32*4)+(DSPChannelNr*4));
-    if (DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Insert)
-    {
-      *((int *)PtrDSP_HPID[DSPNr]) = 1;
-    }
-    else
-    {
-      *((int *)PtrDSP_HPID[DSPNr]) = 0;
-    }
-
-    //Routing from (6: level input is '1'->McASPB (insert input)
-    *PtrDSP_HPIA[DSPNr] = ModuleDSPRoutingFrom+((6*32*4)+(DSPChannelNr*4));
-    *((int *)PtrDSP_HPID[DSPNr]) = 1;
-
-    //Gain section
-    float factor = pow10(DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Gain/20);
-    if (DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].PhaseReverse)
-    {
-      factor *= -1;
-    }
-    //MuteX implementation?
-    *PtrDSP_HPIA[DSPNr] = ModuleDSPUpdate_InputGainFactor+(DSPChannelNr*4);
-    *((float *)PtrDSP_HPID[DSPNr]) = factor;
-
-    //Filter section
-    float Coefs[6];
-    float a0 = 1;
-    float a1 = 0;
-    float a2 = 0;
-    float b1 = 0;
-    float b2 = 0;
-    if (DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Filter.On)
-    {
-      float           Level               = DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Filter.Level;
-      unsigned int    Frequency           = DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Filter.Frequency;
-      float           Bandwidth           = DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Filter.Bandwidth;
-      float           Slope                   = DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Filter.Slope;
-      FilterType      Type                    = DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Filter.Type;
-
-      CalculateEQ(Coefs, Level, Frequency, Bandwidth, Slope, Type);
-
-      a0 = Coefs[0]/Coefs[3];
-      a1 = Coefs[1]/Coefs[3];
-      a2 = Coefs[2]/Coefs[3];
-      b1 = Coefs[4]/Coefs[3];
-      b2 = Coefs[5]/Coefs[3];
-    }
-    //MuteX implementation?
-    *PtrDSP_HPIA[DSPNr] = ModuleDSPFilterCoefficients+((DSPChannelNr*5)*4);
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = -b1;
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = -b2;
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = a0;
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = a1;
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = a2;
-
-    for (int cntBand=0; cntBand<6; cntBand++)
-    {
-      SetDSPCard_EQ(DSPCardChannelNr, cntBand);
-    }
-
-
-    //MuteX implementation?
-    float DynamicsProcessedFactor = 0;
-    float DynamicsOriginalFactor = 1;
-    if (DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Dynamics.On)
-    {
-      DynamicsProcessedFactor = (float)DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Dynamics.Percent/100;
-      DynamicsOriginalFactor = 1-DynamicsProcessedFactor;
-    }
-
-    *PtrDSP_HPIA[DSPNr] = ModuleDSPDynamicsOriginalFactor+(DSPChannelNr*4);
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = DynamicsOriginalFactor;
-
-    *PtrDSP_HPIA[DSPNr] = ModuleDSPDynamicsProcessedFactor+(DSPChannelNr*4);
-    *((float *)PtrDSP_HPIDAutoIncrement[DSPNr]) = DynamicsProcessedFactor;
-  }
-}
-
-void SetDSPCard_BussLevels(unsigned int DSPCardChannelNr)
-{
-  unsigned char DSPCardNr = (DSPCardChannelNr/64);
-  unsigned char DSPChannelNr = DSPCardChannelNr%64;
-
-  if (DSPCardNr == 0)
-  {
-    for (int cntBuss=0; cntBuss<32; cntBuss++)
-    {
-      float factor = 0;
-
-      if (DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Buss[cntBuss].On)
-      {
-        if (DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Buss[cntBuss].Level<-120)
-        {
-          factor = 0;
-        }
-        else
-        {
-          factor = pow10(DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr].Buss[cntBuss].Level/20);
-        }
-      }
-
-      //MuteX implementation?
-      *PtrDSP_HPIA[2] = SummingDSPUpdate_MatrixFactor+((cntBuss+(DSPChannelNr*32))*4);
-      *((float *)PtrDSP_HPID[2]) = factor;
-    }
-  }
-}
-
-void SetDSPCard_MixMinus(unsigned int DSPCardChannelNr)
-{
-  unsigned char DSPCardNr = (DSPCardChannelNr/64);
-  unsigned char DSPChannelNr = DSPCardChannelNr%64;
-
-  printf("CardNr: %d, ChannelNr: %d used buss: %d\n", DSPCardNr, DSPChannelNr, DSPCardData[DSPCardNr].MixMinusData[DSPCardChannelNr].Buss);
-
-  if (DSPCardNr == 0)
-  {
-    //MuteX implementation?
-    *PtrDSP_HPIA[2] = SummingDSPSelectedMixMinusBuss+(DSPChannelNr*4);
-    *((int *)PtrDSP_HPID[2]) = DSPCardData[DSPCardNr].MixMinusData[DSPCardChannelNr].Buss;
-  }
-}
-
 void SetBackplane_Source(unsigned int FormInputNr, unsigned int ChannelNr)
 {
   printf("[SetBackplane_Source(%d,%d)]\n", FormInputNr, ChannelNr);
@@ -7147,19 +6443,21 @@ void SetAxum_EQ(unsigned char ModuleNr, unsigned char BandNr)
   unsigned char DSPCardNr = (FirstDSPChannelNr/64);
   unsigned char DSPCardChannelNr = FirstDSPChannelNr%64;
 
+  DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
+
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].On = AxumData.ModuleData[ModuleNr].EQBand[BandNr].On;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].Level = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].Frequency = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].Bandwidth = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].Slope  = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Slope;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].Type = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].On = AxumData.ModuleData[ModuleNr].EQBand[BandNr].On;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].Level = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].Frequency = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].Bandwidth = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].Slope  = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Slope;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].EQBand[BandNr].Type = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type;
   }
 
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
-    SetDSPCard_EQ(DSPCardChannelNr+cntChannel, BandNr);
+    dsp_set_eq(dsp_handler, DSPCardChannelNr+cntChannel, BandNr);
   }
 }
 
@@ -7169,27 +6467,29 @@ void SetAxum_ModuleProcessing(unsigned int ModuleNr)
   unsigned char DSPCardNr = (FirstDSPChannelNr/64);
   unsigned char DSPCardChannelNr = FirstDSPChannelNr%64;
 
+  DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
+
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Insert = AxumData.ModuleData[ModuleNr].Insert;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Gain = AxumData.ModuleData[ModuleNr].Gain;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Insert = AxumData.ModuleData[ModuleNr].Insert;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Gain = AxumData.ModuleData[ModuleNr].Gain;
 
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Filter.On = AxumData.ModuleData[ModuleNr].Filter.On;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Filter.Level = AxumData.ModuleData[ModuleNr].Filter.Level;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Filter.Frequency = AxumData.ModuleData[ModuleNr].Filter.Frequency;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Filter.Bandwidth = AxumData.ModuleData[ModuleNr].Filter.Bandwidth;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Filter.Slope = AxumData.ModuleData[ModuleNr].Filter.Slope;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Filter.Type = AxumData.ModuleData[ModuleNr].Filter.Type;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.On = AxumData.ModuleData[ModuleNr].Filter.On;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.Level = AxumData.ModuleData[ModuleNr].Filter.Level;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.Frequency = AxumData.ModuleData[ModuleNr].Filter.Frequency;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.Bandwidth = AxumData.ModuleData[ModuleNr].Filter.Bandwidth;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.Slope = AxumData.ModuleData[ModuleNr].Filter.Slope;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.Type = AxumData.ModuleData[ModuleNr].Filter.Type;
 
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Percent = AxumData.ModuleData[ModuleNr].Dynamics;
-    DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Dynamics.On = AxumData.ModuleData[ModuleNr].DynamicsOn;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Percent = AxumData.ModuleData[ModuleNr].Dynamics;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.On = AxumData.ModuleData[ModuleNr].DynamicsOn;
   }
-  DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+1].PhaseReverse = AxumData.ModuleData[ModuleNr].PhaseReverse;
+  dspcard->data.ChannelData[DSPCardChannelNr+1].PhaseReverse = AxumData.ModuleData[ModuleNr].PhaseReverse;
 
 
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
-    SetDSPCard_ChannelProcessing(DSPCardChannelNr+cntChannel);
+    dsp_set_ch(dsp_handler, DSPCardChannelNr+cntChannel);
   }
 }
 
@@ -7199,6 +6499,8 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
   unsigned char DSPCardNr = (FirstDSPChannelNr/64);
   unsigned char DSPCardChannelNr = FirstDSPChannelNr%64;
   float PanoramadB[2] = {-200, -200};
+
+  DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
   //Panorama
   float RightPos = AxumData.ModuleData[ModuleNr].Panorama;
@@ -7267,64 +6569,64 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
 
     for (int cntChannel=0; cntChannel<2; cntChannel++)
     {
-      DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level = -140; //0 dB?
-      DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level = -140; //0 dB?
-      DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
-      DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
+      dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level = -140; //0 dB?
+      dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level = -140; //0 dB?
+      dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
+      dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
 
       if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Active)
       {
         if (AxumData.ModuleData[ModuleNr].Mono)
         {
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += BussBalancedB[0];
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += BussBalancedB[1];
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += -6;
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += -6;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += BussBalancedB[0];
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += BussBalancedB[1];
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += -6;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += -6;
 
           if ((!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel) && (!AxumData.BussMasterData[cntBuss].PreModuleLevel))
           {
-            DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
-            DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
           }
           if (!AxumData.BussMasterData[cntBuss].PreModuleBalance)
           {
-            DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += PanoramadB[0];
-            DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += PanoramadB[1];
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += PanoramadB[0];
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += PanoramadB[1];
           }
           if (!AxumData.BussMasterData[cntBuss].PreModuleOn)
           {
             if ((!AxumData.ModuleData[ModuleNr].On) || (AxumData.ModuleData[ModuleNr].Cough))
             {
-              DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
-              DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
+              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
+              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
             }
           }
         }
         else
         { //Stereo
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
-          DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level += BussBalancedB[cntChannel];
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level += BussBalancedB[cntChannel];
 
           if ((!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel) && (!AxumData.BussMasterData[cntBuss].PreModuleLevel))
           {
-            DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
           }
 
           if (!AxumData.BussMasterData[cntBuss].PreModuleBalance)
           {
-            DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level += PanoramadB[cntChannel];
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level += PanoramadB[cntChannel];
           }
 
           if (!AxumData.BussMasterData[cntBuss].PreModuleOn)
           {
             if ((!AxumData.ModuleData[ModuleNr].On) || (AxumData.ModuleData[ModuleNr].Cough))
             {
-              DSPCardData[DSPCardNr].ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].On = 0;
+              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].On = 0;
             }
           }
         }
@@ -7334,7 +6636,7 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
 
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
-    SetDSPCard_BussLevels(DSPCardChannelNr+cntChannel);
+    dsp_set_buss_lvl(dsp_handler, DSPCardChannelNr+cntChannel);
   }
 }
 
@@ -7469,9 +6771,11 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
   unsigned int FirstDSPChannelNr = ModuleNr<<1;
   unsigned char DSPCardNr = (FirstDSPChannelNr/64);
   unsigned char DSPCardChannelNr = FirstDSPChannelNr%64;
-
   int cntDestination=0;
   int DestinationNr = -1;
+
+  DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
+
   while (cntDestination<1280)
   {
     if (AxumData.DestinationData[cntDestination].MixMinusSource == AxumData.ModuleData[ModuleNr].Source)
@@ -7498,12 +6802,12 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
         {
           printf("Use buss %d, for MixMinus\n", BussToUse);
 
-          DSPCardData[DSPCardNr].MixMinusData[DSPCardChannelNr+0].Buss = (BussToUse<<1)+0;
-          DSPCardData[DSPCardNr].MixMinusData[DSPCardChannelNr+1].Buss = (BussToUse<<1)+1;
+          dspcard->data.MixMinusData[DSPCardChannelNr+0].Buss = (BussToUse<<1)+0;
+          dspcard->data.MixMinusData[DSPCardChannelNr+1].Buss = (BussToUse<<1)+1;
 
           for (int cntChannel=0; cntChannel<2; cntChannel++)
           {
-            SetDSPCard_MixMinus(DSPCardChannelNr+cntChannel);
+            dsp_set_mixmin(dsp_handler, DSPCardChannelNr+cntChannel);
           }
 
           AxumData.DestinationData[DestinationNr].MixMinusActive = 1;
@@ -7862,79 +7166,18 @@ void SetAxum_BussMasterLevels()
 {
   for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
   {
+    DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[cntDSPCard];
+
     //stereo buss 1-16
     for (int cntBuss=0; cntBuss<16; cntBuss++)
     {
-      DSPCardData[cntDSPCard].BussMasterData[(cntBuss*2)+0].Level = AxumData.BussMasterData[cntBuss].Level;
-      DSPCardData[cntDSPCard].BussMasterData[(cntBuss*2)+1].Level = AxumData.BussMasterData[cntBuss].Level;
-      DSPCardData[cntDSPCard].BussMasterData[(cntBuss*2)+0].On = AxumData.BussMasterData[cntBuss].On;
-      DSPCardData[cntDSPCard].BussMasterData[(cntBuss*2)+1].On = AxumData.BussMasterData[cntBuss].On;
+      dspcard->data.BussMasterData[(cntBuss*2)+0].Level = AxumData.BussMasterData[cntBuss].Level;
+      dspcard->data.BussMasterData[(cntBuss*2)+1].Level = AxumData.BussMasterData[cntBuss].Level;
+      dspcard->data.BussMasterData[(cntBuss*2)+0].On = AxumData.BussMasterData[cntBuss].On;
+      dspcard->data.BussMasterData[(cntBuss*2)+1].On = AxumData.BussMasterData[cntBuss].On;
     }
   }
-  SetDSP_BussMasterLevels();
-}
-
-void SetDSP_BussMasterLevels()
-{
-  for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
-  {
-    for (int cntBuss=0; cntBuss<32; cntBuss++)
-    {
-      float factor = pow10(DSPCardData[cntDSPCard].BussMasterData[cntBuss].Level/20);
-      if (!DSPCardData[cntDSPCard].BussMasterData[cntBuss].On)
-      {
-        factor = 0;
-      }
-
-      if (cntDSPCard == 3)
-      {
-        //MuteX implementation?
-        *PtrDSP_HPIA[2] = SummingDSPUpdate_MatrixFactor+((64*32)*4)+(cntBuss*4);
-        *((float *)PtrDSP_HPID[2]) = factor;
-      }
-    }
-  }
-}
-
-void SetDSPCard_MonitorChannel(unsigned int MonitorChannelNr)
-{
-  unsigned char DSPCardNr = (MonitorChannelNr/8);
-  unsigned char DSPCardMonitorChannelNr = MonitorChannelNr%8;
-  float factor = 0;
-
-  for (int cntMonitorInput=0; cntMonitorInput<48; cntMonitorInput++)
-  {
-    if (DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr].Level[cntMonitorInput]<=-140)
-    {
-      factor = 0;
-    }
-    else
-    {
-      factor = pow10(DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr].Level[cntMonitorInput]/20);
-    }
-
-    if (DSPCardNr == 0)
-    {
-      //MuteX implementation?
-      *PtrDSP_HPIA[2] = SummingDSPUpdate_MatrixFactor+((64*32)*4)+(32*4)+(DSPCardMonitorChannelNr*4)+((cntMonitorInput*8)*4);
-      *((float *)PtrDSP_HPID[2]) = factor;
-    }
-  }
-
-  if (DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr].MasterLevel<=-140)
-  {
-    factor = 0;
-  }
-  else
-  {
-    factor = pow10(DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr].MasterLevel/20);
-  }
-  if (DSPCardNr == 0)
-  {
-    //MuteX implementation?
-    *PtrDSP_HPIA[2] = SummingDSPUpdate_MatrixFactor+((64*32)*4)+(32*4)+(DSPCardMonitorChannelNr*4)+((48*8)*4);
-    *((float *)PtrDSP_HPID[2]) = factor;
-  }
+  dsp_set_buss_mstr_lvl(dsp_handler);
 }
 
 void SetAxum_MonitorBuss(unsigned int MonitorBussNr)
@@ -7943,10 +7186,12 @@ void SetAxum_MonitorBuss(unsigned int MonitorBussNr)
   unsigned char DSPCardNr = (FirstMonitorChannelNr/8);
   unsigned char DSPCardMonitorChannelNr = FirstMonitorChannelNr%8;
 
+  DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
+
   for (int cntMonitorInput=0; cntMonitorInput<48; cntMonitorInput++)
   {
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[cntMonitorInput] = -140;
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[cntMonitorInput] = -140;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[cntMonitorInput] = -140;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[cntMonitorInput] = -140;
   }
 
   //Check if an automatic switch buss is active
@@ -7964,15 +7209,15 @@ void SetAxum_MonitorBuss(unsigned int MonitorBussNr)
   {
     if (AxumData.Monitor[MonitorBussNr].Buss[cntBuss])
     {
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[(cntBuss*2)+0] = 0;
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[(cntBuss*2)+1] = 0;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[(cntBuss*2)+0] = 0;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[(cntBuss*2)+1] = 0;
 
       if (MonitorBussDimActive)
       {
         if (!AxumData.Monitor[MonitorBussNr].AutoSwitchingBuss[cntBuss])
         {
-          DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[(cntBuss*2)+0] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
-          DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[(cntBuss*2)+1] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+          dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[(cntBuss*2)+0] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+          dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[(cntBuss*2)+1] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
         }
       }
     }
@@ -7980,90 +7225,90 @@ void SetAxum_MonitorBuss(unsigned int MonitorBussNr)
 
   if (AxumData.Monitor[MonitorBussNr].Ext[0])
   {
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[32] = 0;
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[33] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[32] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[33] = 0;
     if (MonitorBussDimActive)
     {
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[32] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[33] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[32] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[33] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
     }
   }
   if (AxumData.Monitor[MonitorBussNr].Ext[1])
   {
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[34] = 0;
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[35] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[34] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[35] = 0;
     if (MonitorBussDimActive)
     {
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[34] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[35] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[34] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[35] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
     }
   }
   if (AxumData.Monitor[MonitorBussNr].Ext[2])
   {
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[36] = 0;
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[37] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[36] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[37] = 0;
     if (MonitorBussDimActive)
     {
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[36] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[37] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[36] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[37] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
     }
   }
   if (AxumData.Monitor[MonitorBussNr].Ext[3])
   {
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[38] = 0;
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[39] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[38] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[39] = 0;
     if (MonitorBussDimActive)
     {
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[38] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[39] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[38] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[39] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
     }
   }
   if (AxumData.Monitor[MonitorBussNr].Ext[4])
   {
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[40] = 0;
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[41] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[40] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[41] = 0;
     if (MonitorBussDimActive)
     {
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[40] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[41] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[40] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[41] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
     }
   }
   if (AxumData.Monitor[MonitorBussNr].Ext[5])
   {
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[42] = 0;
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[43] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[42] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[43] = 0;
     if (MonitorBussDimActive)
     {
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[42] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[43] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[42] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[43] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
     }
   }
   if (AxumData.Monitor[MonitorBussNr].Ext[6])
   {
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[44] = 0;
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[45] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[44] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[45] = 0;
     if (MonitorBussDimActive)
     {
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[44] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[45] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[44] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[45] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
     }
   }
   if (AxumData.Monitor[MonitorBussNr].Ext[7])
   {
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[46] = 0;
-    DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[47] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[46] = 0;
+    dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[47] = 0;
     if (MonitorBussDimActive)
     {
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].Level[46] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
-      DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].Level[47] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].Level[46] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
+      dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].Level[47] += AxumData.Monitor[MonitorBussNr].SwitchingDimLevel;
     }
   }
 
-  DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+0].MasterLevel = 0;
-  DSPCardData[DSPCardNr].MonitorChannelData[DSPCardMonitorChannelNr+1].MasterLevel = 0;
+  dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].MasterLevel = 0;
+  dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].MasterLevel = 0;
 
-  SetDSPCard_MonitorChannel(DSPCardMonitorChannelNr+0);
-  SetDSPCard_MonitorChannel(DSPCardMonitorChannelNr+1);
+  dsp_set_monitor_buss(dsp_handler, DSPCardMonitorChannelNr+0);
+  dsp_set_monitor_buss(dsp_handler, DSPCardMonitorChannelNr+1);
 }
 
 void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress)
