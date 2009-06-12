@@ -105,6 +105,8 @@ void node_online(struct db_node *node) {
     mbnSetActuatorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_NAME, MBN_DATATYPE_OCTETS, 32, dat, 1);
     db_setnode(node->MambaNetAddr, &addr);
   }
+  /* always get firmware major revision to detect changes in the object list */
+  mbnGetSensorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_FWMAJOR, 1);
 }
 
 
@@ -123,6 +125,7 @@ void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, st
     node.EngineAddr = new->EngineAddr;
     node.Services = new->Services;
     node.Active = 1;
+    node.FirmMajor = -1;
     node_online(&node);
   }
 
@@ -143,16 +146,22 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
   struct db_node node;
   unsigned char *p = dat.Octets;
 
-  if(obj != MBN_NODEOBJ_HWPARENT || type != MBN_DATATYPE_OCTETS)
+  if(!(obj == MBN_NODEOBJ_HWPARENT && type == MBN_DATATYPE_OCTETS)
+      && !(obj == MBN_NODEOBJ_FWMAJOR && type == MBN_DATATYPE_UINT))
     return 1;
 
   db_lock(1);
   if(db_getnode(&node, msg->AddressFrom)) {
-    node.Parent[0] = (unsigned short)(p[0]<<8) + p[1];
-    node.Parent[1] = (unsigned short)(p[2]<<8) + p[3];
-    node.Parent[2] = (unsigned short)(p[4]<<8) + p[5];
-    log_write("Received hardware parent of %08lX: %04X:%04X:%04X",
-      msg->AddressFrom, node.Parent[0], node.Parent[1], node.Parent[2]);
+    if(obj == MBN_NODEOBJ_HWPARENT) {
+      node.Parent[0] = (unsigned short)(p[0]<<8) + p[1];
+      node.Parent[1] = (unsigned short)(p[2]<<8) + p[3];
+      node.Parent[2] = (unsigned short)(p[4]<<8) + p[5];
+      log_write("Received hardware parent of %08lX: %04X:%04X:%04X",
+        msg->AddressFrom, node.Parent[0], node.Parent[1], node.Parent[2]);
+    } else {
+      node.FirmMajor = dat.UInt;
+      log_write("Received firmware major revision of %08lX: %d", msg->AddressFrom, dat.UInt);
+    }
     db_setnode(msg->AddressFrom, &node);
   }
   db_lock(0);

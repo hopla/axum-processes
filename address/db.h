@@ -20,6 +20,7 @@ struct db_node {
   time_t FirstSeen, LastSeen;
   int AddressRequests;
   unsigned char flags; /* for internal use */
+  short FirmMajor;
 };
 
 void db_init(char *);

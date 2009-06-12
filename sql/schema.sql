@@ -106,7 +106,8 @@ CREATE TABLE addresses (
   refresh boolean NOT NULL DEFAULT FALSE,
   firstseen timestamp NOT NULL DEFAULT NOW(),
   lastseen timestamp NOT NULL DEFAULT NOW(),
-  addr_requests integer NOT NULL DEFAULT 0
+  addr_requests integer NOT NULL DEFAULT 0,
+  firm_major smallint
 );
 CREATE UNIQUE INDEX addresses_unique_id ON addresses (((id).man), ((id).prod), ((id).id));
 

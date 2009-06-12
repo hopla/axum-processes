@@ -15,7 +15,7 @@
 
 
 #define ADDRSELECT "addr, name, id, engine_addr, services, active, parent, setname,\
-  refresh, DATE_PART('epoch', firstseen), DATE_PART('epoch', lastseen), addr_requests"
+  refresh, DATE_PART('epoch', firstseen), DATE_PART('epoch', lastseen), addr_requests, firm_major"
 
 
 void db_event_removed(char, char *);
@@ -68,6 +68,8 @@ int db_parserow(PGresult *q, int row, struct db_node *res) {
   sscanf(PQgetvalue(q, row, 9),  "%ld", &(res->FirstSeen));
   sscanf(PQgetvalue(q, row, 10), "%ld", &(res->LastSeen));
   sscanf(PQgetvalue(q, row, 11), "%d",  &(res->AddressRequests));
+  if(sscanf(PQgetvalue(q, row, 12), "%hd", &(res->FirmMajor)) != 1)
+    res->FirmMajor = -1;
   return 1;
 }
 
@@ -108,12 +110,12 @@ int db_nodebyid(struct db_node *res, unsigned short id_man, unsigned short id_pr
 
 int db_setnode(unsigned long addr, struct db_node *node) {
   PGresult *qs;
-  char str[13][33];
-  const char *params[13];
+  char str[14][33];
+  const char *params[14];
   int i;
 
   /* create arguments array */
-  for(i=0;i<13;i++)
+  for(i=0;i<14;i++)
     params[i] = (const char *)str[i];
 
   sprintf(str[0], "%ld", node->MambaNetAddr);
@@ -131,18 +133,22 @@ int db_setnode(unsigned long addr, struct db_node *node) {
   sprintf(str[9],  "%ld", node->FirstSeen);
   sprintf(str[10], "%ld", node->LastSeen);
   sprintf(str[11], "%d", node->AddressRequests);
-  sprintf(str[12], "%ld", node->MambaNetAddr);
+  if(node->FirmMajor == -1)
+    params[12] = NULL;
+  else
+    sprintf(str[12], "%hd", node->FirmMajor);
+  sprintf(str[13], "%ld", node->MambaNetAddr);
 
   /* execute query */
   qs = sql_exec(
     addr ? "UPDATE addresses SET addr = $1, name = $2, id = $3, engine_addr = $4, services = $5,\
               active = $6, parent = $7, setname = $8, refresh = $9, firstseen = 'epoch'::timestamptz\
               + $10 * '1 second'::interval, lastseen = 'epoch'::timestamptz + $11 * '1 second'::interval,\
-              addr_requests = $12 WHERE addr = $13"
+              addr_requests = $12, firm_major = $13 WHERE addr = $14"
          : "INSERT INTO addresses (addr, name, id, engine_addr, services, active, parent, setname, refresh,\
-              firstseen, lastseen, addr_requests) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, 'epoch'::timestamptz\
-              + $10 * '1 second'::interval, 'epoch'::timestamptz + $11 * '1 second'::interval, $12)",
-    0, addr ? 13 : 12, params);
+              firstseen, lastseen, addr_requests, firm_major) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9,\
+              'epoch'::timestamptz+$10*'1 second'::interval, 'epoch'::timestamptz+$11*'1 second'::interval, $12, $13)",
+    0, addr ? 14 : 13, params);
   if(qs == 0)
     return 0;
   PQclear(qs);
@@ -244,6 +250,7 @@ void db_event_refresh(char myself, char *arg) {
   if(myself || mbnNodeStatus(mbn, addr) != NULL) {
     mbnGetActuatorData(mbn, addr, MBN_NODEOBJ_NAME, 1);
     mbnGetSensorData(mbn, addr, MBN_NODEOBJ_HWPARENT, 1);
+    mbnGetSensorData(mbn, addr, MBN_NODEOBJ_FWMAJOR, 1);
     sprintf(str, "%d", addr);
     if((qs = sql_exec("UPDATE addresses SET refresh = FALSE\
         WHERE addr = $1", 0, 1, params)) != NULL)
