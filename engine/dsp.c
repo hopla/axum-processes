@@ -67,7 +67,7 @@ DSP_HANDLER_STRUCT *dsp_open()
     return NULL;
   }
 
-  dsp_init((char *)"/dev/pci2040", &dsp_handler->dspcard[0]);
+  dsp_init((char *)"/dev/pci2040_0", &dsp_handler->dspcard[0]);
   dsp_init((char *)"/dev/pci2040_1", &dsp_handler->dspcard[1]);
   dsp_init((char *)"/dev/pci2040_2", &dsp_handler->dspcard[2]);
   dsp_init((char *)"/dev/pci2040_3", &dsp_handler->dspcard[3]);
@@ -91,7 +91,7 @@ DSP_HANDLER_STRUCT *dsp_open()
   }
   if (!DSPCardCount)
   {
-    fprintf(stderr, "No DSP card found.");
+    fprintf(stderr, "No programmed DSP card found.\n");
     return NULL;
   }
   log_write("%d DSP card(s) found", DSPCardCount);
@@ -109,6 +109,7 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
   {
     return 0; 
   }
+  log_write("PCI card %s got fd %d", devname, fd);
   
   pci2040_ioctl_linux pci2040_ioctl_message;
   PCI2040_DUMP_CONFIG_REGS HPIConfigurationRegisters;
@@ -141,18 +142,18 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
 
     if (!dsp_program_eeprom(fd))
     {
-      fprintf(stderr, "PCI card not initialized by EEPROM !\nThe card is initialized!\nEEPROM programming failed\n");
+      fprintf(stderr, "PCI card (%s) not initialized by EEPROM !\nThe card is initialized!\nEEPROM programming failed\n", devname);
       return 0;
     }
     else
     {
-      fprintf(stderr, "PCI card not initialized by EEPROM !\nThe card is initialized and the EEPROM programmed!\n");
+      fprintf(stderr, "PCI card (%s) not initialized by EEPROM !\nThe card is initialized and the EEPROM programmed!\n", devname);
       return 0;
     }
   }
   else if ((HPIConfigurationRegisters.MiscControl&0xC000)==0xC000)
   {
-    fprintf(stderr, "PCI card is initialized but the EEPROM gives an error!\nThe EEPROM is NOT programmed !\n");
+    fprintf(stderr, "PCI card (%s) is initialized but the EEPROM gives an error!\nThe EEPROM is NOT programmed !\n", devname);
     return 0;
   }
   else
@@ -589,6 +590,22 @@ void dsp_close(DSP_HANDLER_STRUCT *dsp_handler)
   LOG_DEBUG("[%s] enter", __func__);
   free(dsp_handler);
   LOG_DEBUG("[%s] leave", __func__);
+}
+
+int dsp_force_eeprom_prg(char *devname)
+{
+  int fd;
+  
+  LOG_DEBUG("[%s] enter", __func__);
+  fd = open(devname, O_RDWR);
+  if (fd<0)
+  { 
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0; 
+  }
+  dsp_program_eeprom(fd);
+  LOG_DEBUG("[%s] leave", __func__);
+  return 1;
 }
 
 bool dsp_program_eeprom(int fd)

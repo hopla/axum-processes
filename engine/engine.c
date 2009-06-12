@@ -200,7 +200,7 @@ void init(int argc, char **argv)
   strcpy(hwparent_path, DEFAULT_GTW_PATH);
 
   /* parse options */
-  while((c = getopt(argc, argv, "e:d:l:g:i:v")) != -1) {
+  while((c = getopt(argc, argv, "e:d:l:g:i:f:v")) != -1) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
@@ -236,6 +236,17 @@ void init(int argc, char **argv)
       case 'v':
         verbose = 1;
         break;
+      case 'f':
+        if (dsp_force_eeprom_prg(optarg))
+        {
+          fprintf(stderr, "PCI2040 EEPROM NOT programmed in forced mode (%s).\n", optarg);
+        }
+        else
+        {
+          printf("PCI2040 EEPROM programmed in forced mode (%s).\n", optarg);
+        }
+        exit(1);
+        break;
       default:
         fprintf(stderr, "Usage: %s [-e dev] [-u path] [-g path] [-d str] [-l path] [-i id]\n", argv[0]);
         fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
@@ -244,6 +255,7 @@ void init(int argc, char **argv)
         fprintf(stderr, "  -l path  Path to log file.\n");
         fprintf(stderr, "  -d str   PostgreSQL database connection options.\n");
         fprintf(stderr, "  -v       Verbose output.\n");
+        fprintf(stderr, "  -f dev   force EEPROM programming on device 'dev'.\n");
         exit(1);
     }
   }

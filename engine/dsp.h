@@ -89,6 +89,8 @@ typedef struct
 DSP_HANDLER_STRUCT *dsp_open();
 void dsp_close(DSP_HANDLER_STRUCT *dsp_handler);
 
+int dsp_force_eeprom_prg(char *devname);
+
 void dsp_set_eq(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChannelNr, unsigned char BandNr);
 void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChannelNr);
 void dsp_set_buss_lvl(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChannelNr);
