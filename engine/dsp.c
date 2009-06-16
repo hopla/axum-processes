@@ -11,6 +11,8 @@
 #include <string.h>
 #include <math.h>
 
+#define EEPROM_DELAY_TIME   15
+
 //#define LOG_DEBUG_ENABLED
 
 #ifdef LOG_DEBUG_ENABLED
@@ -608,6 +610,7 @@ int dsp_force_eeprom_prg(char *devname)
   return 1;
 }
 
+
 bool dsp_program_eeprom(int fd)
 {
   LOG_DEBUG("[%s] enter", __func__);
@@ -656,11 +659,13 @@ bool dsp_program_eeprom(int fd)
   //Clock High & Data High
   reg.DataVal = 0x03;
 
+  printf("EEPROM delay time: %d uS\n", EEPROM_DELAY_TIME);
+
   pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
   pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
   pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
   ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-  delay_us(5);
+  delay_us(EEPROM_DELAY_TIME);
 
   ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
 
@@ -673,7 +678,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //I2C Address
     for (int cntBit=0; cntBit<8; cntBit++)
@@ -686,7 +691,7 @@ bool dsp_program_eeprom(int fd)
       pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
       pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
       ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
+      delay_us(EEPROM_DELAY_TIME);
 
       //Set I2C Address
       if (0xA0 & Mask)
@@ -698,7 +703,7 @@ bool dsp_program_eeprom(int fd)
       pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
       pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
       ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
+      delay_us(EEPROM_DELAY_TIME);
 
       //Clock High
       reg.DataVal |= 0x01;
@@ -706,7 +711,7 @@ bool dsp_program_eeprom(int fd)
       pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
       pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
       ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
+      delay_us(EEPROM_DELAY_TIME);
     }
     //Acknowledge
     //Clock Low & Data sould be an input
@@ -715,7 +720,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //Change data for input
     reg.Regoff = ENUM_GPBDATADIR_OFFSET;
@@ -724,7 +729,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
 
@@ -734,7 +739,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //Clock Low
     reg.DataVal &= 0xFE;
@@ -742,7 +747,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //Change Data for Output
     reg.Regoff = ENUM_GPBDATADIR_OFFSET;
@@ -751,7 +756,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
     //EEProm Address
@@ -765,7 +770,7 @@ bool dsp_program_eeprom(int fd)
       pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
       pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
       ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
+      delay_us(EEPROM_DELAY_TIME);
 
       //Set EEPROM Address
       if (cntByte & Mask)
@@ -776,7 +781,7 @@ bool dsp_program_eeprom(int fd)
       pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
       pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
       ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
+      delay_us(EEPROM_DELAY_TIME);
 
       //Clock High
       reg.DataVal |= 0x01;
@@ -784,7 +789,7 @@ bool dsp_program_eeprom(int fd)
       pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
       pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
       ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
+      delay_us(EEPROM_DELAY_TIME);
     }
     //Acknowledge
     //Clock Low & Data sould be an input
@@ -793,7 +798,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //Change data for input
     reg.Regoff = ENUM_GPBDATADIR_OFFSET;
@@ -802,7 +807,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
     //Clock High
@@ -811,7 +816,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //Clock Low
     reg.DataVal &= 0xFE;
@@ -819,7 +824,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //Change Data for Output
     reg.Regoff = ENUM_GPBDATADIR_OFFSET;
@@ -828,7 +833,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
     //EEProm Data
@@ -842,7 +847,7 @@ bool dsp_program_eeprom(int fd)
       pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
       pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
       ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
+      delay_us(EEPROM_DELAY_TIME);
 
       //Set EEPROM Data
       if (((unsigned char *)&EEpromRegisters.SubClass)[cntByte] & Mask)
@@ -853,7 +858,7 @@ bool dsp_program_eeprom(int fd)
       pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
       pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
       ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
+      delay_us(EEPROM_DELAY_TIME);
 
       //Clock High
       reg.DataVal |= 0x01;
@@ -861,7 +866,7 @@ bool dsp_program_eeprom(int fd)
       pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
       pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
       ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-      delay_us(5);
+      delay_us(EEPROM_DELAY_TIME);
     }
     //Acknowledge
     //Clock Low & Data sould be an input
@@ -870,7 +875,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //Change data for input
     reg.Regoff = ENUM_GPBDATADIR_OFFSET;
@@ -879,7 +884,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
     //Clock High
@@ -888,7 +893,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //Clock Low
     reg.DataVal &= 0xFE;
@@ -896,7 +901,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //Change Data for Output
     reg.Regoff = ENUM_GPBDATADIR_OFFSET;
@@ -905,19 +910,19 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     reg.Regoff = ENUM_GPBOUTDATA_OFFSET;
     //Stopbit
@@ -928,7 +933,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
 
     //Data High
     reg.DataVal |= 0x02;
@@ -936,8 +941,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
-
+    delay_us(EEPROM_DELAY_TIME);
 
     //Clock High
     reg.DataVal |= 0x01;
@@ -945,7 +949,7 @@ bool dsp_program_eeprom(int fd)
     pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
-    delay_us(5);
+    delay_us(EEPROM_DELAY_TIME);
   }
   LOG_DEBUG("[%s] leave", __func__);
   return true;
