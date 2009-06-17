@@ -111,7 +111,7 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
   {
     return 0; 
   }
-  log_write("PCI card %s got fd %d", devname, fd);
+  log_write("PCI card %s opened, fd=%d", devname, fd);
   
   pci2040_ioctl_linux pci2040_ioctl_message;
   PCI2040_DUMP_CONFIG_REGS HPIConfigurationRegisters;
@@ -253,6 +253,8 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
 
     //file descriptor not used further
     close(fd);
+    log_write("Closed fd %d", fd);
+
 //-------------------------------------------------------------------------
 //Load DSP1&2 with module firmware
 //-------------------------------------------------------------------------
