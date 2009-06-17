@@ -956,6 +956,23 @@ bool dsp_program_eeprom(int fd)
   return true;
 }
 
+int dsp_card_available(DSP_HANDLER_STRUCT *dsp_handler, unsigned char CardNr)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  if (CardNr<4)
+  {
+    if ((dsp_handler->dspcard[CardNr].dsp_regs[0].HPIA != NULL) &&
+        (dsp_handler->dspcard[CardNr].dsp_regs[1].HPIA != NULL) &&
+        (dsp_handler->dspcard[CardNr].dsp_regs[2].HPIA != NULL) &&
+        (dsp_handler->dspcard[CardNr].dsp_regs[3].HPIA != NULL))
+    {
+      LOG_DEBUG("[%s] leave", __func__);
+      return 1;
+    }
+  }
+  LOG_DEBUG("[%s] leave", __func__);
+  return 0;
+}
 void dsp_set_interpolation(DSP_HANDLER_STRUCT *dsp_handler, int Samplerate)
 {
   float AdjustedOffset = (0.002*48000)/Samplerate;
