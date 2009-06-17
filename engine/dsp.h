@@ -77,6 +77,7 @@ typedef struct
 
 typedef struct
 {
+  int slot;
   DSP_REGS_STRUCT dsp_regs[4];
   DSPCARD_DATA_STRUCT data;
 } DSPCARD_STRUCT;

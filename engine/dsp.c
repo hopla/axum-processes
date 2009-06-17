@@ -55,10 +55,7 @@ bool dsp_program_eeprom(int fd);
 DSP_HANDLER_STRUCT *dsp_open()
 {
   int cntDSPCard;
-  int cntDSP;
-  int DSPCardCount;
-  int dsp_initialized;
-  
+
   DSP_HANDLER_STRUCT *dsp_handler;
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -69,34 +66,36 @@ DSP_HANDLER_STRUCT *dsp_open()
     return NULL;
   }
 
-  dsp_init((char *)"/dev/pci2040_0", &dsp_handler->dspcard[0]);
-  dsp_init((char *)"/dev/pci2040_1", &dsp_handler->dspcard[1]);
-  dsp_init((char *)"/dev/pci2040_2", &dsp_handler->dspcard[2]);
-  dsp_init((char *)"/dev/pci2040_3", &dsp_handler->dspcard[3]);
- 
-  DSPCardCount = 0; 
-  for (cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
+  cntDSPCard = 0;
+  if (dsp_init((char *)"/dev/dsp0", &dsp_handler->dspcard[cntDSPCard]))
   {
-    dsp_initialized = true;
-    for (cntDSP=0; cntDSP<4; cntDSP++)
-    {
-      if (dsp_handler->dspcard[cntDSPCard].dsp_regs[cntDSP].HPIA == NULL)
-      {
-        dsp_initialized = false;
-      }
-    }
-
-    if (dsp_initialized)
-    {
-      DSPCardCount++;
-    }
+    dsp_handler->dspcard[cntDSPCard].slot = 0;
+    cntDSPCard++;
   }
-  if (!DSPCardCount)
+  if (dsp_init((char *)"/dev/dsp1", &dsp_handler->dspcard[cntDSPCard]))
+  {
+    dsp_handler->dspcard[cntDSPCard].slot = 1;
+    cntDSPCard++;
+  }
+  if (dsp_init((char *)"/dev/dsp2", &dsp_handler->dspcard[cntDSPCard]))
+  {
+    dsp_handler->dspcard[cntDSPCard].slot = 2;
+    cntDSPCard++;
+  }
+  if (dsp_init((char *)"/dev/dsp3", &dsp_handler->dspcard[cntDSPCard]))
+  {
+    dsp_handler->dspcard[cntDSPCard].slot = 3;
+    cntDSPCard++;
+  }
+ 
+  if (!cntDSPCard)
   {
     fprintf(stderr, "No programmed DSP card found.\n");
     return NULL;
   }
-  log_write("%d DSP card(s) found", DSPCardCount);
+  log_write("%d DSP card(s) found", cntDSPCard);
+
+  LOG_DEBUG("[%s] leave", __func__);
   
   return dsp_handler;
 }
