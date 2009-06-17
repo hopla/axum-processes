@@ -891,7 +891,7 @@ bool dsp_program_eeprom(int fd)
     //Clock High
     reg.DataVal |= 0x01;
     pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-    pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
+  
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
     delay_us(EEPROM_DELAY_TIME);
@@ -1030,7 +1030,7 @@ void dsp_set_interpolation(DSP_HANDLER_STRUCT *dsp_handler, int Samplerate)
   LOG_DEBUG("[%s] leave", __func__);
 }
 
-void dsp_set_eq(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChannelNr, unsigned char BandNr)
+void dsp_set_eq(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr, unsigned char BandNr)
 {
   float Coefs[6];
   float a0 = 1;
@@ -1038,8 +1038,9 @@ void dsp_set_eq(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChannelNr, 
   float a2 = 0;
   float b1 = 0;
   float b2 = 0;
-  unsigned char DSPCardNr = (DSPCardChannelNr/64);
-  unsigned char DSPNr = (DSPCardChannelNr%64)/32;
+  unsigned char DSPCardNr = (SystemChannelNr/64);
+  unsigned char DSPCardChannelNr = SystemChannelNr%64;
+  unsigned char DSPNr = (DSPCardChannelNr)/32;
   unsigned char DSPChannelNr = DSPCardChannelNr%32;
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -1075,10 +1076,11 @@ void dsp_set_eq(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChannelNr, 
   LOG_DEBUG("[%s] leave", __func__);
 }
 
-void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChannelNr)
+void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
 {
-  unsigned char DSPCardNr = (DSPCardChannelNr/64);
-  unsigned char DSPNr = (DSPCardChannelNr%64)/32;
+  unsigned char DSPCardNr = (SystemChannelNr/64);
+  unsigned char DSPCardChannelNr = SystemChannelNr%64;
+  unsigned char DSPNr = (DSPCardChannelNr)/32;
   unsigned char DSPChannelNr = DSPCardChannelNr%32;
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -1187,10 +1189,11 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChannelNr)
   LOG_DEBUG("[%s] leave", __func__);
 }
 
-void dsp_set_buss_lvl(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChannelNr)
+void dsp_set_buss_lvl(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
 {
-  unsigned char DSPCardNr = (DSPCardChannelNr/64);
-  unsigned char DSPChannelNr = DSPCardChannelNr%64;
+  unsigned char DSPCardNr = (SystemChannelNr/64);
+  unsigned char DSPCardChannelNr = SystemChannelNr%64;
+  unsigned char DSPChannelNr = DSPCardChannelNr%32;
   LOG_DEBUG("[%s] enter", __func__);
 
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
@@ -1221,10 +1224,11 @@ void dsp_set_buss_lvl(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChann
   LOG_DEBUG("[%s] leave", __func__);
 }
 
-void dsp_set_mixmin(DSP_HANDLER_STRUCT *dsp_handler, unsigned int DSPCardChannelNr)
+void dsp_set_mixmin(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
 {
-  unsigned char DSPCardNr = (DSPCardChannelNr/64);
-  unsigned char DSPChannelNr = DSPCardChannelNr%64;
+  unsigned char DSPCardNr = (SystemChannelNr/64);
+  unsigned char DSPCardChannelNr = SystemChannelNr%64;
+  unsigned char DSPChannelNr = DSPCardChannelNr%32;
   LOG_DEBUG("[%s] enter", __func__);
 
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
