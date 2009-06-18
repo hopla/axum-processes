@@ -6455,9 +6455,9 @@ void SetBackplane_Clock()
 
 void SetAxum_EQ(unsigned char ModuleNr, unsigned char BandNr)
 {
-  unsigned int FirstDSPChannelNr = ModuleNr<<1;
-  unsigned char DSPCardNr = (FirstDSPChannelNr/64);
-  unsigned char DSPCardChannelNr = FirstDSPChannelNr%64;
+  unsigned int SystemChannelNr = ModuleNr<<1;
+  unsigned char DSPCardNr = (SystemChannelNr/64);
+  unsigned char DSPCardChannelNr = SystemChannelNr%64;
 
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
@@ -6473,15 +6473,15 @@ void SetAxum_EQ(unsigned char ModuleNr, unsigned char BandNr)
 
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
-    dsp_set_eq(dsp_handler, DSPCardChannelNr+cntChannel, BandNr);
+    dsp_set_eq(dsp_handler, SystemChannelNr+cntChannel, BandNr);
   }
 }
 
 void SetAxum_ModuleProcessing(unsigned int ModuleNr)
 {
-  unsigned int FirstDSPChannelNr = ModuleNr<<1;
-  unsigned char DSPCardNr = (FirstDSPChannelNr/64);
-  unsigned char DSPCardChannelNr = FirstDSPChannelNr%64;
+  unsigned int SystemChannelNr = ModuleNr<<1;
+  unsigned char DSPCardNr = (SystemChannelNr/64);
+  unsigned char DSPCardChannelNr = SystemChannelNr%64;
 
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
@@ -6505,15 +6505,15 @@ void SetAxum_ModuleProcessing(unsigned int ModuleNr)
 
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
-    dsp_set_ch(dsp_handler, DSPCardChannelNr+cntChannel);
+    dsp_set_ch(dsp_handler, SystemChannelNr+cntChannel);
   }
 }
 
 void SetAxum_BussLevels(unsigned int ModuleNr)
 {
-  unsigned int FirstDSPChannelNr = ModuleNr<<1;
-  unsigned char DSPCardNr = (FirstDSPChannelNr/64);
-  unsigned char DSPCardChannelNr = FirstDSPChannelNr%64;
+  unsigned int SystemChannelNr = ModuleNr<<1;
+  unsigned char DSPCardNr = (SystemChannelNr/64);
+  unsigned char DSPCardChannelNr = SystemChannelNr%64;
   float PanoramadB[2] = {-200, -200};
 
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
@@ -6652,81 +6652,23 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
 
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
-    dsp_set_buss_lvl(dsp_handler, DSPCardChannelNr+cntChannel);
+    dsp_set_buss_lvl(dsp_handler, SystemChannelNr+cntChannel);
   }
 }
 
 void SetAxum_ModuleSource(unsigned int ModuleNr)
 {
-  unsigned int FirstDSPChannelNr = ModuleNr<<1;
-  unsigned char DSPCardNr = (FirstDSPChannelNr/64);
+  unsigned int SystemChannelNr = ModuleNr<<1;
+  unsigned char DSPCardNr = (SystemChannelNr/64);
+  unsigned int ToChannelNr;
 
-  unsigned int ToChannelNr = 480+(DSPCardNr*5*32)+FirstDSPChannelNr%64;
+  if (dsp_card_available(dsp_handler, DSPCardNr))
+  {  
+    DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
-  if (AxumData.ModuleData[ModuleNr].Source == 0)
-  {
-    for (int cntChannel=0; cntChannel<2; cntChannel++)
-    {   //Turn off
-      SetBackplane_Source(0, ToChannelNr+cntChannel);
-    }
-  }
-  else
-  {
-    int Input1 = 0;
-    int Input2 = 0;
-    //Get slot number from MambaNet Address
-    for (int cntSlot=0; cntSlot<15; cntSlot++)
-    {
-      if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[0].MambaNetAddress)
-      {
-        Input1 = cntSlot*32;
-      }
-      if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[1].MambaNetAddress)
-      {
-        Input2 = cntSlot*32;
-      }
-    }
-    for (int cntSlot=15; cntSlot<19; cntSlot++)
-    {
-      if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[0].MambaNetAddress)
-      {
-        Input1 = 480+((cntSlot-15)*32*5);
-      }
-      if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[1].MambaNetAddress)
-      {
-        Input2 = 480+((cntSlot-15)*32*5);
-      }
-    }
-    for (int cntSlot=21; cntSlot<42; cntSlot++)
-    {
-      if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[0].MambaNetAddress)
-      {
-        Input1 = 1120+((cntSlot-21)*32);
-      }
-      if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[1].MambaNetAddress)
-      {
-        Input2 = 1120+((cntSlot-21)*32);
-      }
-    }
-    Input1 += AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[0].SubChannel;
-    Input2 += AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[1].SubChannel;
+    ToChannelNr = 480+(dspcard->slot*5*32)+(SystemChannelNr%64);
 
-    printf("In1:%d, In2:%d\n", Input1, Input2);
-    SetBackplane_Source(Input1+1, ToChannelNr+0);
-    SetBackplane_Source(Input2+1, ToChannelNr+1);
-  }
-}
-
-void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
-{
-  unsigned char DSPCardNr = MonitorBussPerFourNr;
-
-  //four stereo busses
-  for (int cntExt=0; cntExt<4; cntExt++)
-  {
-    unsigned int ToChannelNr = 480+(DSPCardNr*5*32)+128+(cntExt*2);
-
-    if (AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt] == 0)
+    if (AxumData.ModuleData[ModuleNr].Source == 0)
     {
       for (int cntChannel=0; cntChannel<2; cntChannel++)
       {   //Turn off
@@ -6737,56 +6679,124 @@ void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
     {
       int Input1 = 0;
       int Input2 = 0;
-
       //Get slot number from MambaNet Address
       for (int cntSlot=0; cntSlot<15; cntSlot++)
       {
-        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[0].MambaNetAddress)
+        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[0].MambaNetAddress)
         {
           Input1 = cntSlot*32;
         }
-        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[1].MambaNetAddress)
+        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[1].MambaNetAddress)
         {
           Input2 = cntSlot*32;
         }
       }
       for (int cntSlot=15; cntSlot<19; cntSlot++)
       {
-        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[0].MambaNetAddress)
+        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[0].MambaNetAddress)
         {
           Input1 = 480+((cntSlot-15)*32*5);
         }
-        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[1].MambaNetAddress)
+        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[1].MambaNetAddress)
         {
           Input2 = 480+((cntSlot-15)*32*5);
         }
       }
       for (int cntSlot=21; cntSlot<42; cntSlot++)
       {
-        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[0].MambaNetAddress)
+        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[0].MambaNetAddress)
         {
           Input1 = 1120+((cntSlot-21)*32);
         }
-        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[1].MambaNetAddress)
+        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[1].MambaNetAddress)
         {
           Input2 = 1120+((cntSlot-21)*32);
         }
       }
-      Input1 += AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[0].SubChannel;
-      Input2 += AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[1].SubChannel;
+      Input1 += AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[0].SubChannel;
+      Input2 += AxumData.SourceData[AxumData.ModuleData[ModuleNr].Source-1].InputData[1].SubChannel;
 
-      printf("In1:%d, In2:%d -> %d, %d\n", Input1, Input2, ToChannelNr+0, ToChannelNr+1);
+      printf("In1:%d, In2:%d\n", Input1, Input2);
       SetBackplane_Source(Input1+1, ToChannelNr+0);
       SetBackplane_Source(Input2+1, ToChannelNr+1);
     }
   }
 }
 
+void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
+{
+  unsigned char DSPCardNr = MonitorBussPerFourNr;
+  if (dsp_card_available(dsp_handler, DSPCardNr))
+  {  
+    DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
+
+    //four stereo busses
+    for (int cntExt=0; cntExt<4; cntExt++)
+    {
+      unsigned int ToChannelNr = 480+(dspcard->slot*5*32)+128+(cntExt*2);
+
+      if (AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt] == 0)
+      {
+        for (int cntChannel=0; cntChannel<2; cntChannel++)
+        {   //Turn off
+          SetBackplane_Source(0, ToChannelNr+cntChannel);
+        }
+      }
+      else
+      {
+        int Input1 = 0;
+        int Input2 = 0;
+
+        //Get slot number from MambaNet Address
+        for (int cntSlot=0; cntSlot<15; cntSlot++)
+        {
+          if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[0].MambaNetAddress)
+          {
+            Input1 = cntSlot*32;
+          }
+          if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[1].MambaNetAddress)
+          {
+            Input2 = cntSlot*32;
+          }
+        }
+        for (int cntSlot=15; cntSlot<19; cntSlot++)
+        {
+          if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[0].MambaNetAddress)
+          {
+            Input1 = 480+((cntSlot-15)*32*5);
+          }
+          if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[1].MambaNetAddress)
+          {
+            Input2 = 480+((cntSlot-15)*32*5);
+          }
+        }
+        for (int cntSlot=21; cntSlot<42; cntSlot++)
+        {
+          if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[0].MambaNetAddress)
+          {
+            Input1 = 1120+((cntSlot-21)*32);
+          }
+          if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[1].MambaNetAddress)
+          {
+            Input2 = 1120+((cntSlot-21)*32);
+          }
+        }
+        Input1 += AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[0].SubChannel;
+        Input2 += AxumData.SourceData[AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt]-1].InputData[1].SubChannel;
+
+        printf("In1:%d, In2:%d -> %d, %d\n", Input1, Input2, ToChannelNr+0, ToChannelNr+1);
+        SetBackplane_Source(Input1+1, ToChannelNr+0);
+        SetBackplane_Source(Input2+1, ToChannelNr+1);
+      }
+    }
+  }
+}
+
 void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
 {
-  unsigned int FirstDSPChannelNr = ModuleNr<<1;
-  unsigned char DSPCardNr = (FirstDSPChannelNr/64);
-  unsigned char DSPCardChannelNr = FirstDSPChannelNr%64;
+  unsigned int SystemChannelNr = ModuleNr<<1;
+  unsigned char DSPCardNr = (SystemChannelNr/64);
+  unsigned char DSPCardChannelNr = SystemChannelNr%64;
   int cntDestination=0;
   int DestinationNr = -1;
 
@@ -6823,7 +6833,7 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
 
           for (int cntChannel=0; cntChannel<2; cntChannel++)
           {
-            dsp_set_mixmin(dsp_handler, DSPCardChannelNr+cntChannel);
+            dsp_set_mixmin(dsp_handler, SystemChannelNr+cntChannel);
           }
 
           AxumData.DestinationData[DestinationNr].MixMinusActive = 1;
@@ -6844,40 +6854,45 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
 
 void SetAxum_ModuleInsertSource(unsigned int ModuleNr)
 {
-  unsigned int FirstDSPChannelNr = ModuleNr<<1;
-  unsigned char DSPCardNr = (FirstDSPChannelNr/64);
-
-  unsigned int ToChannelNr = 480+64+(DSPCardNr*5*32)+FirstDSPChannelNr%64;
-
-  if (AxumData.ModuleData[ModuleNr].InsertSource == 0)
+  unsigned int SystemChannelNr = ModuleNr<<1;
+  unsigned char DSPCardNr = (SystemChannelNr/64);
+  
+  if (dsp_card_available(dsp_handler, DSPCardNr))
   {
-    for (int cntChannel=0; cntChannel<2; cntChannel++)
-    {   //Turn off
-      SetBackplane_Source(0, ToChannelNr+cntChannel);
-    }
-  }
-  else
-  {
-    int Input1 = 0;
-    int Input2 = 0;
-    //Get slot number from MambaNet Address
-    for (int cntSlot=0; cntSlot<42; cntSlot++)
+    DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
+
+    unsigned int ToChannelNr = 480+64+(dspcard->slot*5*32)+(SystemChannelNr%64);
+
+    if (AxumData.ModuleData[ModuleNr].InsertSource == 0)
     {
-      if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].InsertSource-1].InputData[0].MambaNetAddress)
-      {
-        Input1 = cntSlot*32;
-      }
-      if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].InsertSource-1].InputData[1].MambaNetAddress)
-      {
-        Input2 = cntSlot*32;
+      for (int cntChannel=0; cntChannel<2; cntChannel++)
+      {   //Turn off
+        SetBackplane_Source(0, ToChannelNr+cntChannel);
       }
     }
-    Input1 += AxumData.SourceData[AxumData.ModuleData[ModuleNr].InsertSource-1].InputData[0].SubChannel;
-    Input2 += AxumData.SourceData[AxumData.ModuleData[ModuleNr].InsertSource-1].InputData[1].SubChannel;
+    else
+    {
+      int Input1 = 0;
+      int Input2 = 0;
+      //Get slot number from MambaNet Address
+      for (int cntSlot=0; cntSlot<42; cntSlot++)
+      {
+        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].InsertSource-1].InputData[0].MambaNetAddress)
+        {
+          Input1 = cntSlot*32;
+        }
+        if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[AxumData.ModuleData[ModuleNr].InsertSource-1].InputData[1].MambaNetAddress)
+        {
+          Input2 = cntSlot*32;
+        }
+      }
+      Input1 += AxumData.SourceData[AxumData.ModuleData[ModuleNr].InsertSource-1].InputData[0].SubChannel;
+      Input2 += AxumData.SourceData[AxumData.ModuleData[ModuleNr].InsertSource-1].InputData[1].SubChannel;
 
-    printf("Insert-In1:%d, Insert-In2:%d\n", Input1, Input2);
-    SetBackplane_Source(Input1+1, ToChannelNr+0);
-    SetBackplane_Source(Input2+1, ToChannelNr+1);
+      printf("Insert-In1:%d, Insert-In2:%d\n", Input1, Input2);
+      SetBackplane_Source(Input1+1, ToChannelNr+0);
+      SetBackplane_Source(Input2+1, ToChannelNr+1);
+    }
   }
 }
 
@@ -6968,10 +6983,22 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
       printf("src: MixMinus %d\n", (MixMinusNr+1));
 
       unsigned char DSPCardNr = (MixMinusNr/32);
-      unsigned int FirstDSPChannelNr = 545+(DSPCardNr*5*32);
+      
+      if (dsp_card_available(dsp_handler, DSPCardNr))
+      {
+        DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
-      FromChannel1 = FirstDSPChannelNr+(MixMinusNr&0x1F);
-      FromChannel2 = FirstDSPChannelNr+(MixMinusNr&0x1F);
+        unsigned int FirstDSPChannelNr = 545+(dspcard->slot*5*32);
+
+        FromChannel1 = FirstDSPChannelNr+(MixMinusNr&0x1F);
+        FromChannel2 = FirstDSPChannelNr+(MixMinusNr&0x1F);
+      }
+      else
+      {
+        printf("src: MixMinus %d muted, no DSP card\n", (MixMinusNr+1));
+        FromChannel1 = 0;
+        FromChannel2 = 0;
+      }
     }
     else if (AxumData.DestinationData[DestinationNr].Source == 0)
     {
@@ -6993,10 +7020,21 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
 
       unsigned char DSPCardNr = (BussNr/4);
 
-      unsigned int FirstDSPChannelNr = 577+(DSPCardNr*5*32);
+      if (dsp_card_available(dsp_handler, DSPCardNr))
+      {
+        DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
-      FromChannel1 = FirstDSPChannelNr+(BussNr*2)+0;
-      FromChannel2 = FirstDSPChannelNr+(BussNr*2)+1;
+        unsigned int FirstDSPChannelNr = 577+(dspcard->slot*5*32);
+
+        FromChannel1 = FirstDSPChannelNr+(BussNr*2)+0;
+        FromChannel2 = FirstDSPChannelNr+(BussNr*2)+1;
+      }
+      else
+      {
+        printf("src: Monitor buss %d muted, no DSP Card\n", BussNr+1);
+        FromChannel1 = 0;
+        FromChannel2 = 0;
+      }
     }
     else if (AxumData.DestinationData[DestinationNr].Source<161)
     {
@@ -7004,12 +7042,21 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
       printf("src: Module insert out %d\n", ModuleNr+1);
 
       unsigned char DSPCardNr = (ModuleNr/32);
-      //unsigned char DSPNr = (ModuleNr%32)/16;
+      if (dsp_card_available(dsp_handler, DSPCardNr))
+      {
+        DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
-      unsigned int FirstDSPChannelNr = 481+(DSPCardNr*5*32);
-
-      FromChannel1 = FirstDSPChannelNr+(ModuleNr*2)+0;
-      FromChannel2 = FirstDSPChannelNr+(ModuleNr*2)+1;
+        unsigned int FirstDSPChannelNr = 481+(dspcard->slot*5*32);
+      
+        FromChannel1 = FirstDSPChannelNr+(ModuleNr*2)+0;
+        FromChannel2 = FirstDSPChannelNr+(ModuleNr*2)+1;
+      }
+      else
+      {
+        printf("src: Module insert out %d muted, no DSP Card\n", ModuleNr+1);
+        FromChannel1 = 0;
+        FromChannel2 = 0;
+      }
     }
     else
     { //161
@@ -7099,11 +7146,21 @@ void SetAxum_TalkbackSource(unsigned int TalkbackNr)
     printf("Talkback src: Monitor buss %d\n", BussNr+1);
 
     unsigned char DSPCardNr = (BussNr/4);
+    if (dsp_card_available(dsp_handler, DSPCardNr))
+    {
+      DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
-    unsigned int FirstDSPChannelNr = 577+(DSPCardNr*5*32);
-
-    FromChannel1 = FirstDSPChannelNr+(BussNr*2)+0;
-    FromChannel2 = FirstDSPChannelNr+(BussNr*2)+1;
+      unsigned int FirstDSPChannelNr = 577+(dspcard->slot*5*32);
+      
+      FromChannel1 = FirstDSPChannelNr+(BussNr*2)+0;
+      FromChannel2 = FirstDSPChannelNr+(BussNr*2)+1;
+    }
+    else
+    {
+      printf("Talkback src: Monitor buss %d muted, no DSP Card\n", BussNr+1);
+      FromChannel1 = 0;
+      FromChannel2 = 0;
+    }
   }
   else if (AxumData.Talkback[TalkbackNr].Source<161)
   {
@@ -7111,11 +7168,21 @@ void SetAxum_TalkbackSource(unsigned int TalkbackNr)
     printf("Talkback src: Module insert out %d\n", ModuleNr+1);
 
     unsigned char DSPCardNr = (ModuleNr/32);
+    if (dsp_card_available(dsp_handler, DSPCardNr))
+    {
+      DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
-    unsigned int FirstDSPChannelNr = 481+(DSPCardNr*5*32);
+      unsigned int FirstDSPChannelNr = 481+(dspcard->slot*5*32);
 
-    FromChannel1 = FirstDSPChannelNr+(ModuleNr*2)+0;
-    FromChannel2 = FirstDSPChannelNr+(ModuleNr*2)+1;
+      FromChannel1 = FirstDSPChannelNr+(ModuleNr*2)+0;
+      FromChannel2 = FirstDSPChannelNr+(ModuleNr*2)+1;
+    }
+    else
+    {
+      printf("Talkback src: Module insert out %d muted, no DSP Card\n", ModuleNr+1);
+      FromChannel1 = 0;
+      FromChannel2 = 0;
+    }
   }
   else
   { //161
@@ -7198,9 +7265,9 @@ void SetAxum_BussMasterLevels()
 
 void SetAxum_MonitorBuss(unsigned int MonitorBussNr)
 {
-  unsigned int FirstMonitorChannelNr = MonitorBussNr<<1;
-  unsigned char DSPCardNr = (FirstMonitorChannelNr/8);
-  unsigned char DSPCardMonitorChannelNr = FirstMonitorChannelNr%8;
+  unsigned int MonitorChannelNr = MonitorBussNr<<1;
+  unsigned char DSPCardNr = (MonitorChannelNr/8);
+  unsigned char DSPCardMonitorChannelNr = MonitorChannelNr%8;
 
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
@@ -7323,8 +7390,8 @@ void SetAxum_MonitorBuss(unsigned int MonitorBussNr)
   dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+0].MasterLevel = 0;
   dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr+1].MasterLevel = 0;
 
-  dsp_set_monitor_buss(dsp_handler, DSPCardMonitorChannelNr+0);
-  dsp_set_monitor_buss(dsp_handler, DSPCardMonitorChannelNr+1);
+  dsp_set_monitor_buss(dsp_handler, MonitorChannelNr+0);
+  dsp_set_monitor_buss(dsp_handler, MonitorChannelNr+1);
 }
 
 void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress)
