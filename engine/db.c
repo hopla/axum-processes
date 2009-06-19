@@ -23,6 +23,8 @@ extern DEFAULT_NODE_OBJECTS_STRUCT AxumEngineDefaultObjects;
 extern int AxumApplicationAndDSPInitialized;
 extern DSP_HANDLER_STRUCT *dsp_handler;
 
+extern src_offset_struct src_offset;
+
 extern PGconn *sql_conn;
 
 struct sql_notify notifies[] = {
@@ -77,6 +79,58 @@ int db_get_fd()
   LOG_DEBUG("[%s] leave", __func__);
 
   return fd;
+}
+
+int db_get_matrix_source_offsets(src_offset_struct *src_offset)
+{
+  int cntRow;
+  LOG_DEBUG("[%s] enter", __func__);
+
+  PGresult *qres = sql_exec("SELECT type, MIN(number), MAX(number) FROM matrix_sources GROUP BY type", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    int cntField=0;
+    char src_type[32];
+
+    strcpy(src_type, PQgetvalue(qres, cntRow, cntField++));
+
+    if (strcmp(src_type, "buss") == 0)
+    {
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->min.buss);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->max.buss);
+    }
+    else if (strcmp(src_type, "insert out") == 0)
+    {
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->min.insert_out);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->max.insert_out);
+    }
+    else if (strcmp(src_type, "monitor buss") == 0)
+    {
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->min.monitor_buss);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->max.monitor_buss);
+    }
+    else if (strcmp(src_type, "n-1") == 0)
+    {
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->min.mixminus);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->max.mixminus);
+    }
+    else if (strcmp(src_type, "source") == 0)
+    {
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->min.source);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->max.source);
+    }
+  }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
 }
 
 int db_read_slot_config()
@@ -138,12 +192,12 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
-    short int number;
+    unsigned int number;
     unsigned char cntModule;
     int cntField;
 
     cntField = 0;
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &number);
 
     AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[number-1];
     
@@ -184,7 +238,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
 
     for (cntModule=0; cntModule<128; cntModule++)
     {
-      if (AxumData.ModuleData[cntModule].Source == number)
+      if (AxumData.ModuleData[cntModule].Source == (number+src_offset.min.source))
       {
         SetAxum_ModuleSource(cntModule);
         SetAxum_ModuleMixMinus(cntModule);
@@ -429,9 +483,10 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_OFF);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON_OFF);
   
-          if (AxumData.ModuleData[ModuleNr].Source > 0)
+          if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=src_offset.max.source))
           {
-            FunctionNrToSent = 0x05000000 | ((AxumData.ModuleData[ModuleNr].Source-1)<<12);
+            unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+            FunctionNrToSent = 0x05000000 | (SourceNr<<12);
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON);
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_OFF);
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
@@ -575,7 +630,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
 
       for (int cntDestination=0; cntDestination<=1280; cntDestination++)
       {
-        if (AxumData.DestinationData[cntDestination].Source == number)
+        if (AxumData.DestinationData[cntDestination].Source == (number+src_offset.min.buss))
         {
           FunctionNrToSent = 0x06000000 | (cntDestination<<12);
           CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_SOURCE);

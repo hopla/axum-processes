@@ -62,7 +62,7 @@ typedef struct
   char DestinationName[32];
   AXUM_OUTPUT_DATA_STRUCT OutputData[8];
 
-  int Source;
+  unsigned int Source;
   float Level;
   unsigned char Mute;
   unsigned char Dim;
@@ -70,7 +70,7 @@ typedef struct
   unsigned char Phase;
   unsigned char Talkback[16];
 
-  int MixMinusSource;
+  unsigned int MixMinusSource;
   unsigned char MixMinusActive;
 
 } AXUM_DESTINATION_DATA_STRUCT;
@@ -105,10 +105,10 @@ typedef struct
 
 typedef struct
 {
-  int Source;
-  int SourceA;
-  int SourceB;
-  int InsertSource;
+  unsigned int Source;
+  unsigned int SourceA;
+  unsigned int SourceB;
+  unsigned int InsertSource;
   unsigned char Insert;
   bool InsertOnOffA;
   bool InsertOnOffB;
@@ -164,7 +164,7 @@ typedef struct
 
 typedef struct
 {
-  int Ext[8];
+  unsigned int Ext[8];
 } AXUM_EXTERN_SOURCE_DATA_STRUCT;
 
 typedef struct
@@ -183,7 +183,7 @@ typedef struct
 
 typedef struct
 {
-  int Source;
+  unsigned int Source;
 } AXUM_TALKBACK_STRUCT;
 
 typedef struct
@@ -214,6 +214,19 @@ typedef struct
   AXUM_TALKBACK_STRUCT Talkback[16];
 } AXUM_DATA_STRUCT;
 
+//**************************************************************/
+// Struct to determine offset numbers of sources
+//**************************************************************/
+typedef struct
+{
+  struct {
+    unsigned int buss;
+    unsigned int insert_out;
+    unsigned int monitor_buss;
+    unsigned int mixminus;
+    unsigned int source;
+  } min, max;
+} src_offset_struct;
 
 //**************************************************************/
 //MambaNet Node information definitions
@@ -340,10 +353,13 @@ void DoAxum_BussReset(int BussNr);
 void DoAxum_ModuleStatusChanged(int ModuleNr);
 void DoAxum_ModulePreStatusChanged(int BussNr);
 
-int Axum_MixMinusSourceUsed(int CurrentSource);
+int Axum_MixMinusSourceUsed(unsigned int CurrentSource);
 
 //functions to set all objects connected to 'these' functions
-void SetNewSource(int ModuleNr, int NewSource, int Forced, int ApplyAorBSettings);
+void GetSourceLabel(unsigned int SourceNr, char *TextString, int MaxLength);
+#define AdjustDestinationSource AdjustModuleSource
+unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset);
+void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAorBSettings);
 void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock);
 
 void initialize_axum_data_struct();

@@ -23,7 +23,7 @@ CREATE OR REPLACE VIEW matrix_sources (type, number, label, active) AS
    SELECT 'buss', number, label, true
     FROM buss_config
   UNION
-   SELECT 'monitor bus', number+16, label, number <= dsp_count()*4
+   SELECT 'monitor buss', number+16, label, number <= dsp_count()*4
     FROM monitor_buss_config
   UNION
    SELECT 'insert out', g.n+32, 'Module '||g.n||' insert out', g.n <= dsp_count()*32

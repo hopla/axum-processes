@@ -1,8 +1,11 @@
 #ifndef _db_h
 #define _db_h
 
+#include "engine.h"
+
 void db_open(char *dbstr);
 int db_get_fd();
+int db_get_matrix_source_offsets(src_offset_struct *src_offset);
 int db_read_slot_config();
 int db_read_src_config(unsigned short int first_src, unsigned short int last_src);
 int db_read_module_config(unsigned char first_mod, unsigned char last_mod);
