@@ -92,7 +92,11 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION src_config_changed() RETURNS trigger AS $$
 BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('src_config_changed', NEW.number::text);
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('src_config_changed', OLD.number::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('src_config_changed', NEW.number::text);
+  END IF;
   RETURN NULL;
 END
 $$ LANGUAGE plpgsql;
@@ -148,7 +152,11 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION dest_config_changed() RETURNS trigger AS $$
 BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('dest_config_changed', NEW.number::text);
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('dest_config_changed', OLD.number::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('dest_config_changed', NEW.number::text);
+  END IF;
   RETURN NULL;
 END
 $$ LANGUAGE plpgsql;
