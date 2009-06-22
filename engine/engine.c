@@ -134,7 +134,6 @@ src_offset_struct src_offset;
 float SummingdBLevel[48];
 unsigned int BackplaneMambaNetAddress = 0x00000000;
 
-//DSPCARD_DATA_STRUCT DSPCardData[4];
 DSP_HANDLER_STRUCT *dsp_handler;
 
 AXUM_FUNCTION_INFORMATION_STRUCT *SourceFunctions[NUMBER_OF_SOURCES][NUMBER_OF_SOURCE_FUNCTIONS];
