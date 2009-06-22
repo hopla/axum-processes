@@ -163,11 +163,11 @@ CREATE TRIGGER addresses_change_notify    AFTER DELETE OR UPDATE ON addresses   
 CREATE TRIGGER defaults_change_notify     AFTER INSERT OR DELETE OR UPDATE ON defaults    FOR EACH ROW EXECUTE PROCEDURE defaults_changed();
 CREATE TRIGGER node_config_change_notify  AFTER INSERT OR DELETE OR UPDATE ON node_config FOR EACH ROW EXECUTE PROCEDURE node_config_changed();
 CREATE TRIGGER slot_config_notify         AFTER UPDATE ON slot_config                     FOR EACH ROW EXECUTE PROCEDURE slot_config_changed();
-CREATE TRIGGER src_config_notify          AFTER UPDATE ON src_config                      FOR EACH ROW EXECUTE PROCEDURE src_config_changed();
+CREATE TRIGGER src_config_notify          AFTER INSERT OR DELETE OR UPDATE ON src_config  FOR EACH ROW EXECUTE PROCEDURE src_config_changed();
 CREATE TRIGGER module_config_notify       AFTER UPDATE ON module_config                   FOR EACH ROW EXECUTE PROCEDURE module_config_changed();
 CREATE TRIGGER buss_config_notify         AFTER UPDATE ON buss_config                     FOR EACH ROW EXECUTE PROCEDURE buss_config_changed();
 CREATE TRIGGER monitor_buss_config_notify AFTER UPDATE ON monitor_buss_config             FOR EACH ROW EXECUTE PROCEDURE monitor_buss_config_changed();
 CREATE TRIGGER extern_src_config_notify   AFTER UPDATE ON extern_src_config               FOR EACH ROW EXECUTE PROCEDURE extern_src_config_changed();
 CREATE TRIGGER talkback_config_notify     AFTER UPDATE ON talkback_config                 FOR EACH ROW EXECUTE PROCEDURE talkback_config_changed();
 CREATE TRIGGER global_config_notify       AFTER UPDATE ON global_config                   FOR EACH ROW EXECUTE PROCEDURE global_config_changed();
-CREATE TRIGGER dest_config_notify         AFTER UPDATE ON dest_config                     FOR EACH ROW EXECUTE PROCEDURE dest_config_changed();
+CREATE TRIGGER dest_config_notify         AFTER INSERT OR DELETE OR UPDATE ON dest_config FOR EACH ROW EXECUTE PROCEDURE dest_config_changed();

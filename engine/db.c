@@ -253,6 +253,8 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   }
   PQclear(qres);
 
+  db_get_matrix_source_offsets(&src_offset);
+
   LOG_DEBUG("[%s] leave", __func__);
 
   return 1;
