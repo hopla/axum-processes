@@ -786,6 +786,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       SetAxum_ModuleInsertSource(cntModule);
                       SetAxum_BussLevels(cntModule);
                     }
+                    SetAxum_BussMasterLevels();
 
                     for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
                     {
