@@ -790,6 +790,24 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                     for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
                     {
                       SetAxum_ExternSources(cntDSPCard);
+
+                      //enable buss summing
+                      if (dsp_card_available(dsp_handler, cntDSPCard))
+                      {  
+                        unsigned char TransmitBuffer[64];
+                        unsigned char cntTransmitBuffer;
+                        unsigned int ObjectNumber = 1026+dsp_handler->dspcard[cntDSPCard].slot;
+
+                        cntTransmitBuffer = 0;
+                        TransmitBuffer[cntTransmitBuffer++] = (ObjectNumber>>8)&0xFF;
+                        TransmitBuffer[cntTransmitBuffer++] = ObjectNumber&0xFF;
+                        TransmitBuffer[cntTransmitBuffer++] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
+                        TransmitBuffer[cntTransmitBuffer++] = STATE_DATATYPE;
+                        TransmitBuffer[cntTransmitBuffer++] = 1;//size
+                        TransmitBuffer[cntTransmitBuffer++] = 1;//enabled
+
+                        SendMambaNetMessage(BackplaneMambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, 1, TransmitBuffer, cntTransmitBuffer);
+                      }
                     }
 
                     for (int cntDestination=0; cntDestination<1280; cntDestination++)
