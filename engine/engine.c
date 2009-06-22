@@ -270,7 +270,17 @@ void init(int argc, char **argv)
   log_write("----------------------------");
   log_write("Try to start the Axum engine");
  
-  //hwparent(&this_node);
+  struct mbn_node_info tmp_node;
+  hwparent(&tmp_node);
+
+  AxumEngineDefaultObjects.Parent[0] = tmp_node.HardwareParent[0]>>8;
+  AxumEngineDefaultObjects.Parent[1] = tmp_node.HardwareParent[0]&0xFF;
+  AxumEngineDefaultObjects.Parent[2] = tmp_node.HardwareParent[1]>>8;
+  AxumEngineDefaultObjects.Parent[3] = tmp_node.HardwareParent[1]&0xFF;
+  AxumEngineDefaultObjects.Parent[4] = tmp_node.HardwareParent[2]>>8;
+  AxumEngineDefaultObjects.Parent[5] = tmp_node.HardwareParent[2]&0xFF;
+
+  printf("%02X%02X:%02X%02X:%02X%02X", AxumEngineDefaultObjects.Parent[0], AxumEngineDefaultObjects.Parent[1], AxumEngineDefaultObjects.Parent[2], AxumEngineDefaultObjects.Parent[3], AxumEngineDefaultObjects.Parent[4], AxumEngineDefaultObjects.Parent[5]);
 
   db_open(dbstr);
   DatabaseFileDescriptor = db_get_fd();
