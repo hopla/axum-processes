@@ -6679,10 +6679,11 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
     {
       DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
-      unsigned int FirstDSPChannelNr = 481+(dspcard->slot*5*32);
+      unsigned int FirstDSPChannelNr = 545+(dspcard->slot*5*32);
       
-      *l_ch = FirstDSPChannelNr+(ModuleNr*2)+0;
-      *r_ch = FirstDSPChannelNr+(ModuleNr*2)+1;
+      //N-1 are mono's
+      *l_ch = FirstDSPChannelNr+ModuleNr;
+      *r_ch = FirstDSPChannelNr+ModuleNr;
     }
     else
     {
