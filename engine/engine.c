@@ -279,7 +279,7 @@ void init(int argc, char **argv)
   AxumEngineDefaultObjects.Parent[4] = tmp_node.HardwareParent[2]>>8;
   AxumEngineDefaultObjects.Parent[5] = tmp_node.HardwareParent[2]&0xFF;
 
-  printf("%02X%02X:%02X%02X:%02X%02X", AxumEngineDefaultObjects.Parent[0], AxumEngineDefaultObjects.Parent[1], AxumEngineDefaultObjects.Parent[2], AxumEngineDefaultObjects.Parent[3], AxumEngineDefaultObjects.Parent[4], AxumEngineDefaultObjects.Parent[5]);
+  printf("hwparent %02X%02X:%02X%02X:%02X%02X\n", AxumEngineDefaultObjects.Parent[0], AxumEngineDefaultObjects.Parent[1], AxumEngineDefaultObjects.Parent[2], AxumEngineDefaultObjects.Parent[3], AxumEngineDefaultObjects.Parent[4], AxumEngineDefaultObjects.Parent[5]);
 
   db_open(dbstr);
   DatabaseFileDescriptor = db_get_fd();
