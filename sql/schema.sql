@@ -374,12 +374,12 @@ CREATE TABLE db_to_position (
 
 -- F O R E I G N   K E Y S
 
-ALTER TABLE node_config ADD FOREIGN KEY (addr) REFERENCES addresses (addr);
-ALTER TABLE defaults      ADD FOREIGN KEY (addr) REFERENCES addresses (addr);
-ALTER TABLE slot_config   ADD FOREIGN KEY (addr) REFERENCES addresses (addr);
-ALTER TABLE src_config    ADD FOREIGN KEY (input1_addr) REFERENCES addresses (addr);
-ALTER TABLE src_config    ADD FOREIGN KEY (input2_addr) REFERENCES addresses (addr);
-ALTER TABLE dest_config   ADD FOREIGN KEY (output1_addr) REFERENCES addresses (addr);
-ALTER TABLE dest_config   ADD FOREIGN KEY (output2_addr) REFERENCES addresses (addr);
+ALTER TABLE node_config   ADD FOREIGN KEY (addr) REFERENCES addresses (addr)         ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE defaults      ADD FOREIGN KEY (addr) REFERENCES addresses (addr)         ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE slot_config   ADD FOREIGN KEY (addr) REFERENCES addresses (addr)         ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE src_config    ADD FOREIGN KEY (input1_addr) REFERENCES addresses (addr)  ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE src_config    ADD FOREIGN KEY (input2_addr) REFERENCES addresses (addr)  ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE dest_config   ADD FOREIGN KEY (output1_addr) REFERENCES addresses (addr) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE dest_config   ADD FOREIGN KEY (output2_addr) REFERENCES addresses (addr) ON DELETE CASCADE ON UPDATE CASCADE;
 
 
