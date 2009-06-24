@@ -23,7 +23,7 @@ extern DEFAULT_NODE_OBJECTS_STRUCT AxumEngineDefaultObjects;
 extern int AxumApplicationAndDSPInitialized;
 extern DSP_HANDLER_STRUCT *dsp_handler;
 
-extern src_offset_struct src_offset;
+extern matrix_sources_struct matrix_sources;
 
 extern PGconn *sql_conn;
 
@@ -51,7 +51,7 @@ double read_minmax(char *mambanet_minmax)
   if (sscanf(mambanet_minmax, "(%d,)", &value_int) == 1)
   {
     return (double)value_int;
-  } 
+  }
   else if (sscanf(mambanet_minmax, "(,%f)", &value_float) == 1)
   {
     return (double)value_float;
@@ -73,7 +73,7 @@ int db_get_fd()
   int fd = PQsocket(sql_conn);
   if (fd < 0)
   {
-    LOG_DEBUG("db_get_fd/PQsocket error, no server connection is currently open");  
+    LOG_DEBUG("db_get_fd/PQsocket error, no server connection is currently open");
   }
 
   LOG_DEBUG("[%s] leave", __func__);
@@ -81,7 +81,7 @@ int db_get_fd()
   return fd;
 }
 
-int db_get_matrix_source_offsets(src_offset_struct *src_offset)
+int db_get_matrix_sources()
 {
   int cntRow;
   LOG_DEBUG("[%s] enter", __func__);
@@ -92,7 +92,7 @@ int db_get_matrix_source_offsets(src_offset_struct *src_offset)
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
-  
+
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     int cntField=0;
@@ -102,28 +102,96 @@ int db_get_matrix_source_offsets(src_offset_struct *src_offset)
 
     if (strcmp(src_type, "buss") == 0)
     {
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->min.buss);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->max.buss);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.min.buss);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.max.buss);
     }
     else if (strcmp(src_type, "insert out") == 0)
     {
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->min.insert_out);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->max.insert_out);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.min.insert_out);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.max.insert_out);
     }
     else if (strcmp(src_type, "monitor buss") == 0)
     {
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->min.monitor_buss);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->max.monitor_buss);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.min.monitor_buss);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.max.monitor_buss);
     }
     else if (strcmp(src_type, "n-1") == 0)
     {
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->min.mixminus);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->max.mixminus);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.min.mixminus);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.max.mixminus);
     }
     else if (strcmp(src_type, "source") == 0)
     {
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->min.source);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &src_offset->max.source);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.max.source);
+    }
+  }
+  PQclear(qres);
+
+  //find the first source number
+  qres = sql_exec("SELECT MAX(number)+1 FROM matrix_sources WHERE type != 'source'", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  sscanf(PQgetvalue(qres,0,0), "%d", &matrix_sources.src_offset.min.source);
+  PQclear(qres);
+
+  //load the complete matrix_sources list
+  qres = sql_exec("SELECT number, active, type FROM matrix_sources", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+
+  for (cntRow=0; cntRow<MAX_SOURCE_LIST_SIZE; cntRow++)
+  {
+    matrix_sources.src[cntRow].active = 0;
+    matrix_sources.src[cntRow].type = none;
+    matrix_sources.src[cntRow].pool[0] = 0;
+    matrix_sources.src[cntRow].pool[1] = 0;
+    matrix_sources.src[cntRow].pool[2] = 0;
+    matrix_sources.src[cntRow].pool[3] = 0;
+    matrix_sources.src[cntRow].pool[4] = 0;
+    matrix_sources.src[cntRow].pool[5] = 0;
+    matrix_sources.src[cntRow].pool[6] = 0;
+    matrix_sources.src[cntRow].pool[7] = 0;
+  }
+
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    int cntField=0;
+    char src_type[32];
+    unsigned short int number;
+
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+    if ((number>=1) && (number<=MAX_SOURCE_LIST_SIZE))
+    {
+      matrix_sources.src[number-1].active = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+      strcpy(src_type, PQgetvalue(qres, cntRow, cntField++));
+
+      if (strcmp(src_type, "buss") == 0)
+      {
+        matrix_sources.src[number-1].type = buss;
+      }
+      else if (strcmp(src_type, "insert out") == 0)
+      {
+        matrix_sources.src[number-1].type = insert_out;
+      }
+      else if (strcmp(src_type, "monitor buss") == 0)
+      {
+        matrix_sources.src[number-1].type = monitor_buss;
+      }
+      else if (strcmp(src_type, "n-1") == 0)
+      {
+        matrix_sources.src[number-1].type = mixminus;
+      }
+      else if (strcmp(src_type, "source") == 0)
+      {
+        matrix_sources.src[number-1].type = source;
+      }
     }
   }
   PQclear(qres);
@@ -200,18 +268,18 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &number);
 
     AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[number-1];
-    
+
     strncpy(SourceData->SourceName, PQgetvalue(qres, cntRow, cntField++), 32);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[0].MambaNetAddress); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[0].MambaNetAddress);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->InputData[0].SubChannel);
-    SourceData->InputData[0].SubChannel--; 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[1].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->InputData[1].SubChannel); 
-    SourceData->InputData[1].SubChannel--; 
+    SourceData->InputData[0].SubChannel--;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[1].MambaNetAddress);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->InputData[1].SubChannel);
+    SourceData->InputData[1].SubChannel--;
     SourceData->Phantom = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Pad = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Gain = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    SourceData->Redlight[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f"); 
+    SourceData->Redlight[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Redlight[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Redlight[2] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Redlight[3] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -238,7 +306,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
 
     for (cntModule=0; cntModule<128; cntModule++)
     {
-      if (AxumData.ModuleData[cntModule].Source == (number+src_offset.min.source))
+      if (AxumData.ModuleData[cntModule].Source == (number+matrix_sources.src_offset.min.source))
       {
         SetAxum_ModuleSource(cntModule);
         SetAxum_ModuleMixMinus(cntModule);
@@ -253,7 +321,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   }
   PQclear(qres);
 
-  db_get_matrix_source_offsets(&src_offset);
+  db_get_matrix_sources();
 
   LOG_DEBUG("[%s] leave", __func__);
 
@@ -424,7 +492,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[number-1];
-   
+
     OldLevel = ModuleData->FaderLevel;
     OldOn = ModuleData->On;
 
@@ -475,24 +543,24 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
         if (AxumApplicationAndDSPInitialized)
         {
           SetNewSource(ModuleNr, ModuleData->SourceA, 1, 1);
-  
+
           SetAxum_ModuleInsertSource(ModuleNr);
-  
+
           //Set fader level and On;
           float NewLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
           int NewOn = AxumData.ModuleData[ModuleNr].On;
-  
+
           SetAxum_BussLevels(ModuleNr);
-  
+
           unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_OFF);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON_OFF);
-  
-          if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=src_offset.max.source))
+
+          if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
           {
-            unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+            unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
             FunctionNrToSent = 0x05000000 | (SourceNr<<12);
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON);
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_OFF);
@@ -500,13 +568,13 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
           }
-  
+
           FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-  
+
           if (((OldLevel<=-80) && (NewLevel>-80)) ||
               ((OldLevel>-80) && (NewLevel<=-80)) ||
               (OldOn != NewOn))
@@ -528,11 +596,11 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
           {
             AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level = AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range;
           }
-  
+
           if (AxumApplicationAndDSPInitialized)
           {
             SetAxum_EQ(ModuleNr, cntBand);
-  
+
             unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
             CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_LEVEL+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL))));
             CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_FREQUENCY+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY))));
@@ -541,7 +609,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
             CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_TYPE+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_TYPE-MODULE_FUNCTION_EQ_BAND_1_TYPE))));
           }
         }
-  
+
         unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
@@ -556,9 +624,9 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
           if (AxumApplicationAndDSPInitialized)
           {
             SetAxum_BussLevels(ModuleNr);
-  
+
             SetBussOnOff(ModuleNr, cntBuss, 1);//use interlock
-  
+
             unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_LEVEL);
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_PRE);
@@ -612,15 +680,15 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_BUSS_MASTER_DATA_STRUCT *BussMasterData = &AxumData.BussMasterData[number-1];
-    
+
     strncpy(BussMasterData->Label, PQgetvalue(qres, cntRow, cntField++), 32);
     BussMasterData->PreModuleOn = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->PreModuleBalance = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &BussMasterData->Level); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &BussMasterData->Level);
     BussMasterData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    BussMasterData->Interlock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f"); 
-    BussMasterData->GlobalBussReset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f"); 
+    BussMasterData->Interlock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    BussMasterData->GlobalBussReset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     if (AxumApplicationAndDSPInitialized)
     {
@@ -637,7 +705,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
 
       for (int cntDestination=0; cntDestination<=1280; cntDestination++)
       {
-        if (AxumData.DestinationData[cntDestination].Source == (number+src_offset.min.buss))
+        if (AxumData.DestinationData[cntDestination].Source == (number+matrix_sources.src_offset.min.buss))
         {
           FunctionNrToSent = 0x06000000 | (cntDestination<<12);
           CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_SOURCE);
@@ -685,16 +753,16 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_MONITOR_OUTPUT_DATA_STRUCT *MonitorData = &AxumData.Monitor[number-1];
-  
+
     strncpy(MonitorData->Label, PQgetvalue(qres, cntRow, cntField++), 32);
 
     MonitorData->Interlock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &MonitorData->DefaultSelection); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &MonitorData->DefaultSelection);
     for (cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
-    { 
+    {
       MonitorData->AutoSwitchingBuss[cntMonitorBuss] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     }
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &MonitorData->SwitchingDimLevel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &MonitorData->SwitchingDimLevel);
 
     if (AxumApplicationAndDSPInitialized)
     {
@@ -738,7 +806,7 @@ int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_d
 
   sprintf(str[0], "%hd", first_dsp_card);
   sprintf(str[1], "%hd", last_dsp_card);
-  
+
   PGresult *qres = sql_exec("SELECT number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8 FROM extern_src_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
@@ -755,12 +823,12 @@ int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_d
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_EXTERN_SOURCE_DATA_STRUCT *ExternSource = &AxumData.ExternSource[number-1];
-    
+
     for (cntExternSource=0; cntExternSource<8; cntExternSource++)
-    { 
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ExternSource->Ext[cntExternSource]); 
+    {
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ExternSource->Ext[cntExternSource]);
     }
-    
+
     if (AxumApplicationAndDSPInitialized)
     {
       SetAxum_ExternSources(number-1);
@@ -946,17 +1014,17 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_DESTINATION_DATA_STRUCT *DestinationData = &AxumData.DestinationData[number-1];
-    
-    strncpy(DestinationData->DestinationName, PQgetvalue(qres, cntRow, cntField++), 32); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[0].MambaNetAddress); 
+
+    strncpy(DestinationData->DestinationName, PQgetvalue(qres, cntRow, cntField++), 32);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[0].MambaNetAddress);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[0].SubChannel);
     DestinationData->OutputData[0].SubChannel--;
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[1].MambaNetAddress); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[1].SubChannel); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[1].MambaNetAddress);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[1].SubChannel);
     DestinationData->OutputData[1].SubChannel--;
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DestinationData->Level); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->Source); 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->MixMinusSource); 
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DestinationData->Level);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->Source);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->MixMinusSource);
 
     if (AxumApplicationAndDSPInitialized)
     {
@@ -1026,7 +1094,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
   const char *params[3];
   int cntParams;
   int cntRow;
-  int maxobjnr; 
+  int maxobjnr;
 
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -1065,12 +1133,12 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
     return 0;
   }
 
-  node_info->NumberOfCustomObjects = 0; 
+  node_info->NumberOfCustomObjects = 0;
   if (PQntuples(qres))
   {
     if (sscanf(PQgetvalue(qres, 0, 0), "%d", &maxobjnr) == 1)
     {
-      node_info->NumberOfCustomObjects = maxobjnr-1023; 
+      node_info->NumberOfCustomObjects = maxobjnr-1023;
     }
   }
 
@@ -1116,10 +1184,10 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->ActuatorDataType);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &obj_info->ActuatorDataSize);
       obj_info->ActuatorDataMinimal = read_minmax(PQgetvalue(qres, cntRow, cntField++));
-      obj_info->ActuatorDataMaximal = read_minmax(PQgetvalue(qres, cntRow, cntField++)); 
-      obj_info->ActuatorDataDefault = read_minmax(PQgetvalue(qres, cntRow, cntField++)); 
-          
-         
+      obj_info->ActuatorDataMaximal = read_minmax(PQgetvalue(qres, cntRow, cntField++));
+      obj_info->ActuatorDataDefault = read_minmax(PQgetvalue(qres, cntRow, cntField++));
+
+
 /*      if (ObjectNr == 1104)
       {
         fprintf(stderr, "min:%f\n", obj_info->ActuatorDataMinimal);
@@ -1129,11 +1197,11 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
 
       if (in_powerup_state)
       {
-        obj_info->CurrentActuatorDataDefault = obj_info->ActuatorDataDefault; 
+        obj_info->CurrentActuatorDataDefault = obj_info->ActuatorDataDefault;
       }
-      
+
       if (strcmp("Slot number", &obj_info->Description[0]) == 0)
-      { 
+      {
         node_info->SlotNumberObjectNr = ObjectNr;
       }
       else if (strcmp("Input channel count", &obj_info->Description[0]) == 0)
@@ -1150,7 +1218,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
       if (ObjectNr >= (1024+node_info->NumberOfCustomObjects))
       {
         log_write("[template error] ObjectNr %d to high for 'row count' (man_id:%04X, prod_id:%04X)", ObjectNr, node_info->ManufacturerID, node_info->ProductID);
-      }      
+      }
     }
   }
 
@@ -1187,7 +1255,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   sprintf(str[0], "%d", node_info->MambaNetAddress);
   sprintf(str[1], "%d", first_obj);
   sprintf(str[2], "%d", last_obj);
- 
+
   PGresult *qres = sql_exec("SELECT object, data FROM defaults WHERE addr=$1 AND object>=$2 AND object<=$3", 1, 3, params);
   if (qres == NULL)
   {
@@ -1228,7 +1296,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
                 TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
               }
               send_default_data = 1;
-            }            
+            }
           }
           break;
           case SIGNED_INTEGER_DATATYPE:
@@ -1245,14 +1313,14 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               }
               send_default_data = 1;
               obj_info->CurrentActuatorDataDefault = DataValue;
-            }            
+            }
           }
           break;
           case OCTET_STRING_DATATYPE:
           {
             char OctetString[256];
             sscanf(PQgetvalue(qres, cntRow, 1), "(,,,%s)", OctetString);
-            
+
             int StringLength = strlen(OctetString);
             if (StringLength>obj_info->ActuatorDataSize)
             {
@@ -1271,7 +1339,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
           {
             float DataValue;
             sscanf(PQgetvalue(qres, cntRow, 1), "(,%f,,)", &DataValue);
-            
+
             if (DataValue != obj_info->CurrentActuatorDataDefault)
             {
               TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
@@ -1290,7 +1358,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               unsigned long DataValue;
               char BitString[256];
               sscanf(PQgetvalue(qres, cntRow, 1), "(,,%s,)", BitString);
-             
+
               int StringLength = strlen(BitString);
               if (StringLength>obj_info->ActuatorDataSize)
               {
@@ -1301,7 +1369,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               for (cntBit=0; cntBit<StringLength; cntBit++)
               {
                 if ((BitString[cntBit] == '0') || (BitString[cntBit] == '1'))
-                { 
+                {
                   DataValue |= (BitString[cntBit]-'0');
                 }
               }
@@ -1321,7 +1389,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
         if (send_default_data)
         {
           SendMambaNetMessage(node_info->MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, cntTransmitData);
-        } 
+        }
       }
     }
   }
@@ -1371,7 +1439,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   sprintf(str[0], "%d", node_info->MambaNetAddress);
   sprintf(str[1], "%hd", first_obj);
   sprintf(str[2], "%hd", last_obj);
- 
+
   PGresult *qres = sql_exec("SELECT object, func FROM node_config WHERE addr=$1 AND object>=$2 AND object<=$3", 1, 3, params);
   if (qres == NULL)
   {
@@ -1388,7 +1456,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
       ObjectConfigChanged[cntObject-1024] = 1;
     }
   }
-  
+
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     unsigned short int ObjectNr = -1;
@@ -1400,12 +1468,12 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
     sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
     sscanf(PQgetvalue(qres, cntRow, 1), "(%hhd,%hd,%hd)", &type, &seq_nr, &func_nr);
     TotalFunctionNr = (((unsigned int)type)<<24)|(((unsigned int)seq_nr)<<12)|func_nr;
-    
+
 
     if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->NumberOfCustomObjects))
     {
       if (node_info->SensorReceiveFunction != NULL)
-      { 
+      {
         SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[ObjectNr-1024];
 
         if (sensor_rcv_func->FunctionNr != TotalFunctionNr)
@@ -1469,7 +1537,7 @@ int db_insert_slot_config(unsigned char slot_nr, unsigned long int addr, unsigne
 
   LOG_DEBUG("[%s] leave", __func__);
 
-  return 1; 
+  return 1;
 }
 
 int db_delete_slot_config(unsigned char slot_nr)
@@ -1486,7 +1554,7 @@ int db_delete_slot_config(unsigned char slot_nr)
   }
 
   sprintf(str[0], "%d", slot_nr+1);
-  
+
   PGresult *qres = sql_exec("DELETE FROM slot_config WHERE slot_nr=$1", 0, 1, params);
   if (qres == NULL)
   {
@@ -1498,7 +1566,7 @@ int db_delete_slot_config(unsigned char slot_nr)
 
   LOG_DEBUG("[%s] leave", __func__);
 
-  return 1; 
+  return 1;
 }
 
 int db_update_slot_config_input_ch_cnt(unsigned long int addr, unsigned char cnt)
@@ -1527,7 +1595,7 @@ int db_update_slot_config_input_ch_cnt(unsigned long int addr, unsigned char cnt
 
   LOG_DEBUG("[%s] leave", __func__);
 
-  return 1; 
+  return 1;
 }
 
 int db_update_slot_config_output_ch_cnt(unsigned long int addr, unsigned char cnt)
@@ -1556,13 +1624,13 @@ int db_update_slot_config_output_ch_cnt(unsigned long int addr, unsigned char cn
 
   LOG_DEBUG("[%s] leave", __func__);
 
-  return 1; 
+  return 1;
 }
 
 int db_empty_slot_config()
 {
   LOG_DEBUG("[%s] enter", __func__);
-  PGresult *qres = sql_exec("TRUNCATE slot_config", 0, 0, NULL); 
+  PGresult *qres = sql_exec("TRUNCATE slot_config", 0, 0, NULL);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -1572,14 +1640,14 @@ int db_empty_slot_config()
 
   LOG_DEBUG("[%s] leave", __func__);
 
-  return 1; 
+  return 1;
 }
 
 void db_processnotifies()
 {
   LOG_DEBUG("[%s] enter", __func__);
-  PQconsumeInput(sql_conn);  
-  sql_processnotifies(); 
+  PQconsumeInput(sql_conn);
+  sql_processnotifies();
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1589,7 +1657,7 @@ void db_close()
   sql_close();
   LOG_DEBUG("[%s] leave", __func__);
 }
- 
+
  /*
 int db_load_engine_functions() {
   PGresult *qres;
@@ -1599,13 +1667,13 @@ int db_load_engine_functions() {
   sprintf(q,"SELECT func, name, rcv_type, xmt_type FROM functions");
   qres = PQexec(sqldb, q); if(qres == NULL || PQresultStatus(qres) != PGRES_COMMAND_OK) {
     //writelog("SQL Error on %s:%d: %s", __FILE__, __LINE__, PQresultErrorMessage(qres));
-  
+
     PQclear(qres);
     return 0;
   }
 
   //parse result of the query
-  row_count = PQntuples(qres);   
+  row_count = PQntuples(qres);
   if (row_count && (PQnfields(qres)==4)) {
     for (cnt_row=0; cnt_row<row_countl cnt_row++) {
       if (sscanf(PQgetvalue(qres, cnt_row, 0, "(%d,%d,%d)", type, sequence_number, function_number)) != 3) {
@@ -1648,7 +1716,6 @@ void db_event_templates_changed(char myself, char *arg)
 
 void db_event_address_removed(char myself, char *arg)
 {
-  unsigned long int addr;
   LOG_DEBUG("[%s] enter", __func__);
   //No implementation
   arg = NULL;

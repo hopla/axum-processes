@@ -5,7 +5,7 @@
 
 void db_open(char *dbstr);
 int db_get_fd();
-int db_get_matrix_source_offsets(src_offset_struct *src_offset);
+int db_get_matrix_sources();
 int db_read_slot_config();
 int db_read_src_config(unsigned short int first_src, unsigned short int last_src);
 int db_read_module_config(unsigned char first_mod, unsigned char last_mod);
@@ -23,7 +23,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
 
 int db_insert_slot_config(unsigned char slot_nr, unsigned long int addr, unsigned char input_ch_cnt, unsigned char output_ch_cnt);
 int db_delete_slot_config(unsigned char slot_nr);
-int db_update_slot_config_input_ch_cnt(unsigned long int addr, unsigned char cnt); 
+int db_update_slot_config_input_ch_cnt(unsigned long int addr, unsigned char cnt);
 int db_update_slot_config_output_ch_cnt(unsigned long int addr, unsigned char cnt);
 int db_empty_slot_config();
 

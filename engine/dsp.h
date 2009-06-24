@@ -85,7 +85,7 @@ typedef struct
 typedef struct
 {
   DSPCARD_STRUCT dspcard[4];
-} DSP_HANDLER_STRUCT; 
+} DSP_HANDLER_STRUCT;
 
 DSP_HANDLER_STRUCT *dsp_open();
 void dsp_close(DSP_HANDLER_STRUCT *dsp_handler);

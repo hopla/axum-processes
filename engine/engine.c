@@ -129,7 +129,7 @@ unsigned char VUMeter = 0;
 unsigned char MeterFrequency = 5; //20Hz
 
 AXUM_DATA_STRUCT AxumData;
-src_offset_struct src_offset;
+matrix_sources_struct matrix_sources;
 
 float SummingdBLevel[48];
 unsigned int BackplaneMambaNetAddress = 0x00000000;
@@ -193,7 +193,7 @@ void init(int argc, char **argv)
   char ethdev[50];
   char dbstr[256];
   int c;
-  
+
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbstr, DEFAULT_DB_STR);
   strcpy(log_file, DEFAULT_LOG_FILE);
@@ -265,10 +265,10 @@ void init(int argc, char **argv)
 
   if (!verbose)
     log_open();
-  
+
   log_write("----------------------------");
   log_write("Try to start the Axum engine");
- 
+
   struct mbn_node_info tmp_node;
   hwparent(&tmp_node);
 
@@ -283,16 +283,16 @@ void init(int argc, char **argv)
 
   db_open(dbstr);
   DatabaseFileDescriptor = db_get_fd();
-  if(DatabaseFileDescriptor < 0) 
+  if(DatabaseFileDescriptor < 0)
   {
     printf("Invalid PostgreSQL socket\n");
     log_close();
     exit(1);
   }
- 
-  db_get_matrix_source_offsets(&src_offset);
- 
-  dsp_handler = dsp_open(); 
+
+  db_get_matrix_sources();
+
+  dsp_handler = dsp_open();
   if (dsp_handler == NULL)
   {
     db_close();
@@ -312,7 +312,7 @@ void init(int argc, char **argv)
     dsp_close(dsp_handler);
     exit(1);
   }
-  
+
   /* initialize the MambaNet node */
 /*  if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
     fprintf(stderr, "Opening %s: %s\n", ethdev, err);
@@ -378,34 +378,34 @@ int main(int argc, char *argv[])
 
   //Slot configuration, former rack organization
   db_empty_slot_config();
-  
+
   //Source configuration
   db_read_src_config(1, 1280);
 
   //module_configuration
   db_read_module_config(1, 128);
-  
+
   //buss_configuration
   db_read_buss_config(1, 16);
 
   //monitor_buss_configuration
   db_read_monitor_buss_config(1, 16);
-  
+
   //extern_source_configuration
   db_read_extern_src_config(1, 4);
 
   //talkback_configuration
   db_read_talkback_config(1, 16);
-  
+
   //global_configuration
   db_read_global_config();
 
   //destination_configuration
   db_read_dest_config(1, 1280);
-  
+
   //position to db
   db_read_db_to_position();
-  
+
   log_write("Axum engine process started, version 2.0");
 
   //Update default values of EQ to the current values
@@ -551,7 +551,7 @@ int main(int argc, char *argv[])
         if (FD_ISSET(DatabaseFileDescriptor, &readfs))
         {
           db_processnotifies();
-        } 
+        }
       }
     }
   }
@@ -796,7 +796,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       //enable buss summing
                       if (dsp_card_available(dsp_handler, cntDSPCard))
-                      {  
+                      {
                         unsigned char TransmitBuffer[64];
                         unsigned char cntTransmitBuffer;
                         unsigned int ObjectNumber = 1026+dsp_handler->dspcard[cntDSPCard].slot;
@@ -870,8 +870,8 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
               AxumData.RackOrganization[Data[5]] = FromAddress;
 
               log_write("0x%08lX found at slot: %d", FromAddress, Data[5]+1);
-              db_insert_slot_config(Data[5], FromAddress, 0, 0); 
-              
+              db_insert_slot_config(Data[5], FromAddress, 0, 0);
+
               //if a slot number exists, check the number of input/output channels.
               if (OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr != -1)
               {
@@ -917,7 +917,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   printf("Found source: %d\n", cntSource);
                   for (int cntModule=0; cntModule<128; cntModule++)
                   {
-                    if (AxumData.ModuleData[cntModule].Source == (cntSource+src_offset.min.source))
+                    if (AxumData.ModuleData[cntModule].Source == (cntSource+matrix_sources.src_offset.min.source))
                     {
                       printf("Found module: %d\n", cntModule);
                       SetAxum_ModuleSource(cntModule);
@@ -928,7 +928,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   {
                     for (int cntExt=0; cntExt<8; cntExt++)
                     {
-                      if (AxumData.ExternSource[cntDSPCard].Ext[cntExt] == (cntSource+src_offset.min.source))
+                      if (AxumData.ExternSource[cntDSPCard].Ext[cntExt] == (cntSource+matrix_sources.src_offset.min.source))
                       {
                         printf("Found extern input @ %d\n", cntDSPCard);
                         SetAxum_ExternSources(cntDSPCard);
@@ -937,7 +937,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   }
                   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
                   {
-                    if (AxumData.Talkback[cntTalkback].Source == (cntSource+src_offset.min.source))
+                    if (AxumData.Talkback[cntTalkback].Source == (cntSource+matrix_sources.src_offset.min.source))
                     {
                       printf("Found talkback @ %d\n", cntTalkback);
                       SetAxum_TalkbackSource(cntTalkback);
@@ -962,7 +962,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
               printf("Check for Channel Counts: %d, %d\n", OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr, OnlineNodeInformation[IndexOfSender].OutputChannelCountObjectNr);
               if (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].InputChannelCountObjectNr)
               {
-                db_update_slot_config_input_ch_cnt(FromAddress, Data[5]); 
+                db_update_slot_config_input_ch_cnt(FromAddress, Data[5]);
               }
               else if (((signed int)ObjectNr) == OnlineNodeInformation[IndexOfSender].OutputChannelCountObjectNr)
               {
@@ -1085,11 +1085,11 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       TempData |= Data[5+cntByte];
                     }
 
-                    if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+                    if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
                     {
-                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
                       if (TempData)
-                      {  
+                      {
                         AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
                       }
                       else
@@ -1133,9 +1133,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       TempData |= Data[5+cntByte];
                     }
 
-                    if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+                    if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
                     {
-                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
                       if (TempData)
                       {
                         AxumData.SourceData[SourceNr].Pad = !AxumData.SourceData[SourceNr].Pad;
@@ -1184,9 +1184,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       TempData |= Data[5+cntByte];
                     }
 
-                    if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+                    if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
                     {
-                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
                       AxumData.SourceData[SourceNr].Gain += (float)TempData/10;
                       if (AxumData.SourceData[SourceNr].Gain<20)
                       {
@@ -1225,9 +1225,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       TempData |= Data[5+cntByte];
                     }
 
-                    if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+                    if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
                     {
-                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
                       if (TempData)
                       {
                         AxumData.SourceData[SourceNr].Gain = 0;
@@ -2101,9 +2101,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   { //fader on changed
                     DoAxum_ModuleStatusChanged(ModuleNr);
 
-                    if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+                    if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
                     {
-                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source - src_offset.min.source;
+                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source - matrix_sources.src_offset.min.source;
                       SensorReceiveFunctionNumber = 0x05000000 | (SourceNr<<12);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_OFF);
@@ -2184,9 +2184,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                     { //module on changed
                       DoAxum_ModuleStatusChanged(ModuleNr);
 
-                      if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+                      if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
                       {
-                        unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+                        unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
                         SensorReceiveFunctionNumber = 0x05000000 | (SourceNr<<12);
                         CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_ON);
                         CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_OFF);
@@ -2543,9 +2543,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       TempData |= Data[5+cntByte];
                     }
 
-                    if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+                    if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
                     {
-                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
                       char UpdateObjects = 0;
 
                       if (TempData)
@@ -2600,7 +2600,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                         for (int cntModule=0; cntModule<128; cntModule++)
                         {
-                          if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                          if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                           {
                             DisplayFunctionNr = (cntModule<<12);
                             CheckObjectsToSent(DisplayFunctionNr | MODULE_FUNCTION_SOURCE_START);
@@ -2630,9 +2630,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                     SetAxum_BussLevels(ModuleNr);
 
                     CheckObjectsToSent(SensorReceiveFunctionNumber);
-                    if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+                    if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
                     {
-                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
                       SensorReceiveFunctionNumber = 0x05000000 | (SourceNr<<12);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
                     }
@@ -2652,9 +2652,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       TempData |= Data[5+cntByte];
                     }
 
-                    if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+                    if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
                     {
-                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+                      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
 
                       if (TempData)
                       {
@@ -2677,7 +2677,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntModule=0; cntModule<128; cntModule++)
                       {
-                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                         {
                           DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_ALERT;
                           CheckObjectsToSent(DisplayFunctionNr);
@@ -3174,7 +3174,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE);
@@ -3216,7 +3216,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
@@ -3251,7 +3251,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_PHONES_LEVEL);
@@ -3288,7 +3288,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_PHONES_LEVEL);
@@ -3330,7 +3330,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONO_AND_MONITOR_MONO);
@@ -3371,7 +3371,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_PHASE_AND_MONITOR_PHASE);
@@ -3405,7 +3405,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_SPEAKER_LEVEL);
@@ -3442,7 +3442,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                           CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_SPEAKER_LEVEL);
@@ -3511,7 +3511,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntDestination=0; cntDestination<1280; cntDestination++)
                       {
-                        if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+MonitorBussNr))
+                        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                         {
                           unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
 
@@ -4001,7 +4001,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                       {
                         int CurrentOn = AxumData.ModuleData[cntModule].On;
 
@@ -4089,7 +4089,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                       {
                         float CurrentLevel = AxumData.ModuleData[cntModule].FaderLevel;
                         if (TempData)
@@ -4186,7 +4186,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                       {
                         float CurrentLevel = AxumData.ModuleData[cntModule].FaderLevel;
                         float CurrentOn = AxumData.ModuleData[cntModule].On;
@@ -4306,9 +4306,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
                             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-                            if ((AxumData.ModuleData[cntModule].Source >= src_offset.min.source) && (AxumData.ModuleData[cntModule].Source <= src_offset.max.source))
+                            if ((AxumData.ModuleData[cntModule].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[cntModule].Source <= matrix_sources.src_offset.max.source))
                             {
-                              int SourceNr = AxumData.ModuleData[cntModule].Source-src_offset.min.source;
+                              int SourceNr = AxumData.ModuleData[cntModule].Source-matrix_sources.src_offset.min.source;
                               FunctionNrToSent = 0x05000000 | (SourceNr<<12);
                               CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
                               CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
@@ -4320,7 +4320,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntModule=0; cntModule<128; cntModule++)
                       {
-                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                         {
                           AxumData.ModuleData[cntModule].Buss[BussNr].On = 1;
                           SetAxum_BussLevels(cntModule);
@@ -4462,7 +4462,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntModule=0; cntModule<128; cntModule++)
                       {
-                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                         {
                           AxumData.ModuleData[cntModule].Buss[BussNr].On = 0;
                           SetAxum_BussLevels(cntModule);
@@ -4601,7 +4601,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                       {
                         if (TempData)
                         {
@@ -4758,7 +4758,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                       {
                         AxumData.ModuleData[cntModule].Cough = TempData;
 
@@ -4842,7 +4842,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                       for (int cntModule=0; cntModule<128; cntModule++)
                       {
-                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                         {
                           DisplayFunctionNr = (cntModule<<12);
                           CheckObjectsToSent(DisplayFunctionNr | MODULE_FUNCTION_SOURCE_START);
@@ -4888,7 +4888,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                       {
                         DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_PHANTOM;
                         CheckObjectsToSent(DisplayFunctionNr);
@@ -4931,7 +4931,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                       {
                         DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_PAD;
                         CheckObjectsToSent(DisplayFunctionNr);
@@ -4972,7 +4972,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                       {
                         DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_GAIN_LEVEL;
                         CheckObjectsToSent(DisplayFunctionNr);
@@ -5015,7 +5015,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+                      if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
                       {
                         DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_ALERT;
                         CheckObjectsToSent(DisplayFunctionNr);
@@ -5837,7 +5837,7 @@ void Timer100HzDone(int Value)
   {
     PreviousCount_LevelMeter = cntMillisecondTimer;
     dsp_read_buss_meters(dsp_handler, SummingdBLevel);
-    
+
     //buss audio level
     for (int cntBuss=0; cntBuss<16; cntBuss++)
     {
@@ -5858,7 +5858,7 @@ void Timer100HzDone(int Value)
     float dBLevel[256];
     PreviousCount_SignalDetect = cntMillisecondTimer;
     dsp_read_module_meters(dsp_handler, dBLevel);
-      
+
     for (int cntModule=0; cntModule<128; cntModule++)
     {
       int FirstChannelNr = cntModule<<1;
@@ -6623,16 +6623,16 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
   {
     printf("src: None\n");
   }
-  else if ((src>=src_offset.min.buss) && (src<=src_offset.max.buss))
+  else if ((src>=matrix_sources.src_offset.min.buss) && (src<=matrix_sources.src_offset.max.buss))
   {
-    int BussNr = src-src_offset.min.buss;
+    int BussNr = src-matrix_sources.src_offset.min.buss;
     printf("src: Total buss %d\n", BussNr+1);
     *l_ch = 1793+(BussNr*2)+0;
     *r_ch = 1793+(BussNr*2)+1;
   }
-  else if ((src>=src_offset.min.insert_out) && (src<=src_offset.max.insert_out))
+  else if ((src>=matrix_sources.src_offset.min.insert_out) && (src<=matrix_sources.src_offset.max.insert_out))
   {
-    int ModuleNr = src-src_offset.min.insert_out;
+    int ModuleNr = src-matrix_sources.src_offset.min.insert_out;
     printf("src: Module insert out %d\n", ModuleNr+1);
 
     unsigned char DSPCardNr = (ModuleNr/32);
@@ -6641,7 +6641,7 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
       DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
       unsigned int FirstDSPChannelNr = 481+(dspcard->slot*5*32);
-      
+
       *l_ch = FirstDSPChannelNr+(ModuleNr*2)+0;
       *r_ch = FirstDSPChannelNr+(ModuleNr*2)+1;
     }
@@ -6650,9 +6650,9 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
       printf("src: Module insert out %d muted, no DSP Card\n", ModuleNr+1);
     }
   }
-  else if ((src>=src_offset.min.monitor_buss) && (src<=src_offset.max.monitor_buss))
+  else if ((src>=matrix_sources.src_offset.min.monitor_buss) && (src<=matrix_sources.src_offset.max.monitor_buss))
   {
-    int BussNr = src-src_offset.min.monitor_buss;
+    int BussNr = src-matrix_sources.src_offset.min.monitor_buss;
     printf("src: Monitor buss %d\n", BussNr+1);
 
     unsigned char DSPCardNr = (BussNr/4);
@@ -6671,9 +6671,9 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
       printf("src: Monitor buss %d muted, no DSP Card\n", BussNr+1);
     }
   }
-  else if ((src>=src_offset.min.mixminus) && (src<=src_offset.max.mixminus))
+  else if ((src>=matrix_sources.src_offset.min.mixminus) && (src<=matrix_sources.src_offset.max.mixminus))
   {
-    int ModuleNr = src-src_offset.min.mixminus;
+    int ModuleNr = src-matrix_sources.src_offset.min.mixminus;
     printf("src: N-1 out %d\n", ModuleNr+1);
 
     unsigned char DSPCardNr = (ModuleNr/32);
@@ -6682,7 +6682,7 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
       DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
       unsigned int FirstDSPChannelNr = 545+(dspcard->slot*5*32);
-      
+
       //N-1 are mono's
       *l_ch = FirstDSPChannelNr+ModuleNr;
       *r_ch = FirstDSPChannelNr+ModuleNr;
@@ -6692,9 +6692,9 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
       printf("src: Module N-1 %d muted, no DSP Card\n", ModuleNr+1);
     }
   }
-  else if ((src>=src_offset.min.source) && (src<=src_offset.max.source))
+  else if ((src>=matrix_sources.src_offset.min.source) && (src<=matrix_sources.src_offset.max.source))
   {
-    int SourceNr = src-src_offset.min.source;
+    int SourceNr = src-matrix_sources.src_offset.min.source;
     printf("src: Source %d\n", SourceNr+1);
 
     //Get slot number from MambaNet Address
@@ -6737,7 +6737,7 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
     //Because 0 = mute, add one per channel
     *l_ch += 1;
     *r_ch += 1;
-  } 
+  }
 }
 
 void SetAxum_ModuleSource(unsigned int ModuleNr)
@@ -6748,13 +6748,13 @@ void SetAxum_ModuleSource(unsigned int ModuleNr)
   unsigned int Input1, Input2;
 
   if (dsp_card_available(dsp_handler, DSPCardNr))
-  {  
+  {
     DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
     ToChannelNr = 480+(dspcard->slot*5*32)+(SystemChannelNr%64);
 
     axum_get_mtrx_chs_from_src(AxumData.ModuleData[ModuleNr].Source, &Input1, &Input2);
-    
+
     printf("In1:%d, In2:%d\n", Input1, Input2);
     SetBackplane_Source(Input1, ToChannelNr+0);
     SetBackplane_Source(Input2, ToChannelNr+1);
@@ -6765,7 +6765,7 @@ void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
 {
   unsigned char DSPCardNr = MonitorBussPerFourNr;
   if (dsp_card_available(dsp_handler, DSPCardNr))
-  {  
+  {
     DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
     //four stereo busses
@@ -6799,7 +6799,7 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
     {
       DestinationNr = cntDestination;
 
-      if ((AxumData.ModuleData[ModuleNr].Source>=src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=src_offset.max.source))
+      if ((AxumData.ModuleData[ModuleNr].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
       {
         printf ("MixMinus@%s\n", AxumData.DestinationData[DestinationNr].DestinationName);
 
@@ -6847,7 +6847,7 @@ void SetAxum_ModuleInsertSource(unsigned int ModuleNr)
 {
   unsigned int SystemChannelNr = ModuleNr<<1;
   unsigned char DSPCardNr = (SystemChannelNr/64);
-  
+
   if (dsp_card_available(dsp_handler, DSPCardNr))
   {
     DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
@@ -6950,7 +6950,7 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
       printf("src: MixMinus %d\n", (MixMinusNr+1));
 
       unsigned char DSPCardNr = (MixMinusNr/32);
-      
+
       if (dsp_card_available(dsp_handler, DSPCardNr))
       {
         DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
@@ -7350,9 +7350,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         case STATE_DATATYPE:
         {
-          if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+          if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
           {
-            int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+            int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
 
             TransmitData[0] = (ObjectNr>>8)&0xFF;
             TransmitData[1] = ObjectNr&0xFF;
@@ -7378,9 +7378,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         case STATE_DATATYPE:
         {
-          if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+          if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
           {
-            int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+            int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
 
             TransmitData[0] = (ObjectNr>>8)&0xFF;
             TransmitData[1] = ObjectNr&0xFF;
@@ -7406,9 +7406,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         case OCTET_STRING_DATATYPE:
         {
-          if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+          if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
           {
-            int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+            int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
             sprintf(LCDText,     "%5.1fdB", AxumData.SourceData[SourceNr].Gain);
           }
           else
@@ -8320,9 +8320,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       case MODULE_FUNCTION_SOURCE_START:
       { //Start
         Active = 0;
-        if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+        if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
         {
-          int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+          int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
           Active = AxumData.SourceData[SourceNr].Start;
         }
       }
@@ -8330,9 +8330,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       case MODULE_FUNCTION_SOURCE_STOP:
       { //Stop
         Active = 0;
-        if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+        if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
         {
-          int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+          int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
           Active = !AxumData.SourceData[SourceNr].Start;
         }
       }
@@ -8340,9 +8340,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       case MODULE_FUNCTION_SOURCE_START_STOP:
       { //Start/Stop
         Active = 0;
-        if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+        if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
         {
-          int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+          int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
           Active = AxumData.SourceData[SourceNr].Start;
         }
       }
@@ -8355,9 +8355,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       case MODULE_FUNCTION_SOURCE_ALERT:
       { //Alert
         Active = 0;
-        if ((AxumData.ModuleData[ModuleNr].Source >= src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= src_offset.max.source))
+        if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source <= matrix_sources.src_offset.max.source))
         {
-          int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+          int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
           Active = AxumData.SourceData[SourceNr].Alert;
         }
       }
@@ -9309,7 +9309,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
         {
           if (AxumData.ModuleData[cntModule].On)
           {
@@ -9342,7 +9342,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
         {
           if (AxumData.ModuleData[cntModule].FaderLevel>-80)
           {
@@ -9374,7 +9374,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
         {
           if (AxumData.ModuleData[cntModule].FaderLevel>-80)
           {
@@ -9425,7 +9425,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
         {
           if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
           {
@@ -9466,7 +9466,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
         {
           if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
           {
@@ -9507,7 +9507,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
         {
           if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
           {
@@ -9532,7 +9532,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       Active = 0;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
         {
           if (AxumData.ModuleData[cntModule].Cough)
           {
@@ -9707,9 +9707,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
     break;
     case DESTINATION_FUNCTION_MONITOR_SPEAKER_LEVEL:
     {
-      if ((AxumData.DestinationData[DestinationNr].Source>=src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=src_offset.max.monitor_buss))
+      if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
       {
-        int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-src_offset.min.monitor_buss;
+        int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
 
         switch (DataType)
         {
@@ -9799,9 +9799,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
     break;
     case DESTINATION_FUNCTION_MONITOR_PHONES_LEVEL:
     {
-      if ((AxumData.DestinationData[DestinationNr].Source>=src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=src_offset.max.monitor_buss))
+      if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
       {
-        int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-src_offset.min.monitor_buss;
+        int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
 
         switch (DataType)
         {
@@ -10009,9 +10009,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         Active = AxumData.DestinationData[DestinationNr].Mute;
 
-        if ((AxumData.DestinationData[DestinationNr].Source>=src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=src_offset.max.monitor_buss))
+        if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
         {
-          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-src_offset.min.monitor_buss;
+          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
           if (AxumData.Monitor[MonitorBussNr].Mute)
           {
             Active = 1;
@@ -10060,9 +10060,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         Active = AxumData.DestinationData[DestinationNr].Dim;
 
-        if ((AxumData.DestinationData[DestinationNr].Source>=src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=src_offset.max.monitor_buss))
+        if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
         {
-          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-src_offset.min.monitor_buss;
+          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
           if (AxumData.Monitor[MonitorBussNr].Dim)
           {
             Active = 1;
@@ -10111,9 +10111,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         Active = AxumData.DestinationData[DestinationNr].Mono;
 
-        if ((AxumData.DestinationData[DestinationNr].Source>=src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=src_offset.max.monitor_buss))
+        if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
         {
-          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-src_offset.min.monitor_buss;
+          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
           if (AxumData.Monitor[MonitorBussNr].Mono)
           {
             Active = 1;
@@ -10162,9 +10162,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         Active = AxumData.DestinationData[DestinationNr].Phase;
 
-        if ((AxumData.DestinationData[DestinationNr].Source>=src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=src_offset.max.monitor_buss))
+        if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
         {
-          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-src_offset.min.monitor_buss;
+          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
           if (AxumData.Monitor[MonitorBussNr].Phase)
           {
             Active = 1;
@@ -10246,9 +10246,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         Active = AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr];
 
-        if ((AxumData.DestinationData[DestinationNr].Source>=src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=src_offset.max.monitor_buss))
+        if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
         {
-          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-src_offset.min.monitor_buss;
+          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
           if (AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr])
           {
             Active = 1;
@@ -10649,9 +10649,9 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     break;
     case MODULE_CONTROL_MODE_SOURCE_GAIN:
     {   //Source gain
-      if ((AxumData.ModuleData[ModuleNr].Source>=src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=src_offset.max.source))
+      if ((AxumData.ModuleData[ModuleNr].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
       {
-        int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+        int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
 
         AxumData.SourceData[SourceNr].Gain += (float)TempData/10;
         if (AxumData.SourceData[SourceNr].Gain < 20)
@@ -10668,7 +10668,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
         for (int cntModule=0; cntModule<128; cntModule++)
         {
-          if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+          if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
           {
             unsigned int DisplayFunctionNr = (cntModule<<12);
             CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1);
@@ -10980,9 +10980,9 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       { //fader on changed
         DoAxum_ModuleStatusChanged(ModuleNr);
 
-        if ((AxumData.ModuleData[ModuleNr].Source>=src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=src_offset.max.source))
+        if ((AxumData.ModuleData[ModuleNr].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
         {
-          unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+          unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
           FunctionNrToSent = 0x05000000 | (SourceNr<<12);
           CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON);
           CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_OFF);
@@ -11158,9 +11158,9 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
             SetAxum_ModuleSource(ModuleNr);
             SetAxum_ModuleMixMinus(ModuleNr);
 
-            if ((OldSource>=src_offset.min.source) && (OldSource<=src_offset.max.source))
+            if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
             {
-              unsigned int SourceNr = OldSource-src_offset.min.source;
+              unsigned int SourceNr = OldSource-matrix_sources.src_offset.min.source;
               FunctionNrToSent = 0x05000000 | (SourceNr<<12);
               CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
               CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
@@ -11243,9 +11243,9 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       break;
       case MODULE_CONTROL_MODE_SOURCE_GAIN:
       {   //Source gain
-        if ((AxumData.ModuleData[ModuleNr].Source>=src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=src_offset.max.source))
+        if ((AxumData.ModuleData[ModuleNr].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
         {
-          unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+          unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
 
           AxumData.SourceData[SourceNr].Gain = 30;
 
@@ -11478,9 +11478,9 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         { //fader on changed
           DoAxum_ModuleStatusChanged(ModuleNr);
 
-          if ((AxumData.ModuleData[ModuleNr].Source>=src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=src_offset.max.source))
+          if ((AxumData.ModuleData[ModuleNr].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
           {
-            unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+            unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
             FunctionNrToSent = 0x05000000 | (SourceNr<<12);
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON);
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_OFF);
@@ -11619,9 +11619,9 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   break;
   case MODULE_CONTROL_MODE_SOURCE_GAIN:
   {
-    if ((AxumData.ModuleData[ModuleNr].Source>=src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=src_offset.max.source))
+    if ((AxumData.ModuleData[ModuleNr].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
     {
-      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+      unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
       sprintf(LCDText, "%5.1fdB", AxumData.SourceData[SourceNr].Gain);
     }
     else
@@ -11884,7 +11884,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   TransmitData[12] = LCDText[7];
 
   SendMambaNetMessage(MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 13);
-  
+
   DataType = 0;
   DataSize = 0;
   DataMinimal = 0;
@@ -12448,9 +12448,9 @@ void DoAxum_BussReset(int BussNr)
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-      if ((AxumData.ModuleData[cntModule].Source>=src_offset.min.source) && (AxumData.ModuleData[cntModule].Source<=src_offset.max.source))
+      if ((AxumData.ModuleData[cntModule].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[cntModule].Source<=matrix_sources.src_offset.max.source))
       {
-        int SourceNr = AxumData.ModuleData[cntModule].Source-src_offset.min.source;
+        int SourceNr = AxumData.ModuleData[cntModule].Source-matrix_sources.src_offset.min.source;
         FunctionNrToSent = 0x05000000 | (SourceNr<<12);
         CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
         CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
@@ -12547,9 +12547,9 @@ void DoAxum_BussReset(int BussNr)
 
 void DoAxum_ModuleStatusChanged(int ModuleNr)
 {
-  if ((AxumData.ModuleData[ModuleNr].Source>=src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=src_offset.max.source))
+  if ((AxumData.ModuleData[ModuleNr].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
   {
-    unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+    unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
     unsigned int CurrentSourceActive = AxumData.SourceData[SourceNr].Active;
     unsigned int NewSourceActive = 0;
     if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
@@ -12564,7 +12564,7 @@ void DoAxum_ModuleStatusChanged(int ModuleNr)
     {
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Source == (SourceNr+src_offset.min.source))
+        if (AxumData.ModuleData[cntModule].Source == (SourceNr+matrix_sources.src_offset.min.source))
         {
           if (AxumData.ModuleData[cntModule].FaderLevel>-80)
           {   //fader open
@@ -12603,7 +12603,7 @@ void DoAxum_ModuleStatusChanged(int ModuleNr)
 
           for (int cntDestination=0; cntDestination<1280; cntDestination++)
           {
-            if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+cntMonitorBuss))
+            if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+cntMonitorBuss))
             {
               FunctionNrToSent = 0x06000000 | (cntDestination<<12);
               CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE);
@@ -12641,9 +12641,9 @@ void DoAxum_ModulePreStatusChanged(int BussNr)
   {
     if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
     {
-      if ((AxumData.ModuleData[cntModule].Source>=src_offset.min.source) && (AxumData.ModuleData[cntModule].Source<=src_offset.max.source))
+      if ((AxumData.ModuleData[cntModule].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[cntModule].Source<=matrix_sources.src_offset.max.source))
       {
-        int SourceNr = AxumData.ModuleData[cntModule].Source-src_offset.min.source;
+        int SourceNr = AxumData.ModuleData[cntModule].Source-matrix_sources.src_offset.min.source;
 
         for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
         {
@@ -12678,7 +12678,7 @@ void DoAxum_ModulePreStatusChanged(int BussNr)
 
       for (int cntDestination=0; cntDestination<1280; cntDestination++)
       {
-        if (AxumData.DestinationData[cntDestination].Source == (src_offset.min.monitor_buss+cntMonitorBuss))
+        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+cntMonitorBuss))
         {
           FunctionNrToSent = 0x06000000 | (cntDestination<<12);
           CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
@@ -12696,12 +12696,12 @@ int Axum_MixMinusSourceUsed(unsigned int CurrentSource)
   {
     if (cntModule != ModuleNr)
     {
-      if (AxumData.ModuleData[cntModule].Source == (CurrentSource+src_offset.min.source))
+      if (AxumData.ModuleData[cntModule].Source == (CurrentSource+matrix_sources.src_offset.min.source))
       {
         int cntDestination = 0;
         while ((cntDestination<1280) && (ModuleNr == -1))
         {
-          if (AxumData.DestinationData[cntDestination].MixMinusSource == (CurrentSource+src_offset.min.source))
+          if (AxumData.DestinationData[cntDestination].MixMinusSource == (CurrentSource+matrix_sources.src_offset.min.source))
           {
             ModuleNr = cntModule;
           }
@@ -12720,14 +12720,14 @@ void GetSourceLabel(unsigned int SourceNr, char *TextString, int MaxLength)
   {
     strncpy(TextString, "None", MaxLength);
   }
-  else if ((SourceNr >= src_offset.min.buss) && (SourceNr <= src_offset.max.buss))
+  else if ((SourceNr >= matrix_sources.src_offset.min.buss) && (SourceNr <= matrix_sources.src_offset.max.buss))
   {
-    int BussNr = SourceNr-src_offset.min.buss;
+    int BussNr = SourceNr-matrix_sources.src_offset.min.buss;
     strncpy(TextString, AxumData.BussMasterData[BussNr].Label, MaxLength);
   }
-  else if ((SourceNr >= src_offset.min.insert_out) && (SourceNr <= src_offset.max.insert_out))
+  else if ((SourceNr >= matrix_sources.src_offset.min.insert_out) && (SourceNr <= matrix_sources.src_offset.max.insert_out))
   {
-    int ModuleNr = SourceNr-src_offset.min.insert_out;
+    int ModuleNr = SourceNr-matrix_sources.src_offset.min.insert_out;
     char InsertText[32];
 
     //eventual depending on MaxLength
@@ -12735,14 +12735,14 @@ void GetSourceLabel(unsigned int SourceNr, char *TextString, int MaxLength)
 
     strncpy(TextString, InsertText, MaxLength);
   }
-  else if ((SourceNr >= src_offset.min.monitor_buss) && (SourceNr <= src_offset.max.monitor_buss))
+  else if ((SourceNr >= matrix_sources.src_offset.min.monitor_buss) && (SourceNr <= matrix_sources.src_offset.max.monitor_buss))
   {
-    int BussNr = SourceNr-src_offset.min.monitor_buss;
+    int BussNr = SourceNr-matrix_sources.src_offset.min.monitor_buss;
     strncpy(TextString, AxumData.Monitor[BussNr].Label, MaxLength);
   }
-  else if ((SourceNr >= src_offset.min.mixminus) && (SourceNr <= src_offset.max.mixminus))
+  else if ((SourceNr >= matrix_sources.src_offset.min.mixminus) && (SourceNr <= matrix_sources.src_offset.max.mixminus))
   {
-    int ModuleNr = SourceNr-src_offset.min.mixminus;
+    int ModuleNr = SourceNr-matrix_sources.src_offset.min.mixminus;
     char MixMinusText[32];
 
     //eventual depending on MaxLength
@@ -12750,9 +12750,9 @@ void GetSourceLabel(unsigned int SourceNr, char *TextString, int MaxLength)
 
     strncpy(TextString, MixMinusText, MaxLength);
   }
-  else if ((SourceNr >= src_offset.min.source) && (SourceNr <= src_offset.max.source))
+  else if ((SourceNr >= matrix_sources.src_offset.min.source) && (SourceNr <= matrix_sources.src_offset.max.source))
   {
-    int LabelSourceNr = SourceNr-src_offset.min.source;
+    int LabelSourceNr = SourceNr-matrix_sources.src_offset.min.source;
     strncpy(TextString, AxumData.SourceData[LabelSourceNr].SourceName, MaxLength);
   }
 }
@@ -12772,27 +12772,27 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
 
         if (CurrentSource == 0)
         {
-          CurrentSource = src_offset.min.source;
+          CurrentSource = matrix_sources.src_offset.min.source;
         }
-        else if (CurrentSource == src_offset.max.buss)
+        else if (CurrentSource == matrix_sources.src_offset.max.buss)
         {
-          CurrentSource = src_offset.min.monitor_buss;
+          CurrentSource = matrix_sources.src_offset.min.monitor_buss;
         }
-        else if (CurrentSource == src_offset.max.insert_out)
+        else if (CurrentSource == matrix_sources.src_offset.max.insert_out)
         {
           CurrentSource = 0;
         }
-        else if (CurrentSource == src_offset.max.monitor_buss)
+        else if (CurrentSource == matrix_sources.src_offset.max.monitor_buss)
         {
-          CurrentSource = src_offset.min.insert_out;
+          CurrentSource = matrix_sources.src_offset.min.insert_out;
         }
-        else if (CurrentSource == src_offset.max.mixminus)
+        else if (CurrentSource == matrix_sources.src_offset.max.mixminus)
         { //May not happen, but then go mute
           CurrentSource = 0;
         }
-        else if (CurrentSource == src_offset.max.source)
+        else if (CurrentSource == matrix_sources.src_offset.max.source)
         {
-          CurrentSource = src_offset.min.buss;
+          CurrentSource = matrix_sources.src_offset.min.buss;
         }
         else
         {
@@ -12807,6 +12807,12 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
             check_for_next_source = 1;
           }
         }
+
+        //not active, go further.
+        if (!matrix_sources.src[CurrentSource-1].active)
+        {
+          check_for_next_source = 1;
+        }
       }
       Offset--;
     }
@@ -12817,29 +12823,29 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
       {
         check_for_next_source = 0;
 
-        if (CurrentSource == src_offset.min.buss)
+        if (CurrentSource == matrix_sources.src_offset.min.buss)
         {
-          CurrentSource = src_offset.max.source;
+          CurrentSource = matrix_sources.src_offset.max.source;
         }
-        else if (CurrentSource == src_offset.min.insert_out)
+        else if (CurrentSource == matrix_sources.src_offset.min.insert_out)
         {
-          CurrentSource = src_offset.max.monitor_buss;
+          CurrentSource = matrix_sources.src_offset.max.monitor_buss;
         }
-        else if (CurrentSource == src_offset.min.monitor_buss)
+        else if (CurrentSource == matrix_sources.src_offset.min.monitor_buss)
         {
-          CurrentSource = src_offset.max.buss;
+          CurrentSource = matrix_sources.src_offset.max.buss;
         }
-        else if (CurrentSource == src_offset.min.mixminus)
+        else if (CurrentSource == matrix_sources.src_offset.min.mixminus)
         { //May not happen, but then go mute
           CurrentSource = 0;
         }
-        else if (CurrentSource == src_offset.min.source)
+        else if (CurrentSource == matrix_sources.src_offset.min.source)
         {
           CurrentSource = 0;
         }
         else if (CurrentSource == 0)
         {
-          CurrentSource = src_offset.max.insert_out;
+          CurrentSource = matrix_sources.src_offset.max.insert_out;
         }
         else
         {
@@ -12853,6 +12859,12 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
           {
             check_for_next_source = 1;
           }
+        }
+
+        //not active, go further.
+        if (!matrix_sources.src[CurrentSource-1].active)
+        {
+          check_for_next_source = 1;
         }
       }
       Offset++;
@@ -12928,9 +12940,9 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_EQ_ON_OFF);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_ON_OFF);
 
-      if ((OldSource>=src_offset.min.source) && (OldSource<=src_offset.max.source))
+      if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
       {
-        unsigned int SourceNr = OldSource-src_offset.min.source;
+        unsigned int SourceNr = OldSource-matrix_sources.src_offset.min.source;
         FunctionNrToSent = 0x05000000 | (SourceNr<<12);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
@@ -12991,9 +13003,9 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
       }
 
-      if ((NewSource>=src_offset.min.source) && (NewSource<=src_offset.max.source))
+      if ((NewSource>=matrix_sources.src_offset.min.source) && (NewSource<=matrix_sources.src_offset.max.source))
       {
-        unsigned int SourceNr = NewSource-src_offset.min.source;
+        unsigned int SourceNr = NewSource-matrix_sources.src_offset.min.source;
         FunctionNrToSent = 0x05000000 | (SourceNr<<12);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
@@ -13087,9 +13099,9 @@ void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock)
   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-  if ((AxumData.ModuleData[ModuleNr].Source>=src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=src_offset.max.source))
+  if ((AxumData.ModuleData[ModuleNr].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
   {
-    int SourceNr = AxumData.ModuleData[ModuleNr].Source-src_offset.min.source;
+    int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
     FunctionNrToSent = 0x05000000 | (SourceNr<<12);
     CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
     CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
@@ -13119,9 +13131,9 @@ void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock)
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-          if ((AxumData.ModuleData[cntModule].Source>=src_offset.min.source) && (AxumData.ModuleData[cntModule].Source<=src_offset.max.source))
+          if ((AxumData.ModuleData[cntModule].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[cntModule].Source<=matrix_sources.src_offset.max.source))
           {
-            int SourceNr = AxumData.ModuleData[cntModule].Source-src_offset.min.source;
+            int SourceNr = AxumData.ModuleData[cntModule].Source-matrix_sources.src_offset.min.source;
             FunctionNrToSent = 0x05000000 | (SourceNr<<12);
             CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
             CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
@@ -13359,7 +13371,7 @@ void initialize_axum_data_struct()
       AxumData.ModuleData[cntModule].Buss[cntBuss].Active = 1;
     }
   }
-  
+
   AxumData.Control1Mode = MODULE_CONTROL_MODE_NONE;
   AxumData.Control2Mode = MODULE_CONTROL_MODE_NONE;
   AxumData.Control3Mode = MODULE_CONTROL_MODE_NONE;

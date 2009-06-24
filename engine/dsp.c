@@ -87,7 +87,7 @@ DSP_HANDLER_STRUCT *dsp_open()
     dsp_handler->dspcard[cntDSPCard].slot = 3;
     cntDSPCard++;
   }
- 
+
   if (!cntDSPCard)
   {
     fprintf(stderr, "No programmed DSP card found.\n");
@@ -96,7 +96,7 @@ DSP_HANDLER_STRUCT *dsp_open()
   log_write("%d DSP card(s) found", cntDSPCard);
 
   LOG_DEBUG("[%s] leave", __func__);
-  
+
   return dsp_handler;
 }
 
@@ -108,10 +108,10 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
   fd = open(devname, O_RDWR);
   if (fd<0)
   {
-    return 0; 
+    return 0;
   }
   log_write("PCI card %s opened, fd=%d", devname, fd);
-  
+
   pci2040_ioctl_linux pci2040_ioctl_message;
   PCI2040_DUMP_CONFIG_REGS HPIConfigurationRegisters;
 
@@ -179,7 +179,7 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
     //pci2040_ioctl_message.Buffer = (unsigned char *)&res;
     //ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
     //unsigned long *PtrGPB_TBC = (unsigned long *)mmap(0, res.Length, PROT_READ|PROT_WRITE, MAP_SHARED | MAP_LOCKED, fd, res.PhysicalAddress);
-    
+
     unsigned long cntPtrAddress = (unsigned long)PtrDSP_HPI;
     for (int cntDSP=0; cntDSP<4; cntDSP++)
     {
@@ -598,13 +598,13 @@ void dsp_close(DSP_HANDLER_STRUCT *dsp_handler)
 int dsp_force_eeprom_prg(char *devname)
 {
   int fd;
-  
+
   LOG_DEBUG("[%s] enter", __func__);
   fd = open(devname, O_RDWR);
   if (fd<0)
-  { 
+  {
     LOG_DEBUG("[%s] leave with error", __func__);
-    return 0; 
+    return 0;
   }
   dsp_program_eeprom(fd);
   LOG_DEBUG("[%s] leave", __func__);
@@ -891,7 +891,7 @@ bool dsp_program_eeprom(int fd)
     //Clock High
     reg.DataVal |= 0x01;
     pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
-  
+
     pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
     delay_us(EEPROM_DELAY_TIME);
