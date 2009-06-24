@@ -1210,7 +1210,6 @@ void dsp_set_buss_lvl(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChanne
 {
   unsigned char DSPCardNr = (SystemChannelNr/64);
   unsigned char DSPCardChannelNr = SystemChannelNr%64;
-  unsigned char DSPChannelNr = DSPCardChannelNr%32;
   LOG_DEBUG("[%s] enter", __func__);
 
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
@@ -1234,7 +1233,7 @@ void dsp_set_buss_lvl(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChanne
       }
 
       //MuteX implementation?
-      *dspcard->dsp_regs[2].HPIA = SummingDSPUpdate_MatrixFactor+((cntBuss+(DSPChannelNr*32))*4);
+      *dspcard->dsp_regs[2].HPIA = SummingDSPUpdate_MatrixFactor+((cntBuss+(DSPCardChannelNr*32))*4);
       *((float *)dspcard->dsp_regs[2].HPID) = factor;
     }
   }
