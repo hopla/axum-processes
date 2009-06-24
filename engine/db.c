@@ -444,6 +444,11 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].DefaultBandwidth);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].DefaultSlope);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&ModuleData->EQBand[cntEQ].DefaultType);
+
+      ModuleData->EQBand[cntEQ].Frequency = ModuleData->EQBand[cntEQ].DefaultFrequency;
+      ModuleData->EQBand[cntEQ].Bandwidth = ModuleData->EQBand[cntEQ].DefaultBandwidth;
+      ModuleData->EQBand[cntEQ].Slope = ModuleData->EQBand[cntEQ].DefaultSlope;
+      ModuleData->EQBand[cntEQ].Type = ModuleData->EQBand[cntEQ].DefaultType;
     }
     ModuleData->EQOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     ModuleData->EQOnOffB = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
