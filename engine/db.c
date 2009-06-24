@@ -1197,7 +1197,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
 
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
-    bool send_default_data = false;
+    unsigned char send_default_data = 0;
     unsigned short int ObjectNr = -1;
     sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
 
@@ -1218,23 +1218,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
           case STATE_DATATYPE:
           {
             unsigned long int DataValue;
-            sscanf(PQgetvalue(qres, cntRow, 0), "(%ld,,,)", &DataValue);
-
-            if (obj_info->CurrentActuatorDataDefault != obj_info->ActuatorDataDefault)
-            {
-              TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
-              for (int cntByte=0; cntByte<obj_info->ActuatorDataSize; cntByte++)
-              {
-                TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
-                send_default_data = true;
-              }
-            }            
-          }
-          break;
-          case SIGNED_INTEGER_DATATYPE:
-          {
-            long int DataValue;
-            sscanf(PQgetvalue(qres, cntRow, 0), "(%ld,,,)", &DataValue);
+            sscanf(PQgetvalue(qres, cntRow, 1), "(%ld,,,)", &DataValue);
 
             if (DataValue != obj_info->CurrentActuatorDataDefault)
             {
@@ -1243,7 +1227,23 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               {
                 TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
               }
-              send_default_data = true;
+              send_default_data = 1;
+            }            
+          }
+          break;
+          case SIGNED_INTEGER_DATATYPE:
+          {
+            long int DataValue;
+            sscanf(PQgetvalue(qres, cntRow, 1), "(%ld,,,)", &DataValue);
+
+            if (DataValue != obj_info->CurrentActuatorDataDefault)
+            {
+              TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
+              for (int cntByte=0; cntByte<obj_info->ActuatorDataSize; cntByte++)
+              {
+                TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
+              }
+              send_default_data = 1;
               obj_info->CurrentActuatorDataDefault = DataValue;
             }            
           }
@@ -1251,7 +1251,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
           case OCTET_STRING_DATATYPE:
           {
             char OctetString[256];
-            sscanf(PQgetvalue(qres, cntRow, 0), "(,,,%s)", OctetString);
+            sscanf(PQgetvalue(qres, cntRow, 1), "(,,,%s)", OctetString);
             
             int StringLength = strlen(OctetString);
             if (StringLength>obj_info->ActuatorDataSize)
@@ -1264,13 +1264,13 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             {
               TransmitData[cntTransmitData++] = OctetString[cntChar];
             }
-            send_default_data = true;
+            send_default_data = 1;
           }
           break;
           case FLOAT_DATATYPE:
           {
             float DataValue;
-            sscanf(PQgetvalue(qres, cntRow, 0), "(,%f,,)", &DataValue);
+            sscanf(PQgetvalue(qres, cntRow, 1), "(,%f,,)", &DataValue);
             
             if (DataValue != obj_info->CurrentActuatorDataDefault)
             {
@@ -1280,7 +1280,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               {
                 cntTransmitData += cntTransmitData;
               }
-              send_default_data = true;
+              send_default_data = 1;
               obj_info->CurrentActuatorDataDefault = DataValue;
             }
             break;
@@ -1289,7 +1289,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               unsigned char cntBit;
               unsigned long DataValue;
               char BitString[256];
-              sscanf(PQgetvalue(qres, cntRow, 0), "(,,%s,)", BitString);
+              sscanf(PQgetvalue(qres, cntRow, 1), "(,,%s,)", BitString);
              
               int StringLength = strlen(BitString);
               if (StringLength>obj_info->ActuatorDataSize)
@@ -1311,17 +1311,17 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               {
                 TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
               }
-              send_default_data = true;
+              send_default_data = 1;
               obj_info->CurrentActuatorDataDefault = DataValue;
             }
             break;
           }
-          
-          if (send_default_data)
-          {
-            SendMambaNetMessage(node_info->MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, cntTransmitData);
-          } 
         }
+
+        if (send_default_data)
+        {
+          SendMambaNetMessage(node_info->MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, cntTransmitData);
+        } 
       }
     }
   }
