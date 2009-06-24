@@ -29,7 +29,7 @@ extern PGconn *sql_conn;
 
 struct sql_notify notifies[] = {
   { (char *)"templates_changed",            db_event_templates_changed},
-  { (char *)"addresses_changed",            db_event_addresses_changed},
+  { (char *)"address_removed",              db_event_address_removed},
   { (char *)"slot_config_changed",          db_event_slot_config_changed},
   { (char *)"src_config_changed",           db_event_src_config_changed},
   { (char *)"module_config_changed",        db_event_module_config_changed},
@@ -1646,8 +1646,9 @@ void db_event_templates_changed(char myself, char *arg)
   LOG_DEBUG("[%s] leave", __func__);
 }
 
-void db_event_addresses_changed(char myself, char *arg)
+void db_event_address_removed(char myself, char *arg)
 {
+  unsigned long int addr;
   LOG_DEBUG("[%s] enter", __func__);
   //No implementation
   arg = NULL;
