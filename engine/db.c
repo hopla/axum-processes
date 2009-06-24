@@ -440,10 +440,10 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
     for (cntEQ=0; cntEQ<6; cntEQ++)
     {
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Range);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->EQBand[cntEQ].Frequency);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Bandwidth);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Slope);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&ModuleData->EQBand[cntEQ].Type);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->EQBand[cntEQ].DefaultFrequency);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].DefaultBandwidth);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].DefaultSlope);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&ModuleData->EQBand[cntEQ].DefaultType);
     }
     ModuleData->EQOnOffA = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     ModuleData->EQOnOffB = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");

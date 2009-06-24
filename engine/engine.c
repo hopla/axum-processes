@@ -413,8 +413,10 @@ int main(int argc, char *argv[])
   {
     for (int cntEQBand=0; cntEQBand<6; cntEQBand++)
     {
+      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Level = 0;
       AxumData.ModuleData[cntModule].EQBand[cntEQBand].Frequency = AxumData.ModuleData[cntModule].EQBand[cntEQBand].DefaultFrequency;
       AxumData.ModuleData[cntModule].EQBand[cntEQBand].Bandwidth = AxumData.ModuleData[cntModule].EQBand[cntEQBand].DefaultBandwidth;
+      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Slope = AxumData.ModuleData[cntModule].EQBand[cntEQBand].DefaultSlope;
       AxumData.ModuleData[cntModule].EQBand[cntEQBand].Type = AxumData.ModuleData[cntModule].EQBand[cntEQBand].DefaultType;
     }
   }
@@ -7198,8 +7200,6 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
   {
     if ((MambaNetAddress == 0x00000000) || (MambaNetAddress == WalkAxumFunctionInformationStruct->MambaNetAddress))
     {
-      if (verbose)
-        printf("Send function %08x data to addr: %08x, obj: %d\n", SensorReceiveFunctionNumber, WalkAxumFunctionInformationStruct->MambaNetAddress, WalkAxumFunctionInformationStruct->ObjectNr); 
       SentDataToObject(SensorReceiveFunctionNumber, WalkAxumFunctionInformationStruct->MambaNetAddress, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ActuatorDataType, WalkAxumFunctionInformationStruct->ActuatorDataSize, WalkAxumFunctionInformationStruct->ActuatorDataMinimal, WalkAxumFunctionInformationStruct->ActuatorDataMaximal);
     }
     WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
