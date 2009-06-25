@@ -229,7 +229,7 @@ void db_event_setname(char myself, char *arg) {
 
   sscanf(arg, "%d", &addr);
   /* if the node is online, set its name and reset the setname flag */
-  if(myself || mbnNodeStatus(mbn, addr) != NULL) {
+  if(!myself && mbnNodeStatus(mbn, addr) != NULL) {
     db_getnode(&node, addr);
     node.flags &= ~DB_FLAGS_SETNAME;
     db_setnode(addr, &node);
