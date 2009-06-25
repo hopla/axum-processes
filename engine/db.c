@@ -122,6 +122,7 @@ int db_get_matrix_sources()
     }
     else if (strcmp(src_type, "source") == 0)
     {
+      cntField++; //skip this minimal value, will be determined in next query. 
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.max.source);
     }
   }
