@@ -134,7 +134,7 @@ CREATE TABLE src_config (
   input2_sub_ch smallint NOT NULL CHECK(input2_sub_ch>=1 AND input2_sub_ch<=32),
   phantom boolean NOT NULL DEFAULT FALSE,
   pad boolean NOT NULL DEFAULT FALSE,
-  gain float NOT NULL DEFAULT 0,
+  gain float NOT NULL DEFAULT 30 CHECK (gain >= 20::double precision AND gain <= 75::double precision),
   redlight1 boolean NOT NULL DEFAULT FALSE,
   redlight2 boolean NOT NULL DEFAULT FALSE,
   redlight3 boolean NOT NULL DEFAULT FALSE,
