@@ -1533,8 +1533,10 @@ int db_insert_slot_config(unsigned char slot_nr, unsigned long int addr, unsigne
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
-
   PQclear(qres);
+
+  //reread sources list if I/O and DSP cards changes
+  db_get_matrix_sources();
 
   LOG_DEBUG("[%s] leave", __func__);
 
@@ -1564,6 +1566,9 @@ int db_delete_slot_config(unsigned char slot_nr)
   }
 
   PQclear(qres);
+
+  //reread sources list if I/O and DSP cards changes
+  db_get_matrix_sources();
 
   LOG_DEBUG("[%s] leave", __func__);
 
