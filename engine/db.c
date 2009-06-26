@@ -329,7 +329,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   return 1;
 }
 
-int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
+int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsigned char force_all)
 {
   char str[2][32];
   const char *params[2];
@@ -548,39 +548,42 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
           SetAxum_ModuleInsertSource(ModuleNr);
 
           //Set fader level and On;
-          float NewLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
-          int NewOn = AxumData.ModuleData[ModuleNr].On;
-
-          SetAxum_BussLevels(ModuleNr);
-
-          unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_OFF);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON_OFF);
-
-          if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
+          if (force_all)
           {
-            unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
-            FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_OFF);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
-          }
+            float NewLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
+            int NewOn = AxumData.ModuleData[ModuleNr].On;
 
-          FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+            SetAxum_BussLevels(ModuleNr);
 
-          if (((OldLevel<=-80) && (NewLevel>-80)) ||
-              ((OldLevel>-80) && (NewLevel<=-80)) ||
-              (OldOn != NewOn))
-          { //fader on changed
-            DoAxum_ModuleStatusChanged(ModuleNr);
+            unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_OFF);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON_OFF);
+
+            if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
+            {
+              unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
+              FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+              CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON);
+              CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_OFF);
+              CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
+              CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
+              CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+            }
+  
+            FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+
+            if (((OldLevel<=-80) && (NewLevel>-80)) ||
+                ((OldLevel>-80) && (NewLevel<=-80)) ||
+                (OldOn != NewOn))
+            { //fader on changed
+              DoAxum_ModuleStatusChanged(ModuleNr);
+            }
           }
         }
       }
@@ -1756,7 +1759,7 @@ void db_event_module_config_changed(char myself, char *arg)
   unsigned char number;
 
   sscanf(arg, "%hhd", &number);
-  db_read_module_config(number, number);
+  db_read_module_config(number, number, 0);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
