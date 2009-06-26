@@ -310,7 +310,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
       if (AxumData.ModuleData[cntModule].Source == (number+matrix_sources.src_offset.min.source))
       {
         SetAxum_ModuleSource(cntModule);
-        SetAxum_ModuleMixMinus(cntModule);
+        SetAxum_ModuleMixMinus(cntModule, 0);
 
         unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);

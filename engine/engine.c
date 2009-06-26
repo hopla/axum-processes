@@ -784,7 +784,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
                       SetAxum_ModuleSource(cntModule);
-                      SetAxum_ModuleMixMinus(cntModule);
+                      SetAxum_ModuleMixMinus(cntModule, 0);
                       SetAxum_ModuleInsertSource(cntModule);
                       SetAxum_BussLevels(cntModule);
                     }
@@ -921,7 +921,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                     {
                       printf("Found module: %d\n", cntModule);
                       SetAxum_ModuleSource(cntModule);
-                      SetAxum_ModuleMixMinus(cntModule);
+                      SetAxum_ModuleMixMinus(cntModule, 0);
                     }
                   }
                   for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
@@ -4295,7 +4295,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                             AxumData.ModuleData[cntModule].Buss[BussNr].On = 0;
 
                             SetAxum_BussLevels(cntModule);
-                            SetAxum_ModuleMixMinus(cntModule);
+                            SetAxum_ModuleMixMinus(cntModule, 0);
 
                             unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
                             CheckObjectsToSent(FunctionNrToSent | FunctionNr);
@@ -4324,7 +4324,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         {
                           AxumData.ModuleData[cntModule].Buss[BussNr].On = 1;
                           SetAxum_BussLevels(cntModule);
-                          SetAxum_ModuleMixMinus(cntModule);
+                          SetAxum_ModuleMixMinus(cntModule, 0);
 
                           FunctionNrToSent = ((cntModule)<<12);
                           CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
@@ -4466,7 +4466,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         {
                           AxumData.ModuleData[cntModule].Buss[BussNr].On = 0;
                           SetAxum_BussLevels(cntModule);
-                          SetAxum_ModuleMixMinus(cntModule);
+                          SetAxum_ModuleMixMinus(cntModule, 0);
 
                           FunctionNrToSent = ((cntModule)<<12);
                           CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
@@ -4620,7 +4620,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         }
 
                         SetAxum_BussLevels(cntModule);
-                        SetAxum_ModuleMixMinus(cntModule);
+                        SetAxum_ModuleMixMinus(cntModule, 0);
 
                         FunctionNrToSent = ((cntModule)<<12);
                         CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
@@ -4640,7 +4640,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                             AxumData.ModuleData[cntModule].Buss[BussNr].On = 0;
 
                             SetAxum_BussLevels(cntModule);
-                            SetAxum_ModuleMixMinus(cntModule);
+                            SetAxum_ModuleMixMinus(cntModule, 0);
 
                             FunctionNrToSent = ((cntModule)<<12);
                             CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
@@ -6783,7 +6783,7 @@ void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
   }
 }
 
-void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
+void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource)
 {
   unsigned int SystemChannelNr = ModuleNr<<1;
   unsigned char DSPCardNr = (SystemChannelNr/64);
@@ -6795,6 +6795,17 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
 
   while (cntDestination<1280)
   {
+    if ((OldSource != 0) && (AxumData.DestinationData[cntDestination].MixMinusSource == OldSource))
+    {
+      DestinationNr = cntDestination;
+
+      if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
+      {
+        printf("MixMinus@%s need to be removed, use default src.\n", AxumData.DestinationData[DestinationNr].DestinationName);
+        AxumData.DestinationData[DestinationNr].MixMinusActive = 0;
+        SetAxum_DestinationSource(DestinationNr);
+      }
+    }
     if (AxumData.DestinationData[cntDestination].MixMinusSource == AxumData.ModuleData[ModuleNr].Source)
     {
       DestinationNr = cntDestination;
@@ -6832,7 +6843,7 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr)
         }
         else
         {
-          printf("Use default src\n");
+          printf("No buss routed, use default src\n");
 
           AxumData.DestinationData[DestinationNr].MixMinusActive = 0;
           SetAxum_DestinationSource(DestinationNr);
@@ -11156,7 +11167,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_B);
 
             SetAxum_ModuleSource(ModuleNr);
-            SetAxum_ModuleMixMinus(ModuleNr);
+            SetAxum_ModuleMixMinus(ModuleNr, OldSource);
 
             if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
             {
@@ -11511,7 +11522,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         int BussNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
         AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
         SetAxum_BussLevels(ModuleNr);
-        SetAxum_ModuleMixMinus(ModuleNr);
+        SetAxum_ModuleMixMinus(ModuleNr, 0);
 
 
         unsigned int FunctionNrToSent = (ModuleNr<<12);
@@ -12437,7 +12448,7 @@ void DoAxum_BussReset(int BussNr)
       AxumData.ModuleData[cntModule].Buss[BussNr].On = 0;
 
       SetAxum_BussLevels(cntModule);
-      SetAxum_ModuleMixMinus(cntModule);
+      SetAxum_ModuleMixMinus(cntModule, 0);
 
       unsigned int FunctionNrToSent = 0x00000000 | (cntModule<<12);
       CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
@@ -12924,7 +12935,7 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
       }
 
       SetAxum_ModuleSource(ModuleNr);
-      SetAxum_ModuleMixMinus(ModuleNr);
+      SetAxum_ModuleMixMinus(ModuleNr, OldSource);
 
       unsigned int FunctionNrToSent = (ModuleNr<<12);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -13089,7 +13100,7 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
 void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock)
 {
   SetAxum_BussLevels(ModuleNr);
-  SetAxum_ModuleMixMinus(ModuleNr);
+  SetAxum_ModuleMixMinus(ModuleNr, 0);
 
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
   CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
@@ -13120,7 +13131,7 @@ void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock)
           AxumData.ModuleData[cntModule].Buss[BussNr].On = 0;
 
           SetAxum_BussLevels(cntModule);
-          SetAxum_ModuleMixMinus(cntModule);
+          SetAxum_ModuleMixMinus(cntModule, 0);
 
           unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
           CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
