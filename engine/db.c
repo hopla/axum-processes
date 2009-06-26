@@ -279,7 +279,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     SourceData->InputData[1].SubChannel--;
     SourceData->Phantom = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Pad = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    SourceData->Gain = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Gain);
     SourceData->Redlight[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Redlight[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Redlight[2] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -305,9 +305,15 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     SourceData->MonitorMute[14] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->MonitorMute[15] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
+    unsigned int FunctionNrToSent = 0x05000000 | ((number-1)<<12);
+    CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM);
+    CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PAD);
+    CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_GAIN);
+
+
     for (cntModule=0; cntModule<128; cntModule++)
     {
-      if (AxumData.ModuleData[cntModule].Source == (number+matrix_sources.src_offset.min.source))
+      if (AxumData.ModuleData[cntModule].Source == ((number-1)+matrix_sources.src_offset.min.source))
       {
         SetAxum_ModuleSource(cntModule);
         SetAxum_ModuleMixMinus(cntModule, 0);
@@ -317,6 +323,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
       }
     }
   }

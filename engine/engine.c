@@ -915,6 +915,13 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       (AxumData.SourceData[cntSource].InputData[1].MambaNetAddress == FromAddress))
                 { //this source is changed, update modules!
                   printf("Found source: %d\n", cntSource);
+
+                  //Set Phantom, Pad and Gain
+                  unsigned int FunctionNrToSend = 0x05000000 | (cntSource<<12);
+                  CheckObjectsToSent(FunctionNrToSend | SOURCE_FUNCTION_PHANTOM);
+                  CheckObjectsToSent(FunctionNrToSend | SOURCE_FUNCTION_PAD);
+                  CheckObjectsToSent(FunctionNrToSend | SOURCE_FUNCTION_GAIN);
+
                   for (int cntModule=0; cntModule<128; cntModule++)
                   {
                     if (AxumData.ModuleData[cntModule].Source == (cntSource+matrix_sources.src_offset.min.source))
@@ -922,6 +929,11 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       printf("Found module: %d\n", cntModule);
                       SetAxum_ModuleSource(cntModule);
                       SetAxum_ModuleMixMinus(cntModule, 0);
+
+                      unsigned int FunctionNrToSend = (cntModule<<12);
+                      CheckObjectsToSent(FunctionNrToSend | MODULE_FUNCTION_SOURCE_PHANTOM);
+                      CheckObjectsToSent(FunctionNrToSend | MODULE_FUNCTION_SOURCE_PAD);
+                      CheckObjectsToSent(FunctionNrToSend | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
                     }
                   }
                   for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
@@ -954,6 +966,9 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                 { //this source is changed, update modules!
                   printf("Found destination: %d\n", cntDestination);
                   SetAxum_DestinationSource(cntDestination);
+
+                  unsigned int FunctionNrToSend = 0x06000000 | (cntDestination<<12);
+                  CheckObjectsToSent(FunctionNrToSend | DESTINATION_FUNCTION_LEVEL);
                 }
               }
             }
