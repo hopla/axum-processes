@@ -274,6 +274,9 @@ void init(int argc, char **argv) {
   char ethdev[50];
   char dbstr[256];
   int c;
+  int verbose;
+
+  verbose = 0;
 
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbstr, DEFAULT_DB_STR);
@@ -281,7 +284,7 @@ void init(int argc, char **argv) {
   strcpy(hwparent_path, DEFAULT_GTW_PATH);
 
   /* parse options */
-  while((c = getopt(argc, argv, "e:d:l:g:i:")) != -1) {
+  while((c = getopt(argc, argv, "e:d:l:g:i:v")) != -1) {
     switch(c) {
       case 'e':
         if(strlen(optarg) > 50) {
@@ -309,6 +312,9 @@ void init(int argc, char **argv) {
       case 'l':
         strcpy(log_file, optarg);
         break;
+      case 'v':
+        verbose=1;
+        break;
       default:
         fprintf(stderr, "Usage: %s [-e dev] [-u path] [-g path] [-d str] [-l path] [-i id]\n", argv[0]);
         fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
@@ -316,12 +322,15 @@ void init(int argc, char **argv) {
         fprintf(stderr, "  -g path  Hardware parent or path to gateway socket.\n");
         fprintf(stderr, "  -l path  Path to log file.\n");
         fprintf(stderr, "  -d str   PostgreSQL database connection options.\n");
+        fprintf(stderr, "  -v       Verbose debug output.\n");
         exit(1);
     }
   }
 
-  daemonize();
-  log_open();
+  if (!verbose){
+    daemonize();
+    log_open();
+  }
   hwparent(&this_node);
   db_init(dbstr);
 
@@ -346,7 +355,8 @@ void init(int argc, char **argv) {
   mbnSetErrorCallback(mbn, mError);
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
 
-  daemonize_finish();
+  if(!verbose)
+    daemonize_finish();
   log_write("-------------------------------");
   log_write("Axum Address Server Initialized");
 }
