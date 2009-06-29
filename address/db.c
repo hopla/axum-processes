@@ -213,9 +213,13 @@ void db_event_setengine(char myself, char *arg) {
 void db_event_setaddress(char myself, char *arg) {
   struct db_node node;
   int old, new;
+  struct mbn_address_node *n;
 
   if(myself || sscanf(arg, "%d %d", &old, &new) != 2 || !db_getnode(&node, new))
     return;
+
+  if((n = mbnNodeStatus(mbn, old)) != NULL)
+    set_address_struct(0, *n);
 
   set_address_struct(new, node);
   log_write("Changing address of %08X to %08X", old, new);
