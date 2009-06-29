@@ -13520,7 +13520,7 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
     }
   }
 
-  if (!NodeFound == -1)
+  if (NodeFound == 0)
   {
     return NULL;
   }
