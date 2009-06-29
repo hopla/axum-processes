@@ -28,7 +28,7 @@ struct sql_notify notifies[] = {
   { "address_removed",    db_event_removed },
   { "address_set_engine", db_event_setengine },
   { "address_set_name",   db_event_setname },
-  { "address_set_address", db_event_setaddress },
+  { "address_set_addr", db_event_setaddress },
   { "address_refresh",    db_event_refresh }
 };
 
