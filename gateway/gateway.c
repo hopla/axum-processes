@@ -313,7 +313,6 @@ void init(int argc, char **argv, char *upath) {
   struct mbn_interface *itf = NULL;
   struct mbn_object obj[6];
   char err[MBN_ERRSIZE], ican[50], tport[10];
-  unsigned short parent[3] = {0,0,0};
   int c, itfcount = 0;
 
   strcpy(upath, DEFAULT_UNIX_PATH);
@@ -322,7 +321,7 @@ void init(int argc, char **argv, char *upath) {
   can = eth = tcp = NULL;
   verbose = 0;
 
-  while((c = getopt(argc, argv, "c:e:u:t:d:i:v")) != -1) {
+  while((c = getopt(argc, argv, "c:e:u:t:d:i:p:v")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
@@ -370,7 +369,19 @@ void init(int argc, char **argv, char *upath) {
       /* uniqueidperproduct */
       case 'i':
         if(sscanf(optarg, "%hd", &(this_node.UniqueIDPerProduct)) != 1) {
-          fprintf(stderr, "Invalid UniqueIDPerProduct");
+          fprintf(stderr, "Invalid UniqueIDPerProduct\n");
+          exit(1);
+        }
+        break;
+      /* hardwareparent */
+      case 'p':
+        if(strcmp(optarg, "self") == 0) {
+          this_node.HardwareParent[0] = this_node.ManufacturerID;
+          this_node.HardwareParent[1] = this_node.ProductID;
+          this_node.HardwareParent[2] = this_node.UniqueIDPerProduct;
+        } else if(sscanf(optarg, "%04hx:%04hx:%04hx", this_node.HardwareParent,
+            this_node.HardwareParent+1, this_node.HardwareParent+2) != 3) {
+          fprintf(stderr, "Invalid HardwareParent\n");
           exit(1);
         }
         break;
@@ -380,13 +391,14 @@ void init(int argc, char **argv, char *upath) {
         break;
       /* wrong option */
       default:
-        fprintf(stderr, "Usage: %s [-v] [-c dev] [-e dev] [-t port] [-u path] [-d path] [-i id]\n", argv[0]);
+        fprintf(stderr, "Usage: %s [-v] [-c dev] [-e dev] [-t port] [-u path] [-d path] [-i id] [-p id]\n", argv[0]);
         fprintf(stderr, "  -v       Print verbose output to stdout\n");
         fprintf(stderr, "  -c dev   CAN device or TTY device\n");
         fprintf(stderr, "  -e dev   Ethernet device\n");
         fprintf(stderr, "  -t port  TCP port (0 = use default)\n");
         fprintf(stderr, "  -u path  Path to UNIX socket\n");
         fprintf(stderr, "  -d path  Path to data file (for IP setting)\n");
+        fprintf(stderr, "  -p id    Hardware Parent (not specified = from CAN, 'self' = own ID)\n");
         fprintf(stderr, "  -i id    UniqueIDPerProduct for the MambaNet node\n");
         exit(1);
     }
@@ -411,16 +423,13 @@ void init(int argc, char **argv, char *upath) {
 
   /* init can */
   if(ican[0]) {
-    if((itf = mbnCANOpen(ican, parent, err)) == NULL) {
+    if((itf = mbnCANOpen(ican, this_node.HardwareParent, err)) == NULL) {
       fprintf(stderr, "mbnCANOpen: %s\n", err);
       exit(1);
     }
-    this_node.HardwareParent[0] = parent[0];
-    this_node.HardwareParent[1] = parent[1];
-    this_node.HardwareParent[2] = parent[2];
     if(verbose)
       printf("Received hardware parent from CAN: %04X:%04X:%04X\n",
-        parent[0], parent[1], parent[2]);
+        this_node.HardwareParent[0], this_node.HardwareParent[1], this_node.HardwareParent[2]);
     if((can = mbnInit(&this_node, obj, itf, err)) == NULL) {
       fprintf(stderr, "mbnInit(can): %s\n", err);
       exit(1);

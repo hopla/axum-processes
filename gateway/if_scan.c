@@ -10,6 +10,7 @@
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <time.h>
 #include <linux/if_arp.h>
 #include <linux/can.h>
 
@@ -55,6 +56,7 @@ struct can_data {
   unsigned char msgbufi;
   unsigned char cirbuf[CIRBUFLENGTH];
   unsigned int cirbufb, cirbuft;
+  unsigned short *parent;
 };
 
 struct can_ifaddr {
@@ -78,6 +80,7 @@ int scan_parse(struct can_frame *frame, struct mbn_interface *itf);
 void *scan_receive(void *);
 int scan_read(struct can_frame *frame, struct mbn_interface *itf);
 void scan_write(struct can_frame *frame, struct mbn_interface *itf);
+
 
 struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *parent, char *err) {
   struct mbn_interface *itf;
@@ -104,8 +107,13 @@ struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *paren
   itf->data = (void *)dat;
 
   if(!error && parent != NULL) {
-    if(scan_hwparent(itf, parent, err))
-      error++;
+    /* no parent known, get parent from CAN */
+    if(parent[0] == 0 && parent[1] == 0 && parent[2] == 0) {
+      if(scan_hwparent(itf, parent, err))
+        error++;
+    /* we are the parent, send to CAN (from separate thread) */
+    } else
+      dat->parent = parent;
   }
 
   if(error) {
@@ -120,6 +128,7 @@ struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *paren
   itf->cb_free_addr = scan_free_addr;
   return itf;
 }
+
 
 int scan_open_sock(char *ifname, struct can_data *dat, char *err) {
   struct sockaddr_can addr;
@@ -149,6 +158,7 @@ int scan_open_sock(char *ifname, struct can_data *dat, char *err) {
   dat->txdly = CAN_TXDELAY;
   return 0;
 }
+
 
 int scan_open_tty(char *ifname, struct can_data *dat, char *err) {
   struct termios tio;
@@ -195,6 +205,7 @@ int scan_open_tty(char *ifname, struct can_data *dat, char *err) {
   return 0;
 }
 
+
 int scan_init(struct mbn_interface *itf, char *err) {
   struct can_data *dat = (struct can_data *)itf->data;
   int i;
@@ -211,6 +222,7 @@ int scan_init(struct mbn_interface *itf, char *err) {
   }
   return 0;
 }
+
 
 int scan_hwparent(struct mbn_interface *itf, unsigned short *par, char *err) {
   struct can_data *dat = (struct can_data *)itf->data;
@@ -275,6 +287,7 @@ void scan_free(struct mbn_interface *itf) {
   pthread_join(dat->rxthread, NULL);
   pthread_join(dat->txthread, NULL);
   pthread_mutex_destroy(dat->txmutex);
+  free(dat->txmutex);
   free(dat);
   free(itf);
 }
@@ -286,8 +299,8 @@ void scan_free_addr(void *ptr) {
   free(ptr);
 }
 
-int scan_parse(struct can_frame *frame, struct mbn_interface *itf)
-{
+
+int scan_parse(struct can_frame *frame, struct mbn_interface *itf) {
   struct can_data *dat = (struct can_data *)itf->data;
   int n, ai, bcast, src, dest, seq;
 
@@ -346,17 +359,35 @@ int scan_parse(struct can_frame *frame, struct mbn_interface *itf)
   return 0;
 }
 
+
 void *scan_send(void *ptr) {
   struct mbn_interface *itf = (struct mbn_interface *)ptr;
   struct can_data *dat = (struct can_data *)itf->data;
   struct can_frame frame;
   struct can_queue *q;
   struct timeval tv;
+  time_t lastparent = 0, now;
   int i;
 
   tv.tv_sec = 0;
   tv.tv_usec = 10000;
   while(1) {
+    /* send CAN parent each second */
+    now = time(NULL);
+    if(dat->parent != NULL && lastparent < now) {
+      frame.can_dlc = 8;
+      frame.can_id = 0x0FFF0011;
+      frame.data[0] = (dat->parent[0]>>8)&0xFF;
+      frame.data[1] =  dat->parent[0]    &0xFF;
+      frame.data[2] = (dat->parent[1]>>8)&0xFF;
+      frame.data[3] =  dat->parent[1]    &0xFF;
+      frame.data[4] = (dat->parent[2]>>8)&0xFF;
+      frame.data[5] =  dat->parent[2]    &0xFF;
+      frame.data[6] = frame.data[7] = 0;
+      scan_write(&frame, itf);
+      lastparent = now;
+    }
+    /* send messages from the queue */
     pthread_mutex_lock(dat->txmutex);
     q = dat->tx[dat->txstart];
     if(q != NULL) {
@@ -367,7 +398,6 @@ void *scan_send(void *ptr) {
         frame.can_id |= i;
         memset((void *)frame.data, 0, 8);
         memcpy((void *)frame.data, &(q->buf[i*8]), i*8+8 > q->length ? q->length-i*8 : 8);
-
         scan_write(&frame, itf);
       }
       dat->tx[dat->txstart] = NULL;
@@ -415,6 +445,7 @@ int scan_transmit(struct mbn_interface *itf, unsigned char *buffer, int length, 
   return 0;
 }
 
+
 void *scan_receive(void *ptr) {
   struct mbn_interface *itf = (struct mbn_interface *)ptr;
   struct can_frame frame;
@@ -430,9 +461,9 @@ void *scan_receive(void *ptr) {
   return NULL;
 }
 
+
 /* CAN/TTY send/receive wrapper functions */
-int scan_read(struct can_frame *frame, struct mbn_interface *itf)
-{
+int scan_read(struct can_frame *frame, struct mbn_interface *itf) {
   struct can_data *dat = (struct can_data *)itf->data;
   unsigned char rcvbuf[128];
   unsigned char rcvbyte;
@@ -490,8 +521,8 @@ int scan_read(struct can_frame *frame, struct mbn_interface *itf)
   return n;
 }
 
-void scan_write(struct can_frame *frame, struct mbn_interface *itf)
-{
+
+void scan_write(struct can_frame *frame, struct mbn_interface *itf) {
   struct can_data *dat = (struct can_data *)itf->data;
   unsigned char xmtbuf[13];
   unsigned char i;
