@@ -207,10 +207,6 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
     else if(tcp != NULL && mbnNodeStatus(tcp, msg->AddressTo) != NULL)
       dest = tcp;
 
-    /* don't forward if we haven't found the destination node */
-    if(dest == NULL)
-      return 0;
-
     /* don't forward if the destination is on the same network */
     if(dest == mbn)
       return 0;
