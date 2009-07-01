@@ -974,6 +974,30 @@ void ProcessMambaNetMessage(unsigned long int ToAddress, unsigned long int FromA
                 if (ReceivedNodeServices&0x80)
                 {
                   AddressTable[cnt].MambaNetAddress = ReceivedMambaNetAddress;
+
+                  //have to check for the new address, and remove it.
+                  for (unsigned int cnt2=0; cnt2<AddressTableCount; cnt2++)
+                  {
+                    if (AddressTable[cnt2].MambaNetAddress == ReceivedMambaNetAddress)
+                    {
+                      if (cnt != cnt2)
+                      {
+                        TRACE_ADDRESSTABLE(printf("[---] Timeout by reservation@%d ManID:0x%04X, ProdID:0x%04X, UniqID:0x%04X, MambaNetAddr:0x%08lX\n", cnt2, AddressTable[cnt2].ManufacturerID, AddressTable[cnt2].ProductID, AddressTable[cnt2].UniqueIDPerProduct, AddressTable[cnt2].MambaNetAddress);)
+                        AddressTable[cnt2].MambaNetAddress = 0x00000000;
+                        AddressTable[cnt2].NodeServices &= 0x7F;
+                        AddressTable[cnt2].Alive = 0;
+
+                        int InterfaceIndex = AddressTable[cnt2].ReceivedInterfaceIndex;
+                        if (Interfaces[InterfaceIndex].Type != NO_INTERFACE)
+                        {
+                          if (Interfaces[InterfaceIndex].AddressTableChangeCallback != NULL)
+                          {
+                            Interfaces[InterfaceIndex].AddressTableChangeCallback(AddressTable, ADDRESS_TABLE_ENTRY_TIMEOUT, cnt2);
+                          }
+                        }
+                      }
+                    }
+                  }
                   ChangeInTable = 1;
                 }
               }
@@ -988,6 +1012,10 @@ void ProcessMambaNetMessage(unsigned long int ToAddress, unsigned long int FromA
               if (AddressTable[cnt].NodeServices != ReceivedNodeServices)
               {
                 AddressTable[cnt].NodeServices  = ReceivedNodeServices;
+                if (!(ReceivedNodeServices&0x80))
+                {
+                  AddressTable[cnt].MambaNetAddress = 0x00000000;
+                }
                 ChangeInTable = 1;
               }
 
@@ -2375,6 +2403,7 @@ void STDCALL MambaNetReservationTimerTick()
           TRACE_ADDRESSTABLE(printf("[---] Timeout@%ld ManID:0x%04X, ProdID:0x%04X, UniqID:0x%04X, MambaNetAddr:0x%08lX\n", cntAddressEntry, AddressTable[cntAddressEntry].ManufacturerID, AddressTable[cntAddressEntry].ProductID, AddressTable[cntAddressEntry].UniqueIDPerProduct, AddressTable[cntAddressEntry].MambaNetAddress);)
 
           AddressTable[cntAddressEntry].NodeServices &= 0x7F;
+          AddressTable[cntAddressEntry].MambaNetAddress = 0x00000000;
 
           int InterfaceIndex = AddressTable[cntAddressEntry].ReceivedInterfaceIndex;
           if (Interfaces[InterfaceIndex].Type != NO_INTERFACE)
