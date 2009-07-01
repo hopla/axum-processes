@@ -417,7 +417,7 @@ void STDCALL SendMambaNetMessage(unsigned long int ToAddress, unsigned long int 
                 }
               }
 
-              if (ToServices&0x80)
+              //if (ToServices&0x80)
               {
                 InterfaceUsedForTransmit->TransmitCallback(TransmitMessageBuffer, TransmitMessageBufferLength, ToHardwareAddress);
               }
@@ -467,7 +467,7 @@ void STDCALL SendMambaNetMessage(unsigned long int ToAddress, unsigned long int 
                 }
               }
 
-              if (ToServices&0x80)
+              //if (ToServices&0x80)
               {
                 InterfaceUsedForTransmit->TransmitCallback(TransmitMessageBuffer, TransmitMessageBufferLength, ToHardwareAddress);
               }
@@ -534,7 +534,7 @@ void STDCALL SendMambaNetMessage(unsigned long int ToAddress, unsigned long int 
           printf("MambaMessage could not be send, no transmit callback function found for this interface!\n");
         }
       }
-      else if (ToAddress == 0x10000000)
+      else if (FromAddress != 0x00000000) //if (ToAddress == 0x10000000)
       {  //No interface found and broadcast, send to all available interfaces
         for (unsigned int cntInterface=0; cntInterface<InterfaceCount; cntInterface++)
         {
