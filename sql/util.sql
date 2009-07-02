@@ -19,20 +19,20 @@ $$ LANGUAGE plpgsql STABLE;
 
 -- a VIEW with all channels available on the matrix
 
-CREATE OR REPLACE VIEW matrix_sources (type, number, label, active) AS
-   SELECT 'buss', number, label, true
+CREATE OR REPLACE VIEW matrix_sources (pos, type, number, label, active) AS
+   SELECT number, 'buss', number, label, true
     FROM buss_config
   UNION
-   SELECT 'monitor buss', number+16, label, number <= dsp_count()*4
+   SELECT number+16, 'monitor buss', number+16, label, number <= dsp_count()*4
     FROM monitor_buss_config
   UNION
-   SELECT 'insert out', g.n+32, 'Module '||g.n||' insert out', g.n <= dsp_count()*32
+   SELECT g.n+32, 'insert out', g.n+32, 'Module '||g.n||' insert out', g.n <= dsp_count()*32
     FROM generate_series(1, 128) AS g(n)
   UNION
-   SELECT 'n-1', g.n+160, 'Module '||g.n||' N-1', g.n <= dsp_count()*32
+   SELECT g.n+160, 'n-1', g.n+160, 'Module '||g.n||' N-1', g.n <= dsp_count()*32
     FROM generate_series(1, 128) AS g(n)
   UNION
-   SELECT 'source', number+288, label, true
+   SELECT pos+288, 'source', number+288, label, true
     FROM src_config;
 
 
