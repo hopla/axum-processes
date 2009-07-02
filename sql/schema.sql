@@ -126,6 +126,7 @@ CREATE TABLE slot_config (
 );
 
 CREATE TABLE src_config (
+  pos smallint NOT NULL,
   number smallint NOT NULL CHECK (number>=1 AND number<=1280) PRIMARY KEY,
   label varchar(32) NOT NULL,
   input1_addr integer NOT NULL,
@@ -160,6 +161,7 @@ CREATE TABLE src_config (
   monitormute15 boolean NOT NULL DEFAULT FALSE,
   monitormute16 boolean NOT NULL DEFAULT FALSE
 );
+CREATE UNIQUE INDEX src_config_unique_id ON src_config (pos);
 
 CREATE TABLE module_config (
   number smallint NOT NULL CHECK(number>=1 AND number<=128) PRIMARY KEY,
@@ -352,6 +354,7 @@ CREATE TABLE global_config (
 );
 
 CREATE TABLE dest_config (
+  pos smallint NOT NULL,
   number smallint NOT NULL CHECK(number>=1 AND number<=1280) PRIMARY KEY,
   label varchar(32) NOT NULL,
   output1_addr integer NOT NULL,
@@ -362,6 +365,7 @@ CREATE TABLE dest_config (
   source integer NOT NULL DEFAULT 0,
   mix_minus_source integer NOT NULL DEFAULT 0
 );
+CREATE UNIQUE INDEX dest_config_unique_id ON dest_config (pos);
 
 CREATE TABLE db_to_position (
   db float PRIMARY KEY CHECK(db >= -140.0 AND db < 10.0),
