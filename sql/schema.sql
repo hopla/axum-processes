@@ -126,7 +126,7 @@ CREATE TABLE slot_config (
 );
 
 CREATE TABLE src_config (
-  pos smallint NOT NULL,
+  pos smallint NOT NULL DEFAULT 9999,
   number smallint NOT NULL CHECK (number>=1 AND number<=1280) PRIMARY KEY,
   label varchar(32) NOT NULL,
   input1_addr integer NOT NULL,
@@ -354,7 +354,7 @@ CREATE TABLE global_config (
 );
 
 CREATE TABLE dest_config (
-  pos smallint NOT NULL,
+  pos smallint NOT NULL DEFAULT 9999,
   number smallint NOT NULL CHECK(number>=1 AND number<=1280) PRIMARY KEY,
   label varchar(32) NOT NULL,
   output1_addr integer NOT NULL,

@@ -17,6 +17,42 @@ END
 $$ LANGUAGE plpgsql STABLE;
 
 
+-- Renumbers the position column to be continues from '1'
+
+CREATE OR REPLACE FUNCTION src_config_renumber() RETURNS integer AS $$
+DECLARE
+  _record RECORD;
+  cnt_pos smallint;
+BEGIN
+  cnt_pos := 1;
+  FOR _record IN ( SELECT number FROM src_config ORDER BY pos )
+  LOOP
+    UPDATE src_config SET pos = cnt_pos WHERE number = _record.number;
+    cnt_pos := cnt_pos + 1;
+  END LOOP;
+  RETURN cnt_pos;
+END
+$$ LANGUAGE plpgsql;
+
+
+-- Renumbers the position column to be continues from '1'
+
+CREATE OR REPLACE FUNCTION dest_config_renumber() RETURNS integer AS $$
+DECLARE
+  _record RECORD;
+  cnt_pos smallint;
+BEGIN
+  cnt_pos := 1;
+  FOR _record IN ( SELECT number FROM dest_config ORDER BY pos )
+  LOOP
+    UPDATE dest_config SET pos = cnt_pos WHERE number = _record.number;
+    cnt_pos := cnt_pos + 1;
+  END LOOP;
+  RETURN cnt_pos;
+END
+$$ LANGUAGE plpgsql;
+
+
 -- a VIEW with all channels available on the matrix
 
 CREATE OR REPLACE VIEW matrix_sources (pos, type, number, label, active) AS
