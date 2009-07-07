@@ -372,6 +372,15 @@ CREATE TABLE db_to_position (
   position smallint CHECK(position >= 0 AND position < 1024)
 );
 
+CREATE TABLE predefined_node_config (
+  man_id smallint NOT NULL,
+  prod_id smallint NOT NULL,
+  firm_major smallint NOT NULL,
+  cfg_name varchar(32) NOT NULL,
+  object integer NOT NULL,
+  func function_number NOT NULL,
+  PRIMARY KEY(man_id, prod_id, firm_major, cfg_name, object)
+);
 
 
 
