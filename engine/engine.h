@@ -228,11 +228,12 @@ typedef struct
   } min, max;
 } src_offset_struct;
 
-#define MAX_SOURCE_LIST_SIZE  1568 //16+128+16+128+1280 => buss+insert_out+monitor_buss+mixminus+source
+#define MAX_POS_LIST_SIZE  1568 //16+128+16+128+1280 => buss+insert_out+monitor_buss+mixminus+source
 enum src_type {none=0, buss=1, insert_out=2, monitor_buss=3, mixminus=4, source=5};
 
 typedef struct
 {
+  short int src;
   unsigned char active;
   src_type type;
   unsigned char pool[8];
@@ -241,7 +242,7 @@ typedef struct
 typedef struct
 {
   src_offset_struct src_offset;
-  src_list_struct src[MAX_SOURCE_LIST_SIZE];
+  src_list_struct pos[MAX_POS_LIST_SIZE];
 } matrix_sources_struct;
 
 //**************************************************************/

@@ -139,59 +139,65 @@ int db_get_matrix_sources()
   PQclear(qres);
 
   //load the complete matrix_sources list
-  qres = sql_exec("SELECT number, active, type FROM matrix_sources", 1, 0, NULL);
+  qres = sql_exec("SELECT pos, number, active, type FROM matrix_sources", 1, 0, NULL);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
 
-  for (cntRow=0; cntRow<MAX_SOURCE_LIST_SIZE; cntRow++)
+  for (cntRow=0; cntRow<MAX_POS_LIST_SIZE; cntRow++)
   {
-    matrix_sources.src[cntRow].active = 0;
-    matrix_sources.src[cntRow].type = none;
-    matrix_sources.src[cntRow].pool[0] = 0;
-    matrix_sources.src[cntRow].pool[1] = 0;
-    matrix_sources.src[cntRow].pool[2] = 0;
-    matrix_sources.src[cntRow].pool[3] = 0;
-    matrix_sources.src[cntRow].pool[4] = 0;
-    matrix_sources.src[cntRow].pool[5] = 0;
-    matrix_sources.src[cntRow].pool[6] = 0;
-    matrix_sources.src[cntRow].pool[7] = 0;
+    matrix_sources.pos[cntRow].src = -1;
+    matrix_sources.pos[cntRow].active = 0;
+    matrix_sources.pos[cntRow].type = none;
+    matrix_sources.pos[cntRow].pool[0] = 0;
+    matrix_sources.pos[cntRow].pool[1] = 0;
+    matrix_sources.pos[cntRow].pool[2] = 0;
+    matrix_sources.pos[cntRow].pool[3] = 0;
+    matrix_sources.pos[cntRow].pool[4] = 0;
+    matrix_sources.pos[cntRow].pool[5] = 0;
+    matrix_sources.pos[cntRow].pool[6] = 0;
+    matrix_sources.pos[cntRow].pool[7] = 0;
   }
 
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     int cntField=0;
     char src_type[32];
-    unsigned short int number;
+    unsigned short int pos;
 
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
-    if ((number>=1) && (number<=MAX_SOURCE_LIST_SIZE))
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &pos);
+    if ((pos>=1) && (pos<=MAX_POS_LIST_SIZE))
     {
-      matrix_sources.src[number-1].active = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &matrix_sources.pos[pos-1].src);
+      matrix_sources.pos[pos-1].active = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
       strcpy(src_type, PQgetvalue(qres, cntRow, cntField++));
 
-      if (strcmp(src_type, "buss") == 0)
+      if (strcmp(src_type, "none") == 0)
       {
-        matrix_sources.src[number-1].type = buss;
+        matrix_sources.pos[pos-1].type = none;
+      }
+      else if (strcmp(src_type, "buss") == 0)
+      {
+        matrix_sources.pos[pos-1].type = buss;
       }
       else if (strcmp(src_type, "insert out") == 0)
       {
-        matrix_sources.src[number-1].type = insert_out;
+        matrix_sources.pos[pos-1].type = insert_out;
       }
       else if (strcmp(src_type, "monitor buss") == 0)
       {
-        matrix_sources.src[number-1].type = monitor_buss;
+        matrix_sources.pos[pos-1].type = monitor_buss;
       }
       else if (strcmp(src_type, "n-1") == 0)
       {
-        matrix_sources.src[number-1].type = mixminus;
+        matrix_sources.pos[pos-1].type = mixminus;
       }
       else if (strcmp(src_type, "source") == 0)
       {
-        matrix_sources.src[number-1].type = source;
+        matrix_sources.pos[pos-1].type = source;
       }
     }
   }

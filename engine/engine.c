@@ -12785,115 +12785,122 @@ void GetSourceLabel(unsigned int SourceNr, char *TextString, int MaxLength)
 
 unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
 {
-  char check_for_next_source;
+  char check_for_next_pos;
+  int cntPos;
+  int CurrentPos;
+  int PosBefore;
+  int PosAfter;
 
-  while (Offset != 0)
+  //Determin the current position
+  CurrentPos = -1;
+  PosBefore = -1;
+  PosAfter = MAX_POS_LIST_SIZE;
+  for (cntPos=0; cntPos<MAX_POS_LIST_SIZE; cntPos++)
   {
-    if (Offset>0)
-    { // the ++sequence is: source, busses, monitor busses, insert out (except its own)
-      check_for_next_source = 1;
-      while (check_for_next_source)
+    if (matrix_sources.pos[cntPos].src != -1)
+    {
+      if (matrix_sources.pos[cntPos].src == (signed short int)CurrentSource)
       {
-        check_for_next_source = 0;
-
-        if (CurrentSource == 0)
+        CurrentPos = cntPos;
+      }
+      else if (matrix_sources.pos[cntPos].src < (signed short int)CurrentSource)
+      {
+        if (cntPos>PosBefore)
         {
-          CurrentSource = matrix_sources.src_offset.min.source;
-        }
-        else if (CurrentSource == matrix_sources.src_offset.max.buss)
-        {
-          CurrentSource = matrix_sources.src_offset.min.monitor_buss;
-        }
-        else if (CurrentSource == matrix_sources.src_offset.max.insert_out)
-        {
-          CurrentSource = 0;
-        }
-        else if (CurrentSource == matrix_sources.src_offset.max.monitor_buss)
-        {
-          CurrentSource = matrix_sources.src_offset.min.insert_out;
-        }
-        else if (CurrentSource == matrix_sources.src_offset.max.mixminus)
-        { //May not happen, but then go mute
-          CurrentSource = 0;
-        }
-        else if (CurrentSource == matrix_sources.src_offset.max.source)
-        {
-          CurrentSource = matrix_sources.src_offset.min.buss;
-        }
-        else
-        {
-          CurrentSource++;
-        }
-
-        //check if hybrid is used
-        if (CurrentSource != 0)
-        {
-          if (Axum_MixMinusSourceUsed(CurrentSource-1) != -1)
-          {
-            check_for_next_source = 1;
-          }
-        }
-
-        //not active, go further.
-        if (!matrix_sources.src[CurrentSource-1].active)
-        {
-          check_for_next_source = 1;
+          PosBefore = cntPos;
         }
       }
-      Offset--;
+      else if (matrix_sources.pos[cntPos].src > (signed short int)CurrentSource)
+      {
+        if (cntPos<PosAfter)
+        {
+          PosAfter = cntPos;
+        }
+      }
+    }
+  }
+
+  //If current position not found...
+  if (CurrentPos == -1)
+  {
+    if (Offset<0)
+    {
+      CurrentPos = PosBefore;
     }
     else
-    { // the ++sequence is: source, busses, monitor busses, insert out (except its own)
-      check_for_next_source = 1;
-      while (check_for_next_source)
+    {
+      CurrentPos = PosAfter;
+    }
+  }
+
+  if (CurrentPos != -1)
+  {
+    while (Offset != 0)
+    {
+      if (Offset>0)
       {
-        check_for_next_source = 0;
+        check_for_next_pos = 1;
+        while (check_for_next_pos)
+        {
+          check_for_next_pos = 0;
 
-        if (CurrentSource == matrix_sources.src_offset.min.buss)
-        {
-          CurrentSource = matrix_sources.src_offset.max.source;
-        }
-        else if (CurrentSource == matrix_sources.src_offset.min.insert_out)
-        {
-          CurrentSource = matrix_sources.src_offset.max.monitor_buss;
-        }
-        else if (CurrentSource == matrix_sources.src_offset.min.monitor_buss)
-        {
-          CurrentSource = matrix_sources.src_offset.max.buss;
-        }
-        else if (CurrentSource == matrix_sources.src_offset.min.mixminus)
-        { //May not happen, but then go mute
-          CurrentSource = 0;
-        }
-        else if (CurrentSource == matrix_sources.src_offset.min.source)
-        {
-          CurrentSource = 0;
-        }
-        else if (CurrentSource == 0)
-        {
-          CurrentSource = matrix_sources.src_offset.max.insert_out;
-        }
-        else
-        {
-          CurrentSource--;
-        }
-
-        //check if hybrid is used
-        if (CurrentSource != 0)
-        {
-          if (Axum_MixMinusSourceUsed(CurrentSource-1) != -1)
+          CurrentPos++;
+          if (CurrentPos>MAX_POS_LIST_SIZE)
           {
-            check_for_next_source = 1;
+            CurrentPos = 0;
+          }
+
+          CurrentSource = matrix_sources.pos[CurrentPos].src;
+
+          //check if hybrid is used
+          if (CurrentSource != 0)
+          {
+            if (Axum_MixMinusSourceUsed(CurrentSource) != -1)
+            {
+              check_for_next_pos = 1;
+            }
+          }
+
+          //not active, go further.
+          if (!matrix_sources.pos[CurrentPos].active)
+          {
+            check_for_next_pos = 1;
           }
         }
-
-        //not active, go further.
-        if (!matrix_sources.src[CurrentSource-1].active)
-        {
-          check_for_next_source = 1;
-        }
+        Offset--;
       }
-      Offset++;
+      else
+      {
+        check_for_next_pos = 1;
+        while (check_for_next_pos)
+        {
+          check_for_next_pos = 0;
+
+          CurrentPos--;
+          if (CurrentPos<0)
+          {
+            CurrentPos = MAX_POS_LIST_SIZE;
+          }
+
+          CurrentSource = matrix_sources.pos[CurrentPos].src;
+
+          //check if hybrid is used
+          if (CurrentSource != 0)
+          {
+            if (Axum_MixMinusSourceUsed(CurrentSource) != -1)
+            {
+              check_for_next_pos = 1;
+            }
+          }
+
+          //not active, go further.
+          if (!matrix_sources.pos[CurrentPos].active)
+          {
+            check_for_next_pos = 1;
+          }
+        }
+        Offset++;
+      }
     }
   }
 
@@ -12902,7 +12909,6 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
 
 void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAorBSettings)
 {
-
   unsigned int OldSource = AxumData.ModuleData[ModuleNr].Source;
   int OldSourceActive = 0;
 
