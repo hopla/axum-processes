@@ -1,0 +1,468 @@
+<ui version="4.0" >
+ <class>Browser</class>
+ <widget class="QWidget" name="Browser" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>768</height>
+   </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Maximum" hsizetype="Maximum" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="palette" >
+   <palette>
+    <active>
+     <colorrole role="Base" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>234</red>
+        <green>234</green>
+        <blue>234</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="AlternateBase" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </active>
+    <inactive>
+     <colorrole role="Base" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>234</red>
+        <green>234</green>
+        <blue>234</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="AlternateBase" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </inactive>
+    <disabled>
+     <colorrole role="Base" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>234</red>
+        <green>234</green>
+        <blue>234</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>234</red>
+        <green>234</green>
+        <blue>234</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="AlternateBase" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </disabled>
+   </palette>
+  </property>
+  <property name="windowTitle" >
+   <string>Axum</string>
+  </property>
+  <property name="windowIcon" >
+   <iconset>
+    <normaloff>Skins/Axum.png</normaloff>Skins/Axum.png</iconset>
+  </property>
+  <property name="autoFillBackground" >
+   <bool>false</bool>
+  </property>
+  <property name="styleSheet" >
+   <string notr="true" />
+  </property>
+  <widget class="DNRImage" name="NewDNRImage" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>94</y>
+     <width>1024</width>
+     <height>580</height>
+    </rect>
+   </property>
+   <property name="sizePolicy" >
+    <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="toolTip" >
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis" >
+    <string>The Image widget displays </string>
+   </property>
+   <property name="SkinEnvironmentVariable" >
+    <string>SkinPath</string>
+   </property>
+   <property name="ImageFileName" >
+    <string>MeterBackground.png</string>
+   </property>
+   <property name="ScaleImage" >
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="DNRDigitalClock" name="NewDNRDigitalClock" >
+   <property name="geometry" >
+    <rect>
+     <x>569</x>
+     <y>419</y>
+     <width>211</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="font" >
+    <font>
+     <family>Verdana</family>
+     <pointsize>12</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="toolTip" >
+    <string>The current time</string>
+   </property>
+   <property name="whatsThis" >
+    <string>The digital clock widget displays the current time.</string>
+   </property>
+  </widget>
+  <widget class="DNRAnalogClock" name="NewDNRAnalogClock" >
+   <property name="geometry" >
+    <rect>
+     <x>469</x>
+     <y>176</y>
+     <width>410</width>
+     <height>410</height>
+    </rect>
+   </property>
+   <property name="toolTip" >
+    <string>The current time</string>
+   </property>
+   <property name="whatsThis" >
+    <string>The analog clock widget displays the current time.</string>
+   </property>
+   <property name="HourLines" >
+    <bool>false</bool>
+   </property>
+   <property name="MinuteLines" >
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewDNRPPMMeter" >
+   <property name="geometry" >
+    <rect>
+     <x>36</x>
+     <y>139</y>
+     <width>10</width>
+     <height>448</height>
+    </rect>
+   </property>
+   <property name="toolTip" >
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis" >
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="GradientForground" >
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewDNRPPMMeter_2" >
+   <property name="geometry" >
+    <rect>
+     <x>119</x>
+     <y>139</y>
+     <width>10</width>
+     <height>448</height>
+    </rect>
+   </property>
+   <property name="toolTip" >
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis" >
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="GradientForground" >
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewDNRPPMMeter_3" >
+   <property name="geometry" >
+    <rect>
+     <x>216</x>
+     <y>139</y>
+     <width>10</width>
+     <height>448</height>
+    </rect>
+   </property>
+   <property name="toolTip" >
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis" >
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="GradientForground" >
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewDNRPPMMeter_4" >
+   <property name="geometry" >
+    <rect>
+     <x>298</x>
+     <y>139</y>
+     <width>10</width>
+     <height>448</height>
+    </rect>
+   </property>
+   <property name="toolTip" >
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis" >
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="GradientForground" >
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1024</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="font" >
+    <font>
+     <family>Arial Unicode MS</family>
+     <pointsize>48</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="acceptDrops" >
+    <bool>true</bool>
+   </property>
+   <property name="styleSheet" >
+    <string notr="true" >QLabel
+{
+	color: rgba(200, 200, 200, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+   </property>
+   <property name="text" >
+    <string>A∙X∙U∙M</string>
+   </property>
+   <property name="textFormat" >
+    <enum>Qt::AutoText</enum>
+   </property>
+   <property name="alignment" >
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>674</y>
+     <width>1024</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="font" >
+    <font>
+     <family>Arial Unicode MS</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="acceptDrops" >
+    <bool>true</bool>
+   </property>
+   <property name="styleSheet" >
+    <string notr="true" >QLabel
+{
+	color: rgba(200, 200, 200, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+   </property>
+   <property name="text" >
+    <string>(C) Copyright 2009 - D&amp;R Electronica Weesp B.V.</string>
+   </property>
+   <property name="textFormat" >
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment" >
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3" >
+   <property name="geometry" >
+    <rect>
+     <x>26</x>
+     <y>600</y>
+     <width>114</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="font" >
+    <font>
+     <family>Arial Unicode MS</family>
+     <pointsize>14</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="acceptDrops" >
+    <bool>true</bool>
+   </property>
+   <property name="styleSheet" >
+    <string notr="true" >QLabel
+{
+	color: rgba(208, 208, 0, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+   </property>
+   <property name="text" >
+    <string>CRM</string>
+   </property>
+   <property name="textFormat" >
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment" >
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4" >
+   <property name="geometry" >
+    <rect>
+     <x>205</x>
+     <y>600</y>
+     <width>114</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="font" >
+    <font>
+     <family>Arial Unicode MS</family>
+     <pointsize>14</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="acceptDrops" >
+    <bool>true</bool>
+   </property>
+   <property name="styleSheet" >
+    <string notr="true" >QLabel
+{
+	color: rgba(208, 208, 0, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+   </property>
+   <property name="text" >
+    <string>Std 1</string>
+   </property>
+   <property name="textFormat" >
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment" >
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <action name="insertRowAction" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="text" >
+    <string>&amp;Insert Row</string>
+   </property>
+   <property name="statusTip" >
+    <string>Inserts a new Row</string>
+   </property>
+  </action>
+  <action name="deleteRowAction" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="text" >
+    <string>&amp;Delete Row</string>
+   </property>
+   <property name="statusTip" >
+    <string>Deletes the current Row</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DNRAnalogClock</class>
+   <extends>QWidget</extends>
+   <header>DNRAnalogClock.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DNRDigitalClock</class>
+   <extends>QWidget</extends>
+   <header>DNRDigitalClock.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DNRPPMMeter</class>
+   <extends>QWidget</extends>
+   <header>DNRPPMMeter.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DNRImage</class>
+   <extends>QWidget</extends>
+   <header>DNRImage.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

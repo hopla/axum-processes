@@ -1,0 +1,94 @@
+/****************************************************************************
+**
+** Copyright (C) 2004-2006 Trolltech ASA. All rights reserved.
+**
+** This file is part of the demonstration applications of the Qt Toolkit.
+**
+** This file may be used under the terms of the GNU General Public
+** License version 2.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of
+** this file.  Please review the following information to ensure GNU
+** General Public Licensing requirements will be met:
+** http://www.trolltech.com/products/qt/opensource.html
+**
+** If you are unsure which license is appropriate for your use, please
+** review the following information:
+** http://www.trolltech.com/products/qt/licensing.html or contact the
+** sales department at sales@trolltech.com.
+**
+** This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+**
+****************************************************************************/
+
+#ifndef BROWSER_H
+#define BROWSER_H
+
+#include <QWidget>
+#include "ui_browserwidget.h"
+
+#include <QtGui>
+
+#include <QObject>
+#include <QTimer>
+#include <QSocketNotifier>
+#include <stdio.h>
+#include <string.h>         //for memcpy/strncpy
+#include <unistd.h>         //for STDIN_FILENO/close/write
+#include <fcntl.h>          //for GET_FL/SET_FL/O_XXXXXX/FNDELAY
+#include <arpa/inet.h>      //for AF_PACKET/SOCK_DGRAM/htons/ntohs/socket/bind/sendto
+#include <linux/if_arp.h>   //for ETH_P_ALL/ifreq/sockaddr_ll/ETH_ALEN etc...
+#include <sys/ioctl.h>          //for ioctl
+
+#include "mambanet_stack_axum.h"
+
+class ConnectionWidget;
+class QTableView;
+class QPushButton;
+class QTextEdit;
+class QSqlError;
+class ChaseWidget;
+class ToolbarSearch;
+
+class Browser: public QWidget, public Ui::Browser
+{
+    Q_OBJECT
+public:
+	 int LinuxIfIndex;
+	 int MambaNetSocket;
+	 QSocketNotifier *NetworkNotifier;
+	 int cntSecond;
+
+	 double MeterData[4];
+	 double previousNumberOfSeconds;
+
+    Browser(DEFAULT_NODE_OBJECTS_STRUCT *NewDefaultObjects, CUSTOM_OBJECT_INFORMATION_STRUCT *NewCustomObjectInformation, unsigned int NewNumberOfCustomObjects, char *InterfaceName, QWidget *parent = 0);
+    virtual ~Browser();
+
+	 void timerEvent(QTimerEvent *Event);
+
+	 QToolBar *m_NavigationBar;
+
+	 QAction *m_Back;
+	 QAction *m_Forward;
+	 QAction *m_StopReload;
+//	 ToolbarSearch *m_ToolbarSearch;
+	 ChaseWidget *m_ChaseWidget;
+  
+public slots:
+	 void MeterRelease();
+    void SecondTimerTick(void);
+	 void ReadNetwork();
+
+private:
+    int EthernetInterfaceIndex;
+    char LocalMACAddress[6];
+
+    int cntEthernetMambaNetDecodeBuffer;
+	 unsigned char EthernetMambaNetDecodeBuffer[128];
+
+	 void InitializeTheMambaNetStack(DEFAULT_NODE_OBJECTS_STRUCT *NewDefaultObjects, CUSTOM_OBJECT_INFORMATION_STRUCT *NewCustomObjectInformation, unsigned int NewNumberOfCustomObjects);
+    int OpenDevice(char *Name);
+};
+
+#endif

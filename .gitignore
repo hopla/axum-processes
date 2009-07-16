@@ -3,7 +3,10 @@
 *.~
 *.so
 *.out
+moc_*
 engine/axum-engine
 address/axum-address
 gateway/axum-gateway
 learner/axum-learner
+meters/axum-meters
+
