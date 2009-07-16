@@ -1,6 +1,8 @@
 *.o
 *.a
 *.~
+*.so
+*.out
 engine/axum-engine
 address/axum-address
 gateway/axum-gateway
