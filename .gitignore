@@ -4,6 +4,7 @@
 *.so
 *.out
 moc_*
+ui_*
 engine/axum-engine
 address/axum-address
 gateway/axum-gateway
