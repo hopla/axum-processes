@@ -111,7 +111,7 @@
   </property>
   <property name="windowIcon" >
    <iconset>
-    <normaloff>Skins/Axum.png</normaloff>Skins/Axum.png</iconset>
+     <normaloff>/var/lib/axum/meters/Axum.png</normaloff>/var/lib/axum/meters/Axum.png</iconset>
   </property>
   <property name="autoFillBackground" >
    <bool>false</bool>
@@ -441,10 +441,10 @@ QTabWidget::tab-bar
       <string>The Image widget displays </string>
      </property>
      <property name="SkinEnvironmentVariable" >
-      <string>SkinPath</string>
+      <string></string>
      </property>
      <property name="ImageFileName" >
-      <string>MeterBackground.png</string>
+       <string>/var/lib/axum/skins/meters/MeterBackground.png</string>
      </property>
      <property name="ScaleImage" >
       <bool>false</bool>
