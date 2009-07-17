@@ -12573,6 +12573,9 @@ void DoAxum_BussReset(int BussNr)
 
 void DoAxum_ModuleStatusChanged(int ModuleNr)
 {
+  unsigned char Redlight[8] = {0,0,0,0,0,0,0,0};
+  unsigned char MonitorMute[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
   if ((AxumData.ModuleData[ModuleNr].Source>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
   {
     unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
@@ -12606,30 +12609,55 @@ void DoAxum_ModuleStatusChanged(int ModuleNr)
     {
       AxumData.SourceData[SourceNr].Active = NewSourceActive;
 
+      //Check current state or redlights/mutes
+      for (int cntModule=0; cntModule<128; cntModule++)
+      {
+        if (AxumData.ModuleData[cntModule].Source != 0)
+        {
+          if (AxumData.SourceData[AxumData.ModuleData[cntModule].Source-1].Active)
+          {
+            for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
+            {
+              if (AxumData.SourceData[AxumData.ModuleData[cntModule].Source-1].Redlight[cntRedlight])
+              {
+                Redlight[cntRedlight] = 1;
+              }
+            }
+            for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
+            {
+              if (AxumData.SourceData[AxumData.ModuleData[cntModule].Source-1].MonitorMute[cntMonitorBuss])
+              {
+                MonitorMute[cntMonitorBuss] = 1;
+              }
+            }
+          }
+        }
+      }
+
       //redlights
       for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
       {
-        if (AxumData.SourceData[SourceNr].Redlight[cntRedlight])
+        if (Redlight[cntRedlight] != AxumData.Redlight[cntRedlight])
         {
-          AxumData.Redlight[cntRedlight] = AxumData.SourceData[SourceNr].Active;
+          AxumData.Redlight[cntRedlight] = Redlight[cntRedlight];
 
           unsigned int FunctionNrToSent = 0x04000000 | (GLOBAL_FUNCTION_REDLIGHT_1+(cntRedlight*(GLOBAL_FUNCTION_REDLIGHT_2-GLOBAL_FUNCTION_REDLIGHT_1)));
           CheckObjectsToSent(FunctionNrToSent);
         }
       }
+
       //mutes
       for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
       {
-        if (AxumData.SourceData[SourceNr].MonitorMute[cntMonitorBuss])
+        if (MonitorMute[cntMonitorBuss] != AxumData.Monitor[cntMonitorBuss].Mute)
         {
-          AxumData.Monitor[cntMonitorBuss].Mute = AxumData.SourceData[SourceNr].Active;
-
+          AxumData.Monitor[cntMonitorBuss].Mute = MonitorMute[cntMonitorBuss];
           unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
-          CheckObjectsToSent(FunctionNrToSent | MONITOR_BUSS_FUNCTION_MUTE);
 
+          CheckObjectsToSent(FunctionNrToSent | MONITOR_BUSS_FUNCTION_MUTE);
           for (int cntDestination=0; cntDestination<1280; cntDestination++)
           {
-            if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+cntMonitorBuss))
+            if (AxumData.DestinationData[cntDestination].Source == (unsigned int)(17+cntMonitorBuss))
             {
               FunctionNrToSent = 0x06000000 | (cntDestination<<12);
               CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE);
