@@ -111,7 +111,7 @@
   </property>
   <property name="windowIcon" >
    <iconset>
-     <normaloff>/var/lib/axum/meters/Axum.png</normaloff>/var/lib/axum/meters/Axum.png</iconset>
+     <normaloff>/var/lib/axum/skins/meters/Axum.png</normaloff>/var/lib/axum/skins/meters/Axum.png</iconset>
   </property>
   <property name="autoFillBackground" >
    <bool>false</bool>
@@ -220,10 +220,10 @@ QTabWidget::tab-bar
      <height>601</height>
     </rect>
    </property>
-   <property name="acceptDrops" >
+   <property name="mouseTracking" >
     <bool>false</bool>
    </property>
-   <property name="mouseTracking" >
+   <property name="acceptDrops" >
     <bool>false</bool>
    </property>
    <property name="styleSheet" >
@@ -236,7 +236,7 @@ QTabWidget::tab-bar
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex" >
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab" >
     <attribute name="title" >
@@ -281,6 +281,9 @@ QTabWidget::tab-bar
      <property name="whatsThis" >
       <string>The PPM Meter widget displays </string>
      </property>
+     <property name="dBPosition" stdset="0" >
+      <double>0.000000000000000</double>
+     </property>
      <property name="GradientForground" >
       <bool>true</bool>
      </property>
@@ -299,6 +302,9 @@ QTabWidget::tab-bar
      </property>
      <property name="whatsThis" >
       <string>The PPM Meter widget displays </string>
+     </property>
+     <property name="dBPosition" stdset="0" >
+      <double>0.000000000000000</double>
      </property>
      <property name="GradientForground" >
       <bool>true</bool>
@@ -354,7 +360,7 @@ QTabWidget::tab-bar
 }</string>
      </property>
      <property name="text" >
-      <string>Std 1</string>
+      <string>Monitor  2</string>
      </property>
      <property name="textFormat" >
       <enum>Qt::PlainText</enum>
@@ -391,7 +397,7 @@ QTabWidget::tab-bar
 }</string>
      </property>
      <property name="text" >
-      <string>CRM</string>
+      <string>Monitor 1</string>
      </property>
      <property name="textFormat" >
       <enum>Qt::PlainText</enum>
@@ -414,6 +420,9 @@ QTabWidget::tab-bar
      </property>
      <property name="whatsThis" >
       <string>The PPM Meter widget displays </string>
+     </property>
+     <property name="dBPosition" stdset="0" >
+      <double>0.000000000000000</double>
      </property>
      <property name="GradientForground" >
       <bool>true</bool>
@@ -472,54 +481,19 @@ QTabWidget::tab-bar
       <bool>true</bool>
      </property>
     </widget>
-    <zorder>NewDNRImage</zorder>
-    <zorder>NewDNRDigitalClock</zorder>
-    <zorder>NewDNRPPMMeter_3</zorder>
-    <zorder>NewDNRPPMMeter_4</zorder>
-    <zorder>NewDNRAnalogClock</zorder>
-    <zorder>label_4</zorder>
-    <zorder>label_3</zorder>
-    <zorder>NewDNRPPMMeter</zorder>
-    <zorder>NewDNRPPMMeter_2</zorder>
-   </widget>
-   <widget class="QWidget" name="tab_2" >
-    <attribute name="title" >
-     <string>Webview</string>
-    </attribute>
-    <widget class="QWebView" name="webView" >
-     <property name="mouseTracking" >
-      <bool>false</bool>
-     </property>
-	  <property name="acceptDrops" >
-		<bool>false</bool>
-	  </property>
+    <widget class="QLabel" name="label_5" >
      <property name="geometry" >
       <rect>
-       <x>0</x>
-       <y>37</y>
-       <width>1024</width>
-       <height>545</height>
-      </rect>
-     </property>
-     <property name="url" >
-      <url>
-       <string>http://Service:Service@192.168.0.200/new/skin_table.html?file=main.php</string>
-      </url>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_7" >
-     <property name="geometry" >
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>1024</width>
-       <height>37</height>
+       <x>26</x>
+       <y>536</y>
+       <width>114</width>
+       <height>30</height>
       </rect>
      </property>
      <property name="font" >
       <font>
        <family>Arial Unicode MS</family>
-       <pointsize>48</pointsize>
+       <pointsize>14</pointsize>
        <weight>75</weight>
        <bold>true</bold>
       </font>
@@ -530,20 +504,106 @@ QTabWidget::tab-bar
      <property name="styleSheet" >
       <string notr="true" >QLabel
 {
-	color: rgba(120, 120, 120, 255);
-	background: rgba(120, 120, 120, 255);
+	color: rgba(208, 208, 0, 255);
+	background: rgba(0, 0, 0, 255);
 }</string>
      </property>
      <property name="text" >
-      <string/>
+      <string>-</string>
      </property>
      <property name="textFormat" >
-      <enum>Qt::LogText</enum>
+      <enum>Qt::PlainText</enum>
      </property>
      <property name="alignment" >
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
+    <widget class="QLabel" name="label_6" >
+     <property name="geometry" >
+      <rect>
+       <x>205</x>
+       <y>536</y>
+       <width>114</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="font" >
+      <font>
+       <family>Arial Unicode MS</family>
+       <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="acceptDrops" >
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet" >
+      <string notr="true" >QLabel
+{
+	color: rgba(208, 208, 0, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+     </property>
+     <property name="text" >
+      <string>-</string>
+     </property>
+     <property name="textFormat" >
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_7" >
+     <property name="geometry" >
+      <rect>
+       <x>370</x>
+       <y>44</y>
+       <width>114</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="font" >
+      <font>
+       <family>Arial Unicode MS</family>
+       <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="acceptDrops" >
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet" >
+      <string notr="true" >QLabel
+{
+	color: rgba(255, 0, 0, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+     </property>
+     <property name="text" >
+      <string>-</string>
+     </property>
+     <property name="textFormat" >
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <zorder>NewDNRImage</zorder>
+    <zorder>NewDNRDigitalClock</zorder>
+    <zorder>NewDNRPPMMeter_3</zorder>
+    <zorder>NewDNRPPMMeter_4</zorder>
+    <zorder>NewDNRAnalogClock</zorder>
+    <zorder>label_4</zorder>
+    <zorder>label_3</zorder>
+    <zorder>NewDNRPPMMeter</zorder>
+    <zorder>NewDNRPPMMeter_2</zorder>
+    <zorder>label_5</zorder>
+    <zorder>label_6</zorder>
+    <zorder>label_7</zorder>
    </widget>
   </widget>
   <action name="insertRowAction" >
@@ -590,11 +650,7 @@ QTabWidget::tab-bar
    <extends>QWidget</extends>
    <header>DNRImage.h</header>
   </customwidget>
-  <customwidget>
-   <class>QWebView</class>
-   <extends>QWidget</extends>
-   <header>QtWebKit/QWebView</header>
-  </customwidget>
  </customwidgets>
+ <resources/>
  <connections/>
 </ui>

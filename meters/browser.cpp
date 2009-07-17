@@ -102,7 +102,7 @@ Browser::~Browser()
     if (MambaNetSocket >= 0)
     {
         ::close(MambaNetSocket);
-    }}
+    }}
 
 int Browser::OpenDevice(char *InterfaceName)
 {
@@ -274,26 +274,28 @@ void Browser::ReadNetwork()
                                 {
                                     ReadedByte = buffer[cnt];
 
-                                    switch (ReadedByte)
-                                    {
-                                        case 0x80:
-                                        case 0x81:
-                                        {
+												switch (ReadedByte&0xC0)
+												{
+													case 0x80: //0x80, 0x81, 0x82
+													{
                                             cntEthernetMambaNetDecodeBuffer = 0;
                                             EthernetMambaNetDecodeBuffer[cntEthernetMambaNetDecodeBuffer++] = ReadedByte;
-                                        }
-                                        break;
-                                        case 0xFF:
-                                        {
+                                       }
+                                       break;
+													case 0xC0: //0xFF
+													{
+														if (ReadedByte == 0xFF)
+														{
                                             EthernetMambaNetDecodeBuffer[cntEthernetMambaNetDecodeBuffer++] = ReadedByte;
                                             DecodeRawMambaNetMessage(EthernetMambaNetDecodeBuffer, cntEthernetMambaNetDecodeBuffer, EthernetInterfaceIndex, fromAddress.sll_addr);
-                                        }
-                                        break;
-                                        default:
-                                        {
-                                            EthernetMambaNetDecodeBuffer[cntEthernetMambaNetDecodeBuffer++] = ReadedByte;
-                                        }
-                                        break;
+														}
+                                       }
+                                       break;
+                                       default:
+                                       {
+                                          EthernetMambaNetDecodeBuffer[cntEthernetMambaNetDecodeBuffer++] = ReadedByte;
+                                       }
+                                       break;
                                     }
                                 }
                             }

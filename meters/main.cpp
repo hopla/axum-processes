@@ -36,7 +36,7 @@
 
 #include <errno.h>
 
-#include "ThreadListener.h"
+//#include "ThreadListener.h"
 #include "mambanet_network.h"
 
 #define PCB_MAJOR_VERSION        1
@@ -46,9 +46,9 @@
 #define FIRMWARE_MINOR_VERSION   1
 
 #define MANUFACTURER_ID          0x0001	//D&R
-#define PRODUCT_ID               0x0018	//Axum linux meters
+#define PRODUCT_ID               0x001A	//Axum linux meters
 
-#define NR_OF_STATIC_OBJECTS    (1029-1023)
+#define NR_OF_STATIC_OBJECTS    (1032-1023)
 #define NR_OF_OBJECTS            NR_OF_STATIC_OBJECTS
 
 extern unsigned int AddressTableCount;
@@ -94,7 +94,10 @@ CUSTOM_OBJECT_INFORMATION_STRUCT AxumPPMMeterCustomObjectInformation[NR_OF_STATI
    { "Meter 1 Right dB"       , 0x00, 0x00000000, 0x00
                               , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
                               , {FLOAT_DATATYPE             ,  2, 0xD240, 0x4900, 0xD240 }},
-   { "Meter 1 Label"          , 0x00, 0x00000000, 0x00
+   { "Meter 1 Label A"        , 0x00, 0x00000000, 0x00
+                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
+                              , {OCTET_STRING_DATATYPE      ,  8, 0		, 127	  , 0		  }},
+   { "Meter 1 Label B"        , 0x00, 0x00000000, 0x00
                               , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
                               , {OCTET_STRING_DATATYPE      ,  8, 0		, 127	  , 0		  }},
    { "Meter 2 Left dB"        , 0x00, 0x00000000, 0x00
@@ -103,9 +106,15 @@ CUSTOM_OBJECT_INFORMATION_STRUCT AxumPPMMeterCustomObjectInformation[NR_OF_STATI
    { "Meter 2 Right dB"       , 0x00, 0x00000000, 0x00
                               , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
                               , {FLOAT_DATATYPE             ,  2, 0xD240, 0x4900, 0xD240 }},
-   { "Meter 2 Label"          , 0x00, 0x00000000, 0x00
+   { "Meter 2 Label A"        , 0x00, 0x00000000, 0x00
                               , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
-                              , {OCTET_STRING_DATATYPE      ,  8, 0		, 127	  , 0		  }}
+                              , {OCTET_STRING_DATATYPE      ,  8, 0		, 127	  , 0		  }},
+   { "Meter 2 Label B"        , 0x00, 0x00000000, 0x00
+                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
+                              , {OCTET_STRING_DATATYPE      ,  8, 0		, 127	  , 0		  }},
+   { "On Air" 			         , 0x00, 0x00000000, 0x00
+                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
+                              , {STATE_DATATYPE      			,  1, 0		, 1	  , 0		  }}
 };
 #else
 CUSTOM_OBJECT_INFORMATION_STRUCT AxumPPMMeterCustomObjectInformation[1];
@@ -114,10 +123,10 @@ CUSTOM_OBJECT_INFORMATION_STRUCT AxumPPMMeterCustomObjectInformation[1];
 
 void addConnectionsFromCommandline(const QStringList &args, Browser *browser)
 {
-/*   for (int i = 1; i < args.count(); ++i) 
+/*   for (int i = 1; i < args.count(); ++i)
    {
       QUrl url(args.at(i), QUrl::TolerantMode);
-      if (!url.isValid()) 
+      if (!url.isValid())
       {
          qWarning("Invalid URL: %s", qPrintable(args.at(i)));
          continue;
@@ -131,20 +140,20 @@ void addConnectionsFromCommandline(const QStringList &args, Browser *browser)
 
 int delay_us(double sleep_time)
 {
-   struct timespec tv; 
+   struct timespec tv;
 
    sleep_time /= 1000000;
 
-   /* Construct the timespec from the number of whole seconds... */ 
-   tv.tv_sec = (time_t) sleep_time; 
-   /* ... and the remainder in nanoseconds. */ 
+   /* Construct the timespec from the number of whole seconds... */
+   tv.tv_sec = (time_t) sleep_time;
+   /* ... and the remainder in nanoseconds. */
    tv.tv_nsec = (long) ((sleep_time - tv.tv_sec) * 1e+9);
 
    while (1)
    {
       /* Sleep for the time specified in tv. If interrupted by a signal, place the remaining time left to sleep back into tv. */
       int rval = nanosleep (&tv, &tv);
-      if (rval == 0)   
+      if (rval == 0)
       {
          /* Completed the entire sleep time; all done. */
          return 0;
@@ -197,7 +206,7 @@ int main(int argc, char *argv[])
 //	QWebView *test = new QWebView(browser->tabWidget);
 //	test->load(QUrl("http://Service:Service@192.168.0.200/new/skin_table.html?file=main.php"));
 //	test->show();
-   
+
 //   addConnectionsFromCommandline(app.arguments(), browser);
 	mainWin.showFullScreen();
 	mainWin.setGeometry(0,0, 1024,800);
@@ -214,7 +223,7 @@ void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned cha
 //	 printf("Transmit size: %d, address %08X:%08X:%08X:%08X:%08X:%08X\n", buffersize, hardware_address[0], hardware_address[1], hardware_address[2], hardware_address[3], hardware_address[4], hardware_address[5]);
 
     //Setup the socket datastruct to transmit data.
-	
+
 	 if (browser != NULL)
 	 {
     struct sockaddr_ll socket_address;
@@ -264,6 +273,11 @@ void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigne
 {
 	bool MessageProcessed = false;
 
+	if (MessageID)
+	{
+		Ack = 1;
+	}
+
    switch (MessageType)
    {
       case 0x0000:
@@ -281,7 +295,7 @@ void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigne
          ObjectNr |= Data[1];
          Action  = Data[2];
 
-			//printf("message received in MambaNetMessageReceiveCallback(0x%08lx, 0x%08lx, 0x%06lx, 0x%04x, %d) ObjectNr:%d\n", ToAddress, FromAddress, MessageID, MessageType, DataLength, ObjectNr);
+//			printf("message received in MambaNetMessageReceiveCallback(0x%08lx, 0x%08lx, %d, 0x%06lx, 0x%04x, %d) ObjectNr:%d\n", ToAddress, FromAddress, Ack, MessageID, MessageType, DataLength, ObjectNr);
 
          if (Action == MAMBANET_OBJECT_ACTION_GET_ACTUATOR_DATA)
          {
@@ -333,7 +347,7 @@ void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigne
                {
                   if (Data[3] == OCTET_STRING_DATATYPE)
                   {
-							char TempString[256] = "";            
+							char TempString[256] = "";
 							strncpy(TempString, (char *)&Data[5], Data[4]);
 							TempString[Data[4]] = 0;
 
@@ -342,6 +356,18 @@ void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigne
 					}
 					break;
                case 1027:
+               {
+                  if (Data[3] == OCTET_STRING_DATATYPE)
+                  {
+							char TempString[256] = "";
+							strncpy(TempString, (char *)&Data[5], Data[4]);
+							TempString[Data[4]] = 0;
+
+	                  browser->label_5->setText(QString(TempString));
+						}
+					}
+					break;
+               case 1028:
                {
                   if ((Data[3] == FLOAT_DATATYPE) && (Data[4]==2))
                   {
@@ -361,7 +387,7 @@ void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigne
                   }
                }
                break;
-               case 1028:
+               case 1029:
                {
                   if (Data[3] == FLOAT_DATATYPE)
                   {
@@ -381,17 +407,55 @@ void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigne
                   }
                }
                break;
-					case 1029:
+					case 1030:
 					{
-						char TempString[256] = "";            
+						char TempString[256] = "";
 						strncpy(TempString, (char *)&Data[5], Data[4]);
 						TempString[Data[4]] = 0;
 
                   browser->label_4->setText(QString(TempString));
 					}
 					break;
+					case 1031:
+					{
+						char TempString[256] = "";
+						strncpy(TempString, (char *)&Data[5], Data[4]);
+						TempString[Data[4]] = 0;
+
+                  browser->label_6->setText(QString(TempString));
+					}
+					break;
+					case 1032:
+					{
+                  if (Data[3] == STATE_DATATYPE)
+                  {
+							if (Data[4] == 1)
+							{
+								if (Data[5])
+								{
+									browser->label_7->setText("ON AIR");
+								}
+								else
+								{
+									browser->label_7->setText("");
+								}
+							}
+                  }
+					}
+					break;
             }
 	         MessageProcessed = 1;
+
+				if (MessageID)
+				{
+					unsigned char TransmitBuffer[4];
+
+					TransmitBuffer[0] = (ObjectNr>>8)&0xFF;
+               TransmitBuffer[1] = ObjectNr&0xFF;
+               TransmitBuffer[2] = MAMBANET_OBJECT_ACTION_ACTUATOR_DATA_RESPONSE;
+               TransmitBuffer[3] = NO_DATA_DATATYPE;
+               SendMambaNetMessage(FromAddress, AxumPPMMeterDefaultObjects.MambaNetAddress, Ack, MessageID, 1, TransmitBuffer, 4);
+				}
          }
       }
       break;
@@ -409,6 +473,6 @@ void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigne
 
 void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *AddressTable, MambaNetAddressTableStatus Status, int Index)
 {
-	printf("AddressTableChange: 0x%08lX\n", AddressTable[Index].MambaNetAddress);
+//	printf("AddressTableChange: 0x%08lX\n", AddressTable[Index].MambaNetAddress);
 }
 
