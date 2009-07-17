@@ -3110,7 +3110,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       else if (DefaultSelection<24)
                       {
                         int ExtNr = DefaultSelection-16;
-                        AxumData.Monitor[MonitorBussNr].Buss[ExtNr] = 1;
+                        AxumData.Monitor[MonitorBussNr].Ext[ExtNr] = 1;
 
                         unsigned int FunctionNrToSent = 0x02000000 | (MonitorBussNr<<12);
                         CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
@@ -4412,7 +4412,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                           else if (DefaultSelection<24)
                           {
                             int ExtNr = DefaultSelection-16;
-                            AxumData.Monitor[cntMonitorBuss].Buss[ExtNr] = 1;
+                            AxumData.Monitor[cntMonitorBuss].Ext[ExtNr] = 1;
 
                             unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
                             CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
@@ -4553,7 +4553,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                           else if (DefaultSelection<24)
                           {
                             int ExtNr = DefaultSelection-16;
-                            AxumData.Monitor[cntMonitorBuss].Buss[ExtNr] = 1;
+                            AxumData.Monitor[cntMonitorBuss].Ext[ExtNr] = 1;
 
                             unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
                             CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
@@ -4729,7 +4729,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         else if (DefaultSelection<24)
                         {
                           int ExtNr = DefaultSelection-16;
-                          AxumData.Monitor[cntMonitorBuss].Buss[ExtNr] = 1;
+                          AxumData.Monitor[cntMonitorBuss].Ext[ExtNr] = 1;
 
                           unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
                           CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
@@ -12541,7 +12541,7 @@ void DoAxum_BussReset(int BussNr)
       else if (DefaultSelection<24)
       {
         int ExtNr = DefaultSelection-16;
-        AxumData.Monitor[cntMonitorBuss].Buss[ExtNr] = 1;
+        AxumData.Monitor[cntMonitorBuss].Ext[ExtNr] = 1;
 
         unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
         CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
@@ -13233,7 +13233,7 @@ void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock)
       else if (DefaultSelection<24)
       {
         int ExtNr = DefaultSelection-16;
-        AxumData.Monitor[cntMonitorBuss].Buss[ExtNr] = 1;
+        AxumData.Monitor[cntMonitorBuss].Ext[ExtNr] = 1;
 
         unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
         CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
