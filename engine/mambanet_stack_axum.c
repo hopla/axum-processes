@@ -1403,7 +1403,7 @@ void ProcessMambaNetMessage(unsigned long int ToAddress, unsigned long int FromA
         {
           if ((ObjectNr>=1024) && (ObjectNr<(1024+NumberOfCustomObjects)))
           {  //Only for the non-standard objects
-            if (CustomObjectInformation[ObjectNr].Services != 0x00)
+            if (CustomObjectInformation[ObjectNr-1024].Services != 0x00)
             {
               unsigned char TransmitBuffer[6];
               unsigned char ObjectFrequency;
