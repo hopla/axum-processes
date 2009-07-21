@@ -177,7 +177,7 @@ QTabWidget::tab-bar
    <property name="geometry" >
     <rect>
      <x>0</x>
-     <y>674</y>
+     <y>673</y>
      <width>1024</width>
      <height>94</height>
     </rect>
@@ -360,7 +360,7 @@ QTabWidget::tab-bar
 }</string>
      </property>
      <property name="text" >
-      <string>Monitor  2</string>
+      <string>Mon. 2</string>
      </property>
      <property name="textFormat" >
       <enum>Qt::PlainText</enum>
@@ -397,7 +397,7 @@ QTabWidget::tab-bar
 }</string>
      </property>
      <property name="text" >
-      <string>Monitor 1</string>
+      <string>Mon. 1</string>
      </property>
      <property name="textFormat" >
       <enum>Qt::PlainText</enum>

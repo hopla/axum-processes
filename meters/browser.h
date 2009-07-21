@@ -40,8 +40,6 @@
 #include <linux/if_arp.h>   //for ETH_P_ALL/ifreq/sockaddr_ll/ETH_ALEN etc...
 #include <sys/ioctl.h>          //for ioctl
 
-#include "mambanet_stack_axum.h"
-
 class ConnectionWidget;
 class QTableView;
 class QPushButton;
@@ -54,16 +52,14 @@ class Browser: public QWidget, public Ui::Browser
 {
     Q_OBJECT
 public:
-	 int LinuxIfIndex;
-	 int MambaNetSocket;
-	 QSocketNotifier *NetworkNotifier;
 	 int cntSecond;
 
 	 double MeterData[4];
+   char Label[4][9];
 	 double previousNumberOfSeconds;
 
-    Browser(DEFAULT_NODE_OBJECTS_STRUCT *NewDefaultObjects, CUSTOM_OBJECT_INFORMATION_STRUCT *NewCustomObjectInformation, unsigned int NewNumberOfCustomObjects, char *InterfaceName, QWidget *parent = 0);
-    virtual ~Browser();
+   Browser(QWidget *parent = 0);
+   virtual ~Browser();
 
 	 void timerEvent(QTimerEvent *Event);
 
@@ -72,23 +68,12 @@ public:
 	 QAction *m_Back;
 	 QAction *m_Forward;
 	 QAction *m_StopReload;
-//	 ToolbarSearch *m_ToolbarSearch;
 	 ChaseWidget *m_ChaseWidget;
   
 public slots:
 	 void MeterRelease();
-    void SecondTimerTick(void);
-	 void ReadNetwork();
 
 private:
-    int EthernetInterfaceIndex;
-    char LocalMACAddress[6];
-
-    int cntEthernetMambaNetDecodeBuffer;
-	 unsigned char EthernetMambaNetDecodeBuffer[128];
-
-	 void InitializeTheMambaNetStack(DEFAULT_NODE_OBJECTS_STRUCT *NewDefaultObjects, CUSTOM_OBJECT_INFORMATION_STRUCT *NewCustomObjectInformation, unsigned int NewNumberOfCustomObjects);
-    int OpenDevice(char *Name);
 };
 
 #endif

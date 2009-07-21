@@ -31,13 +31,13 @@
 #include <QtGui>
 #include <QtSql>
 
-#include <ddpci2040.h>
 #include <browser.h>
 
 #include <errno.h>
 
-//#include "ThreadListener.h"
-#include "mambanet_network.h"
+#define MBN_VARARG
+#include "mbn.h"
+#include "common.h"
 
 #define PCB_MAJOR_VERSION        1
 #define PCB_MINOR_VERSION        0
@@ -51,91 +51,248 @@
 #define NR_OF_STATIC_OBJECTS    (1032-1023)
 #define NR_OF_OBJECTS            NR_OF_STATIC_OBJECTS
 
-extern unsigned int AddressTableCount;
-
-void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16]);
-void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigned long int FromAddress, unsigned char Ack, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress);
-void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *AddressTable, MambaNetAddressTableStatus Status, int Index);
+#define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
+#define DEFAULT_ETH_DEV   "eth0"
+#define DEFAULT_LOG_FILE  "/var/log/axum-meters.log"
 
 Browser *browser = NULL;
 
-/********************************/
-/* global declarations          */
-/********************************/
-DEFAULT_NODE_OBJECTS_STRUCT AxumPPMMeterDefaultObjects =
-{
-   "Axum PPM Meters (Linux)",				   //Description
-   "Axum-PPM-Meters",			            //Name is stored in EEPROM, see above
-   MANUFACTURER_ID,                       //ManufacturerID
-   PRODUCT_ID,                            //ProductID
-  	1,                                     //UniqueIDPerProduct (1=fader)
-   PCB_MAJOR_VERSION,                     //HardwareMajorRevision
-   PCB_MINOR_VERSION,                     //HardwareMinorRevision
-   FIRMWARE_MAJOR_VERSION,                //FirmwareMajorRevision
-   FIRMWARE_MINOR_VERSION,                //FirmwareMinorRevision
-   PROTOCOL_MAJOR_VERSION,                //ProtocolMajorRevision
-   PROTOCOL_MINOR_VERSION,                //ProtocolMinorRevision
-   NR_OF_OBJECTS,                         //NumberOfObjects
-   0x00000000,                            //DefaultEngineAddress
-   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00},  //Parent
-   0x00000000,                            //MambaNetAddress
-	0x00												//Services
+struct mbn_interface *itf;
+struct mbn_handler *mbn;
+char error[MBN_ERRSIZE];
+
+struct mbn_node_info this_node = {
+  0, 0,                   //MambaNet address, Services
+  "Axum PPM Meters (Linux)",
+  "Axum-PPM-Meters",
+  MANUFACTURER_ID, PRODUCT_ID, 0x0001,
+  0, 0,                   //Hw revision
+  2, 0,                   //Fw revision
+  0, 0,                   //FPGA revision
+  NR_OF_OBJECTS,          //Number of objects
+  0,                      //Default engine address
+  {0x0000,0x0000,0x000},  //Hardware parent
+  0                       //Service request
 };
 
-#if (NR_OF_OBJECTS != 0)
-CUSTOM_OBJECT_INFORMATION_STRUCT AxumPPMMeterCustomObjectInformation[NR_OF_STATIC_OBJECTS] =
-{
-   // Description             , Services
-   //                         , sensor {type, size, min, max}
-   //                         , actuator {type, size, min, max, default}
-   { "Meter 1 Left dB"        , 0x00, 0x00000000, 0x00
-                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
-                              , {FLOAT_DATATYPE             ,  2, 0xD240, 0x4900, 0xD240 }},
-   { "Meter 1 Right dB"       , 0x00, 0x00000000, 0x00
-                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
-                              , {FLOAT_DATATYPE             ,  2, 0xD240, 0x4900, 0xD240 }},
-   { "Meter 1 Label A"        , 0x00, 0x00000000, 0x00
-                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
-                              , {OCTET_STRING_DATATYPE      ,  8, 0		, 127	  , 0		  }},
-   { "Meter 1 Label B"        , 0x00, 0x00000000, 0x00
-                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
-                              , {OCTET_STRING_DATATYPE      ,  8, 0		, 127	  , 0		  }},
-   { "Meter 2 Left dB"        , 0x00, 0x00000000, 0x00
-                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
-                              , {FLOAT_DATATYPE             ,  2, 0xD240, 0x4900, 0xD240 }},
-   { "Meter 2 Right dB"       , 0x00, 0x00000000, 0x00
-                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
-                              , {FLOAT_DATATYPE             ,  2, 0xD240, 0x4900, 0xD240 }},
-   { "Meter 2 Label A"        , 0x00, 0x00000000, 0x00
-                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
-                              , {OCTET_STRING_DATATYPE      ,  8, 0		, 127	  , 0		  }},
-   { "Meter 2 Label B"        , 0x00, 0x00000000, 0x00
-                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
-                              , {OCTET_STRING_DATATYPE      ,  8, 0		, 127	  , 0		  }},
-   { "On Air" 			         , 0x00, 0x00000000, 0x00
-                              , {NO_DATA_DATATYPE           ,  0, 0     , 0      }
-                              , {STATE_DATATYPE      			,  1, 0		, 1	  , 0		  }}
-};
-#else
-CUSTOM_OBJECT_INFORMATION_STRUCT AxumPPMMeterCustomObjectInformation[1];
-#endif
+void init(int argc, char *argv[]);
+int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_data in);
+int delay_us(double sleep_time);
 
-
-void addConnectionsFromCommandline(const QStringList &args, Browser *browser)
+void init(int argc, char *argv[])
 {
-/*   for (int i = 1; i < args.count(); ++i)
-   {
-      QUrl url(args.at(i), QUrl::TolerantMode);
-      if (!url.isValid())
+  char ethdev[50];
+  struct mbn_object objects[NR_OF_STATIC_OBJECTS];
+  int c;
+
+  strcpy(ethdev, DEFAULT_ETH_DEV);
+  strcpy(log_file, DEFAULT_LOG_FILE);
+  strcpy(hwparent_path, DEFAULT_GTW_PATH);
+
+  while((c =getopt(argc, argv, "e:g:l:i:qws")) != -1)
+  {
+    switch(c)
+    {
+      case 'e':
       {
-         qWarning("Invalid URL: %s", qPrintable(args.at(i)));
-         continue;
+        if(strlen(optarg) > 50)
+        {
+          fprintf(stderr, "Too long device name.\n");
+          exit(1);
+        }
+        strcpy(ethdev, optarg);
       }
+      break;
+      case 'g':
+      {
+        strcpy(hwparent_path, optarg);
+      }
+      break;
+      case 'l':
+      {
+        strcpy(log_file, optarg);
+      }
+      break;
+      case 'i':
+      {
+        if(sscanf(optarg, "%hd", &(this_node.UniqueIDPerProduct)) != 1)
+        {
+          fprintf(stderr, "Invalid UniqueIDPerProduct");
+          exit(1);
+        }
+      }
+      break;
+      case 'q':
+      case 'w':
+      case 's':
+      {
+      }
+      break;
+      default:
+      {
+        fprintf(stderr, "Usage: %s [-e dev] [-g path] [-l path] [-i id]\n", argv[0]);
+        fprintf(stderr, "  -e dev   Ethernet device for MambaNet communication.\n");
+        fprintf(stderr, "  -g path  Hardware parent or path to gateway socket.\n");
+        fprintf(stderr, "  -l path  Path to log file.\n");
+        fprintf(stderr, "  -i id    UniqueIDPerProduct for the MambaNet node\n");
+        exit(1);
+      }
+      break;
+    }
+  }
 
-      QSqlError err = browser->addConnection(url.scheme(), url.path().mid(1), url.host(), url.userName(), url.password(), url.port(-1));
-      if (err.type() != QSqlError::NoError)
-         qDebug() << "Unable to open connection:" << err;
-   }*/
+  objects[0] = MBN_OBJ( (char *)"Meter 1 Left dB",
+                        MBN_DATATYPE_NODATA,
+                        MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[1] = MBN_OBJ( (char *)"Meter 1 Right dB",
+                        MBN_DATATYPE_NODATA,
+                        MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[2] = MBN_OBJ( (char *)"Meter 1 Label A",
+                        MBN_DATATYPE_NODATA,
+                        MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 1");
+  objects[3] = MBN_OBJ( (char *)"Meter 1 Label B",
+                        MBN_DATATYPE_NODATA,
+                        MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "-");
+  objects[4] = MBN_OBJ( (char *)"Meter 2 Left dB",
+                        MBN_DATATYPE_NODATA,
+                        MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[5] = MBN_OBJ( (char *)"Meter 2 Right dB",
+                        MBN_DATATYPE_NODATA,
+                        MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[6] = MBN_OBJ( (char *)"Meter 2 Label A",
+                        MBN_DATATYPE_NODATA,
+                        MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 2");
+  objects[7] = MBN_OBJ( (char *)"Meter 2 Label B",
+                        MBN_DATATYPE_NODATA,
+                        MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "-");
+  objects[8] = MBN_OBJ( (char *)"On Air",
+                        MBN_DATATYPE_NODATA,
+                        MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  this_node.NumberOfObjects = 9;
+
+  log_open();
+  hwparent(&this_node);
+
+  if ((itf=mbnEthernetOpen(ethdev, error)) == NULL)
+  {
+    fprintf(stderr, "Error opening ethernet device: %s", error);
+    log_close();
+    exit(1);
+  }
+
+  if ((mbn=mbnInit(&this_node, objects, itf, error)) == NULL)
+  {
+    fprintf(stderr, "Error initializing MambaNet node: %s", error);
+    log_close();
+    exit(1);
+  }
+
+  mbnSetSetActuatorDataCallback(mbn, SetActuatorData);
+
+  log_write("-----------------------");
+  log_write("Axum meters initialized");
+  log_write("Starting QApplication");
+}
+
+int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_data in)
+{
+  if (((object<1024) || (object>=(1024+this_node.NumberOfObjects))) || (browser == NULL))
+  {
+    return 1;
+  }
+
+  switch (object)
+  {
+    case 1024:
+    {
+      float dB = in.Float+20;
+
+      browser->MeterData[0] = dB;
+      if (dB>browser->NewDNRPPMMeter->FdBPosition)
+			{
+			  browser->NewDNRPPMMeter->FdBPosition = dB;
+				browser->NewDNRPPMMeter->update();
+		  }
+    }
+    break;
+    case 1025:
+    {
+      float dB = in.Float+20;
+
+      browser->MeterData[1] = dB;
+			if (dB>browser->NewDNRPPMMeter_2->FdBPosition)
+			{
+			  browser->NewDNRPPMMeter_2->FdBPosition = dB;
+		    browser->NewDNRPPMMeter_2->update();
+			}
+    }
+    break;
+    case 1026:
+    {
+      strncpy(browser->Label[0], (char *)in.Octets, 8);
+      browser->Label[0][8] = 0;
+      browser->label_3->setText(QString(browser->Label[0]));
+		}
+    break;
+    case 1027:
+    {
+      strncpy(browser->Label[1], (char *)in.Octets, 8);
+      browser->Label[1][8] = 0;
+      browser->label_5->setText(QString(browser->Label[1]));
+    }
+		break;
+    case 1028:
+    {
+      float dB = in.Float+20;
+
+      browser->MeterData[2] = dB;
+      if (dB>browser->NewDNRPPMMeter_3->FdBPosition)
+			{
+			  browser->NewDNRPPMMeter_3->FdBPosition = dB;
+				browser->NewDNRPPMMeter_3->update();
+      }
+    }
+    break;
+    case 1029:
+    {
+      float dB = in.Float+20;
+
+      browser->MeterData[3] = dB;
+      if (dB>browser->NewDNRPPMMeter_4->FdBPosition)
+      {
+        browser->NewDNRPPMMeter_4->FdBPosition = dB;
+        browser->NewDNRPPMMeter_4->update();
+      }
+    }
+    break;
+		case 1030:
+		{
+      strncpy(browser->Label[2], (char *)in.Octets, 8);
+      browser->Label[2][8] = 0;
+      browser->label_4->setText(QString(browser->Label[2]));
+		}
+		break;
+    case 1031:
+		{
+      strncpy(browser->Label[3], (char *)in.Octets, 8);
+      browser->Label[3][8] = 0;
+      browser->label_6->setText(QString(browser->Label[3]));
+		}
+    break;
+		case 1032:
+		{
+      if (in.State)
+      {
+			  browser->label_7->setText("ON AIR");
+			}
+			else
+			{
+        browser->label_7->setText("");
+      }
+		}
+  }
+  mbnUpdateActuatorData(mbn, object, in);
+  return 0;
 }
 
 int delay_us(double sleep_time)
@@ -174,305 +331,33 @@ int delay_us(double sleep_time)
 
 int main(int argc, char *argv[])
 {
-	int UniqueIDPerProduct = -1;
-	char FilenameUniqueID[64];
-	char UniqueIDString[8];
-	sprintf(FilenameUniqueID, "%s.dat", argv[0]);
+  int app_return;
 
-	int FileHandleUniqueID = open(FilenameUniqueID, O_RDONLY);
-	if (FileHandleUniqueID == -1)
-	{
-		perror(FilenameUniqueID);
-		exit(1);
-	}
 
-	read(FileHandleUniqueID, UniqueIDString, 8);
+  QApplication app(argc, argv);
 
-	UniqueIDPerProduct = atoi(UniqueIDString);
-	if ((UniqueIDPerProduct < 1) || (UniqueIDPerProduct > 65535))
-	{
-		fprintf(stderr, "Unique ID not found or out of range\n");
-		exit(1);
-	}
-	AxumPPMMeterDefaultObjects.UniqueIDPerProduct = UniqueIDPerProduct;
+  QMainWindow mainWin;
+  browser = new Browser(&mainWin);
+  mainWin.setCentralWidget(browser);
 
-   QApplication app(argc, argv);
-
-   QMainWindow mainWin;
-   browser = new Browser(&AxumPPMMeterDefaultObjects, AxumPPMMeterCustomObjectInformation, NR_OF_STATIC_OBJECTS, "eth0", &mainWin);
-   mainWin.setCentralWidget(browser);
-
+  //init mambanet after browser is active
+  init(argc, argv);
 
 //	QWebView *test = new QWebView(browser->tabWidget);
 //	test->load(QUrl("http://Service:Service@192.168.0.200/new/skin_table.html?file=main.php"));
 //	test->show();
 
-//   addConnectionsFromCommandline(app.arguments(), browser);
 	mainWin.showFullScreen();
 	mainWin.setGeometry(0,0, 1024,800);
 
-//   QObject::connect(browser, SIGNAL(statusMessage(QString)), mainWin.statusBar(), SLOT(showMessage(QString)));
+  app_return = app.exec();
 
-   return app.exec();
+  log_write("Closing meters");
 
-	printf("\n");
-}
+  if (mbn)
+    mbnFree(mbn);
 
-void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16])
-{
-//	 printf("Transmit size: %d, address %08X:%08X:%08X:%08X:%08X:%08X\n", buffersize, hardware_address[0], hardware_address[1], hardware_address[2], hardware_address[3], hardware_address[4], hardware_address[5]);
-
-    //Setup the socket datastruct to transmit data.
-
-	 if (browser != NULL)
-	 {
-    struct sockaddr_ll socket_address;
-    socket_address.sll_family   = AF_PACKET;
-    socket_address.sll_protocol = htons(ETH_P_DNR);
-    socket_address.sll_ifindex  = browser->LinuxIfIndex;
-    socket_address.sll_hatype    = ARPHRD_ETHER;
-    socket_address.sll_pkttype  = PACKET_OTHERHOST;
-    socket_address.sll_halen     = ETH_ALEN;
-    socket_address.sll_addr[0]  = hardware_address[0];
-    socket_address.sll_addr[1]  = hardware_address[1];
-    socket_address.sll_addr[2]  = hardware_address[2];
-    socket_address.sll_addr[3]  = hardware_address[3];
-    socket_address.sll_addr[4]  = hardware_address[4];
-    socket_address.sll_addr[5]  = hardware_address[5];
-    socket_address.sll_addr[6]  = 0x00;
-    socket_address.sll_addr[7]  = 0x00;
-
-    if (browser->MambaNetSocket >= 0)
-    {
-        int CharactersSend = 0;
-        unsigned char cntRetry=0;
-
-        while ((CharactersSend < buffersize) && (cntRetry<10))
-        {
-            CharactersSend = sendto(browser->MambaNetSocket, buffer, buffersize, 0, (struct sockaddr *) &socket_address, sizeof(socket_address));
-
-            if (cntRetry != 0)
-            {
-                printf("[NET] Retry %d\r\n", cntRetry++);
-            }
-        }
-
-        if (CharactersSend < 0)
-        {
-            perror("cannot send data.\r\n");
-        }
-        else
-        {
-//          TRACE_PACKETS("[ETHERNET] SendMambaMessage(0x%08X, 0x%08X, 0x%04X, %d)", ToAddress, FromAddress, MessageType, DataLength);
-        }
-    }
-	 }
-}
-
-void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigned long int FromAddress, unsigned char Ack, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress)
-{
-	bool MessageProcessed = false;
-
-	if (MessageID)
-	{
-		Ack = 1;
-	}
-
-   switch (MessageType)
-   {
-      case 0x0000:
-      {
-         MessageProcessed = 1;
-      }
-      break;
-      case 0x0001:
-      {
-         int ObjectNr;
-         unsigned char Action;
-
-         ObjectNr = Data[0];
-         ObjectNr <<=8;
-         ObjectNr |= Data[1];
-         Action  = Data[2];
-
-//			printf("message received in MambaNetMessageReceiveCallback(0x%08lx, 0x%08lx, %d, 0x%06lx, 0x%04x, %d) ObjectNr:%d\n", ToAddress, FromAddress, Ack, MessageID, MessageType, DataLength, ObjectNr);
-
-         if (Action == MAMBANET_OBJECT_ACTION_GET_ACTUATOR_DATA)
-         {
-         }
-         else if (Action == MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA)
-         {
-	         switch (ObjectNr)
-            {
-               case 1024:
-               {
-                  if ((Data[3] == FLOAT_DATATYPE) && (Data[4]==2))
-                  {
-                     float Value;
-                     if (VariableFloat2Float(&Data[5], Data[4], &Value) == 0)
-                     {
-                        float dB = Value+20;
-
-	                     browser->MeterData[0] = dB;
-								if (dB>browser->NewDNRPPMMeter->FdBPosition)
-								{
-									browser->NewDNRPPMMeter->FdBPosition = dB;
-									browser->NewDNRPPMMeter->update();
-								}
-                     }
-                  }
-               }
-               break;
-               case 1025:
-               {
-                  if (Data[3] == FLOAT_DATATYPE)
-                  {
-                     float Value;
-                     if (VariableFloat2Float(&Data[5], Data[4], &Value) == 0)
-                     {
-                        float dB = Value+20;
-
-	                     browser->MeterData[1] = dB;
-								if (dB>browser->NewDNRPPMMeter_2->FdBPosition)
-								{
-									browser->NewDNRPPMMeter_2->FdBPosition = dB;
-//									browser->NewDNRPPMMeter_2->repaint();
-									browser->NewDNRPPMMeter_2->update();
-								}
-                     }
-                  }
-               }
-               break;
-               case 1026:
-               {
-                  if (Data[3] == OCTET_STRING_DATATYPE)
-                  {
-							char TempString[256] = "";
-							strncpy(TempString, (char *)&Data[5], Data[4]);
-							TempString[Data[4]] = 0;
-
-	                  browser->label_3->setText(QString(TempString));
-						}
-					}
-					break;
-               case 1027:
-               {
-                  if (Data[3] == OCTET_STRING_DATATYPE)
-                  {
-							char TempString[256] = "";
-							strncpy(TempString, (char *)&Data[5], Data[4]);
-							TempString[Data[4]] = 0;
-
-	                  browser->label_5->setText(QString(TempString));
-						}
-					}
-					break;
-               case 1028:
-               {
-                  if ((Data[3] == FLOAT_DATATYPE) && (Data[4]==2))
-                  {
-                     float Value;
-                     if (VariableFloat2Float(&Data[5], Data[4], &Value) == 0)
-                     {
-                        float dB = Value+20;
-
-	                     browser->MeterData[2] = dB;
-								if (dB>browser->NewDNRPPMMeter_3->FdBPosition)
-								{
-									browser->NewDNRPPMMeter_3->FdBPosition = dB;
-//									browser->NewDNRPPMMeter_3->repaint();
-									browser->NewDNRPPMMeter_3->update();
-								}
-                     }
-                  }
-               }
-               break;
-               case 1029:
-               {
-                  if (Data[3] == FLOAT_DATATYPE)
-                  {
-                     float Value;
-                     if (VariableFloat2Float(&Data[5], Data[4], &Value) == 0)
-                     {
-                        float dB = Value+20;
-
-	                     browser->MeterData[3] = dB;
-								if (dB>browser->NewDNRPPMMeter_4->FdBPosition)
-								{
-									browser->NewDNRPPMMeter_4->FdBPosition = dB;
-//									browser->NewDNRPPMMeter_4->repaint();
-									browser->NewDNRPPMMeter_4->update();
-								}
-                     }
-                  }
-               }
-               break;
-					case 1030:
-					{
-						char TempString[256] = "";
-						strncpy(TempString, (char *)&Data[5], Data[4]);
-						TempString[Data[4]] = 0;
-
-                  browser->label_4->setText(QString(TempString));
-					}
-					break;
-					case 1031:
-					{
-						char TempString[256] = "";
-						strncpy(TempString, (char *)&Data[5], Data[4]);
-						TempString[Data[4]] = 0;
-
-                  browser->label_6->setText(QString(TempString));
-					}
-					break;
-					case 1032:
-					{
-                  if (Data[3] == STATE_DATATYPE)
-                  {
-							if (Data[4] == 1)
-							{
-								if (Data[5])
-								{
-									browser->label_7->setText("ON AIR");
-								}
-								else
-								{
-									browser->label_7->setText("");
-								}
-							}
-                  }
-					}
-					break;
-            }
-	         MessageProcessed = 1;
-
-				if (MessageID)
-				{
-					unsigned char TransmitBuffer[4];
-
-					TransmitBuffer[0] = (ObjectNr>>8)&0xFF;
-               TransmitBuffer[1] = ObjectNr&0xFF;
-               TransmitBuffer[2] = MAMBANET_OBJECT_ACTION_ACTUATOR_DATA_RESPONSE;
-               TransmitBuffer[3] = NO_DATA_DATATYPE;
-               SendMambaNetMessage(FromAddress, AxumPPMMeterDefaultObjects.MambaNetAddress, Ack, MessageID, 1, TransmitBuffer, 4);
-				}
-         }
-      }
-      break;
-      case MAMBANET_DEBUG_MESSAGETYPE:
-      {
-      }
-      break;
-   }
-
-   if (!MessageProcessed)
-   {
-		printf("Unkown message received in MambaNetMessageReceiveCallback(0x%08lx, 0x%08lx, 0x%06lx, 0x%04x, %d)\n", ToAddress, FromAddress, MessageID, MessageType, DataLength);
-   }
-}
-
-void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *AddressTable, MambaNetAddressTableStatus Status, int Index)
-{
-//	printf("AddressTableChange: 0x%08lX\n", AddressTable[Index].MambaNetAddress);
+  log_close();
+  return app_return;
 }
 
