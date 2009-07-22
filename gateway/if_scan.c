@@ -80,7 +80,7 @@ int scan_parse(struct can_frame *frame, struct mbn_interface *itf);
 void *scan_receive(void *);
 int scan_read(struct can_frame *frame, struct mbn_interface *itf);
 void scan_write(struct can_frame *frame, struct mbn_interface *itf);
-
+void scan_write_parent(struct can_frame *frame, struct mbn_interface *itf);
 
 struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *parent, char *err) {
   struct mbn_interface *itf;
@@ -384,7 +384,7 @@ void *scan_send(void *ptr) {
       frame.data[4] = (dat->parent[2]>>8)&0xFF;
       frame.data[5] =  dat->parent[2]    &0xFF;
       frame.data[6] = frame.data[7] = 0;
-      scan_write(&frame, itf);
+      scan_write_parent(&frame, itf);
       lastparent = now;
     }
     /* send messages from the queue */
@@ -538,10 +538,33 @@ void scan_write(struct can_frame *frame, struct mbn_interface *itf) {
 
     if (write(dat->fd, xmtbuf, 13) < 13)
       fprintf(stderr, "TTY send: %s", strerror(errno));
-                                                                                                                
   }
   else {
     if(write(dat->sock, (void *)&frame, sizeof(struct can_frame)) < (int)sizeof(struct can_frame))
       fprintf(stderr, "CAN send: %s", strerror(errno));
   }
 }
+
+void scan_write_parent(struct can_frame *frame, struct mbn_interface *itf) {
+  struct can_data *dat = (struct can_data *)itf->data;
+  unsigned char xmtbuf[13];
+  unsigned char i;
+
+  if(dat->tty_mode) {
+    xmtbuf[0] = 0xE0;
+    xmtbuf[1] = 0x40 | ((frame->can_id>>23)&0x1F);
+    xmtbuf[2] = (frame->can_id>>16)&0x7F;
+    xmtbuf[3] = frame->can_id&0x0F;
+    for (i=0; i<8; i++)
+      xmtbuf[4+i] = frame->data[i];
+    xmtbuf[12] = 0xE1;
+
+    if (write(dat->fd, xmtbuf, 13) < 13)
+      fprintf(stderr, "TTY send parent: %s", strerror(errno));
+  }
+  else {
+    if(write(dat->sock, (void *)&frame, sizeof(struct can_frame)) < (int)sizeof(struct can_frame))
+      fprintf(stderr, "CAN send parent: %s", strerror(errno));
+  }
+}
+
