@@ -12614,18 +12614,19 @@ void DoAxum_ModuleStatusChanged(int ModuleNr)
       {
         if (AxumData.ModuleData[cntModule].Source != 0)
         {
-          if (AxumData.SourceData[AxumData.ModuleData[cntModule].Source-1].Active)
+          int SourceToCheck = AxumData.ModuleData[cntModule].Source-matrix_sources.src_offset.min.source;
+          if (AxumData.SourceData[SourceToCheck].Active)
           {
             for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
             {
-              if (AxumData.SourceData[AxumData.ModuleData[cntModule].Source-1].Redlight[cntRedlight])
+              if (AxumData.SourceData[SourceToCheck].Redlight[cntRedlight])
               {
                 Redlight[cntRedlight] = 1;
               }
             }
             for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
             {
-              if (AxumData.SourceData[AxumData.ModuleData[cntModule].Source-1].MonitorMute[cntMonitorBuss])
+              if (AxumData.SourceData[SourceToCheck].MonitorMute[cntMonitorBuss])
               {
                 MonitorMute[cntMonitorBuss] = 1;
               }
