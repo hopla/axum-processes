@@ -179,7 +179,7 @@ QTabWidget::tab-bar
      <x>0</x>
      <y>673</y>
      <width>1024</width>
-     <height>94</height>
+     <height>95</height>
     </rect>
    </property>
    <property name="font" >
