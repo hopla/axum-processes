@@ -133,9 +133,60 @@ CREATE TABLE src_config (
   input1_sub_ch smallint NOT NULL CHECK(input1_sub_ch>=1 AND input1_sub_ch<=32),
   input2_addr integer NOT NULL,
   input2_sub_ch smallint NOT NULL CHECK(input2_sub_ch>=1 AND input2_sub_ch<=32),
-  phantom boolean NOT NULL DEFAULT FALSE,
-  pad boolean NOT NULL DEFAULT FALSE,
-  gain float NOT NULL DEFAULT 30 CHECK (gain >= 20::double precision AND gain <= 75::double precision),
+  input_phantom boolean NOT NULL DEFAULT FALSE,
+  input_pad boolean NOT NULL DEFAULT FALSE,
+  input_gain float NOT NULL DEFAULT 30 CHECK (input_gain >= 20::double precision AND input_gain <= 75::double precision),
+  use_gain_preset boolean NOT NULL DEFAULT FALSE,
+  gain float NOT NULL DEFAULT 0,
+  use_lc_preset boolean NOT NULL DEFAULT FALSE,
+  lc_on_off boolean NOT NULL DEFAULT FALSE,
+  lc_frequency smallint NOT NULL DEFAULT 120 CHECK(lc_frequency>=40 AND lc_frequency<=12000),
+  use_insert_preset boolean NOT NULL DEFAULT FALSE,
+  insert_on_off boolean NOT NULL DEFAULT FALSE,
+  insert_source smallint NOT NULL DEFAULT 0,
+  use_eq_preset boolean NOT NULL DEFAULT FALSE,
+  eq_on_off boolean NOT NULL DEFAULT FALSE,
+  eq_band_1_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_1_range>=0 AND eq_band_1_range<=18),
+  eq_band_1_level smallint NOT NULL DEFAULT 0 CHECK(eq_band_1_level>=-eq_band_1_range AND eq_band_1_level<=eq_band_1_range),
+  eq_band_1_freq smallint NOT NULL DEFAULT 12000 CHECK(eq_band_1_freq>=10 AND eq_band_1_freq<=20000),
+  eq_band_1_bw float NOT NULL DEFAULT 1 CHECK(eq_band_1_bw>=0.1 AND eq_band_1_bw<=10),
+  eq_band_1_slope float NOT NULL DEFAULT 1 CHECK(eq_band_1_slope>=0.1 AND eq_band_1_slope<=10),
+  eq_band_1_type smallint NOT NULL DEFAULT 4 CHECK(eq_band_1_type>=0 AND eq_band_1_type<=7),
+  eq_band_2_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_2_range>=0 AND eq_band_2_range<=18),
+  eq_band_2_level smallint NOT NULL DEFAULT 0 CHECK(eq_band_2_level>=-eq_band_2_range AND eq_band_2_level<=eq_band_2_range),
+  eq_band_2_freq smallint NOT NULL DEFAULT 4000 CHECK(eq_band_2_freq>=10 AND eq_band_2_freq<=20000),
+  eq_band_2_bw float NOT NULL DEFAULT 1 CHECK(eq_band_2_bw>=0.1 AND eq_band_2_bw<=10),
+  eq_band_2_slope float NOT NULL DEFAULT 1 CHECK(eq_band_2_slope>=0.1 AND eq_band_2_slope<=10),
+  eq_band_2_type smallint NOT NULL DEFAULT 3 CHECK(eq_band_2_type>=0 AND eq_band_2_type<=7),
+  eq_band_3_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_3_range>=0 AND eq_band_3_range<=18),
+  eq_band_3_level smallint NOT NULL DEFAULT 0 CHECK(eq_band_3_level>=-eq_band_3_range AND eq_band_3_level<=eq_band_3_range),
+  eq_band_3_freq smallint NOT NULL DEFAULT 800 CHECK(eq_band_3_freq>=10 AND eq_band_3_freq<=20000),
+  eq_band_3_bw float NOT NULL DEFAULT 1 CHECK(eq_band_3_bw>=0.1 AND eq_band_3_bw<=10),
+  eq_band_3_slope float NOT NULL DEFAULT 1 CHECK(eq_band_3_slope>=0.1 AND eq_band_3_slope<=10),
+  eq_band_3_type smallint NOT NULL DEFAULT 2 CHECK(eq_band_3_type>=0 AND eq_band_3_type<=7),
+  eq_band_4_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_4_range>=0 AND eq_band_4_range<=18),
+  eq_band_4_level smallint NOT NULL DEFAULT 0 CHECK(eq_band_4_level>=-eq_band_4_range AND eq_band_4_level<=eq_band_4_range),
+  eq_band_4_freq smallint NOT NULL DEFAULT 120 CHECK(eq_band_4_freq>=10 AND eq_band_4_freq<=20000),
+  eq_band_4_bw float NOT NULL DEFAULT 1 CHECK(eq_band_4_bw>=0.1 AND eq_band_4_bw<=10),
+  eq_band_4_slope float NOT NULL DEFAULT 1 CHECK(eq_band_4_slope>=0.1 AND eq_band_4_slope<=10),
+  eq_band_4_type smallint NOT NULL DEFAULT 1 CHECK(eq_band_4_type>=0 AND eq_band_4_type<=7),
+  eq_band_5_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_5_range>=0 AND eq_band_5_range<=18),
+  eq_band_5_level smallint NOT NULL DEFAULT 0 CHECK(eq_band_5_level>=-eq_band_5_range AND eq_band_5_level<=eq_band_5_range),
+  eq_band_5_freq smallint NOT NULL DEFAULT 12000 CHECK(eq_band_5_freq>=10 AND eq_band_5_freq<=20000),
+  eq_band_5_bw float NOT NULL DEFAULT 1 CHECK(eq_band_5_bw>=0.1 AND eq_band_5_bw<=10),
+  eq_band_5_slope float NOT NULL DEFAULT 1 CHECK(eq_band_5_slope>=0.1 AND eq_band_5_slope<=10),
+  eq_band_5_type smallint NOT NULL DEFAULT 5 CHECK(eq_band_5_type>=0 AND eq_band_5_type<=7),
+  eq_band_6_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_6_range>=0 AND eq_band_6_range<=18),
+  eq_band_6_level smallint NOT NULL DEFAULT 0 CHECK(eq_band_6_level>=-eq_band_6_range AND eq_band_6_level<=eq_band_6_range),
+  eq_band_6_freq smallint NOT NULL DEFAULT 120 CHECK(eq_band_6_freq>=10 AND eq_band_6_freq<=20000),
+  eq_band_6_bw float NOT NULL DEFAULT 1 CHECK(eq_band_6_bw>=0.1 AND eq_band_6_bw<=10),
+  eq_band_6_slope float NOT NULL DEFAULT 1 CHECK(eq_band_6_slope>=0.1 AND eq_band_6_slope<=10),
+  eq_band_6_type smallint NOT NULL DEFAULT 0 CHECK(eq_band_6_type>=0 AND eq_band_6_type<=7),
+  use_dyn_preset boolean NOT NULL DEFAULT FALSE,
+  dyn_on_off boolean NOT NULL DEFAULT FALSE,
+  dyn_amount smallint NOT NULL DEFAULT 0,
+  use_routing_preset boolean NOT NULL DEFAULT FALSE,
+  routing_preset smallint NOT NULL DEFAULT 0 CHECK(routing_preset>=0 AND routing_preset<=7),
   redlight1 boolean NOT NULL DEFAULT FALSE,
   redlight2 boolean NOT NULL DEFAULT FALSE,
   redlight3 boolean NOT NULL DEFAULT FALSE,
@@ -161,136 +212,245 @@ CREATE TABLE src_config (
   monitormute15 boolean NOT NULL DEFAULT FALSE,
   monitormute16 boolean NOT NULL DEFAULT FALSE
 );
-CREATE UNIQUE INDEX src_config_unique_id ON src_config (pos);
 
 CREATE TABLE module_config (
   number smallint NOT NULL CHECK(number>=1 AND number<=128) PRIMARY KEY,
   source_a smallint NOT NULL DEFAULT 0,
   source_b smallint NOT NULL DEFAULT 0,
+  source_c smallint NOT NULL DEFAULT 0,
+  source_d smallint NOT NULL DEFAULT 0,
   insert_source smallint NOT NULL DEFAULT 0,
-  insert_on_off_a boolean NOT NULL DEFAULT FALSE,
-  insert_on_off_b boolean NOT NULL DEFAULT FALSE,
+  insert_on_off boolean NOT NULL DEFAULT FALSE,
   gain float NOT NULL DEFAULT 0,
   lc_frequency smallint NOT NULL DEFAULT 120 CHECK(lc_frequency>=40 AND lc_frequency<=12000),
-  lc_on_off_a boolean NOT NULL DEFAULT FALSE,
-  lc_on_off_b boolean NOT NULL DEFAULT FALSE,
-  eq_band_1_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_1_range>=-18 AND eq_band_1_range<=18),
+  lc_on_off boolean NOT NULL DEFAULT FALSE,
+  eq_band_1_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_1_range>=0 AND eq_band_1_range<=18),
   eq_band_1_freq smallint NOT NULL DEFAULT 12000 CHECK(eq_band_1_freq>=10 AND eq_band_1_freq<=20000),
   eq_band_1_bw float NOT NULL DEFAULT 1 CHECK(eq_band_1_bw>=0.1 AND eq_band_1_bw<=10),
   eq_band_1_slope float NOT NULL DEFAULT 1 CHECK(eq_band_1_slope>=0.1 AND eq_band_1_slope<=10),
   eq_band_1_type smallint NOT NULL DEFAULT 4 CHECK(eq_band_1_type>=0 AND eq_band_1_type<=7),
-  eq_band_2_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_2_range>=-18 AND eq_band_2_range<=18),
+  eq_band_2_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_2_range>=0 AND eq_band_2_range<=18),
   eq_band_2_freq smallint NOT NULL DEFAULT 4000 CHECK(eq_band_2_freq>=10 AND eq_band_2_freq<=20000),
   eq_band_2_bw float NOT NULL DEFAULT 1 CHECK(eq_band_2_bw>=0.1 AND eq_band_2_bw<=10),
   eq_band_2_slope float NOT NULL DEFAULT 1 CHECK(eq_band_2_slope>=0.1 AND eq_band_2_slope<=10),
   eq_band_2_type smallint NOT NULL DEFAULT 3 CHECK(eq_band_2_type>=0 AND eq_band_2_type<=7),
-  eq_band_3_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_3_range>=-18 AND eq_band_3_range<=18),
+  eq_band_3_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_3_range>=0 AND eq_band_3_range<=18),
   eq_band_3_freq smallint NOT NULL DEFAULT 800 CHECK(eq_band_3_freq>=10 AND eq_band_3_freq<=20000),
   eq_band_3_bw float NOT NULL DEFAULT 1 CHECK(eq_band_3_bw>=0.1 AND eq_band_3_bw<=10),
   eq_band_3_slope float NOT NULL DEFAULT 1 CHECK(eq_band_3_slope>=0.1 AND eq_band_3_slope<=10),
   eq_band_3_type smallint NOT NULL DEFAULT 2 CHECK(eq_band_3_type>=0 AND eq_band_3_type<=7),
-  eq_band_4_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_4_range>=-18 AND eq_band_4_range<=18),
+  eq_band_4_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_4_range>=0 AND eq_band_4_range<=18),
   eq_band_4_freq smallint NOT NULL DEFAULT 120 CHECK(eq_band_4_freq>=10 AND eq_band_4_freq<=20000),
   eq_band_4_bw float NOT NULL DEFAULT 1 CHECK(eq_band_4_bw>=0.1 AND eq_band_4_bw<=10),
   eq_band_4_slope float NOT NULL DEFAULT 1 CHECK(eq_band_4_slope>=0.1 AND eq_band_4_slope<=10),
   eq_band_4_type smallint NOT NULL DEFAULT 1 CHECK(eq_band_4_type>=0 AND eq_band_4_type<=7),
-  eq_band_5_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_5_range>=-18 AND eq_band_5_range<=18),
+  eq_band_5_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_5_range>=0 AND eq_band_5_range<=18),
   eq_band_5_freq smallint NOT NULL DEFAULT 12000 CHECK(eq_band_5_freq>=10 AND eq_band_5_freq<=20000),
   eq_band_5_bw float NOT NULL DEFAULT 1 CHECK(eq_band_5_bw>=0.1 AND eq_band_5_bw<=10),
   eq_band_5_slope float NOT NULL DEFAULT 1 CHECK(eq_band_5_slope>=0.1 AND eq_band_5_slope<=10),
   eq_band_5_type smallint NOT NULL DEFAULT 5 CHECK(eq_band_5_type>=0 AND eq_band_5_type<=7),
-  eq_band_6_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_6_range>=-18 AND eq_band_6_range<=18),
+  eq_band_6_range smallint NOT NULL DEFAULT 18 CHECK(eq_band_6_range>=0 AND eq_band_6_range<=18),
   eq_band_6_freq smallint NOT NULL DEFAULT 120 CHECK(eq_band_6_freq>=10 AND eq_band_6_freq<=20000),
   eq_band_6_bw float NOT NULL DEFAULT 1 CHECK(eq_band_6_bw>=0.1 AND eq_band_6_bw<=10),
   eq_band_6_slope float NOT NULL DEFAULT 1 CHECK(eq_band_6_slope>=0.1 AND eq_band_6_slope<=10),
   eq_band_6_type smallint NOT NULL DEFAULT 0 CHECK(eq_band_6_type>=0 AND eq_band_6_type<=7),
-  eq_on_off_a boolean NOT NULL DEFAULT FALSE,
-  eq_on_off_b boolean NOT NULL DEFAULT FALSE,
+  eq_on_off boolean NOT NULL DEFAULT FALSE,
   dyn_amount smallint NOT NULL DEFAULT 0,
-  dyn_on_off_a boolean NOT NULL DEFAULT FALSE,
-  dyn_on_off_b boolean NOT NULL DEFAULT FALSE,
+  dyn_on_off boolean NOT NULL DEFAULT FALSE,
   mod_level float NOT NULL DEFAULT -140,
   mod_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_1_2_level float NOT NULL DEFAULT 0,
-  buss_1_2_on_off boolean NOT NULL DEFAULT TRUE,
-  buss_1_2_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_1_2_balance smallint NOT NULL DEFAULT 512 CHECK(buss_1_2_balance>=0 AND buss_1_2_balance<1024),
+  buss_1_2_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_1_2_on_off boolean[8] NOT NULL DEFAULT ARRAY[TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE],
+  buss_1_2_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_1_2_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_1_2_balance[0]>=0 AND buss_1_2_balance[0]<1024 AND
+                                                                                                    buss_1_2_balance[1]>=0 AND buss_1_2_balance[1]<1024 AND
+                                                                                                    buss_1_2_balance[2]>=0 AND buss_1_2_balance[2]<1024 AND
+                                                                                                    buss_1_2_balance[3]>=0 AND buss_1_2_balance[3]<1024 AND
+                                                                                                    buss_1_2_balance[4]>=0 AND buss_1_2_balance[4]<1024 AND
+                                                                                                    buss_1_2_balance[5]>=0 AND buss_1_2_balance[5]<1024 AND
+                                                                                                    buss_1_2_balance[6]>=0 AND buss_1_2_balance[6]<1024 AND
+                                                                                                    buss_1_2_balance[7]>=0 AND buss_1_2_balance[7]<1024),
   buss_1_2_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_3_4_level float NOT NULL DEFAULT 0,
-  buss_3_4_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_3_4_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_3_4_balance smallint NOT NULL DEFAULT 512 CHECK(buss_3_4_balance>=0 AND buss_3_4_balance<1024),
+  buss_3_4_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_3_4_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_3_4_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_3_4_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_3_4_balance[0]>=0 AND buss_3_4_balance[0]<1024 AND
+                                                                                                    buss_3_4_balance[1]>=0 AND buss_3_4_balance[1]<1024 AND
+                                                                                                    buss_3_4_balance[2]>=0 AND buss_3_4_balance[2]<1024 AND
+                                                                                                    buss_3_4_balance[3]>=0 AND buss_3_4_balance[3]<1024 AND
+                                                                                                    buss_3_4_balance[4]>=0 AND buss_3_4_balance[4]<1024 AND
+                                                                                                    buss_3_4_balance[5]>=0 AND buss_3_4_balance[5]<1024 AND
+                                                                                                    buss_3_4_balance[6]>=0 AND buss_3_4_balance[6]<1024 AND
+                                                                                                    buss_3_4_balance[7]>=0 AND buss_3_4_balance[7]<1024),
   buss_3_4_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_5_6_level float NOT NULL DEFAULT 0,
-  buss_5_6_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_5_6_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_5_6_balance smallint NOT NULL DEFAULT 512 CHECK(buss_5_6_balance>=0 AND buss_5_6_balance<1024),
+  buss_5_6_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_5_6_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_5_6_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_5_6_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_5_6_balance[0]>=0 AND buss_5_6_balance[0]<1024 AND
+                                                                                                    buss_5_6_balance[1]>=0 AND buss_5_6_balance[1]<1024 AND
+                                                                                                    buss_5_6_balance[2]>=0 AND buss_5_6_balance[2]<1024 AND
+                                                                                                    buss_5_6_balance[3]>=0 AND buss_5_6_balance[3]<1024 AND
+                                                                                                    buss_5_6_balance[4]>=0 AND buss_5_6_balance[4]<1024 AND
+                                                                                                    buss_5_6_balance[5]>=0 AND buss_5_6_balance[5]<1024 AND
+                                                                                                    buss_5_6_balance[6]>=0 AND buss_5_6_balance[6]<1024 AND
+                                                                                                    buss_5_6_balance[7]>=0 AND buss_5_6_balance[7]<1024),
   buss_5_6_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_7_8_level float NOT NULL DEFAULT 0,
-  buss_7_8_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_7_8_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_7_8_balance smallint NOT NULL DEFAULT 512 CHECK(buss_7_8_balance>=0 AND buss_7_8_balance<1024),
+  buss_7_8_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_7_8_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_7_8_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_7_8_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_7_8_balance[0]>=0 AND buss_7_8_balance[0]<1024 AND
+                                                                                                    buss_7_8_balance[1]>=0 AND buss_7_8_balance[1]<1024 AND
+                                                                                                    buss_7_8_balance[2]>=0 AND buss_7_8_balance[2]<1024 AND
+                                                                                                    buss_7_8_balance[3]>=0 AND buss_7_8_balance[3]<1024 AND
+                                                                                                    buss_7_8_balance[4]>=0 AND buss_7_8_balance[4]<1024 AND
+                                                                                                    buss_7_8_balance[5]>=0 AND buss_7_8_balance[5]<1024 AND
+                                                                                                    buss_7_8_balance[6]>=0 AND buss_7_8_balance[6]<1024 AND
+                                                                                                    buss_7_8_balance[7]>=0 AND buss_7_8_balance[7]<1024),
   buss_7_8_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_9_10_level float NOT NULL DEFAULT 0,
-  buss_9_10_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_9_10_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_9_10_balance smallint NOT NULL DEFAULT 512 CHECK(buss_9_10_balance>=0 AND buss_9_10_balance<1024),
+  buss_9_10_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_9_10_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_9_10_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_9_10_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_9_10_balance[0]>=0 AND buss_9_10_balance[0]<1024 AND
+                                                                                                    buss_9_10_balance[1]>=0 AND buss_9_10_balance[1]<1024 AND
+                                                                                                    buss_9_10_balance[2]>=0 AND buss_9_10_balance[2]<1024 AND
+                                                                                                    buss_9_10_balance[3]>=0 AND buss_9_10_balance[3]<1024 AND
+                                                                                                    buss_9_10_balance[4]>=0 AND buss_9_10_balance[4]<1024 AND
+                                                                                                    buss_9_10_balance[5]>=0 AND buss_9_10_balance[5]<1024 AND
+                                                                                                    buss_9_10_balance[6]>=0 AND buss_9_10_balance[6]<1024 AND
+                                                                                                    buss_9_10_balance[7]>=0 AND buss_9_10_balance[7]<1024),
   buss_9_10_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_11_12_level float NOT NULL DEFAULT 0,
-  buss_11_12_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_11_12_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_11_12_balance smallint NOT NULL DEFAULT 512 CHECK(buss_11_12_balance>=0 AND buss_11_12_balance<1024),
+  buss_11_12_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_11_12_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_11_12_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_11_12_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_11_12_balance[0]>=0 AND buss_11_12_balance[0]<1024 AND
+                                                                                                    buss_11_12_balance[1]>=0 AND buss_11_12_balance[1]<1024 AND
+                                                                                                    buss_11_12_balance[2]>=0 AND buss_11_12_balance[2]<1024 AND
+                                                                                                    buss_11_12_balance[3]>=0 AND buss_11_12_balance[3]<1024 AND
+                                                                                                    buss_11_12_balance[4]>=0 AND buss_11_12_balance[4]<1024 AND
+                                                                                                    buss_11_12_balance[5]>=0 AND buss_11_12_balance[5]<1024 AND
+                                                                                                    buss_11_12_balance[6]>=0 AND buss_11_12_balance[6]<1024 AND
+                                                                                                    buss_11_12_balance[7]>=0 AND buss_11_12_balance[7]<1024),
   buss_11_12_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_13_14_level float NOT NULL DEFAULT 0,
-  buss_13_14_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_13_14_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_13_14_balance smallint NOT NULL DEFAULT 512 CHECK(buss_13_14_balance>=0 AND buss_13_14_balance<1024),
+  buss_13_14_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_13_14_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_13_14_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_13_14_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_13_14_balance[0]>=0 AND buss_13_14_balance[0]<1024 AND
+                                                                                                    buss_13_14_balance[1]>=0 AND buss_13_14_balance[1]<1024 AND
+                                                                                                    buss_13_14_balance[2]>=0 AND buss_13_14_balance[2]<1024 AND
+                                                                                                    buss_13_14_balance[3]>=0 AND buss_13_14_balance[3]<1024 AND
+                                                                                                    buss_13_14_balance[4]>=0 AND buss_13_14_balance[4]<1024 AND
+                                                                                                    buss_13_14_balance[5]>=0 AND buss_13_14_balance[5]<1024 AND
+                                                                                                    buss_13_14_balance[6]>=0 AND buss_13_14_balance[6]<1024 AND
+                                                                                                    buss_13_14_balance[7]>=0 AND buss_13_14_balance[7]<1024),
   buss_13_14_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_15_16_level float NOT NULL DEFAULT 0,
-  buss_15_16_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_15_16_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_15_16_balance smallint NOT NULL DEFAULT 512 CHECK(buss_15_16_balance>=0 AND buss_15_16_balance<1024),
+  buss_15_16_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_15_16_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_15_16_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_15_16_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_15_16_balance[0]>=0 AND buss_15_16_balance[0]<1024 AND
+                                                                                                    buss_15_16_balance[1]>=0 AND buss_15_16_balance[1]<1024 AND
+                                                                                                    buss_15_16_balance[2]>=0 AND buss_15_16_balance[2]<1024 AND
+                                                                                                    buss_15_16_balance[3]>=0 AND buss_15_16_balance[3]<1024 AND
+                                                                                                    buss_15_16_balance[4]>=0 AND buss_15_16_balance[4]<1024 AND
+                                                                                                    buss_15_16_balance[5]>=0 AND buss_15_16_balance[5]<1024 AND
+                                                                                                    buss_15_16_balance[6]>=0 AND buss_15_16_balance[6]<1024 AND
+                                                                                                    buss_15_16_balance[7]>=0 AND buss_15_16_balance[7]<1024),
   buss_15_16_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_17_18_level float NOT NULL DEFAULT 0,
-  buss_17_18_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_17_18_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_17_18_balance smallint NOT NULL DEFAULT 512 CHECK(buss_17_18_balance>=0 AND buss_17_18_balance<1024),
+  buss_17_18_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_17_18_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_17_18_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_17_18_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_17_18_balance[0]>=0 AND buss_17_18_balance[0]<1024 AND
+                                                                                                    buss_17_18_balance[1]>=0 AND buss_17_18_balance[1]<1024 AND
+                                                                                                    buss_17_18_balance[2]>=0 AND buss_17_18_balance[2]<1024 AND
+                                                                                                    buss_17_18_balance[3]>=0 AND buss_17_18_balance[3]<1024 AND
+                                                                                                    buss_17_18_balance[4]>=0 AND buss_17_18_balance[4]<1024 AND
+                                                                                                    buss_17_18_balance[5]>=0 AND buss_17_18_balance[5]<1024 AND
+                                                                                                    buss_17_18_balance[6]>=0 AND buss_17_18_balance[6]<1024 AND
+                                                                                                    buss_17_18_balance[7]>=0 AND buss_17_18_balance[7]<1024),
   buss_17_18_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_19_20_level float NOT NULL DEFAULT 0,
-  buss_19_20_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_19_20_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_19_20_balance smallint NOT NULL DEFAULT 512 CHECK(buss_19_20_balance>=0 AND buss_19_20_balance<1024),
+  buss_19_20_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_19_20_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_19_20_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_19_20_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_19_20_balance[0]>=0 AND buss_19_20_balance[0]<1024 AND
+                                                                                                    buss_19_20_balance[1]>=0 AND buss_19_20_balance[1]<1024 AND
+                                                                                                    buss_19_20_balance[2]>=0 AND buss_19_20_balance[2]<1024 AND
+                                                                                                    buss_19_20_balance[3]>=0 AND buss_19_20_balance[3]<1024 AND
+                                                                                                    buss_19_20_balance[4]>=0 AND buss_19_20_balance[4]<1024 AND
+                                                                                                    buss_19_20_balance[5]>=0 AND buss_19_20_balance[5]<1024 AND
+                                                                                                    buss_19_20_balance[6]>=0 AND buss_19_20_balance[6]<1024 AND
+                                                                                                    buss_19_20_balance[7]>=0 AND buss_19_20_balance[7]<1024),
   buss_19_20_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_21_22_level float NOT NULL DEFAULT 0,
-  buss_21_22_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_21_22_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_21_22_balance smallint NOT NULL DEFAULT 512 CHECK(buss_21_22_balance>=0 AND buss_21_22_balance<1024),
+  buss_21_22_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_21_22_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_21_22_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_21_22_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_21_22_balance[0]>=0 AND buss_21_22_balance[0]<1024 AND
+                                                                                                    buss_21_22_balance[1]>=0 AND buss_21_22_balance[1]<1024 AND
+                                                                                                    buss_21_22_balance[2]>=0 AND buss_21_22_balance[2]<1024 AND
+                                                                                                    buss_21_22_balance[3]>=0 AND buss_21_22_balance[3]<1024 AND
+                                                                                                    buss_21_22_balance[4]>=0 AND buss_21_22_balance[4]<1024 AND
+                                                                                                    buss_21_22_balance[5]>=0 AND buss_21_22_balance[5]<1024 AND
+                                                                                                    buss_21_22_balance[6]>=0 AND buss_21_22_balance[6]<1024 AND
+                                                                                                    buss_21_22_balance[7]>=0 AND buss_21_22_balance[7]<1024),
   buss_21_22_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_23_24_level float NOT NULL DEFAULT 0,
-  buss_23_24_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_23_24_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_23_24_balance smallint NOT NULL DEFAULT 512 CHECK(buss_23_24_balance>=0 AND buss_23_24_balance<1024),
+  buss_23_24_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_23_24_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_23_24_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_23_24_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_23_24_balance[0]>=0 AND buss_23_24_balance[0]<1024 AND
+                                                                                                    buss_23_24_balance[1]>=0 AND buss_23_24_balance[1]<1024 AND
+                                                                                                    buss_23_24_balance[2]>=0 AND buss_23_24_balance[2]<1024 AND
+                                                                                                    buss_23_24_balance[3]>=0 AND buss_23_24_balance[3]<1024 AND
+                                                                                                    buss_23_24_balance[4]>=0 AND buss_23_24_balance[4]<1024 AND
+                                                                                                    buss_23_24_balance[5]>=0 AND buss_23_24_balance[5]<1024 AND
+                                                                                                    buss_23_24_balance[6]>=0 AND buss_23_24_balance[6]<1024 AND
+                                                                                                    buss_23_24_balance[7]>=0 AND buss_23_24_balance[7]<1024),
   buss_23_24_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_25_26_level float NOT NULL DEFAULT 0,
-  buss_25_26_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_25_26_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_25_26_balance smallint NOT NULL DEFAULT 512 CHECK(buss_25_26_balance>=0 AND buss_25_26_balance<1024),
+  buss_25_26_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_25_26_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_25_26_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_25_26_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_25_26_balance[0]>=0 AND buss_25_26_balance[0]<1024 AND
+                                                                                                    buss_25_26_balance[1]>=0 AND buss_25_26_balance[1]<1024 AND
+                                                                                                    buss_25_26_balance[2]>=0 AND buss_25_26_balance[2]<1024 AND
+                                                                                                    buss_25_26_balance[3]>=0 AND buss_25_26_balance[3]<1024 AND
+                                                                                                    buss_25_26_balance[4]>=0 AND buss_25_26_balance[4]<1024 AND
+                                                                                                    buss_25_26_balance[5]>=0 AND buss_25_26_balance[5]<1024 AND
+                                                                                                    buss_25_26_balance[6]>=0 AND buss_25_26_balance[6]<1024 AND
+                                                                                                    buss_25_26_balance[7]>=0 AND buss_25_26_balance[7]<1024),
   buss_25_26_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_27_28_level float NOT NULL DEFAULT 0,
-  buss_27_28_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_27_28_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_27_28_balance smallint NOT NULL DEFAULT 512 CHECK(buss_27_28_balance>=0 AND buss_27_28_balance<1024),
+  buss_27_28_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_27_28_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_27_28_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_27_28_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_27_28_balance[0]>=0 AND buss_27_28_balance[0]<1024 AND
+                                                                                                    buss_27_28_balance[1]>=0 AND buss_27_28_balance[1]<1024 AND
+                                                                                                    buss_27_28_balance[2]>=0 AND buss_27_28_balance[2]<1024 AND
+                                                                                                    buss_27_28_balance[3]>=0 AND buss_27_28_balance[3]<1024 AND
+                                                                                                    buss_27_28_balance[4]>=0 AND buss_27_28_balance[4]<1024 AND
+                                                                                                    buss_27_28_balance[5]>=0 AND buss_27_28_balance[5]<1024 AND
+                                                                                                    buss_27_28_balance[6]>=0 AND buss_27_28_balance[6]<1024 AND
+                                                                                                    buss_27_28_balance[7]>=0 AND buss_27_28_balance[7]<1024),
   buss_27_28_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_29_30_level float NOT NULL DEFAULT 0,
-  buss_29_30_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_29_30_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_29_30_balance smallint NOT NULL DEFAULT 512 CHECK(buss_29_30_balance>=0 AND buss_29_30_balance<1024),
+  buss_29_30_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_29_30_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_29_30_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_29_30_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_29_30_balance[0]>=0 AND buss_29_30_balance[0]<1024 AND
+                                                                                                    buss_29_30_balance[1]>=0 AND buss_29_30_balance[1]<1024 AND
+                                                                                                    buss_29_30_balance[2]>=0 AND buss_29_30_balance[2]<1024 AND
+                                                                                                    buss_29_30_balance[3]>=0 AND buss_29_30_balance[3]<1024 AND
+                                                                                                    buss_29_30_balance[4]>=0 AND buss_29_30_balance[4]<1024 AND
+                                                                                                    buss_29_30_balance[5]>=0 AND buss_29_30_balance[5]<1024 AND
+                                                                                                    buss_29_30_balance[6]>=0 AND buss_29_30_balance[6]<1024 AND
+                                                                                                    buss_29_30_balance[7]>=0 AND buss_29_30_balance[7]<1024),
   buss_29_30_assignment boolean NOT NULL DEFAULT TRUE,
-  buss_31_32_level float NOT NULL DEFAULT 0,
-  buss_31_32_on_off boolean NOT NULL DEFAULT FALSE,
-  buss_31_32_pre_post boolean NOT NULL DEFAULT FALSE,
-  buss_31_32_balance smallint NOT NULL DEFAULT 512 CHECK(buss_31_32_balance>=0 AND buss_31_32_balance<1024),
-  buss_31_32_assignment boolean NOT NULL DEFAULT TRUE
+  buss_31_32_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
+  buss_31_32_on_off boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_31_32_pre_post boolean[8] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  buss_31_32_balance smallint[8] NOT NULL DEFAULT ARRAY[512, 512, 512, 512, 512, 512, 512, 512] CHECK(buss_31_32_balance[0]>=0 AND buss_31_32_balance[0]<1024 AND
+                                                                                                    buss_31_32_balance[1]>=0 AND buss_31_32_balance[1]<1024 AND
+                                                                                                    buss_31_32_balance[2]>=0 AND buss_31_32_balance[2]<1024 AND
+                                                                                                    buss_31_32_balance[3]>=0 AND buss_31_32_balance[3]<1024 AND
+                                                                                                    buss_31_32_balance[4]>=0 AND buss_31_32_balance[4]<1024 AND
+                                                                                                    buss_31_32_balance[5]>=0 AND buss_31_32_balance[5]<1024 AND
+                                                                                                    buss_31_32_balance[6]>=0 AND buss_31_32_balance[6]<1024 AND
+                                                                                                    buss_31_32_balance[7]>=0 AND buss_31_32_balance[7]<1024),
+  buss_31_32_assignment boolean NOT NULL DEFAULT TRUE,
 );
 
 CREATE TABLE buss_config (
@@ -365,7 +525,6 @@ CREATE TABLE dest_config (
   source integer NOT NULL DEFAULT 0,
   mix_minus_source integer NOT NULL DEFAULT 0
 );
-CREATE UNIQUE INDEX dest_config_unique_id ON dest_config (pos);
 
 CREATE TABLE db_to_position (
   db float PRIMARY KEY CHECK(db >= -140.0 AND db < 10.0),

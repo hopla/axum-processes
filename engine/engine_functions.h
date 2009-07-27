@@ -257,6 +257,8 @@
 #define MODULE_FUNCTION_CONTROL_4_RESET         180
 #define MODULE_FUNCTION_PEAK                  181
 #define MODULE_FUNCTION_SIGNAL                182
+#define MODULE_FUNCTION_SOURCE_C              183
+#define MODULE_FUNCTION_SOURCE_D              184
 
 #define NUMBER_OF_MODULE_FUNCTIONS              183
 #define  NUMBER_OF_MODULES                    128

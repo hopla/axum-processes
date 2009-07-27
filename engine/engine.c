@@ -1068,6 +1068,16 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                           CurrentSource = AxumData.ModuleData[ModuleNr].SourceB;
                         }
                         break;
+                        case MODULE_FUNCTION_SOURCE_C:
+                        {
+                          CurrentSource = AxumData.ModuleData[ModuleNr].SourceC;
+                        }
+                        break;
+                        case MODULE_FUNCTION_SOURCE_D:
+                        {
+                          CurrentSource = AxumData.ModuleData[ModuleNr].SourceD;
+                        }
+                        break;
                       }
 
                       if (Axum_MixMinusSourceUsed(CurrentSource-1) != -1)
@@ -7329,11 +7339,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         {
           if (AxumData.ModuleData[ModuleNr].SourceA != 0)
           {
-            if (  (AxumData.ModuleData[ModuleNr].Source == AxumData.ModuleData[ModuleNr].SourceA) &&
-                  (AxumData.ModuleData[ModuleNr].Insert == AxumData.ModuleData[ModuleNr].InsertOnOffA) &&
-                  (AxumData.ModuleData[ModuleNr].Filter.On == AxumData.ModuleData[ModuleNr].FilterOnOffA) &&
-                  (AxumData.ModuleData[ModuleNr].EQOn == AxumData.ModuleData[ModuleNr].EQOnOffA) &&
-                  (AxumData.ModuleData[ModuleNr].DynamicsOn == AxumData.ModuleData[ModuleNr].DynamicsOnOffA))
+            if (AxumData.ModuleData[ModuleNr].Source == AxumData.ModuleData[ModuleNr].SourceA)
             {
               Active = 1;
             }
@@ -7344,11 +7350,29 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         {
           if (AxumData.ModuleData[ModuleNr].SourceB != 0)
           {
-            if (  (AxumData.ModuleData[ModuleNr].Source == AxumData.ModuleData[ModuleNr].SourceB) &&
-                  (AxumData.ModuleData[ModuleNr].Insert == AxumData.ModuleData[ModuleNr].InsertOnOffB) &&
-                  (AxumData.ModuleData[ModuleNr].Filter.On == AxumData.ModuleData[ModuleNr].FilterOnOffB) &&
-                  (AxumData.ModuleData[ModuleNr].EQOn == AxumData.ModuleData[ModuleNr].EQOnOffB) &&
-                  (AxumData.ModuleData[ModuleNr].DynamicsOn == AxumData.ModuleData[ModuleNr].DynamicsOnOffB))
+            if (AxumData.ModuleData[ModuleNr].Source == AxumData.ModuleData[ModuleNr].SourceB)
+            {
+              Active = 1;
+            }
+          }
+        }
+        break;
+        case MODULE_FUNCTION_SOURCE_C: //Source C
+        {
+          if (AxumData.ModuleData[ModuleNr].SourceC != 0)
+          {
+            if (AxumData.ModuleData[ModuleNr].Source == AxumData.ModuleData[ModuleNr].SourceC)
+            {
+              Active = 1;
+            }
+          }
+        }
+        break;
+        case MODULE_FUNCTION_SOURCE_D: //Source D
+        {
+          if (AxumData.ModuleData[ModuleNr].SourceD != 0)
+          {
+            if (AxumData.ModuleData[ModuleNr].Source == AxumData.ModuleData[ModuleNr].SourceD)
             {
               Active = 1;
             }
@@ -12955,34 +12979,7 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
     {
       AxumData.ModuleData[ModuleNr].Source = NewSource;
 
-      //eventual 'reset' the A/B values
-      if ((NewSource == AxumData.ModuleData[ModuleNr].SourceA) || (NewSource == AxumData.ModuleData[ModuleNr].SourceB))
-      {
-        if (ApplyAorBSettings)
-        {
-          if (NewSource == AxumData.ModuleData[ModuleNr].SourceA)
-          {
-            AxumData.ModuleData[ModuleNr].Insert = AxumData.ModuleData[ModuleNr].InsertOnOffA;
-            AxumData.ModuleData[ModuleNr].Filter.On = AxumData.ModuleData[ModuleNr].FilterOnOffA;
-            AxumData.ModuleData[ModuleNr].EQOn = AxumData.ModuleData[ModuleNr].EQOnOffA;
-            AxumData.ModuleData[ModuleNr].DynamicsOn = AxumData.ModuleData[ModuleNr].DynamicsOnOffA;
-          }
-          else if (NewSource == AxumData.ModuleData[ModuleNr].SourceB)
-          {
-            AxumData.ModuleData[ModuleNr].Insert = AxumData.ModuleData[ModuleNr].InsertOnOffB;
-            AxumData.ModuleData[ModuleNr].Filter.On = AxumData.ModuleData[ModuleNr].FilterOnOffB;
-            AxumData.ModuleData[ModuleNr].EQOn = AxumData.ModuleData[ModuleNr].EQOnOffB;
-            AxumData.ModuleData[ModuleNr].DynamicsOn = AxumData.ModuleData[ModuleNr].DynamicsOnOffB;
-          }
-
-          SetAxum_ModuleProcessing(ModuleNr);
-          for (int cntBand=0; cntBand<6; cntBand++)
-          {
-            AxumData.ModuleData[ModuleNr].EQBand[cntBand].On = AxumData.ModuleData[ModuleNr].EQOn;
-            SetAxum_EQ(ModuleNr, cntBand);
-          }
-        }
-      }
+      //eventual 'reset' set a preset?
 
       SetAxum_ModuleSource(ModuleNr);
       SetAxum_ModuleMixMinus(ModuleNr, OldSource);
@@ -13145,6 +13142,7 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
       }
     }
   }
+  ApplyAorBSettings = 0;
 }
 
 void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock)
@@ -13300,6 +13298,68 @@ void initialize_axum_data_struct()
       AxumData.SourceData[cntSource].InputData[cntInput].MambaNetAddress = 0x00000000;
       AxumData.SourceData[cntSource].InputData[cntInput].SubChannel = -1;
     }
+
+    AxumData.SourceData[cntSource].Preset.UseGain = false;
+    AxumData.SourceData[cntSource].Preset.Gain = 0;
+
+    AxumData.SourceData[cntSource].Preset.UseFilter = false;
+    AxumData.SourceData[cntSource].Preset.Filter.Level = 0;
+    AxumData.SourceData[cntSource].Preset.Filter.Frequency = 80;
+    AxumData.SourceData[cntSource].Preset.Filter.Bandwidth = 1;
+    AxumData.SourceData[cntSource].Preset.Filter.Slope = 1;
+    AxumData.SourceData[cntSource].Preset.Filter.Type = HPF;
+    AxumData.SourceData[cntSource].Preset.FilterOnOff = false;
+
+    AxumData.SourceData[cntSource].Preset.UseInsert = false;
+    AxumData.SourceData[cntSource].Preset.InsertSource = 0;
+    AxumData.SourceData[cntSource].Preset.InsertOnOff = false;
+
+    AxumData.SourceData[cntSource].Preset.UseEQ = false;
+
+    AxumData.SourceData[cntSource].Preset.EQBand[0].Level = 0;
+    AxumData.SourceData[cntSource].Preset.EQBand[0].Frequency = 12000;
+    AxumData.SourceData[cntSource].Preset.EQBand[0].Bandwidth = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[0].Slope = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[0].Type = PEAKINGEQ;
+
+    AxumData.SourceData[cntSource].Preset.EQBand[1].Level = 0;
+    AxumData.SourceData[cntSource].Preset.EQBand[1].Frequency = 4000;
+    AxumData.SourceData[cntSource].Preset.EQBand[1].Bandwidth = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[1].Slope = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[1].Type = PEAKINGEQ;
+
+    AxumData.SourceData[cntSource].Preset.EQBand[2].Level = 0;
+    AxumData.SourceData[cntSource].Preset.EQBand[2].Frequency = 800;
+    AxumData.SourceData[cntSource].Preset.EQBand[2].Bandwidth = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[2].Slope = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[2].Type = PEAKINGEQ;
+
+    AxumData.SourceData[cntSource].Preset.EQBand[3].Level = 0;
+    AxumData.SourceData[cntSource].Preset.EQBand[3].Frequency = 120;
+    AxumData.SourceData[cntSource].Preset.EQBand[3].Bandwidth = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[3].Slope = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[3].Type = LOWSHELF;
+
+    AxumData.SourceData[cntSource].Preset.EQBand[4].Level = 0;
+    AxumData.SourceData[cntSource].Preset.EQBand[4].Frequency = 300;
+    AxumData.SourceData[cntSource].Preset.EQBand[4].Bandwidth = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[4].Slope = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[4].Type = HPF;
+
+    AxumData.SourceData[cntSource].Preset.EQBand[5].Level = 0;
+    AxumData.SourceData[cntSource].Preset.EQBand[5].Frequency = 3000;
+    AxumData.SourceData[cntSource].Preset.EQBand[5].Bandwidth = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[5].Slope = 1;
+    AxumData.SourceData[cntSource].Preset.EQBand[5].Type = LPF;
+    AxumData.SourceData[cntSource].Preset.EQOnOff = false;
+
+    AxumData.SourceData[cntSource].Preset.UseDynamics = false;
+    AxumData.SourceData[cntSource].Preset.Dynamics = 0;
+    AxumData.SourceData[cntSource].Preset.DynamicsOnOff = false;
+
+    AxumData.SourceData[cntSource].Preset.UseRouting = false;
+    AxumData.SourceData[cntSource].Preset.RoutingPreset = 0;
+
     for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
     {
       AxumData.SourceData[cntSource].Redlight[cntRedlight] = 0;
@@ -13346,9 +13406,10 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].Source = 0;
     AxumData.ModuleData[cntModule].SourceA = 0;
     AxumData.ModuleData[cntModule].SourceB = 0;
+    AxumData.ModuleData[cntModule].SourceC = 0;
+    AxumData.ModuleData[cntModule].SourceD = 0;
     AxumData.ModuleData[cntModule].Insert = 0;
-    AxumData.ModuleData[cntModule].InsertOnOffA = 0;
-    AxumData.ModuleData[cntModule].InsertOnOffB = 0;
+    AxumData.ModuleData[cntModule].InsertOnOff = 0;
     AxumData.ModuleData[cntModule].Gain = 0;
     AxumData.ModuleData[cntModule].PhaseReverse = 0;
 
@@ -13358,8 +13419,7 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].Filter.Bandwidth = 1;
     AxumData.ModuleData[cntModule].Filter.Slope = 1;
     AxumData.ModuleData[cntModule].Filter.Type = HPF;
-    AxumData.ModuleData[cntModule].FilterOnOffA = 0;
-    AxumData.ModuleData[cntModule].FilterOnOffB = 0;
+    AxumData.ModuleData[cntModule].FilterOnOff = 0;
 
     AxumData.ModuleData[cntModule].EQBand[0].On = 1;
     AxumData.ModuleData[cntModule].EQBand[0].Level = 0;
@@ -13404,13 +13464,11 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].EQBand[5].Type = LPF;
 
     AxumData.ModuleData[cntModule].EQOn = 1;
-    AxumData.ModuleData[cntModule].EQOnOffA = 0;
-    AxumData.ModuleData[cntModule].EQOnOffB = 0;
+    AxumData.ModuleData[cntModule].EQOnOff = 0;
 
     AxumData.ModuleData[cntModule].Dynamics = 0;
     AxumData.ModuleData[cntModule].DynamicsOn = 0;
-    AxumData.ModuleData[cntModule].DynamicsOnOffA = 0;
-    AxumData.ModuleData[cntModule].DynamicsOnOffB = 0;
+    AxumData.ModuleData[cntModule].DynamicsOnOff = 0;
 
     AxumData.ModuleData[cntModule].Panorama = 512;
     AxumData.ModuleData[cntModule].Mono = 0;
@@ -13430,6 +13488,14 @@ void initialize_axum_data_struct()
       AxumData.ModuleData[cntModule].Buss[cntBuss].Balance = 512;
       AxumData.ModuleData[cntModule].Buss[cntBuss].PreModuleLevel = 0;
       AxumData.ModuleData[cntModule].Buss[cntBuss].Active = 1;
+
+      for (int cntPreset=0; cntPreset<8; cntPreset++)
+      {
+        AxumData.ModuleData[cntModule].RoutingPreset[cntPreset][cntBuss].Level = 0; //0dB
+        AxumData.ModuleData[cntModule].RoutingPreset[cntPreset][cntBuss].On = 0;
+        AxumData.ModuleData[cntModule].RoutingPreset[cntPreset][cntBuss].Balance = 512;
+        AxumData.ModuleData[cntModule].RoutingPreset[cntPreset][cntBuss].PreModuleLevel = 0;
+      }
     }
   }
 

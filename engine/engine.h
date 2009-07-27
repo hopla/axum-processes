@@ -38,8 +38,43 @@ typedef struct
 
 typedef struct
 {
+  float Range;
+  float Level;
+  unsigned int Frequency;
+  float Bandwidth;
+  float Slope;
+  FilterType Type;
+} AXUM_EQ_BAND_PRESET_STRUCT;
+
+typedef struct
+{
   char SourceName[32];
   AXUM_INPUT_DATA_STRUCT InputData[8];
+
+  struct {
+    bool UseGain;
+    float Gain;
+
+    bool UseFilter;
+    AXUM_EQ_BAND_PRESET_STRUCT Filter;
+    bool FilterOnOff;
+
+    bool UseInsert;
+    unsigned int InsertSource;
+    bool InsertOnOff;
+
+    bool UseEQ;
+    AXUM_EQ_BAND_PRESET_STRUCT EQBand[6];
+    bool EQOnOff;
+
+    bool UseDynamics;
+    char Dynamics;
+    bool DynamicsOnOff;
+
+    bool UseRouting;
+    unsigned char RoutingPreset;
+  } Preset;
+
   bool Redlight[8];
   bool MonitorMute[16];
   char Active;
@@ -105,27 +140,33 @@ typedef struct
 
 typedef struct
 {
+  float Level;
+  unsigned char On;
+  int Balance;
+  unsigned char PreModuleLevel;
+} AXUM_ROUTING_PRESET_STRUCT;
+
+typedef struct
+{
   unsigned int Source;
   unsigned int SourceA;
   unsigned int SourceB;
+  unsigned int SourceC;
+  unsigned int SourceD;
   unsigned int InsertSource;
   unsigned char Insert;
-  bool InsertOnOffA;
-  bool InsertOnOffB;
+  bool InsertOnOff;
   float Gain;
   bool PhaseReverse;
   AXUM_EQ_BAND_DATA_STRUCT Filter;
-  bool FilterOnOffA;
-  bool FilterOnOffB;
+  bool FilterOnOff;
   AXUM_EQ_BAND_DATA_STRUCT EQBand[6];
   bool EQOn;
-  bool EQOnOffA;
-  bool EQOnOffB;
+  bool EQOnOff;
 
   char Dynamics;
   bool DynamicsOn;
-  bool DynamicsOnOffA;
-  bool DynamicsOnOffB;
+  bool DynamicsOnOff;
 
   int Panorama;
   char Mono;
@@ -138,6 +179,8 @@ typedef struct
   bool Peak;
 
   AXUM_BUSS_DATA_STRUCT Buss[16];
+
+  AXUM_ROUTING_PRESET_STRUCT RoutingPreset[8][16];
 
 } AXUM_MODULE_DATA_STRUCT;
 
