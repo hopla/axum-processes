@@ -9300,7 +9300,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         unsigned char Active = 0;
         unsigned char TransmitData[32];
         unsigned char CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2;
-        if (AxumData.MasterControl1Mode == CorrespondingControlMode)
+        if (AxumData.MasterControl3Mode == CorrespondingControlMode)
         {
           Active = 1;
         }
@@ -9319,7 +9319,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         unsigned char Active = 0;
         unsigned char TransmitData[32];
         unsigned char CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2;
-        if (AxumData.MasterControl1Mode == CorrespondingControlMode)
+        if (AxumData.MasterControl4Mode == CorrespondingControlMode)
         {
           Active = 1;
         }
@@ -12205,7 +12205,7 @@ void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsi
     case MASTER_CONTROL_MODE_BUSS_29_30:
     case MASTER_CONTROL_MODE_BUSS_31_32:
     { //master level
-      int BussNr = AxumData.MasterControl1Mode-MASTER_CONTROL_MODE_BUSS_1_2;
+      int BussNr = MasterControlMode-MASTER_CONTROL_MODE_BUSS_1_2;
       float dB = Position2dB[Position];
       //dB -= AxumData.LevelReserve;
       dB -= 10;
@@ -12257,7 +12257,7 @@ void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsi
     case MASTER_CONTROL_MODE_BUSS_29_30:
     case MASTER_CONTROL_MODE_BUSS_31_32:
     { //master level
-      int BussNr = AxumData.MasterControl1Mode-MASTER_CONTROL_MODE_BUSS_1_2;
+      int BussNr = MasterControlMode-MASTER_CONTROL_MODE_BUSS_1_2;
       AxumData.BussMasterData[BussNr].Level += TempData;
       if (AxumData.BussMasterData[BussNr].Level<-140)
       {
@@ -12296,22 +12296,22 @@ void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr,
   {
   case GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET:
   {
-    MasterControlMode = AxumData.MasterControl1Mode;
+    MasterControlMode = MasterControlMode;
   }
   break;
   case GLOBAL_FUNCTION_MASTER_CONTROL_2_RESET:
   {
-    MasterControlMode = AxumData.MasterControl2Mode;
+    MasterControlMode = MasterControlMode;
   }
   break;
   case GLOBAL_FUNCTION_MASTER_CONTROL_3_RESET:
   {
-    MasterControlMode = AxumData.MasterControl3Mode;
+    MasterControlMode = MasterControlMode;
   }
   break;
   case GLOBAL_FUNCTION_MASTER_CONTROL_4_RESET:
   {
-    MasterControlMode = AxumData.MasterControl4Mode;
+    MasterControlMode = MasterControlMode;
   }
   break;
   }
@@ -12347,7 +12347,7 @@ void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr,
       case MASTER_CONTROL_MODE_BUSS_29_30:
       case MASTER_CONTROL_MODE_BUSS_31_32:
       { //master level
-        int BussNr = AxumData.MasterControl1Mode - MASTER_CONTROL_MODE_BUSS_1_2;
+        int BussNr = MasterControlMode - MASTER_CONTROL_MODE_BUSS_1_2;
         AxumData.BussMasterData[BussNr].Level = 0;
 
         SetAxum_BussMasterLevels();
@@ -12402,7 +12402,7 @@ void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned 
   break;
   }
 
-  switch (AxumData.MasterControl1Mode)
+  switch (MasterControlMode)
   {
   case MASTER_CONTROL_MODE_BUSS_1_2:
   case MASTER_CONTROL_MODE_BUSS_3_4:
@@ -12421,7 +12421,7 @@ void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned 
   case MASTER_CONTROL_MODE_BUSS_29_30:
   case MASTER_CONTROL_MODE_BUSS_31_32:
   { //busses
-    int BussNr = AxumData.MasterControl1Mode-MASTER_CONTROL_MODE_BUSS_1_2;
+    int BussNr = MasterControlMode-MASTER_CONTROL_MODE_BUSS_1_2;
     MasterLevel = AxumData.BussMasterData[BussNr].Level;
   }
   break;
