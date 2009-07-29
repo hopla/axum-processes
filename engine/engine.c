@@ -10814,7 +10814,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     case MODULE_CONTROL_MODE_EQ_BAND_5_LEVEL:
     case MODULE_CONTROL_MODE_EQ_BAND_6_LEVEL:
     {   //EQ level
-      int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL)/(MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL);
+      int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL)/(MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL);
       AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level += (float)TempData/10;
       if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level<-AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range)
       {
@@ -10842,7 +10842,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     case MODULE_CONTROL_MODE_EQ_BAND_5_FREQUENCY:
     case MODULE_CONTROL_MODE_EQ_BAND_6_FREQUENCY:
     {   //EQ frequency
-      int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY)/(MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY);
+      int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY)/(MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY);
       if (TempData>=0)
       {
         AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency *= 1+((float)TempData/100);
@@ -10878,7 +10878,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     case MODULE_CONTROL_MODE_EQ_BAND_5_BANDWIDTH:
     case MODULE_CONTROL_MODE_EQ_BAND_6_BANDWIDTH:
     {   //EQ Bandwidth
-      int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH)/(MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH);
+      int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH)/(MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH);
 
       AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth += (float)TempData/10;
 
@@ -10908,7 +10908,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     case MODULE_CONTROL_MODE_EQ_BAND_5_TYPE:
     case MODULE_CONTROL_MODE_EQ_BAND_6_TYPE:
     {   //EQ type
-      int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE)/(MODULE_CONTROL_MODE_EQ_BAND_2_TYPE-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE);
+      int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE)/(MODULE_CONTROL_MODE_EQ_BAND_2_TYPE-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE);
       int Type = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type;
 
       Type += TempData;
@@ -11060,7 +11060,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     case MODULE_CONTROL_MODE_BUSS_29_30:
     case MODULE_CONTROL_MODE_BUSS_31_32:
     {   //Aux
-      int BussNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
+      int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
       AxumData.ModuleData[ModuleNr].Buss[BussNr].Level += TempData;
       if (AxumData.ModuleData[ModuleNr].Buss[BussNr].Level < -140)
       {
@@ -11101,7 +11101,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     case MODULE_CONTROL_MODE_BUSS_29_30_BALANCE:
     case MODULE_CONTROL_MODE_BUSS_31_32_BALANCE:
     {
-      int BussNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE)/(MODULE_CONTROL_MODE_BUSS_3_4_BALANCE-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE);
+      int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE)/(MODULE_CONTROL_MODE_BUSS_3_4_BALANCE-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE);
 
 
       AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance += TempData;
@@ -11385,7 +11385,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       case MODULE_CONTROL_MODE_EQ_BAND_5_LEVEL:
       case MODULE_CONTROL_MODE_EQ_BAND_6_LEVEL:
       {   //EQ Level
-        int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL)/(MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL);
+        int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL)/(MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL);
         AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level = 0;
         SetAxum_EQ(ModuleNr, BandNr);
 
@@ -11406,7 +11406,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       case MODULE_CONTROL_MODE_EQ_BAND_5_FREQUENCY:
       case MODULE_CONTROL_MODE_EQ_BAND_6_FREQUENCY:
       {   //EQ frequency
-        int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY)/(MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY);
+        int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY)/(MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY);
         AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency = AxumData.ModuleData[ModuleNr].EQBand[BandNr].DefaultFrequency;
 
         SetAxum_EQ(ModuleNr, BandNr);
@@ -11428,7 +11428,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       case MODULE_CONTROL_MODE_EQ_BAND_5_BANDWIDTH:
       case MODULE_CONTROL_MODE_EQ_BAND_6_BANDWIDTH:
       {   //EQ bandwidth
-        int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH)/(MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH);
+        int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH)/(MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH);
         AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = AxumData.ModuleData[ModuleNr].EQBand[BandNr].DefaultBandwidth;
         SetAxum_EQ(ModuleNr, BandNr);
 
@@ -11449,7 +11449,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       case MODULE_CONTROL_MODE_EQ_BAND_5_TYPE:
       case MODULE_CONTROL_MODE_EQ_BAND_6_TYPE:
       {   //EQ Type
-        int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE)/(MODULE_CONTROL_MODE_EQ_BAND_2_TYPE-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE);
+        int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE)/(MODULE_CONTROL_MODE_EQ_BAND_2_TYPE-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE);
         AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type = AxumData.ModuleData[ModuleNr].EQBand[BandNr].DefaultType;
         SetAxum_EQ(ModuleNr, BandNr);
 
@@ -11558,7 +11558,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       case MODULE_CONTROL_MODE_BUSS_29_30:
       case MODULE_CONTROL_MODE_BUSS_31_32:
       {   //Buss
-        int BussNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
+        int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
         AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
         SetAxum_BussLevels(ModuleNr);
         SetAxum_ModuleMixMinus(ModuleNr, 0);
@@ -11601,7 +11601,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       case MODULE_CONTROL_MODE_BUSS_29_30_BALANCE:
       case MODULE_CONTROL_MODE_BUSS_31_32_BALANCE:
       {   //Buss
-        int BussNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
+        int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
 
         AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance = 512;
         SetAxum_BussLevels(ModuleNr);
@@ -11716,7 +11716,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   case MODULE_CONTROL_MODE_EQ_BAND_5_LEVEL:
   case MODULE_CONTROL_MODE_EQ_BAND_6_LEVEL:
   {
-    int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL)/(MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL);
+    int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL)/(MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL);
     sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level);
   }
   break;
@@ -11727,7 +11727,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   case MODULE_CONTROL_MODE_EQ_BAND_5_FREQUENCY:
   case MODULE_CONTROL_MODE_EQ_BAND_6_FREQUENCY:
   {
-    int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY)/(MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY);
+    int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY)/(MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY);
     sprintf(LCDText, "%5dHz", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency);
   }
   break;
@@ -11738,7 +11738,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   case MODULE_CONTROL_MODE_EQ_BAND_5_BANDWIDTH:
   case MODULE_CONTROL_MODE_EQ_BAND_6_BANDWIDTH:
   {
-    int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH)/(MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH);
+    int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH)/(MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH);
     sprintf(LCDText, "%5.1f Q", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth);
   }
   break;
@@ -11749,7 +11749,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   case MODULE_CONTROL_MODE_EQ_BAND_5_TYPE:
   case MODULE_CONTROL_MODE_EQ_BAND_6_TYPE:
   {
-    int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE)/(MODULE_CONTROL_MODE_EQ_BAND_2_TYPE-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE);
+    int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE)/(MODULE_CONTROL_MODE_EQ_BAND_2_TYPE-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE);
     switch (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type)
     {
     case OFF:
@@ -11859,7 +11859,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   case MODULE_CONTROL_MODE_BUSS_29_30:
   case MODULE_CONTROL_MODE_BUSS_31_32:
   {
-    int BussNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
+    int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
     if (AxumData.ModuleData[ModuleNr].Buss[BussNr].On)
     {
       sprintf(LCDText, " %4.0f dB", AxumData.ModuleData[ModuleNr].Buss[BussNr].Level);
@@ -11887,7 +11887,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   case MODULE_CONTROL_MODE_BUSS_29_30_BALANCE:
   case MODULE_CONTROL_MODE_BUSS_31_32_BALANCE:
   {
-    int BussNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE)/(MODULE_CONTROL_MODE_BUSS_3_4_BALANCE-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE);
+    int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE)/(MODULE_CONTROL_MODE_BUSS_3_4_BALANCE-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE);
 
     unsigned char Types[4] = {'[','|','|',']'};
     unsigned char Pos = AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance/128;
@@ -12023,7 +12023,7 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
   case MODULE_CONTROL_MODE_EQ_BAND_5_LEVEL:
   case MODULE_CONTROL_MODE_EQ_BAND_6_LEVEL:
   {
-    int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL)/(MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL);
+    int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL)/(MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL);
     sprintf(LCDText,"EQ%d lvl ", BandNr+1);
   }
   break;
@@ -12034,7 +12034,7 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
   case MODULE_CONTROL_MODE_EQ_BAND_5_FREQUENCY:
   case MODULE_CONTROL_MODE_EQ_BAND_6_FREQUENCY:
   {
-    int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY)/(MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY);
+    int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY)/(MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY);
     sprintf(LCDText,"EQ%d freq", BandNr+1);
   }
   break;
@@ -12045,7 +12045,7 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
   case MODULE_CONTROL_MODE_EQ_BAND_5_BANDWIDTH:
   case MODULE_CONTROL_MODE_EQ_BAND_6_BANDWIDTH:
   {
-    int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH)/(MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH);
+    int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH)/(MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH);
     sprintf(LCDText," EQ%d Q  ", BandNr+1);
   }
   break;
@@ -12056,7 +12056,7 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
   case MODULE_CONTROL_MODE_EQ_BAND_5_TYPE:
   case MODULE_CONTROL_MODE_EQ_BAND_6_TYPE:
   {
-    int BandNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE)/(MODULE_CONTROL_MODE_EQ_BAND_2_TYPE-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE);
+    int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE)/(MODULE_CONTROL_MODE_EQ_BAND_2_TYPE-MODULE_CONTROL_MODE_EQ_BAND_1_TYPE);
     sprintf(LCDText,"EQ%d type", BandNr+1);
   }
   break;
@@ -12092,7 +12092,7 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
   case MODULE_CONTROL_MODE_BUSS_29_30:
   case MODULE_CONTROL_MODE_BUSS_31_32:
   {
-    int BussNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
+    int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
     strncpy(LCDText, AxumData.BussMasterData[BussNr].Label, 8);
   }
   break;
@@ -12113,7 +12113,7 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
   case MODULE_CONTROL_MODE_BUSS_29_30_BALANCE:
   case MODULE_CONTROL_MODE_BUSS_31_32_BALANCE:
   {
-    int BussNr = (AxumData.Control1Mode-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE)/(MODULE_CONTROL_MODE_BUSS_3_4_BALANCE-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE);
+    int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE)/(MODULE_CONTROL_MODE_BUSS_3_4_BALANCE-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE);
     strncpy(LCDText, AxumData.BussMasterData[BussNr].Label, 8);
   }
   break;
