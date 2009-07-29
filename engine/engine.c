@@ -5871,7 +5871,7 @@ void Timer100HzDone(int Value)
     }
 
     //monitor buss audio level
-    for (int cntMonitorBuss=0; cntMonitorBuss<2; cntMonitorBuss++)
+    for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
     {
       CheckObjectsToSent(0x02000000 | (cntMonitorBuss<<12) | MONITOR_BUSS_FUNCTION_AUDIO_LEVEL_LEFT);
       CheckObjectsToSent(0x02000000 | (cntMonitorBuss<<12) | MONITOR_BUSS_FUNCTION_AUDIO_LEVEL_RIGHT);
