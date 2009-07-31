@@ -510,7 +510,15 @@ CREATE TABLE global_config (
   samplerate integer NOT NULL,
   ext_clock boolean NOT NULL,
   headroom float NOT NULL,
-  level_reserve float NOT NULL
+  level_reserve float NOT NULL,
+  routing_preset_1_label varchar(32) NOT NULL DEFAULT 'Default',
+  routing_preset_2_label varchar(32) NOT NULL DEFAULT 'Preset 2',
+  routing_preset_3_label varchar(32) NOT NULL DEFAULT 'Preset 3',
+  routing_preset_4_label varchar(32) NOT NULL DEFAULT 'Preset 4',
+  routing_preset_5_label varchar(32) NOT NULL DEFAULT 'Preset 5',
+  routing_preset_6_label varchar(32) NOT NULL DEFAULT 'Preset 6',
+  routing_preset_7_label varchar(32) NOT NULL DEFAULT 'Preset 7',
+  routing_preset_8_label varchar(32) NOT NULL DEFAULT 'Preset 8'
 );
 
 CREATE TABLE dest_config (
