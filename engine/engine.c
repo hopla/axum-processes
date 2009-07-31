@@ -13503,10 +13503,10 @@ void initialize_axum_data_struct()
   AxumData.Control2Mode = MODULE_CONTROL_MODE_NONE;
   AxumData.Control3Mode = MODULE_CONTROL_MODE_NONE;
   AxumData.Control4Mode = MODULE_CONTROL_MODE_NONE;
-  AxumData.MasterControl1Mode = MASTER_CONTROL_MODE_BUSS_1_2;
-  AxumData.MasterControl2Mode = MASTER_CONTROL_MODE_BUSS_1_2;
-  AxumData.MasterControl3Mode = MASTER_CONTROL_MODE_BUSS_1_2;
-  AxumData.MasterControl4Mode = MASTER_CONTROL_MODE_BUSS_1_2;
+  AxumData.MasterControl1Mode = MASTER_CONTROL_MODE_NONE;
+  AxumData.MasterControl2Mode = MASTER_CONTROL_MODE_NONE;
+  AxumData.MasterControl3Mode = MASTER_CONTROL_MODE_NONE;
+  AxumData.MasterControl4Mode = MASTER_CONTROL_MODE_NONE;
 
   for (int cntBuss=0; cntBuss<16; cntBuss++)
   {
