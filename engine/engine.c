@@ -3886,7 +3886,14 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         char NewMasterControl1Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
 
                         unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl1Mode+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2);
-                        AxumData.MasterControl1Mode = NewMasterControl1Mode;
+                        if (AxumData.MasterControl1Mode != NewMasterControl1Mode)
+                        {
+                          AxumData.MasterControl1Mode = NewMasterControl1Mode;
+                        }
+                        else
+                        {
+                          AxumData.MasterControl1Mode = MASTER_CONTROL_MODE_NONE;
+                        }
                         CheckObjectsToSent(OldFunctionNumber);
                         CheckObjectsToSent(SensorReceiveFunctionNumber);
                         CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_1);
@@ -3911,7 +3918,14 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         char NewMasterControl2Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2;
 
                         unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl2Mode+GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2);
-                        AxumData.MasterControl2Mode = NewMasterControl2Mode;
+                        if (AxumData.MasterControl2Mode != NewMasterControl2Mode)
+                        {
+                          AxumData.MasterControl2Mode = NewMasterControl2Mode;
+                        }
+                        else
+                        {
+                          AxumData.MasterControl2Mode = MASTER_CONTROL_MODE_NONE;
+                        }
                         CheckObjectsToSent(OldFunctionNumber);
                         CheckObjectsToSent(SensorReceiveFunctionNumber);
                         CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_2);
@@ -3936,7 +3950,14 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         char NewMasterControl3Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2;
 
                         unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl3Mode+GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2);
-                        AxumData.MasterControl3Mode = NewMasterControl3Mode;
+                        if (AxumData.MasterControl3Mode != NewMasterControl3Mode)
+                        {
+                          AxumData.MasterControl3Mode = NewMasterControl3Mode;
+                        }
+                        else
+                        {
+                          AxumData.MasterControl3Mode = MASTER_CONTROL_MODE_NONE;
+                        }
                         CheckObjectsToSent(OldFunctionNumber);
                         CheckObjectsToSent(SensorReceiveFunctionNumber);
                         CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_3);
@@ -3944,7 +3965,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                     }
                   }
                   else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1))
-                  { //Master control 1 mode
+                  { //Master control 4 mode
                     printf("Master control 4 mode\n");
                     if (Data[3] == STATE_DATATYPE)
                     {
@@ -3961,7 +3982,14 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         char NewMasterControl4Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2;
 
                         unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl4Mode+GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2);
-                        AxumData.MasterControl4Mode = NewMasterControl4Mode;
+                        if (AxumData.MasterControl4Mode != NewMasterControl4Mode)
+                        {
+                          AxumData.MasterControl4Mode = NewMasterControl4Mode;
+                        }
+                        else
+                        {
+                          AxumData.MasterControl4Mode = MASTER_CONTROL_MODE_NONE;
+                        }
                         CheckObjectsToSent(OldFunctionNumber);
                         CheckObjectsToSent(SensorReceiveFunctionNumber);
                         CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_4);
@@ -12296,22 +12324,22 @@ void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr,
   {
   case GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET:
   {
-    MasterControlMode = MasterControlMode;
+    MasterControlMode = AxumData.MasterControl1Mode;
   }
   break;
   case GLOBAL_FUNCTION_MASTER_CONTROL_2_RESET:
   {
-    MasterControlMode = MasterControlMode;
+    MasterControlMode = AxumData.MasterControl2Mode;
   }
   break;
   case GLOBAL_FUNCTION_MASTER_CONTROL_3_RESET:
   {
-    MasterControlMode = MasterControlMode;
+    MasterControlMode = AxumData.MasterControl3Mode;
   }
   break;
   case GLOBAL_FUNCTION_MASTER_CONTROL_4_RESET:
   {
-    MasterControlMode = MasterControlMode;
+    MasterControlMode = AxumData.MasterControl4Mode;
   }
   break;
   }
