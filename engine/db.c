@@ -753,7 +753,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
           }
           else if (AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level < -AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range)
           {
-            AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level = AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range;
+            AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level = -AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range;
           }
 
           if (AxumApplicationAndDSPInitialized)
