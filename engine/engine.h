@@ -237,14 +237,14 @@ typedef struct
   AXUM_MODULE_DATA_STRUCT ModuleData[128];
   AXUM_BUSS_MASTER_DATA_STRUCT BussMasterData[16];
 
-  bool Control1Mode;
-  bool Control2Mode;
-  bool Control3Mode;
-  bool Control4Mode;
-  bool MasterControl1Mode;
-  bool MasterControl2Mode;
-  bool MasterControl3Mode;
-  bool MasterControl4Mode;
+  int Control1Mode;
+  int Control2Mode;
+  int Control3Mode;
+  int Control4Mode;
+  int MasterControl1Mode;
+  int MasterControl2Mode;
+  int MasterControl3Mode;
+  int MasterControl4Mode;
 
   bool Redlight[8];
   unsigned int Samplerate;

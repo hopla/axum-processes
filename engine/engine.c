@@ -3884,8 +3884,13 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       if (TempData)
                       {
                         char NewMasterControl1Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
+                        unsigned int OldFunctionNumber = 0x00000000;
 
-                        unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl1Mode+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2);
+                        if (AxumData.MasterControl1Mode != MASTER_CONTROL_MODE_NONE)
+                        {
+                          OldFunctionNumber = 0x04000000 | (AxumData.MasterControl1Mode+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2);
+                        }
+
                         if (AxumData.MasterControl1Mode != NewMasterControl1Mode)
                         {
                           AxumData.MasterControl1Mode = NewMasterControl1Mode;
@@ -3894,7 +3899,10 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         {
                           AxumData.MasterControl1Mode = MASTER_CONTROL_MODE_NONE;
                         }
-                        CheckObjectsToSent(OldFunctionNumber);
+                        if (OldFunctionNumber != 0x00000000)
+                        {
+                          CheckObjectsToSent(OldFunctionNumber);
+                        }
                         CheckObjectsToSent(SensorReceiveFunctionNumber);
                         CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_1);
                       }
@@ -3916,8 +3924,13 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       if (TempData)
                       {
                         char NewMasterControl2Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2;
+                        unsigned int OldFunctionNumber = 0x00000000;
 
-                        unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl2Mode+GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2);
+                        if (AxumData.MasterControl2Mode != MASTER_CONTROL_MODE_NONE)
+                        {
+                          OldFunctionNumber = 0x04000000 | (AxumData.MasterControl2Mode+GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2);
+                        }
+
                         if (AxumData.MasterControl2Mode != NewMasterControl2Mode)
                         {
                           AxumData.MasterControl2Mode = NewMasterControl2Mode;
@@ -3926,7 +3939,10 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         {
                           AxumData.MasterControl2Mode = MASTER_CONTROL_MODE_NONE;
                         }
-                        CheckObjectsToSent(OldFunctionNumber);
+                        if (OldFunctionNumber != 0x00000000)
+                        {
+                          CheckObjectsToSent(OldFunctionNumber);
+                        }
                         CheckObjectsToSent(SensorReceiveFunctionNumber);
                         CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_2);
                       }
@@ -3948,8 +3964,13 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       if (TempData)
                       {
                         char NewMasterControl3Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2;
+                        unsigned int OldFunctionNumber = 0x00000000;
 
-                        unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl3Mode+GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2);
+                        if (AxumData.MasterControl3Mode != MASTER_CONTROL_MODE_NONE)
+                        {
+                          OldFunctionNumber = 0x04000000 | (AxumData.MasterControl3Mode+GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2);
+                        }
+
                         if (AxumData.MasterControl3Mode != NewMasterControl3Mode)
                         {
                           AxumData.MasterControl3Mode = NewMasterControl3Mode;
@@ -3958,7 +3979,10 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         {
                           AxumData.MasterControl3Mode = MASTER_CONTROL_MODE_NONE;
                         }
-                        CheckObjectsToSent(OldFunctionNumber);
+                        if (OldFunctionNumber != 0x00000000)
+                        {
+                          CheckObjectsToSent(OldFunctionNumber);
+                        }
                         CheckObjectsToSent(SensorReceiveFunctionNumber);
                         CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_3);
                       }
@@ -3980,8 +4004,13 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       if (TempData)
                       {
                         char NewMasterControl4Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2;
+                        unsigned int OldFunctionNumber = 0x00000000;
 
-                        unsigned int OldFunctionNumber = 0x04000000 | (AxumData.MasterControl4Mode+GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2);
+                        if (AxumData.MasterControl4Mode != MASTER_CONTROL_MODE_NONE)
+                        {
+                          OldFunctionNumber = 0x04000000 | (AxumData.MasterControl4Mode+GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2);
+                        }
+
                         if (AxumData.MasterControl4Mode != NewMasterControl4Mode)
                         {
                           AxumData.MasterControl4Mode = NewMasterControl4Mode;
@@ -3990,7 +4019,10 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                         {
                           AxumData.MasterControl4Mode = MASTER_CONTROL_MODE_NONE;
                         }
-                        CheckObjectsToSent(OldFunctionNumber);
+                        if (OldFunctionNumber != 0x00000000)
+                        {
+                          CheckObjectsToSent(OldFunctionNumber);
+                        }
                         CheckObjectsToSent(SensorReceiveFunctionNumber);
                         CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_4);
                       }
