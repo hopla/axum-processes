@@ -2733,6 +2733,31 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                   ModeControllerResetSensorChange(SensorReceiveFunctionNumber, Data, DataType, DataSize, DataMinimal, DataMaximal);
                 }
                 break;
+                case MODULE_FUNCTION_ROUTING_PRESET_1:
+                case MODULE_FUNCTION_ROUTING_PRESET_2:
+                case MODULE_FUNCTION_ROUTING_PRESET_3:
+                case MODULE_FUNCTION_ROUTING_PRESET_4:
+                case MODULE_FUNCTION_ROUTING_PRESET_5:
+                case MODULE_FUNCTION_ROUTING_PRESET_6:
+                case MODULE_FUNCTION_ROUTING_PRESET_7:
+                case MODULE_FUNCTION_ROUTING_PRESET_8:
+                {
+                  unsigned char PresetNr = FunctionNr - MODULE_FUNCTION_ROUTING_PRESET_1;
+                  bool SourceActive = false;
+
+                  if (AxumData.ModuleData[ModuleNr].On)
+                  {
+                    if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
+                    {
+                      SourceActive = 1;
+                    }
+                  }
+                  if (!SourceActive)
+                  {
+                    LoadRoutingPreset(ModuleNr, PresetNr);
+                  }
+                }
+                break;
                 }
               }
               break;
@@ -13800,23 +13825,7 @@ void LoadSourcePreset(unsigned char ModuleNr)
 
     if (SourceData->Preset.UseRouting)
     {
-      unsigned char cntBuss;
-      AXUM_ROUTING_PRESET_STRUCT *RoutingPreset = AxumData.ModuleData[ModuleNr].RoutingPreset[SourceData->Preset.RoutingPreset];
-
-      for (cntBuss=0; cntBuss<16; cntBuss++)
-      {
-        AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level = RoutingPreset[cntBuss].Level;
-        AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = RoutingPreset[cntBuss].On;
-        AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance = RoutingPreset[cntBuss].Balance;
-        AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel = RoutingPreset[cntBuss].PreModuleLevel;
-
-        SetBussOnOff(ModuleNr, cntBuss, 0);
-
-        unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL))));
-        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_BALANCE+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_BALANCE-MODULE_FUNCTION_BUSS_1_2_BALANCE))));
-        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_PRE+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_PRE-MODULE_FUNCTION_BUSS_1_2_PRE))));
-      }
+      LoadRoutingPreset(ModuleNr, SourceData->Preset.RoutingPreset);
     }
 
     if (SetModuleProcessing)
@@ -13832,5 +13841,26 @@ void LoadSourcePreset(unsigned char ModuleNr)
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
     }
+  }
+}
+
+void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr)
+{
+  unsigned char cntBuss;
+  AXUM_ROUTING_PRESET_STRUCT *RoutingPreset = AxumData.ModuleData[ModuleNr].RoutingPreset[PresetNr];
+
+  for (cntBuss=0; cntBuss<16; cntBuss++)
+  {
+    AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level = RoutingPreset[cntBuss].Level;
+    AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = RoutingPreset[cntBuss].On;
+    AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance = RoutingPreset[cntBuss].Balance;
+    AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel = RoutingPreset[cntBuss].PreModuleLevel;
+
+    SetBussOnOff(ModuleNr, cntBuss, 0);
+
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL))));
+    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_BALANCE+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_BALANCE-MODULE_FUNCTION_BUSS_1_2_BALANCE))));
+    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_PRE+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_PRE-MODULE_FUNCTION_BUSS_1_2_PRE))));
   }
 }
