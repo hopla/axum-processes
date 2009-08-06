@@ -216,7 +216,16 @@ INSERT INTO functions VALUES ('(0,,179)', 'Control 4 label', 0, 4);
 INSERT INTO functions VALUES ('(0,,180)', 'Control 4 reset', 3, 0);
 INSERT INTO functions VALUES ('(0,,181)', 'Peak', 0, 3);
 INSERT INTO functions VALUES ('(0,,182)', 'Signal', 0, 3);
-
+INSERT INTO functions VALUES ('(0,,183)', 'Source C', 3, 3);
+INSERT INTO functions VALUES ('(0,,184)', 'Source D', 3, 3);
+INSERT INTO functions VALUES ('(0,,185)', 'Routing preset 1', 3, 0);
+INSERT INTO functions VALUES ('(0,,186)', 'Routing preset 2', 3, 0);
+INSERT INTO functions VALUES ('(0,,187)', 'Routing preset 3', 3, 0);
+INSERT INTO functions VALUES ('(0,,188)', 'Routing preset 4', 3, 0);
+INSERT INTO functions VALUES ('(0,,189)', 'Routing preset 5', 3, 0);
+INSERT INTO functions VALUES ('(0,,190)', 'Routing preset 6', 3, 0);
+INSERT INTO functions VALUES ('(0,,191)', 'Routing preset 7', 3, 0);
+INSERT INTO functions VALUES ('(0,,192)', 'Routing preset 8', 3, 0);
 
 
 -- buss functions
@@ -653,6 +662,7 @@ INSERT INTO functions VALUES ('(4,,353)', 'Master control 3 reset', 3, 0);
 INSERT INTO functions VALUES ('(4,,354)', 'Master control 4', 2, 6);
 INSERT INTO functions VALUES ('(4,,354)', 'Master control 4', 1, 1);
 INSERT INTO functions VALUES ('(4,,355)', 'Master control 4 reset', 3, 0);
+INSERT INTO functions VALUES ('(4,,356)', 'Set modules to default processing', 3, 0);
 
 
 
