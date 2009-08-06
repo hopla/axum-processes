@@ -148,7 +148,8 @@ typedef struct
 
 typedef struct
 {
-  unsigned int Source;
+  unsigned int TemporySource;
+  unsigned int SelectedSource;
   unsigned int SourceA;
   unsigned int SourceB;
   unsigned int SourceC;

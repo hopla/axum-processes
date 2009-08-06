@@ -122,7 +122,7 @@ int db_get_matrix_sources()
     }
     else if (strcmp(src_type, "source") == 0)
     {
-      cntField++; //skip this minimal value, will be determined in next query. 
+      cntField++; //skip this minimal value, will be determined in next query.
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.src_offset.max.source);
     }
   }
@@ -436,7 +436,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
 
     for (cntModule=0; cntModule<128; cntModule++)
     {
-      if (AxumData.ModuleData[cntModule].Source == ((number-1)+matrix_sources.src_offset.min.source))
+      if (AxumData.ModuleData[cntModule].SelectedSource == ((number-1)+matrix_sources.src_offset.min.source))
       {
         SetAxum_ModuleSource(cntModule);
         SetAxum_ModuleMixMinus(cntModule, 0);
@@ -716,9 +716,9 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_OFF);
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON_OFF);
 
-            if ((AxumData.ModuleData[ModuleNr].Source >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].Source<=matrix_sources.src_offset.max.source))
+            if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
             {
-              unsigned int SourceNr = AxumData.ModuleData[ModuleNr].Source-matrix_sources.src_offset.min.source;
+              unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
               FunctionNrToSent = 0x05000000 | (SourceNr<<12);
               CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON);
               CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_OFF);
@@ -726,7 +726,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
               CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
               CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
             }
-  
+
             FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
