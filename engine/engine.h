@@ -162,11 +162,9 @@ typedef struct
   AXUM_EQ_BAND_DATA_STRUCT Filter;
   bool FilterOnOff;
   AXUM_EQ_BAND_DATA_STRUCT EQBand[6];
-  bool EQOn;
   bool EQOnOff;
 
   char Dynamics;
-  bool DynamicsOn;
   bool DynamicsOnOff;
 
   int Panorama;
@@ -429,5 +427,8 @@ void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock);
 void initialize_axum_data_struct();
 
 ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr);
+
+
+void LoadSourcePreset(unsigned char ModuleNr);
 
 #endif

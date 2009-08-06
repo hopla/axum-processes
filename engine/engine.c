@@ -1833,7 +1833,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     if (TempData)
                     {
-                      AxumData.ModuleData[ModuleNr].EQOn = !AxumData.ModuleData[ModuleNr].EQOn;
+                      AxumData.ModuleData[ModuleNr].EQOnOff = !AxumData.ModuleData[ModuleNr].EQOnOff;
                     }
                     else
                     {
@@ -1842,14 +1842,14 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       {
                         if (delay_time>=OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].TimeBeforeMomentary)
                         {
-                          AxumData.ModuleData[ModuleNr].EQOn = !AxumData.ModuleData[ModuleNr].EQOn;
+                          AxumData.ModuleData[ModuleNr].EQOnOff = !AxumData.ModuleData[ModuleNr].EQOnOff;
                         }
                       }
                     }
 
                     for (int cntBand=0; cntBand<6; cntBand++)
                     {
-                      AxumData.ModuleData[ModuleNr].EQBand[cntBand].On = AxumData.ModuleData[ModuleNr].EQOn;
+                      AxumData.ModuleData[ModuleNr].EQBand[cntBand].On = AxumData.ModuleData[ModuleNr].EQOnOff;
                       SetAxum_EQ(ModuleNr, cntBand);
                     }
 
@@ -1921,7 +1921,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
 
                     if (TempData)
                     {
-                      AxumData.ModuleData[ModuleNr].DynamicsOn = !AxumData.ModuleData[ModuleNr].DynamicsOn;
+                      AxumData.ModuleData[ModuleNr].DynamicsOnOff = !AxumData.ModuleData[ModuleNr].DynamicsOnOff;
                     }
                     else
                     {
@@ -1930,7 +1930,7 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
                       {
                         if (delay_time>=OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].TimeBeforeMomentary)
                         {
-                          AxumData.ModuleData[ModuleNr].DynamicsOn = !AxumData.ModuleData[ModuleNr].DynamicsOn;
+                          AxumData.ModuleData[ModuleNr].DynamicsOnOff = !AxumData.ModuleData[ModuleNr].DynamicsOnOff;
                         }
                       }
                     }
@@ -6540,7 +6540,7 @@ void SetAxum_ModuleProcessing(unsigned int ModuleNr)
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.Type = AxumData.ModuleData[ModuleNr].Filter.Type;
 
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Percent = AxumData.ModuleData[ModuleNr].Dynamics;
-    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.On = AxumData.ModuleData[ModuleNr].DynamicsOn;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.On = AxumData.ModuleData[ModuleNr].DynamicsOnOff;
   }
   dspcard->data.ChannelData[DSPCardChannelNr+1].PhaseReverse = AxumData.ModuleData[ModuleNr].PhaseReverse;
 
@@ -7906,7 +7906,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
         TransmitData[3] = STATE_DATATYPE;
         TransmitData[4] = 1;
-        TransmitData[5] = AxumData.ModuleData[ModuleNr].EQOn&0xFF;
+        TransmitData[5] = AxumData.ModuleData[ModuleNr].EQOnOff&0xFF;
 
         SendMambaNetMessage(MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 6);
       }
@@ -7958,7 +7958,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         TransmitData[2] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;
         TransmitData[3] = STATE_DATATYPE;
         TransmitData[4] = 1;
-        TransmitData[5] = AxumData.ModuleData[ModuleNr].DynamicsOn&0xFF;
+        TransmitData[5] = AxumData.ModuleData[ModuleNr].DynamicsOnOff&0xFF;
 
         SendMambaNetMessage(MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, 6);
       }
@@ -11541,7 +11541,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       break;
       case MODULE_CONTROL_MODE_DYNAMICS:
       {   //Dynamics
-        AxumData.ModuleData[ModuleNr].DynamicsOn = !AxumData.ModuleData[ModuleNr].DynamicsOn;
+        AxumData.ModuleData[ModuleNr].DynamicsOnOff = !AxumData.ModuleData[ModuleNr].DynamicsOnOff;
         SetAxum_ModuleProcessing(ModuleNr);
 
         unsigned int FunctionNrToSent = (ModuleNr<<12);
@@ -13063,6 +13063,7 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
       AxumData.ModuleData[ModuleNr].SelectedSource = NewSource;
 
       //eventual 'reset' set a preset?
+      LoadSourcePreset(ModuleNr);
 
       SetAxum_ModuleSource(ModuleNr);
       SetAxum_ModuleMixMinus(ModuleNr, OldSource);
@@ -13547,11 +13548,9 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].EQBand[5].Slope = 1;
     AxumData.ModuleData[cntModule].EQBand[5].Type = LPF;
 
-    AxumData.ModuleData[cntModule].EQOn = 1;
-    AxumData.ModuleData[cntModule].EQOnOff = 0;
+    AxumData.ModuleData[cntModule].EQOnOff = 1;
 
     AxumData.ModuleData[cntModule].Dynamics = 0;
-    AxumData.ModuleData[cntModule].DynamicsOn = 0;
     AxumData.ModuleData[cntModule].DynamicsOnOff = 0;
 
     AxumData.ModuleData[cntModule].Panorama = 512;
@@ -13710,4 +13709,128 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
     return NULL;
   }
   return &OnlineNodeInformation[Index];
+}
+
+void LoadSourcePreset(unsigned char ModuleNr)
+{
+  if (AxumData.ModuleData[ModuleNr].SelectedSource>0)
+  {
+    bool SetModuleProcessing = false;
+    bool SetModuleControllers = false;
+    AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[AxumData.ModuleData[ModuleNr].SelectedSource-1];
+
+    if (SourceData->Preset.UseGain)
+    {
+      AxumData.ModuleData[ModuleNr].Gain = SourceData->Preset.Gain;
+
+      unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_GAIN_LEVEL);
+
+      SetModuleProcessing = true;
+      SetModuleControllers = true;
+    }
+
+    if (SourceData->Preset.UseFilter)
+    {
+      AxumData.ModuleData[ModuleNr].Filter.Frequency = SourceData->Preset.Filter.Frequency;
+      AxumData.ModuleData[ModuleNr].Filter.On = SourceData->Preset.FilterOnOff;
+
+      unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_FREQUENCY);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_ON_OFF);
+
+      SetModuleProcessing = true;
+      SetModuleControllers = true;
+    }
+
+    if (SourceData->Preset.UseInsert)
+    {
+      AxumData.ModuleData[ModuleNr].InsertSource = SourceData->Preset.InsertSource;
+      AxumData.ModuleData[ModuleNr].InsertOnOff = SourceData->Preset.InsertOnOff;
+
+      SetAxum_ModuleInsertSource(ModuleNr);
+
+      unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_INSERT_ON_OFF);
+
+      SetModuleProcessing = true;
+      SetModuleControllers = true;
+    }
+
+    if (SourceData->Preset.UseEQ)
+    {
+      unsigned char cntEQ;
+
+      AxumData.ModuleData[ModuleNr].EQOnOff = SourceData->Preset.EQOnOff;
+      for (cntEQ=0; cntEQ<6; cntEQ++)
+      {
+        AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Range = SourceData->Preset.EQBand[cntEQ].Range;
+        AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Level = SourceData->Preset.EQBand[cntEQ].Level;
+        AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Frequency = SourceData->Preset.EQBand[cntEQ].Frequency;
+        AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Bandwidth = SourceData->Preset.EQBand[cntEQ].Bandwidth;
+        AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Slope = SourceData->Preset.EQBand[cntEQ].Slope;
+        AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Type = SourceData->Preset.EQBand[cntEQ].Type;
+        AxumData.ModuleData[ModuleNr].EQBand[cntEQ].On = AxumData.ModuleData[ModuleNr].EQOnOff;
+
+        SetAxum_EQ(ModuleNr, cntEQ);
+
+        unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_LEVEL+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL))));
+        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_FREQUENCY+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY))));
+        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH))));
+        //CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_SLOPE+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_SLOPE-MODULE_FUNCTION_EQ_BAND_1_SLOPE))));
+        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_TYPE+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_TYPE-MODULE_FUNCTION_EQ_BAND_1_TYPE))));
+
+        SetModuleControllers = true;
+      }
+    }
+
+    if (SourceData->Preset.UseDynamics)
+    {
+      AxumData.ModuleData[ModuleNr].Dynamics = SourceData->Preset.Dynamics;
+      AxumData.ModuleData[ModuleNr].DynamicsOnOff = SourceData->Preset.DynamicsOnOff;
+
+      unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_AMOUNT);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_ON_OFF);
+
+      SetModuleProcessing = true;
+      SetModuleControllers = true;
+    }
+
+    if (SourceData->Preset.UseRouting)
+    {
+      unsigned char cntBuss;
+      AXUM_ROUTING_PRESET_STRUCT *RoutingPreset = AxumData.ModuleData[ModuleNr].RoutingPreset[SourceData->Preset.RoutingPreset];
+
+      for (cntBuss=0; cntBuss<16; cntBuss++)
+      {
+        AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level = RoutingPreset[cntBuss].Level;
+        AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = RoutingPreset[cntBuss].On;
+        AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance = RoutingPreset[cntBuss].Balance;
+        AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel = RoutingPreset[cntBuss].PreModuleLevel;
+
+        SetBussOnOff(ModuleNr, cntBuss, 0);
+
+        unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL))));
+        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_BALANCE+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_BALANCE-MODULE_FUNCTION_BUSS_1_2_BALANCE))));
+        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_PRE+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_PRE-MODULE_FUNCTION_BUSS_1_2_PRE))));
+      }
+    }
+
+    if (SetModuleProcessing)
+    {
+      SetAxum_ModuleProcessing(ModuleNr);
+    }
+
+    if (SetModuleControllers)
+    {
+      unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+    }
+  }
 }
