@@ -13738,11 +13738,13 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
 
 void LoadSourcePreset(unsigned char ModuleNr)
 {
-  if (AxumData.ModuleData[ModuleNr].SelectedSource>0)
+  if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) &&
+      (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
   {
+    unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
     bool SetModuleProcessing = false;
     bool SetModuleControllers = false;
-    AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[AxumData.ModuleData[ModuleNr].SelectedSource-1];
+    AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[SourceNr];
 
     if (SourceData->Preset.UseGain)
     {

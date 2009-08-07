@@ -354,6 +354,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   {
     unsigned int number;
     unsigned char cntModule;
+    unsigned char PresetNr;
     int cntField;
     int cntEQ;
 
@@ -401,7 +402,8 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     SourceData->Preset.DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     SourceData->Preset.UseRouting = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->Preset.RoutingPreset);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &PresetNr);
+    SourceData->Preset.RoutingPreset = PresetNr-1;
 
     SourceData->Redlight[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Redlight[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
