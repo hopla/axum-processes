@@ -511,6 +511,7 @@ CREATE TABLE global_config (
   ext_clock boolean NOT NULL,
   headroom float NOT NULL,
   level_reserve float NOT NULL,
+  use_module_defaults boolean NOT NULL,
   routing_preset_1_label varchar(32) NOT NULL DEFAULT 'Default',
   routing_preset_2_label varchar(32) NOT NULL DEFAULT 'Preset 2',
   routing_preset_3_label varchar(32) NOT NULL DEFAULT 'Preset 3',
