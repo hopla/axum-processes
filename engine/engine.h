@@ -112,20 +112,12 @@ typedef struct
 
 typedef struct
 {
-  //realtime parameters
-  unsigned char On;
+  float Range;
   float Level;
   unsigned int Frequency;
   float Bandwidth;
   float Slope;
   FilterType Type;
-
-  //configuration parameters
-  float Range;
-  unsigned int DefaultFrequency;
-  float DefaultBandwidth;
-  float DefaultSlope;
-  FilterType DefaultType;
 } AXUM_EQ_BAND_DATA_STRUCT;
 
 typedef struct
@@ -148,6 +140,30 @@ typedef struct
 
 typedef struct
 {
+  unsigned int SourceA;
+  unsigned int SourceB;
+  unsigned int SourceC;
+  unsigned int SourceD;
+  unsigned int InsertSource;
+  bool InsertOnOff;
+  float Gain;
+  bool PhaseReverse;
+  AXUM_EQ_BAND_DATA_STRUCT Filter;
+  bool FilterOnOff;
+  AXUM_EQ_BAND_DATA_STRUCT EQBand[6];
+  bool EQOnOff;
+
+  char Dynamics;
+  bool DynamicsOnOff;
+
+  int Panorama;
+  char Mono;
+  float FaderLevel;
+  bool On;
+} AXUM_DEFAULT_MODULE_DATA_STRUCT;
+
+typedef struct
+{
   unsigned int TemporySource;
   unsigned int SelectedSource;
   unsigned int SourceA;
@@ -155,7 +171,6 @@ typedef struct
   unsigned int SourceC;
   unsigned int SourceD;
   unsigned int InsertSource;
-  unsigned char Insert;
   bool InsertOnOff;
   float Gain;
   bool PhaseReverse;
@@ -180,6 +195,8 @@ typedef struct
   AXUM_BUSS_DATA_STRUCT Buss[16];
 
   AXUM_ROUTING_PRESET_STRUCT RoutingPreset[8][16];
+
+  AXUM_DEFAULT_MODULE_DATA_STRUCT Defaults;
 
 } AXUM_MODULE_DATA_STRUCT;
 
@@ -250,6 +267,7 @@ typedef struct
   bool ExternClock;
   float Headroom;
   float LevelReserve;
+  bool UseModuleDefaults;
 
   AXUM_MONITOR_OUTPUT_DATA_STRUCT Monitor[16];
   AXUM_EXTERN_SOURCE_DATA_STRUCT ExternSource[4];

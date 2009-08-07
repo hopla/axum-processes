@@ -622,78 +622,100 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
-    AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[number-1];
-
-    OldLevel = ModuleData->FaderLevel;
-    OldOn = ModuleData->On;
-
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceA);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceB);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceC);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceD);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->InsertSource);
-    ModuleData->InsertOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->Gain);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Filter.Frequency);
-    ModuleData->FilterOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    for (cntEQ=0; cntEQ<6; cntEQ++)
-    {
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].Range);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->EQBand[cntEQ].DefaultFrequency);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].DefaultBandwidth);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->EQBand[cntEQ].DefaultSlope);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&ModuleData->EQBand[cntEQ].DefaultType);
-
-      ModuleData->EQBand[cntEQ].Frequency = ModuleData->EQBand[cntEQ].DefaultFrequency;
-      ModuleData->EQBand[cntEQ].Bandwidth = ModuleData->EQBand[cntEQ].DefaultBandwidth;
-      ModuleData->EQBand[cntEQ].Slope = ModuleData->EQBand[cntEQ].DefaultSlope;
-      ModuleData->EQBand[cntEQ].Type = ModuleData->EQBand[cntEQ].DefaultType;
-    }
-    ModuleData->EQOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &ModuleData->Dynamics);
-    ModuleData->DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &ModuleData->FaderLevel);
-    ModuleData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    for (cntBuss=0; cntBuss<16; cntBuss++)
-    {
-      char OnChar[8];
-      char PreChar[8];
-
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "{%f,%f,%f,%f,%f,%f,%f,%f}", &ModuleData->RoutingPreset[0][cntBuss].Level,
-                                                                                &ModuleData->RoutingPreset[1][cntBuss].Level,
-                                                                                &ModuleData->RoutingPreset[2][cntBuss].Level,
-                                                                                &ModuleData->RoutingPreset[3][cntBuss].Level,
-                                                                                &ModuleData->RoutingPreset[4][cntBuss].Level,
-                                                                                &ModuleData->RoutingPreset[5][cntBuss].Level,
-                                                                                &ModuleData->RoutingPreset[6][cntBuss].Level,
-                                                                                &ModuleData->RoutingPreset[7][cntBuss].Level);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c}", &OnChar[0], &OnChar[1], &OnChar[2], &OnChar[3], &OnChar[4], &OnChar[5], &OnChar[6], &OnChar[7]);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c}", &PreChar[0], &PreChar[1], &PreChar[2], &PreChar[3], &PreChar[4], &PreChar[5], &PreChar[6], &PreChar[7]);
-      for (int cntPreset=0; cntPreset<8; cntPreset++)
-      {
-        ModuleData->RoutingPreset[cntPreset][cntBuss].On = (OnChar[cntPreset] == 't');
-        ModuleData->RoutingPreset[cntPreset][cntBuss].PreModuleLevel = (PreChar[cntPreset] == 't');
-      }
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "{%d,%d,%d,%d,%d,%d,%d,%d}", &ModuleData->RoutingPreset[0][cntBuss].Balance,
-                                                                                &ModuleData->RoutingPreset[1][cntBuss].Balance,
-                                                                                &ModuleData->RoutingPreset[2][cntBuss].Balance,
-                                                                                &ModuleData->RoutingPreset[3][cntBuss].Balance,
-                                                                                &ModuleData->RoutingPreset[4][cntBuss].Balance,
-                                                                                &ModuleData->RoutingPreset[5][cntBuss].Balance,
-                                                                                &ModuleData->RoutingPreset[6][cntBuss].Balance,
-                                                                                &ModuleData->RoutingPreset[7][cntBuss].Balance);
-
-      ModuleData->Buss[cntBuss].Active = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-
-      //for now initialize with first settings
-      ModuleData->Buss[cntBuss].Level = ModuleData->RoutingPreset[0][cntBuss].Level;
-      ModuleData->Buss[cntBuss].On = ModuleData->RoutingPreset[0][cntBuss].On;
-      ModuleData->Buss[cntBuss].PreModuleLevel = ModuleData->RoutingPreset[0][cntBuss].PreModuleLevel;
-      ModuleData->Buss[cntBuss].Balance = ModuleData->RoutingPreset[0][cntBuss].Balance;
-    }
-
     if (number>0)
     {
+      AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[number-1];
+      AXUM_DEFAULT_MODULE_DATA_STRUCT *DefaultModuleData = &ModuleData->Defaults;
+
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceA);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceB);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceC);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceD);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->InsertSource);
+      DefaultModuleData->InsertOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->Gain);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->Filter.Frequency);
+      DefaultModuleData->FilterOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      for (cntEQ=0; cntEQ<6; cntEQ++)
+      {
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->EQBand[cntEQ].Range);
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->EQBand[cntEQ].Frequency);
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->EQBand[cntEQ].Bandwidth);
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->EQBand[cntEQ].Slope);
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&DefaultModuleData->EQBand[cntEQ].Type);
+      }
+      DefaultModuleData->EQOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DefaultModuleData->Dynamics);
+      DefaultModuleData->DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->FaderLevel);
+      DefaultModuleData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+      //Next are routing presets and assignment of modules to busses.
+      for (cntBuss=0; cntBuss<16; cntBuss++)
+      {
+        char OnChar[8];
+        char PreChar[8];
+
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "{%f,%f,%f,%f,%f,%f,%f,%f}", &ModuleData->RoutingPreset[0][cntBuss].Level,
+                                                                                  &ModuleData->RoutingPreset[1][cntBuss].Level,
+                                                                                  &ModuleData->RoutingPreset[2][cntBuss].Level,
+                                                                                  &ModuleData->RoutingPreset[3][cntBuss].Level,
+                                                                                  &ModuleData->RoutingPreset[4][cntBuss].Level,
+                                                                                  &ModuleData->RoutingPreset[5][cntBuss].Level,
+                                                                                  &ModuleData->RoutingPreset[6][cntBuss].Level,
+                                                                                  &ModuleData->RoutingPreset[7][cntBuss].Level);
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c}", &OnChar[0], &OnChar[1], &OnChar[2], &OnChar[3], &OnChar[4], &OnChar[5], &OnChar[6], &OnChar[7]);
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c}", &PreChar[0], &PreChar[1], &PreChar[2], &PreChar[3], &PreChar[4], &PreChar[5], &PreChar[6], &PreChar[7]);
+        for (int cntPreset=0; cntPreset<8; cntPreset++)
+        {
+          ModuleData->RoutingPreset[cntPreset][cntBuss].On = (OnChar[cntPreset] == 't');
+          ModuleData->RoutingPreset[cntPreset][cntBuss].PreModuleLevel = (PreChar[cntPreset] == 't');
+        }
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "{%d,%d,%d,%d,%d,%d,%d,%d}", &ModuleData->RoutingPreset[0][cntBuss].Balance,
+                                                                                  &ModuleData->RoutingPreset[1][cntBuss].Balance,
+                                                                                  &ModuleData->RoutingPreset[2][cntBuss].Balance,
+                                                                                  &ModuleData->RoutingPreset[3][cntBuss].Balance,
+                                                                                  &ModuleData->RoutingPreset[4][cntBuss].Balance,
+                                                                                  &ModuleData->RoutingPreset[5][cntBuss].Balance,
+                                                                                  &ModuleData->RoutingPreset[6][cntBuss].Balance,
+                                                                                  &ModuleData->RoutingPreset[7][cntBuss].Balance);
+
+        ModuleData->Buss[cntBuss].Active = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+        //for now initialize with first settings
+        ModuleData->Buss[cntBuss].Level = ModuleData->RoutingPreset[0][cntBuss].Level;
+        ModuleData->Buss[cntBuss].On = ModuleData->RoutingPreset[0][cntBuss].On;
+        ModuleData->Buss[cntBuss].PreModuleLevel = ModuleData->RoutingPreset[0][cntBuss].PreModuleLevel;
+        ModuleData->Buss[cntBuss].Balance = ModuleData->RoutingPreset[0][cntBuss].Balance;
+      }
+
+      //Use defaults in current settings
+      OldLevel = ModuleData->FaderLevel;
+      OldOn = ModuleData->On;
+      ModuleData->SourceA = DefaultModuleData->SourceA;
+      ModuleData->SourceB = DefaultModuleData->SourceB;
+      ModuleData->SourceC = DefaultModuleData->SourceC;
+      ModuleData->SourceD = DefaultModuleData->SourceD;
+      ModuleData->InsertSource = DefaultModuleData->InsertSource;
+      ModuleData->InsertOnOff = DefaultModuleData->InsertOnOff;
+      ModuleData->Gain = DefaultModuleData->Gain;
+      ModuleData->PhaseReverse = DefaultModuleData->PhaseReverse;
+      ModuleData->Filter = DefaultModuleData->Filter;
+      ModuleData->FilterOnOff = DefaultModuleData->FilterOnOff;
+      ModuleData->EQBand[0] = DefaultModuleData->EQBand[0];
+      ModuleData->EQBand[1] = DefaultModuleData->EQBand[1];
+      ModuleData->EQBand[2] = DefaultModuleData->EQBand[2];
+      ModuleData->EQBand[3] = DefaultModuleData->EQBand[3];
+      ModuleData->EQBand[4] = DefaultModuleData->EQBand[4];
+      ModuleData->EQBand[5] = DefaultModuleData->EQBand[5];
+      ModuleData->EQOnOff = DefaultModuleData->EQOnOff;
+      ModuleData->Dynamics = DefaultModuleData->Dynamics;
+      ModuleData->DynamicsOnOff = DefaultModuleData->DynamicsOnOff;
+      ModuleData->Panorama = DefaultModuleData->Panorama;
+      ModuleData->Mono = DefaultModuleData->Mono;
+      ModuleData->FaderLevel = DefaultModuleData->FaderLevel;
+      ModuleData->On = DefaultModuleData->On;
+
       int ModuleNr = number-1;
 
       //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 1))
@@ -1048,7 +1070,7 @@ int db_read_global_config()
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve FROM global_config", 1, 0, NULL);
+  PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve, use_module_defaults FROM global_config", 1, 0, NULL);
 
   if (qres == NULL)
   {
@@ -1064,6 +1086,7 @@ int db_read_global_config()
     AxumData.ExternClock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.Headroom);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.LevelReserve);
+    AxumData.UseModuleDefaults = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     if (AxumApplicationAndDSPInitialized)
     {
