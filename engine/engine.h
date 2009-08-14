@@ -267,6 +267,7 @@ typedef struct
   bool ExternClock;
   float Headroom;
   float LevelReserve;
+  bool AutoMomentary;
   bool UseModuleDefaults;
 
   AXUM_MONITOR_OUTPUT_DATA_STRUCT Monitor[16];

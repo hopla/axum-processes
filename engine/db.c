@@ -1070,7 +1070,7 @@ int db_read_global_config()
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve, use_module_defaults FROM global_config", 1, 0, NULL);
+  PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve, auto_momentary, use_module_defaults FROM global_config", 1, 0, NULL);
 
   if (qres == NULL)
   {
@@ -1086,6 +1086,7 @@ int db_read_global_config()
     AxumData.ExternClock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.Headroom);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.LevelReserve);
+    AxumData.AutoMomentary = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     AxumData.UseModuleDefaults = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     if (AxumApplicationAndDSPInitialized)

@@ -993,6 +993,10 @@ void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int From
           if (OnlineNodeInformation[IndexOfSender].SensorReceiveFunction != NULL)
           {
             OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].LastChangedTime = cntMillisecondTimer;
+            if (!AxumData.AutoMomentary)
+            {
+              OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].PreviousChangedTime = OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].LastChangedTime;
+            }
 
             int SensorReceiveFunctionNumber = OnlineNodeInformation[IndexOfSender].SensorReceiveFunction[ObjectNr-1024].FunctionNr;
             int DataType = OnlineNodeInformation[IndexOfSender].ObjectInformation[ObjectNr-1024].SensorDataType;
@@ -13701,6 +13705,7 @@ void initialize_axum_data_struct()
   AxumData.ExternClock = 0;
   AxumData.Headroom = -20;
   AxumData.LevelReserve = 0;
+  AxumData.AutoMomentary = false;
   AxumData.UseModuleDefaults = true;
 
   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
