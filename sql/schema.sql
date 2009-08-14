@@ -507,11 +507,12 @@ CREATE TABLE talkback_config (
 );
 
 CREATE TABLE global_config (
-  samplerate integer NOT NULL,
-  ext_clock boolean NOT NULL,
-  headroom float NOT NULL,
-  level_reserve float NOT NULL,
-  use_module_defaults boolean NOT NULL,
+  samplerate integer NOT NULL DEFAULT 48000,
+  ext_clock boolean NOT NULL DEFAULT FALSE,
+  headroom float NOT NULL DEFAULT 20.0,
+  level_reserve float NOT NULL DEFAULT 0.0,
+  use_module_defaults boolean NOT NULL DEFAULT TRUE,
+  auto_momentary boolean NOT NULL DEFAULT TRUE,
   routing_preset_1_label varchar(32) NOT NULL DEFAULT 'Default',
   routing_preset_2_label varchar(32) NOT NULL DEFAULT 'Preset 2',
   routing_preset_3_label varchar(32) NOT NULL DEFAULT 'Preset 3',
