@@ -95,7 +95,11 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION slot_config_changed() RETURNS trigger AS $$
 BEGIN
-  INSERT INTO recent_changes (change, arguments) VALUES('slot_config_changed', NEW.slot_nr::text);
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('slot_config_changed', OLD.slot_nr::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('slot_config_changed', NEW.slot_nr::text);
+  END IF;
   RETURN NULL;
 END
 $$ LANGUAGE plpgsql;
@@ -182,7 +186,7 @@ CREATE TRIGGER before_addresses_change_notify BEFORE UPDATE ON addresses        
 CREATE TRIGGER addresses_change_notify        AFTER DELETE OR UPDATE ON addresses             FOR EACH ROW EXECUTE PROCEDURE addresses_changed();
 CREATE TRIGGER defaults_change_notify         AFTER INSERT OR DELETE OR UPDATE ON defaults    FOR EACH ROW EXECUTE PROCEDURE defaults_changed();
 CREATE TRIGGER node_config_change_notify      AFTER INSERT OR DELETE OR UPDATE ON node_config FOR EACH ROW EXECUTE PROCEDURE node_config_changed();
-CREATE TRIGGER slot_config_notify             AFTER UPDATE ON slot_config                     FOR EACH ROW EXECUTE PROCEDURE slot_config_changed();
+CREATE TRIGGER slot_config_notify             AFTER INSERT OR DELETE OR UPDATE ON slot_config FOR EACH ROW EXECUTE PROCEDURE slot_config_changed();
 CREATE TRIGGER src_config_notify              AFTER INSERT OR DELETE OR UPDATE ON src_config  FOR EACH ROW EXECUTE PROCEDURE src_config_changed();
 CREATE TRIGGER module_config_notify           AFTER UPDATE ON module_config                   FOR EACH ROW EXECUTE PROCEDURE module_config_changed();
 CREATE TRIGGER buss_config_notify             AFTER UPDATE ON buss_config                     FOR EACH ROW EXECUTE PROCEDURE buss_config_changed();
