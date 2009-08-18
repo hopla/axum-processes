@@ -1311,7 +1311,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
             float CurrentLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
 
-            if (type == MBN_DATATYPE_SINT)
+            if (type == MBN_DATATYPE_UINT)
             {
               int Position = (data.SInt*1023)/(DataMaximal-DataMinimal);
               float dB = Position2dB[Position];
@@ -4569,9 +4569,9 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
         }
         else if (((signed int)object) == OnlineNodeInformationElement->OutputChannelCountObjectNr)
         {
-          //db_lock(1);
-          //db_update_slot_config_output_ch_cnt(message->AddressFrom, data.UInt);
-          //db_lock(0);
+          db_lock(1);
+          db_update_slot_config_output_ch_cnt(message->AddressFrom, data.UInt);
+          db_lock(0);
         }
       }
     }
