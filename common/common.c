@@ -258,7 +258,10 @@ void sql_processnotifies() {
         sql_events[j].callback(myself, arg);
   }
   /* update lastnotify variable */
-  strcpy(sql_lastnotify, PQgetvalue(qs, i-1, 2));
+  if ((i>0) && (i<=PQntuples(qs)))
+  {
+    strcpy(sql_lastnotify, PQgetvalue(qs, i-1, 2));
+  }
   PQclear(qs);
 }
 
