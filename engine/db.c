@@ -2,6 +2,7 @@
 #include "engine.h"
 #include "dsp.h"
 #include "db.h"
+#include "mbn.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +20,7 @@
 extern AXUM_DATA_STRUCT AxumData;
 extern unsigned short int dB2Position[1500];
 extern float Position2dB[1024];
-extern DEFAULT_NODE_OBJECTS_STRUCT AxumEngineDefaultObjects;
+extern struct mbn_handler *mbn;
 extern int AxumApplicationAndDSPInitialized;
 extern DSP_HANDLER_STRUCT *dsp_handler;
 
@@ -219,6 +220,10 @@ int db_read_slot_config()
   {
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
+  }
+  for (cntRow=0; cntRow<42; cntRow++)
+  {
+    AxumData.RackOrganization[cntRow] = 0;
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
@@ -1452,58 +1457,56 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   {
     unsigned char send_default_data = 0;
     unsigned short int ObjectNr = -1;
+    unsigned char data_size = 0;
+    char OctetString[256];
+
+    mbn_data data;
     sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
 
     if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->NumberOfCustomObjects))
     {
       OBJECT_INFORMATION_STRUCT *obj_info = &node_info->ObjectInformation[ObjectNr-1024];
-      if (obj_info->ActuatorDataType != NO_DATA_DATATYPE)
+      if (obj_info->ActuatorDataType != MBN_DATATYPE_NODATA)
       {
-        unsigned char TransmitData[128];
-        unsigned char cntTransmitData = 0;
-        TransmitData[cntTransmitData++] = (ObjectNr>>8)&0xFF;
-        TransmitData[cntTransmitData++] = ObjectNr&0xFF;
-        TransmitData[cntTransmitData++] = MAMBANET_OBJECT_ACTION_SET_ACTUATOR_DATA;//Set actuator
-        TransmitData[cntTransmitData++] = obj_info->ActuatorDataType;
         switch (obj_info->ActuatorDataType)
         {
-          case UNSIGNED_INTEGER_DATATYPE:
-          case STATE_DATATYPE:
+          case MBN_DATATYPE_UINT:
+          case MBN_DATATYPE_STATE:
           {
             unsigned long int DataValue;
             sscanf(PQgetvalue(qres, cntRow, 1), "(%ld,,,)", &DataValue);
 
             if (DataValue != obj_info->CurrentActuatorDataDefault)
             {
-              TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
-              for (int cntByte=0; cntByte<obj_info->ActuatorDataSize; cntByte++)
+              data_size = obj_info->ActuatorDataSize;
+              if (obj_info->ActuatorDataType == MBN_DATATYPE_UINT)
               {
-                TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
+                data.UInt = DataValue;
+              }
+              else
+              {
+                data.State = DataValue;
               }
               send_default_data = 1;
             }
           }
           break;
-          case SIGNED_INTEGER_DATATYPE:
+          case MBN_DATATYPE_SINT:
           {
             long int DataValue;
             sscanf(PQgetvalue(qres, cntRow, 1), "(%ld,,,)", &DataValue);
 
             if (DataValue != obj_info->CurrentActuatorDataDefault)
             {
-              TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
-              for (int cntByte=0; cntByte<obj_info->ActuatorDataSize; cntByte++)
-              {
-                TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
-              }
+              data_size = obj_info->ActuatorDataSize;
+              data.SInt = DataValue;
               send_default_data = 1;
               obj_info->CurrentActuatorDataDefault = DataValue;
             }
           }
           break;
-          case OCTET_STRING_DATATYPE:
+          case MBN_DATATYPE_OCTETS:
           {
-            char OctetString[256];
             sscanf(PQgetvalue(qres, cntRow, 1), "(,,,%s)", OctetString);
 
             int StringLength = strlen(OctetString);
@@ -1512,32 +1515,25 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               StringLength = obj_info->ActuatorDataSize;
             }
 
-            TransmitData[cntTransmitData++] = StringLength;
-            for (int cntChar=0; cntChar<StringLength; cntChar++)
-            {
-              TransmitData[cntTransmitData++] = OctetString[cntChar];
-            }
+            data_size = StringLength;
+            data.Octets = (unsigned char *)OctetString;
             send_default_data = 1;
           }
           break;
-          case FLOAT_DATATYPE:
+          case MBN_DATATYPE_FLOAT:
           {
             float DataValue;
             sscanf(PQgetvalue(qres, cntRow, 1), "(,%f,,)", &DataValue);
 
             if (DataValue != obj_info->CurrentActuatorDataDefault)
             {
-              TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
-
-              if (Float2VariableFloat(DataValue, obj_info->ActuatorDataSize, &TransmitData[cntTransmitData]) == 0)
-              {
-                cntTransmitData += cntTransmitData;
-              }
+              data_size = obj_info->ActuatorDataSize;
+              data.Float = DataValue;
               send_default_data = 1;
               obj_info->CurrentActuatorDataDefault = DataValue;
             }
             break;
-            case BIT_STRING_DATATYPE:
+            case MBN_DATATYPE_BITS:
             {
               unsigned char cntBit;
               unsigned long DataValue;
@@ -1559,10 +1555,10 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
                 }
               }
 
-              TransmitData[cntTransmitData++] = obj_info->ActuatorDataSize;
+              data_size = obj_info->ActuatorDataSize;
               for (int cntByte=0; cntByte<obj_info->ActuatorDataSize; cntByte++)
               {
-                TransmitData[cntTransmitData++] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
+                data.Bits[cntByte] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
               }
               send_default_data = 1;
               obj_info->CurrentActuatorDataDefault = DataValue;
@@ -1573,7 +1569,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
 
         if (send_default_data)
         {
-          SendMambaNetMessage(node_info->MambaNetAddress, AxumEngineDefaultObjects.MambaNetAddress, 0, 0, MAMBANET_OBJECT_MESSAGETYPE, TransmitData, cntTransmitData);
+          mbnSetActuatorData(mbn, node_info->MambaNetAddress, ObjectNr, obj_info->ActuatorDataType, data_size, data ,1);
         }
       }
     }
@@ -1678,6 +1674,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
     if (ObjectConfigChanged[cntObject-1024])
     {
       SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[cntObject-1024];
+      printf("Object:%d, Func: %08X\n", cntObject, sensor_rcv_func->FunctionNr);
       MakeObjectListPerFunction(sensor_rcv_func->FunctionNr);
 
       CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
@@ -2053,5 +2050,12 @@ void db_event_defaults_changed(char myself, char *arg)
   db_read_node_defaults(node_info, 1024, node_info->NumberOfCustomObjects+1024);
 
   myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_lock(int lock)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  sql_lock(lock);
   LOG_DEBUG("[%s] leave", __func__);
 }

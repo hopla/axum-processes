@@ -19,7 +19,6 @@
 
 #include <stdio.h>
 #include "engine_functions.h"
-#include "mambanet_stack_axum.h"
 
 #define DEFAULT_TIME_BEFORE_MOMENTARY 750
 
@@ -344,14 +343,13 @@ typedef struct
   int TimeBeforeMomentary;
 } SENSOR_RECEIVE_FUNCTION_STRUCT;
 
-typedef struct
+struct ONLINE_NODE_INFORMATION_STRUCT
 {
   unsigned int MambaNetAddress;
   unsigned int ManufacturerID;
   unsigned int ProductID;
   unsigned int UniqueIDPerProduct;
   int FirmwareMajorRevision;
-//  int FirmwareMinorRevision;
 
 //Not sure if should be stored here...
   int SlotNumberObjectNr;
@@ -371,22 +369,28 @@ typedef struct
   SENSOR_RECEIVE_FUNCTION_STRUCT *SensorReceiveFunction;
   OBJECT_INFORMATION_STRUCT *ObjectInformation;
 
-} ONLINE_NODE_INFORMATION_STRUCT;
+  ONLINE_NODE_INFORMATION_STRUCT *Next;
+};
 
 float CalculateEQ(float *Coefficients, float Gain, int Frequency, float Bandwidth, float Slope, FilterType Type);
 
 //required function for the MambaNet stack.
-void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int FromAddress, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress=NULL);
+//void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int FromAddress, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress=NULL);
 
 //debug function
-void dump_block(const unsigned char *block, unsigned int length);
+//void dump_block(const unsigned char *block, unsigned int length);
 
-int SetupNetwork(char *NetworkInterface, unsigned char *LocalMACAddress);
-void CloseNetwork(int NetworkFileDescriptor);
+//int SetupNetwork(char *NetworkInterface, unsigned char *LocalMACAddress);
+//void CloseNetwork(int NetworkFileDescriptor);
 
-void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16]);
-void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigned long int FromAddress, unsigned char Ack, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress);
-void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *AddressTable, MambaNetAddressTableStatus Status, int Index);
+//void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16]);
+//void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigned long int FromAddress, unsigned char Ack, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress);
+//void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *AddressTable, MambaNetAddressTableStatus Status, int Index);
+
+//mbn callbacks
+void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_info, struct mbn_address_node *new_info);
+int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data);
+int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data);
 
 void Timer100HzDone(int Value);
 
@@ -421,13 +425,13 @@ void InitalizeAllObjectListPerFunction();
 void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber);
 void DeleteAllObjectListPerFunction();
 
-void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char *Data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char *Data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
 void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
 void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
 
-void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char *Data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char *Data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
 void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
 
 void DoAxum_BussReset(int BussNr);
