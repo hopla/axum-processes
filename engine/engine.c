@@ -7367,7 +7367,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             switch (DataType)
             {
-              case MBN_DATATYPE_STATE:
+              case MBN_DATATYPE_FLOAT:
               {
                 data.Float = SummingdBLevel[32+(MonitorBussNr*2)+0];
                 mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
@@ -7380,7 +7380,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             switch (DataType)
             {
-              case MBN_DATATYPE_STATE:
+              case MBN_DATATYPE_FLOAT:
               {
                 data.Float = SummingdBLevel[32+(MonitorBussNr*2)+1];
                 mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
