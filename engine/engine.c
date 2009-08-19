@@ -10791,6 +10791,7 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
     if ((!OldSourceActive) || (Forced))
     {
       AxumData.ModuleData[ModuleNr].SelectedSource = NewSource;
+      AxumData.ModuleData[ModuleNr].Cough = 0;
 
       //eventual 'reset' set a preset?
       LoadSourcePreset(ModuleNr);
@@ -10811,6 +10812,7 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_FREQUENCY);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_EQ_ON_OFF);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_ON_OFF);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_COUGH_ON_OFF);
 
       if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
       {
