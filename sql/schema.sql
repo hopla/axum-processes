@@ -462,6 +462,7 @@ CREATE TABLE buss_config (
   level float NOT NULL DEFAULT 0.0,
   on_off boolean NOT NULL DEFAULT TRUE,
   interlock boolean NOT NULL DEFAULT FALSE,
+  exclusive boolean NOT NULL DEFAULT FALSE,
   global_reset boolean NOT NULL DEFAULT FALSE
 );
 
