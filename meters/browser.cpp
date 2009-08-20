@@ -30,6 +30,8 @@
 
 #include "chasewidget.h"
 
+extern QMutex qt_mutex;
+
 Browser::Browser(QWidget *parent)
     : QWidget(parent)
 {
@@ -69,6 +71,18 @@ Browser::Browser(QWidget *parent)
 	MeterData[1] = -50;
 	MeterData[2] = -50;
 	MeterData[3] = -50;
+
+  sprintf(Label[0]," Mon. 1 ");
+  sprintf(Label[1],"  ----  ");
+  sprintf(Label[2]," Mon. 2 ");
+  sprintf(Label[3],"  ----  ");
+  sprintf(CurrentLabel[0]," Mon. 1 ");
+  sprintf(CurrentLabel[1],"  ----  ");
+  sprintf(CurrentLabel[2]," Mon. 2 ");
+  sprintf(CurrentLabel[3],"  ----  ");
+
+  OnAirState = 0;
+  CurrentOnAirState = 0;
 }
 
 Browser::~Browser()
@@ -85,6 +99,7 @@ void Browser::timerEvent(QTimerEvent *Event)
 
 void Browser::MeterRelease()
 {
+  float Difference;
 /*
 #ifdef Q_OS_WIN32
 	LARGE_INTEGER freq, newTime;
@@ -101,66 +116,125 @@ void Browser::MeterRelease()
 	previousNumberOfSeconds = newNumberOfSeconds;
 //	printf("time:%g - delta: %g\n", newNumberOfSeconds, elapsedTime);
 */
+  qt_mutex.lock();
+  if ((NewDNRPPMMeter->FdBPosition>-50) || (MeterData[0]>-50))
+  {
+    Difference = MeterData[0]-NewDNRPPMMeter->FdBPosition;
 
-   if (NewDNRPPMMeter->FdBPosition>-50)
-   {     
-		if (MeterData[0] < NewDNRPPMMeter->FdBPosition)
-      {         
-			NewDNRPPMMeter->FdBPosition-=0.15;      
-//			NewDNRPPMMeter->repaint();
+    if (Difference < -0.15)
+    {
+      Difference = -0.15;
+		}
+
+    if (Difference != 0)
+    {
+      NewDNRPPMMeter->FdBPosition += Difference;
 			NewDNRPPMMeter->update();
-		}
+    }
 	}
 
-   if (NewDNRPPMMeter_2->FdBPosition>-50)
-   {     
-		if (MeterData[1] < NewDNRPPMMeter_2->FdBPosition)
-      {         
-			NewDNRPPMMeter_2->FdBPosition-=0.15;      
-//			NewDNRPPMMeter_2->repaint();
+  if ((NewDNRPPMMeter_2->FdBPosition>-50) || (MeterData[1]>-50))
+  {
+    Difference = MeterData[1]-NewDNRPPMMeter_2->FdBPosition;
+
+    if (Difference < -0.15)
+    {
+      Difference = -0.15;
+		}
+
+    if (Difference != 0)
+    {
+      NewDNRPPMMeter_2->FdBPosition += Difference;
 			NewDNRPPMMeter_2->update();
+    }
+	}
+
+  if ((NewDNRPPMMeter_3->FdBPosition>-50) || (MeterData[2]>-50))
+  {
+    Difference = MeterData[2]-NewDNRPPMMeter_3->FdBPosition;
+
+    if (Difference < -0.15)
+    {
+      Difference = -0.15;
 		}
-	}   
 
-   if (NewDNRPPMMeter_3->FdBPosition>-50)
-   {     
-		if (MeterData[2] < NewDNRPPMMeter_3->FdBPosition)
-      {         
-			NewDNRPPMMeter_3->FdBPosition-=0.15;      
+    if (Difference != 0)
+    {
+      NewDNRPPMMeter_3->FdBPosition += Difference;
 			NewDNRPPMMeter_3->update();
-//			NewDNRPPMMeter_3->repaint();
-		}   
+    }
 	}
 
-   if (NewDNRPPMMeter_4->FdBPosition>-50)
-   {     
-		if (MeterData[3] < NewDNRPPMMeter_4->FdBPosition)
-      {         
-			NewDNRPPMMeter_4->FdBPosition-=0.15;      
+  if ((NewDNRPPMMeter_4->FdBPosition>-50) || (MeterData[3]>-50))
+  {
+    Difference = MeterData[3]-NewDNRPPMMeter_4->FdBPosition;
+
+    if (Difference < -0.15)
+    {
+      Difference = -0.15;
+		}
+
+    if (Difference != 0)
+    {
+      NewDNRPPMMeter_4->FdBPosition += Difference;
 			NewDNRPPMMeter_4->update();
-//			NewDNRPPMMeter_4->repaint();
-		}   
+    }
 	}
+
+  if (strcmp(Label[0], CurrentLabel[0]) != 0)
+  {
+    label_3->setText(QString(Label[0]));
+    strcpy(Label[0], CurrentLabel[0]);
+  }
+  if (strcmp(Label[1], CurrentLabel[1]) != 0)
+  {
+    label_5->setText(QString(Label[1]));
+    strcpy(Label[1], CurrentLabel[1]);
+  }
+  if (strcmp(Label[2], CurrentLabel[2]) != 0)
+  {
+    label_4->setText(QString(Label[2]));
+    strcpy(Label[2], CurrentLabel[2]);
+  }
+  if (strcmp(Label[3], CurrentLabel[3]) != 0)
+  {
+    label_6->setText(QString(Label[3]));
+    strcpy(Label[3], CurrentLabel[3]);
+  }
+
+  if (OnAirState != CurrentOnAirState)
+  {
+    if (OnAirState)
+    {
+      label_7->setText("ON AIR");
+    }
+    else
+    {
+      label_7->setText("");
+    }
+    CurrentOnAirState = OnAirState;
+  }
+  qt_mutex.unlock();
 }
 
 /* for webbrowsing */
 //void Browser::slotLoadProgress(int progress)
 //{
-//	if (progress < 100 && progress > 0) 
+//	if (progress < 100 && progress > 0)
 //	{
 //		m_chaseWidget->setAnimated(true);
-      
+
 /*		disconnect(m_stopReload, SIGNAL(triggered()), m_reload, SLOT(trigger()));
       if (m_stopIcon.isNull())
       	m_stopIcon = style()->standardIcon(QStyle::SP_BrowserStop);
       m_stopReload->setIcon(m_stopIcon);
      	connect(m_stopReload, SIGNAL(triggered()), m_stop, SLOT(trigger()));
 		m_stopReload->setToolTip(tr("Stop loading the current page"));*/
-//   } 
-//	else 
+//   }
+//	else
 //	{
 //		m_chaseWidget->setAnimated(false);
-		
+
 /*		disconnect(m_stopReload, SIGNAL(triggered()), m_stop, SLOT(trigger()));
 		m_stopReload->setIcon(m_reloadIcon);
 		connect(m_stopReload, SIGNAL(triggered()), m_reload, SLOT(trigger()));

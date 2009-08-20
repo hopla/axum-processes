@@ -32,7 +32,6 @@
 #include <QtSql>
 
 #include <browser.h>
-
 #include <errno.h>
 
 #define MBN_VARARG
@@ -56,6 +55,7 @@
 #define DEFAULT_LOG_FILE  "/var/log/axum-meters.log"
 
 Browser *browser = NULL;
+QMutex qt_mutex(QMutex::Recursive);
 
 struct mbn_interface *itf;
 struct mbn_handler *mbn;
@@ -196,8 +196,10 @@ void init(int argc, char *argv[])
 
 int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_data in)
 {
+  qt_mutex.lock();
   if (((object<1024) || (object>=(1024+this_node.NumberOfObjects))) || (browser == NULL))
   {
+    qt_mutex.unlock();
     return 1;
   }
 
@@ -208,11 +210,6 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
       float dB = in.Float+20;
 
       browser->MeterData[0] = dB;
-      if (dB>browser->NewDNRPPMMeter->FdBPosition)
-			{
-			  browser->NewDNRPPMMeter->FdBPosition = dB;
-				browser->NewDNRPPMMeter->update();
-		  }
     }
     break;
     case 1025:
@@ -220,25 +217,18 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
       float dB = in.Float+20;
 
       browser->MeterData[1] = dB;
-			if (dB>browser->NewDNRPPMMeter_2->FdBPosition)
-			{
-			  browser->NewDNRPPMMeter_2->FdBPosition = dB;
-		    browser->NewDNRPPMMeter_2->update();
-			}
     }
     break;
     case 1026:
     {
       strncpy(browser->Label[0], (char *)in.Octets, 8);
       browser->Label[0][8] = 0;
-      browser->label_3->setText(QString(browser->Label[0]));
 		}
     break;
     case 1027:
     {
       strncpy(browser->Label[1], (char *)in.Octets, 8);
       browser->Label[1][8] = 0;
-      browser->label_5->setText(QString(browser->Label[1]));
     }
 		break;
     case 1028:
@@ -246,11 +236,6 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
       float dB = in.Float+20;
 
       browser->MeterData[2] = dB;
-      if (dB>browser->NewDNRPPMMeter_3->FdBPosition)
-			{
-			  browser->NewDNRPPMMeter_3->FdBPosition = dB;
-				browser->NewDNRPPMMeter_3->update();
-      }
     }
     break;
     case 1029:
@@ -258,29 +243,23 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
       float dB = in.Float+20;
 
       browser->MeterData[3] = dB;
-      if (dB>browser->NewDNRPPMMeter_4->FdBPosition)
-      {
-        browser->NewDNRPPMMeter_4->FdBPosition = dB;
-        browser->NewDNRPPMMeter_4->update();
-      }
     }
     break;
 		case 1030:
 		{
       strncpy(browser->Label[2], (char *)in.Octets, 8);
       browser->Label[2][8] = 0;
-      browser->label_4->setText(QString(browser->Label[2]));
 		}
 		break;
     case 1031:
 		{
       strncpy(browser->Label[3], (char *)in.Octets, 8);
       browser->Label[3][8] = 0;
-      browser->label_6->setText(QString(browser->Label[3]));
 		}
     break;
 		case 1032:
 		{
+      browser->OnAirState = in.State;
       if (in.State)
       {
 			  browser->label_7->setText("ON AIR");
@@ -291,6 +270,7 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
       }
 		}
   }
+  qt_mutex.unlock();
   mbnUpdateActuatorData(mbn, object, in);
   return 0;
 }

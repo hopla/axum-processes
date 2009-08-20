@@ -56,7 +56,10 @@ public:
 
 	 double MeterData[4];
    char Label[4][9];
-	 double previousNumberOfSeconds;
+   char CurrentLabel[4][9];
+   bool OnAirState;
+   bool CurrentOnAirState;
+	 double previouNumberOfSeconds;
 
    Browser(QWidget *parent = 0);
    virtual ~Browser();
@@ -69,7 +72,7 @@ public:
 	 QAction *m_Forward;
 	 QAction *m_StopReload;
 	 ChaseWidget *m_ChaseWidget;
-  
+
 public slots:
 	 void MeterRelease();
 
