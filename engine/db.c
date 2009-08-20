@@ -728,6 +728,8 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
         if (AxumApplicationAndDSPInitialized)
         {
           SetNewSource(ModuleNr, ModuleData->SourceA, 1, 1);
+          ModuleData->TemporySource = ModuleData->SourceA;
+
 
           SetAxum_ModuleInsertSource(ModuleNr);
 
