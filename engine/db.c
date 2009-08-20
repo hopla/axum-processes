@@ -853,7 +853,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
   sprintf(str[0], "%hd", first_buss);
   sprintf(str[1], "%hd", last_buss);
 
-  PGresult *qres = sql_exec("SELECT number, label, pre_on, pre_level, pre_balance, level, on_off, interlock, global_reset FROM buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
+  PGresult *qres = sql_exec("SELECT number, label, pre_on, pre_level, pre_balance, level, on_off, interlock, exclusive, global_reset FROM buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -876,6 +876,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &BussMasterData->Level);
     BussMasterData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->Interlock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    BussMasterData->Exclusive = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->GlobalBussReset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     if (AxumApplicationAndDSPInitialized)

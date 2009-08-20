@@ -10961,8 +10961,80 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
   ApplyAorBSettings = 0;
 }
 
-void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock)
+void SetBussOnOff(int ModuleNr, int BussNr, int LoadPreset)
 {
+  unsigned char Active = 0;
+
+  if ((AxumData.BussMasterData[BussNr].Exclusive) && (!LoadPreset))
+  {
+    if (AxumData.ModuleData[ModuleNr].On)
+    {
+      if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
+      {
+        Active = 1;
+      }
+    }
+    //TODO: Check if others already or still in exlusive mode...
+
+    if (!Active)
+    {
+      if (!AxumData.ModuleData[ModuleNr].Buss[BussNr].On)
+      {  //return to normal routing
+        for (int cntBuss=0; cntBuss<16; cntBuss++)
+        {
+          if (cntBuss != BussNr)
+          {
+            if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].On != AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn)
+            {
+              AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn;
+
+              unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+              CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
+
+              if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
+              {
+                int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-1;
+                FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
+                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
+                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
+              }
+            }
+          }
+        }
+      }
+      else
+      {  //turn off other routing
+        for (int cntBuss=0; cntBuss<16; cntBuss++)
+        {
+          if (cntBuss != BussNr)
+          {
+            AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
+            if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].On != 0)
+            {
+              AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = 0;
+
+              unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+              CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
+
+              if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
+              {
+                int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-1;
+                FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
+                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
+                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
+              }
+            }
+          }
+        }
+      }
+    }
+    else
+    {
+      AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
+    }
+  }
   SetAxum_BussLevels(ModuleNr);
   SetAxum_ModuleMixMinus(ModuleNr, 0);
 
@@ -10984,7 +11056,7 @@ void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock)
   }
 
   //Do interlock
-  if ((AxumData.BussMasterData[BussNr].Interlock) && (UseInterlock))
+  if ((AxumData.BussMasterData[BussNr].Interlock) && (!LoadPreset))
   {
     for (int cntModule=0; cntModule<128; cntModule++)
     {
@@ -11293,6 +11365,7 @@ void initialize_axum_data_struct()
     {
       AxumData.ModuleData[cntModule].Buss[cntBuss].Level = 0; //0dB
       AxumData.ModuleData[cntModule].Buss[cntBuss].On = 0;
+      AxumData.ModuleData[cntModule].Buss[cntBuss].PreviousOn = 0;
       AxumData.ModuleData[cntModule].Buss[cntBuss].Balance = 512;
       AxumData.ModuleData[cntModule].Buss[cntBuss].PreModuleLevel = 0;
       AxumData.ModuleData[cntModule].Buss[cntBuss].Active = 1;
@@ -11390,6 +11463,7 @@ void initialize_axum_data_struct()
     AxumData.BussMasterData[cntBuss].PreModuleBalance = 0;
 
     AxumData.BussMasterData[cntBuss].Interlock = 0;
+    AxumData.BussMasterData[cntBuss].Exclusive = 0;
     AxumData.BussMasterData[cntBuss].GlobalBussReset = 0;
   }
 

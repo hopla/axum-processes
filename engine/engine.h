@@ -123,6 +123,7 @@ typedef struct
 {
   float Level;
   unsigned char On;
+  unsigned char PreviousOn;
   int Balance;
   unsigned char PreModuleLevel;
 
@@ -236,6 +237,7 @@ typedef struct
   bool PreModuleBalance;
 
   bool Interlock;
+  bool Exclusive;
   bool GlobalBussReset;
 } AXUM_BUSS_MASTER_DATA_STRUCT;
 
