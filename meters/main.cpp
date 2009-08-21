@@ -189,6 +189,8 @@ void init(int argc, char *argv[])
 
   mbnSetSetActuatorDataCallback(mbn, SetActuatorData);
 
+  mbnStartInterface(itf, error);
+
   log_write("-----------------------");
   log_write("Axum meters initialized");
   log_write("Starting QApplication");
