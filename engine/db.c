@@ -629,6 +629,8 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
 
     if (number>0)
     {
+      unsigned char SetModeControllers = 0;
+
       AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[number-1];
       AXUM_DEFAULT_MODULE_DATA_STRUCT *DefaultModuleData = &ModuleData->Defaults;
 
@@ -718,8 +720,11 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       ModuleData->DynamicsOnOff = DefaultModuleData->DynamicsOnOff;
       ModuleData->Panorama = DefaultModuleData->Panorama;
       ModuleData->Mono = DefaultModuleData->Mono;
-      ModuleData->FaderLevel = DefaultModuleData->FaderLevel;
-      ModuleData->On = DefaultModuleData->On;
+      if (force_all)
+      {
+        ModuleData->FaderLevel = DefaultModuleData->FaderLevel;
+        ModuleData->On = DefaultModuleData->On;
+      }
 
       int ModuleNr = number-1;
 
@@ -758,11 +763,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
               CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
             }
 
-            FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+            SetModeControllers = 1;
 
             if (((OldLevel<=-80) && (NewLevel>-80)) ||
                 ((OldLevel>-80) && (NewLevel<=-80)) ||
@@ -801,12 +802,21 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
         }
 
         unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_EQ_ON_OFF);
+
+        SetModeControllers = 1;
       }
 
+      //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 2))
+      { //All or dynamics 
+        SetAxum_ModuleProcessing(ModuleNr);
+
+        unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_AMOUNT);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_ON_OFF);
+
+        SetModeControllers = 1;
+      }
       //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 3))
       { //All or busses
         for (int cntBuss=0; cntBuss<16; cntBuss++)
@@ -822,12 +832,18 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_PRE);
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_BALANCE);
 
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+            SetModeControllers = 1;
           }
         }
+      }
+
+      if (SetModeControllers)
+      {
+        unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
       }
     }
   }
