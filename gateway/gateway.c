@@ -431,6 +431,9 @@ void init(int argc, char **argv, char *upath) {
       exit(1);
     }
     setcallbacks(can);
+
+    //start interface for the mbn-handler
+    mbnStartInterface(itf, err);
   }
 
   /* init ethernet */
@@ -448,6 +451,9 @@ void init(int argc, char **argv, char *upath) {
       exit(1);
     }
     setcallbacks(eth);
+
+    //start interface for the mbn-handler
+    mbnStartInterface(itf, err);
   }
 
   /* init TCP */
@@ -469,6 +475,9 @@ void init(int argc, char **argv, char *upath) {
       exit(1);
     }
     setcallbacks(tcp);
+
+    //start interface for the mbn-handler
+    mbnStartInterface(itf, err);
   }
 
   if(!verbose)
