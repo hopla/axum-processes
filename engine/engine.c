@@ -7075,7 +7075,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = SummingdBLevel[(BussNr*2)+0];
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
             }
           }
         }
@@ -7083,7 +7083,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case BUSS_FUNCTION_AUDIO_LEVEL_RIGHT:
         {
           data.Float = SummingdBLevel[(BussNr*2)+1];
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
         }
         break;
       }
@@ -7370,7 +7370,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               case MBN_DATATYPE_FLOAT:
               {
                 data.Float = SummingdBLevel[32+(MonitorBussNr*2)+0];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
               }
               break;
             }
@@ -7383,7 +7383,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               case MBN_DATATYPE_FLOAT:
               {
                 data.Float = SummingdBLevel[32+(MonitorBussNr*2)+1];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
               }
               break;
             }
