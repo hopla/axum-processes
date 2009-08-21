@@ -369,11 +369,14 @@ int main(int argc, char *argv[])
   mbnSetSensorDataResponseCallback(mbn, mSensorDataResponse);
   mbnSetSensorDataChangedCallback(mbn, mSensorDataChanged);
 
- //  mbnSetActuatorDataResponseCallback(mbn, mActuatorDataResponse);
+//  mbnSetActuatorDataResponseCallback(mbn, mActuatorDataResponse);
 //  mbnSetReceiveMessageCallback(mbn, mReceiveMessage);
 
 //  mbnSetErrorCallback(mbn, mError);
 //  mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
+
+  //start interface for the mbn-handler
+  mbnStartInterface(itf, error);
   log_write("Axum engine process started, version %d.%d", FIRMWARE_MAJOR_VERSION, FIRMWARE_MINOR_VERSION);
 
   //Update default values of EQ to the current values
