@@ -449,6 +449,9 @@ void init(int argc, char *argv[]) {
   mbnSetObjectInformationResponseCallback(mbn, mObjectInformationResponse);
   mbnSetObjectErrorCallback(mbn, mObjectError);
 
+  //start interface for the mbn-handler
+  mbnStartInterface(itf, err);
+
   daemonize_finish();
   log_write("------------------------");
   log_write("Axum Learner Initialized");
