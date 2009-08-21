@@ -260,14 +260,6 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
 		case 1032:
 		{
       browser->OnAirState = in.State;
-      if (in.State)
-      {
-			  browser->label_7->setText("ON AIR");
-			}
-			else
-			{
-        browser->label_7->setText("");
-      }
 		}
   }
   qt_mutex.unlock();
