@@ -4480,10 +4480,13 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             }
           }
         }
-        AxumData.RackOrganization[data.UInt] = message->AddressFrom;
+        if (AxumData.RackOrganization[data.UInt] != message->AddressFrom)
+        {
+          AxumData.RackOrganization[data.UInt] = message->AddressFrom;
 
-        log_write("0x%08lX found at slot: %d", message->AddressFrom, data.UInt+1);
-        db_insert_slot_config(data.UInt, message->AddressFrom, 0, 0);
+          log_write("0x%08lX found at slot: %d", message->AddressFrom, data.UInt+1);
+          db_insert_slot_config(data.UInt, message->AddressFrom, 0, 0);
+        }
         db_lock(0);
 
         //if a slot number exists, check the number of input/output channels.
