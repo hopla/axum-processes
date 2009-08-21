@@ -355,6 +355,8 @@ void init(int argc, char **argv) {
   mbnSetErrorCallback(mbn, mError);
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
 
+  mbnStartInterface(itf, err);
+
   if(!verbose)
     daemonize_finish();
   log_write("-------------------------------");
