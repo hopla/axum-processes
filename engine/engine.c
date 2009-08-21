@@ -1592,12 +1592,15 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
           case MODULE_FUNCTION_BUSS_31_32_ON_OFF:
           { //Buss on/off
             int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_ON_OFF)/(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF);
+            unsigned char CallSetBussOnOff = 0;
+
             printf("Buss %d/%d on/off\n", (BussNr*2)+1, (BussNr*2)+2);
             if (type == MBN_DATATYPE_STATE)
             {
               if (data.State)
               {
                 AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
+                CallSetBussOnOff = 1;
               }
               else
               {
@@ -1607,10 +1610,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
                   {
                     AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
+                    CallSetBussOnOff = 1;
                   }
                 }
               }
-              SetBussOnOff(ModuleNr, BussNr, data.State);
+              if (CallSetBussOnOff)
+              {
+                SetBussOnOff(ModuleNr, BussNr, 0);
+              }
             }
           }
           break;
@@ -3648,11 +3655,13 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                 for (int cntModule=0; cntModule<128; cntModule++)
                 {
+                  unsigned char CallSetBussOnOff = 0;
                   if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+matrix_sources.src_offset.min.source))
                   {
                     if (data.State)
                     {
                       AxumData.ModuleData[cntModule].Buss[BussNr].On = !AxumData.ModuleData[cntModule].Buss[BussNr].On;
+                      CallSetBussOnOff = 1;
                     }
                     else
                     {
@@ -3662,20 +3671,15 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
                         {
                           AxumData.ModuleData[cntModule].Buss[BussNr].On = !AxumData.ModuleData[cntModule].Buss[BussNr].On;
+                          CallSetBussOnOff = 1;
                         }
                       }
                     }
 
-                    SetAxum_BussLevels(cntModule);
-                    SetAxum_ModuleMixMinus(cntModule, 0);
-
-                    FunctionNrToSent = ((cntModule)<<12);
-                    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
-
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+                    if (CallSetBussOnOff)
+                    {
+                      SetBussOnOff(cntModule, BussNr, 0);
+                    }
                   }
                   else
                   {
@@ -11804,7 +11808,7 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr)
     AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance = RoutingPreset[cntBuss].Balance;
     AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel = RoutingPreset[cntBuss].PreModuleLevel;
 
-    SetBussOnOff(ModuleNr, cntBuss, 0);
+    SetBussOnOff(ModuleNr, cntBuss, 1);
 
     unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
     CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL))));

@@ -815,7 +815,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
           {
             SetAxum_BussLevels(ModuleNr);
 
-            SetBussOnOff(ModuleNr, cntBuss, 1);//use interlock
+            SetBussOnOff(ModuleNr, cntBuss, 1);//load preset 
 
             unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_LEVEL);
