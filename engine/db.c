@@ -494,31 +494,37 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
                                     lc_frequency,         \
                                     lc_on_off,            \
                                     eq_band_1_range,      \
+                                    eq_band_1_level,      \
                                     eq_band_1_freq,       \
                                     eq_band_1_bw,         \
                                     eq_band_1_slope,      \
                                     eq_band_1_type,       \
                                     eq_band_2_range,      \
+                                    eq_band_2_level,      \
                                     eq_band_2_freq,       \
                                     eq_band_2_bw,         \
                                     eq_band_2_slope,      \
                                     eq_band_2_type,       \
                                     eq_band_3_range,      \
+                                    eq_band_3_level,      \
                                     eq_band_3_freq,       \
                                     eq_band_3_bw,         \
                                     eq_band_3_slope,      \
                                     eq_band_3_type,       \
                                     eq_band_4_range,      \
+                                    eq_band_4_level,      \
                                     eq_band_4_freq,       \
                                     eq_band_4_bw,         \
                                     eq_band_4_slope,      \
                                     eq_band_4_type,       \
                                     eq_band_5_range,      \
+                                    eq_band_5_level,      \
                                     eq_band_5_freq,       \
                                     eq_band_5_bw,         \
                                     eq_band_5_slope,      \
                                     eq_band_5_type,       \
                                     eq_band_6_range,      \
+                                    eq_band_6_level,      \
                                     eq_band_6_freq,       \
                                     eq_band_6_bw,         \
                                     eq_band_6_slope,      \
@@ -646,6 +652,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       for (cntEQ=0; cntEQ<6; cntEQ++)
       {
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->EQBand[cntEQ].Range);
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->EQBand[cntEQ].Level);
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->EQBand[cntEQ].Frequency);
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->EQBand[cntEQ].Bandwidth);
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->EQBand[cntEQ].Slope);
