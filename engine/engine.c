@@ -387,12 +387,8 @@ int main(int argc, char *argv[])
   mbnSetAddressTableChangeCallback(mbn, mAddressTableChange);
   mbnSetSensorDataResponseCallback(mbn, mSensorDataResponse);
   mbnSetSensorDataChangedCallback(mbn, mSensorDataChanged);
-
-//  mbnSetActuatorDataResponseCallback(mbn, mActuatorDataResponse);
-//  mbnSetReceiveMessageCallback(mbn, mReceiveMessage);
-
-//  mbnSetErrorCallback(mbn, mError);
-//  mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
+  mbnSetErrorCallback(mbn, mError);
+  mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
 
   //start interface for the mbn-handler
   mbnStartInterface(itf, error);
@@ -4707,6 +4703,16 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
   unlock_node_info(__FUNCTION__);
 }
 
+void mError(struct mbn_handler *m, int code, char *str) {
+  log_write("MambaNet Error: %s (%d)", str, code);
+  m=NULL;
+}
+
+void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
+  log_write("Acknowledge timeout for message to %08lX", msg->AddressTo);
+  m=NULL;
+}
+
 void Timer100HzDone(int Value)
 {
   if ((cntMillisecondTimer-PreviousCount_LevelMeter)>MeterFrequency)
@@ -6604,7 +6610,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.UInt = Position;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 0);
             }
             break;
             case MBN_DATATYPE_OCTETS:

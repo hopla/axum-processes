@@ -393,6 +393,8 @@ float CalculateEQ(float *Coefficients, float Gain, int Frequency, float Bandwidt
 void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_info, struct mbn_address_node *new_info);
 int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data);
 int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data);
+void mError(struct mbn_handler *m, int code, char *str);
+void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg);
 
 void Timer100HzDone(int Value);
 
