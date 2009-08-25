@@ -276,7 +276,7 @@ void init(int argc, char **argv)
 
   hwparent(&this_node);
 
-  log_write("hwparent %04X:%04X:%04X\n", this_node.HardwareParent[0], this_node.HardwareParent[1], this_node.HardwareParent[2]);
+  log_write("hwparent %04X:%04X:%04X", this_node.HardwareParent[0], this_node.HardwareParent[1], this_node.HardwareParent[2]);
 
   db_open(dbstr);
 
@@ -448,6 +448,8 @@ int main(int argc, char *argv[])
     }
   }
   log_write("Closing Engine");
+
+  backup_close();
 
   DeleteAllObjectListPerFunction();
 
@@ -4604,7 +4606,7 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
   lock_node_info(__FUNCTION__);
   if (old_info == NULL)
   {
-    log_write("Add node with MambaNet address: %08lX\n", new_info->MambaNetAddr);
+    log_write("Add node with MambaNet address: %08lX", new_info->MambaNetAddr);
     ONLINE_NODE_INFORMATION_STRUCT *NewOnlineNodeInformationElement = new ONLINE_NODE_INFORMATION_STRUCT;
     NewOnlineNodeInformationElement->Next = NULL;
     NewOnlineNodeInformationElement->MambaNetAddress = new_info->MambaNetAddr;
@@ -4678,7 +4680,7 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
         }
       }
     }
-    log_write("Removed node with MambaNet address: %08lX\n", old_info->MambaNetAddr);
+    log_write("Removed node with MambaNet address: %08lX", old_info->MambaNetAddr);
   }
   else
   {
@@ -4698,9 +4700,9 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
 
     if (FoundOnlineNodeInformationElement != NULL)
     {
-      log_write("change OnlineNodeInformation\n");
+      log_write("change OnlineNodeInformation");
     }
-    log_write("Address changed: %08lX => %08lX\n", old_info->MambaNetAddr, new_info->MambaNetAddr);
+    log_write("Address changed: %08lX => %08lX", old_info->MambaNetAddr, new_info->MambaNetAddr);
   }
   unlock_node_info(__FUNCTION__);
 }
