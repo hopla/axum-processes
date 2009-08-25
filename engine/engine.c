@@ -18,6 +18,7 @@
 #include "db.h"
 #include "dsp.h"
 #include "mbn.h"
+#include "backup.h"
 
 #include <stdio.h>
 #include <stdlib.h>         //for atoi
@@ -65,6 +66,7 @@ pthread_mutex_t get_node_info_mutex;
 #define DEFAULT_ETH_DEV     "eth0"
 #define DEFAULT_DB_STR      "dbname='axum' user='axum'"
 #define DEFAULT_LOG_FILE    "/var/log/axum-engine.log"
+#define DEFAULT_BACKUP_FILE "/var/lib/axum/.backup"
 
 #define PCB_MAJOR_VERSION        1
 #define PCB_MINOR_VERSION        0
@@ -200,6 +202,7 @@ void init(int argc, char **argv)
   strcpy(dbstr, DEFAULT_DB_STR);
   strcpy(log_file, DEFAULT_LOG_FILE);
   strcpy(hwparent_path, DEFAULT_GTW_PATH);
+  strcpy(backup_file, DEFAULT_BACKUP_FILE);
 
   /* parse options */
   while((c = getopt(argc, argv, "e:d:l:g:i:f:v")) != -1) {
@@ -356,6 +359,22 @@ int main(int argc, char *argv[])
   db_read_db_to_position();
   db_lock(0);
 
+  //Update default values of EQ to the current values
+  for (int cntModule=0; cntModule<128; cntModule++)
+  {
+    for (int cntEQBand=0; cntEQBand<6; cntEQBand++)
+    {
+      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Level = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Level;
+      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Frequency = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Frequency;
+      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Bandwidth = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Bandwidth;
+      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Slope = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Slope;
+      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Type = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Type;
+    }
+  }
+
+  //Check for backup
+  backup_open((void *)&AxumData, sizeof(AxumData));
+
   if((mbn = mbnInit(&this_node, NULL, itf, error)) == NULL) {
     fprintf(stderr, "mbnInit: %s\n", error);
     dsp_close(dsp_handler);
@@ -378,19 +397,6 @@ int main(int argc, char *argv[])
   //start interface for the mbn-handler
   mbnStartInterface(itf, error);
   log_write("Axum engine process started, version %d.%d", FIRMWARE_MAJOR_VERSION, FIRMWARE_MINOR_VERSION);
-
-  //Update default values of EQ to the current values
-  for (int cntModule=0; cntModule<128; cntModule++)
-  {
-    for (int cntEQBand=0; cntEQBand<6; cntEQBand++)
-    {
-      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Level = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Level;
-      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Frequency = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Frequency;
-      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Bandwidth = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Bandwidth;
-      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Slope = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Slope;
-      AxumData.ModuleData[cntModule].EQBand[cntEQBand].Type = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Type;
-    }
-  }
 
   InitalizeAllObjectListPerFunction();
 
@@ -481,6 +487,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
   if (OnlineNodeInformationElement == NULL)
   {
+    printf("OnlineNodeInformationElement == NULL\n");
     return 1;
   }
 
@@ -4594,11 +4601,10 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
 void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_info, struct mbn_address_node *new_info)
 {
-  printf("mAddressTableChange\n");
   lock_node_info(__FUNCTION__);
   if (old_info == NULL)
   {
-    printf("ADD: %08lX\n", new_info->MambaNetAddr);
+    log_write("Add node with MambaNet address: %08lX\n", new_info->MambaNetAddr);
     ONLINE_NODE_INFORMATION_STRUCT *NewOnlineNodeInformationElement = new ONLINE_NODE_INFORMATION_STRUCT;
     NewOnlineNodeInformationElement->Next = NULL;
     NewOnlineNodeInformationElement->MambaNetAddress = new_info->MambaNetAddr;
@@ -4627,12 +4633,9 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
       }
       OnlineNodeInformationElement->Next = NewOnlineNodeInformationElement;
     }
-    printf("old: NULL, new: %08lX\n", new_info->MambaNetAddr);
 
     unsigned int ObjectNr = 7;//Firmware major revision;
     mbnGetSensorData(mbn, new_info->MambaNetAddr, ObjectNr, 1);
-    printf("Get firmware 0x%08lX\n", new_info->MambaNetAddr);
-
   }
   else if (new_info == NULL)
   {
@@ -4675,7 +4678,7 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
         }
       }
     }
-    printf("old: %08lX, new: NULL\n", old_info->MambaNetAddr);
+    log_write("Removed node with MambaNet address: %08lX\n", old_info->MambaNetAddr);
   }
   else
   {
@@ -4695,9 +4698,9 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
 
     if (FoundOnlineNodeInformationElement != NULL)
     {
-      printf("change OnlineNodeInformation\n");
+      log_write("change OnlineNodeInformation\n");
     }
-    printf("old: %08lX, new: %08lX\n", old_info->MambaNetAddr, new_info->MambaNetAddr);
+    log_write("Address changed: %08lX => %08lX\n", old_info->MambaNetAddr, new_info->MambaNetAddr);
   }
   unlock_node_info(__FUNCTION__);
 }
