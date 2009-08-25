@@ -1940,7 +1940,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 if (data.State)
                 {
-                  LoadRoutingPreset(ModuleNr, PresetNr);
+                  //only set differences
+                  LoadRoutingPreset(ModuleNr, PresetNr, 0);
                 }
               }
             }
@@ -3069,7 +3070,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 for (int cntModule=0; cntModule<128; cntModule++)
                 {
-                  LoadSourcePreset(cntModule);
+                  //Only set differences
+                  LoadSourcePreset(cntModule, false);
                 }
               }
               break;
@@ -10815,7 +10817,7 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
       AxumData.ModuleData[ModuleNr].Cough = 0;
 
       //eventual 'reset' set a preset?
-      LoadSourcePreset(ModuleNr);
+      LoadSourcePreset(ModuleNr, Forced);
 
       SetAxum_ModuleSource(ModuleNr);
       SetAxum_ModuleMixMinus(ModuleNr, OldSource);
@@ -11595,11 +11597,21 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
   return FoundOnlineNodeInformationElement;
 }
 
-void LoadSourcePreset(unsigned char ModuleNr)
+void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
 {
   bool SetModuleProcessing = false;
   bool SetModuleControllers = false;
   unsigned char cntEQ;
+  //parameters per module
+  float Gain = 0;
+  unsigned int Frequency = 80;
+  bool FilterOnOff = 0;
+  unsigned int InsertSource = 0;
+  bool InsertOnOff = 0;
+  bool EQOnOff;
+  AXUM_EQ_BAND_PRESET_STRUCT EQBand[6];
+  int Dynamics = 0;
+  bool DynamicsOnOff = 0;
 
   if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) &&
       (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
@@ -11611,104 +11623,69 @@ void LoadSourcePreset(unsigned char ModuleNr)
     {
       if (SourceData->Preset.UseGain)
       {
-        AxumData.ModuleData[ModuleNr].Gain = SourceData->Preset.Gain;
+        Gain = SourceData->Preset.Gain;
       }
       else
       {
-        AxumData.ModuleData[ModuleNr].Gain = AxumData.ModuleData[ModuleNr].Defaults.Gain;
+        Gain = AxumData.ModuleData[ModuleNr].Defaults.Gain;
       }
-
-      unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_GAIN_LEVEL);
-
-      SetModuleProcessing = true;
-      SetModuleControllers = true;
     }
 
     if ((SourceData->Preset.UseFilter) || (AxumData.UseModuleDefaults))
     {
       if (SourceData->Preset.UseFilter)
       {
-        AxumData.ModuleData[ModuleNr].Filter.Frequency = SourceData->Preset.Filter.Frequency;
-        AxumData.ModuleData[ModuleNr].FilterOnOff = SourceData->Preset.FilterOnOff;
+        Frequency = SourceData->Preset.Filter.Frequency;
+        FilterOnOff = SourceData->Preset.FilterOnOff;
       }
       else
       {
-        AxumData.ModuleData[ModuleNr].Filter.Frequency = AxumData.ModuleData[ModuleNr].Defaults.Filter.Frequency;
-        AxumData.ModuleData[ModuleNr].FilterOnOff = AxumData.ModuleData[ModuleNr].Defaults.FilterOnOff;
+        Frequency = AxumData.ModuleData[ModuleNr].Defaults.Filter.Frequency;
+        FilterOnOff = AxumData.ModuleData[ModuleNr].Defaults.FilterOnOff;
       }
-
-      unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_FREQUENCY);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_ON_OFF);
-
-      SetModuleProcessing = true;
-      SetModuleControllers = true;
     }
 
     if ((SourceData->Preset.UseInsert) || (AxumData.UseModuleDefaults))
     {
       if (SourceData->Preset.UseInsert)
       {
-        AxumData.ModuleData[ModuleNr].InsertSource = SourceData->Preset.InsertSource;
-        AxumData.ModuleData[ModuleNr].InsertOnOff = SourceData->Preset.InsertOnOff;
+        InsertSource = SourceData->Preset.InsertSource;
+        InsertOnOff = SourceData->Preset.InsertOnOff;
       }
       else
       {
-        AxumData.ModuleData[ModuleNr].InsertSource = AxumData.ModuleData[ModuleNr].Defaults.InsertSource;
-        AxumData.ModuleData[ModuleNr].InsertOnOff = AxumData.ModuleData[ModuleNr].Defaults.InsertOnOff;
+        InsertSource = AxumData.ModuleData[ModuleNr].Defaults.InsertSource;
+        InsertOnOff = AxumData.ModuleData[ModuleNr].Defaults.InsertOnOff;
       }
-
-      SetAxum_ModuleInsertSource(ModuleNr);
-
-      unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_INSERT_ON_OFF);
-
-      SetModuleProcessing = true;
-      SetModuleControllers = true;
     }
 
     if ((SourceData->Preset.UseEQ) || (AxumData.UseModuleDefaults))
     {
       if (SourceData->Preset.UseEQ)
       {
-        AxumData.ModuleData[ModuleNr].EQOnOff = SourceData->Preset.EQOnOff;
+        EQOnOff = SourceData->Preset.EQOnOff;
         for (cntEQ=0; cntEQ<6; cntEQ++)
         {
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Range = SourceData->Preset.EQBand[cntEQ].Range;
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Level = SourceData->Preset.EQBand[cntEQ].Level;
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Frequency = SourceData->Preset.EQBand[cntEQ].Frequency;
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Bandwidth = SourceData->Preset.EQBand[cntEQ].Bandwidth;
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Slope = SourceData->Preset.EQBand[cntEQ].Slope;
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Type = SourceData->Preset.EQBand[cntEQ].Type;
+          EQBand[cntEQ].Range = SourceData->Preset.EQBand[cntEQ].Range;
+          EQBand[cntEQ].Level = SourceData->Preset.EQBand[cntEQ].Level;
+          EQBand[cntEQ].Frequency = SourceData->Preset.EQBand[cntEQ].Frequency;
+          EQBand[cntEQ].Bandwidth = SourceData->Preset.EQBand[cntEQ].Bandwidth;
+          EQBand[cntEQ].Slope = SourceData->Preset.EQBand[cntEQ].Slope;
+          EQBand[cntEQ].Type = SourceData->Preset.EQBand[cntEQ].Type;
         }
       }
       else
       {
-        AxumData.ModuleData[ModuleNr].EQOnOff = AxumData.ModuleData[ModuleNr].Defaults.EQOnOff;
+        EQOnOff = AxumData.ModuleData[ModuleNr].Defaults.EQOnOff;
         for (cntEQ=0; cntEQ<6; cntEQ++)
         {
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Range = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Range;
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Level = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Level;
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Frequency = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Frequency;
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Bandwidth = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Bandwidth;
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Slope = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Slope;
-          AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Type = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Type;
+          EQBand[cntEQ].Range = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Range;
+          EQBand[cntEQ].Level = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Level;
+          EQBand[cntEQ].Frequency = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Frequency;
+          EQBand[cntEQ].Bandwidth = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Bandwidth;
+          EQBand[cntEQ].Slope = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Slope;
+          EQBand[cntEQ].Type = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Type;
         }
-      }
-
-      for (cntEQ=0; cntEQ<6; cntEQ++)
-      {
-        SetAxum_EQ(ModuleNr, cntEQ);
-
-        unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_LEVEL+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL))));
-        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_FREQUENCY+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY))));
-        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH))));
-        //CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_SLOPE+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_SLOPE-MODULE_FUNCTION_EQ_BAND_1_SLOPE))));
-        CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_TYPE+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_TYPE-MODULE_FUNCTION_EQ_BAND_1_TYPE))));
-
-        SetModuleControllers = true;
       }
     }
 
@@ -11716,87 +11693,170 @@ void LoadSourcePreset(unsigned char ModuleNr)
     {
       if (SourceData->Preset.UseDynamics)
       {
-        AxumData.ModuleData[ModuleNr].Dynamics = SourceData->Preset.Dynamics;
-        AxumData.ModuleData[ModuleNr].DynamicsOnOff = SourceData->Preset.DynamicsOnOff;
+        Dynamics = SourceData->Preset.Dynamics;
+        DynamicsOnOff = SourceData->Preset.DynamicsOnOff;
       }
       else
       {
-        AxumData.ModuleData[ModuleNr].Dynamics = AxumData.ModuleData[ModuleNr].Defaults.Dynamics;
-        AxumData.ModuleData[ModuleNr].DynamicsOnOff = AxumData.ModuleData[ModuleNr].Defaults.DynamicsOnOff;
+        Dynamics = AxumData.ModuleData[ModuleNr].Defaults.Dynamics;
+        DynamicsOnOff = AxumData.ModuleData[ModuleNr].Defaults.DynamicsOnOff;
       }
-
-      unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_AMOUNT);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_ON_OFF);
-
-      SetModuleProcessing = true;
-      SetModuleControllers = true;
     }
 
     if ((SourceData->Preset.UseRouting) || (AxumData.UseModuleDefaults))
     {
       if (SourceData->Preset.UseRouting)
       {
-        LoadRoutingPreset(ModuleNr, SourceData->Preset.RoutingPreset);
+        LoadRoutingPreset(ModuleNr, SourceData->Preset.RoutingPreset, SetAllObjects);
       }
       else
       {
-        LoadRoutingPreset(ModuleNr, 0);
+        LoadRoutingPreset(ModuleNr, 0, SetAllObjects);
       }
     }
   }
   else if (AxumData.UseModuleDefaults)
   {
-    AxumData.ModuleData[ModuleNr].Gain = AxumData.ModuleData[ModuleNr].Defaults.Gain;
+    Gain = AxumData.ModuleData[ModuleNr].Defaults.Gain;
 
-    AxumData.ModuleData[ModuleNr].Filter.Frequency = AxumData.ModuleData[ModuleNr].Defaults.Filter.Frequency;
-    AxumData.ModuleData[ModuleNr].FilterOnOff = AxumData.ModuleData[ModuleNr].Defaults.FilterOnOff;
+    Frequency = AxumData.ModuleData[ModuleNr].Defaults.Filter.Frequency;
+    FilterOnOff = AxumData.ModuleData[ModuleNr].Defaults.FilterOnOff;
 
-
-    AxumData.ModuleData[ModuleNr].InsertSource = AxumData.ModuleData[ModuleNr].Defaults.InsertSource;
-    AxumData.ModuleData[ModuleNr].InsertOnOff = AxumData.ModuleData[ModuleNr].Defaults.InsertOnOff;
+    InsertSource = AxumData.ModuleData[ModuleNr].Defaults.InsertSource;
+    InsertOnOff = AxumData.ModuleData[ModuleNr].Defaults.InsertOnOff;
     for (cntEQ=0; cntEQ<6; cntEQ++)
     {
-      AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Range = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Range;
-      AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Level = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Level;
-      AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Frequency = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Frequency;
-      AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Bandwidth = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Bandwidth;
-      AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Slope = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Slope;
-      AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Type = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Type;
+      EQBand[cntEQ].Range = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Range;
+      EQBand[cntEQ].Level = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Level;
+      EQBand[cntEQ].Frequency = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Frequency;
+      EQBand[cntEQ].Bandwidth = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Bandwidth;
+      EQBand[cntEQ].Slope = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Slope;
+      EQBand[cntEQ].Type = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Type;
     }
-    AxumData.ModuleData[ModuleNr].EQOnOff = AxumData.ModuleData[ModuleNr].Defaults.EQOnOff;
-    AxumData.ModuleData[ModuleNr].Dynamics = AxumData.ModuleData[ModuleNr].Defaults.Dynamics;
-    AxumData.ModuleData[ModuleNr].DynamicsOnOff = AxumData.ModuleData[ModuleNr].Defaults.DynamicsOnOff;
+    EQOnOff = AxumData.ModuleData[ModuleNr].Defaults.EQOnOff;
+    Dynamics = AxumData.ModuleData[ModuleNr].Defaults.Dynamics;
+    DynamicsOnOff = AxumData.ModuleData[ModuleNr].Defaults.DynamicsOnOff;
 
-    SetAxum_ModuleInsertSource(ModuleNr);
+    LoadRoutingPreset(ModuleNr, 0, SetAllObjects);
+  }
 
+  //Set if there is a difference
+  if ((AxumData.ModuleData[ModuleNr].Gain != Gain) || (SetAllObjects))
+  {
     unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+
+    AxumData.ModuleData[ModuleNr].Gain = Gain;
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_GAIN_LEVEL);
+
+    SetModuleProcessing = true;
+    SetModuleControllers = true;
+  }
+  if ((AxumData.ModuleData[ModuleNr].Filter.Frequency != Frequency) || (SetAllObjects))
+  {
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    AxumData.ModuleData[ModuleNr].Filter.Frequency = Frequency;
+
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_FREQUENCY);
+    SetModuleProcessing = true;
+    SetModuleControllers = true;
+  }
+
+  if ((AxumData.ModuleData[ModuleNr].FilterOnOff != FilterOnOff) || (SetAllObjects))
+  {
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    AxumData.ModuleData[ModuleNr].FilterOnOff = FilterOnOff;
+
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_ON_OFF);
-    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_INSERT_ON_OFF);
-
-
-    for (cntEQ=0; cntEQ<6; cntEQ++)
-    {
-      SetAxum_EQ(ModuleNr, cntEQ);
-
-      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_LEVEL+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL))));
-      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_FREQUENCY+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY))));
-      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH))));
-      //CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_SLOPE+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_SLOPE-MODULE_FUNCTION_EQ_BAND_1_SLOPE))));
-      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_TYPE+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_TYPE-MODULE_FUNCTION_EQ_BAND_1_TYPE))));
-    }
-
-    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_AMOUNT);
-    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_ON_OFF);
-
-    LoadRoutingPreset(ModuleNr, 0);
 
     SetModuleProcessing = true;
     SetModuleControllers = true;
   }
 
+  if ((AxumData.ModuleData[ModuleNr].InsertSource != InsertSource) || (SetAllObjects))
+  {
+    AxumData.ModuleData[ModuleNr].InsertSource = InsertSource;
+    SetAxum_ModuleInsertSource(ModuleNr);
+    SetModuleControllers = true;
+  }
+
+  if ((AxumData.ModuleData[ModuleNr].InsertOnOff != InsertOnOff) || (SetAllObjects))
+  {
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    AxumData.ModuleData[ModuleNr].InsertOnOff = InsertOnOff;
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_INSERT_ON_OFF);
+
+    SetModuleProcessing = true;
+    SetModuleControllers = true;
+  }
+
+  if ((AxumData.ModuleData[ModuleNr].EQOnOff != EQOnOff) || (SetAllObjects))
+  {
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+
+    AxumData.ModuleData[ModuleNr].EQOnOff = EQOnOff;
+    for (int cntBand=0; cntBand<6; cntBand++)
+    {
+      SetAxum_EQ(ModuleNr, cntBand);
+    }
+
+    FunctionNrToSent = (ModuleNr<<12) | MODULE_FUNCTION_EQ_ON_OFF;
+    CheckObjectsToSent(FunctionNrToSent);
+
+    SetModuleControllers = true;
+  }
+
+  for (cntEQ=0; cntEQ<6; cntEQ++)
+  {
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    bool EQBandChanged = false;
+
+    if ((AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Level != EQBand[cntEQ].Level) || (SetAllObjects))
+    {
+      AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Level = EQBand[cntEQ].Level;
+      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_LEVEL+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL))));
+      EQBandChanged = true;
+    }
+    if ((AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Frequency != EQBand[cntEQ].Frequency) || (SetAllObjects))
+    {
+      AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Frequency = EQBand[cntEQ].Frequency;
+      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_FREQUENCY+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY))));
+      EQBandChanged = true;
+    }
+    if ((AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Bandwidth != EQBand[cntEQ].Bandwidth) || (SetAllObjects))
+    {
+      AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Bandwidth = EQBand[cntEQ].Bandwidth;
+      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH))));
+      EQBandChanged = true;
+    }
+    if ((AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Type != EQBand[cntEQ].Type) || (SetAllObjects))
+    {
+      AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Type = EQBand[cntEQ].Type;
+      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_TYPE+(cntEQ*(MODULE_FUNCTION_EQ_BAND_2_TYPE-MODULE_FUNCTION_EQ_BAND_1_TYPE))));
+      EQBandChanged = true;
+    }
+
+    if (EQBandChanged)
+    {
+      SetAxum_EQ(ModuleNr, cntEQ);
+      SetModuleControllers = true;
+    }
+  }
+  if ((AxumData.ModuleData[ModuleNr].Dynamics != Dynamics) || (SetAllObjects))
+  {
+    AxumData.ModuleData[ModuleNr].Dynamics = Dynamics;
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_AMOUNT);
+    SetModuleProcessing = true;
+    SetModuleControllers = true;
+  }
+  if ((AxumData.ModuleData[ModuleNr].DynamicsOnOff != DynamicsOnOff) || (SetAllObjects))
+  {
+    AxumData.ModuleData[ModuleNr].DynamicsOnOff = DynamicsOnOff;
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_ON_OFF);
+    SetModuleProcessing = true;
+    SetModuleControllers = true;
+  }
 
   if (SetModuleProcessing)
   {
@@ -11813,23 +11873,64 @@ void LoadSourcePreset(unsigned char ModuleNr)
   }
 }
 
-void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr)
+void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char SetAllObjects)
 {
   unsigned char cntBuss;
   AXUM_ROUTING_PRESET_STRUCT *RoutingPreset = AxumData.ModuleData[ModuleNr].RoutingPreset[PresetNr];
+  bool BussChanged = false;
+  bool SetModuleControllers = false;
+  unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
 
   for (cntBuss=0; cntBuss<16; cntBuss++)
   {
-    AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level = RoutingPreset[cntBuss].Level;
-    AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = RoutingPreset[cntBuss].On;
-    AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance = RoutingPreset[cntBuss].Balance;
-    AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel = RoutingPreset[cntBuss].PreModuleLevel;
+    float Level = -140;
+    bool On = 0;
+    signed int Balance = 512;
+    bool PreModuleLevel = 0;
 
-    SetBussOnOff(ModuleNr, cntBuss, 1);
+    Level = RoutingPreset[cntBuss].Level;
+    On = RoutingPreset[cntBuss].On;
+    Balance = RoutingPreset[cntBuss].Balance;
+    PreModuleLevel = RoutingPreset[cntBuss].PreModuleLevel;
 
-    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL))));
-    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_BALANCE+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_BALANCE-MODULE_FUNCTION_BUSS_1_2_BALANCE))));
-    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_PRE+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_PRE-MODULE_FUNCTION_BUSS_1_2_PRE))));
+    if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level != Level) || (SetAllObjects))
+    {
+      AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level = Level;
+      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL))));
+      BussChanged = true;
+      SetModuleControllers = true;
+    }
+    if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].On != On) || (SetAllObjects))
+    {
+      AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = On;
+      SetBussOnOff(ModuleNr, cntBuss, 1);
+      SetModuleControllers = true;
+    }
+    if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance != Balance) || (SetAllObjects))
+    {
+      AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance = Balance;
+      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_BALANCE+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_BALANCE-MODULE_FUNCTION_BUSS_1_2_BALANCE))));
+      BussChanged = true;
+      SetModuleControllers = true;
+    }
+    if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel != PreModuleLevel) || (SetAllObjects))
+    {
+      AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel = PreModuleLevel;
+      CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_PRE+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_PRE-MODULE_FUNCTION_BUSS_1_2_PRE))));
+      BussChanged = true;
+      SetModuleControllers = true;
+    }
+  }
+
+  if (BussChanged)
+  {
+    SetAxum_BussLevels(ModuleNr);
+  }
+  if (SetModuleControllers)
+  {
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
   }
 }

@@ -456,7 +456,7 @@ void initialize_axum_data_struct();
 ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr);
 
 
-void LoadSourcePreset(unsigned char ModuleNr);
-void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr);
+void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects);
+void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char SetAllObjects);
 
 #endif
