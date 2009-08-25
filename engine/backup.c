@@ -74,7 +74,6 @@ size_t backup_read(void *buffer, size_t length)
 
 void backup_write(const void *buffer, size_t length)
 {
-  log_write("write backup...(0x%08X)", backupfd);
   if(backupfd != NULL) {
     rewind(backupfd);
     fwrite(buffer, length, 1, backupfd);
