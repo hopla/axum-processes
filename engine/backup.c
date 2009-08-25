@@ -14,7 +14,8 @@ pthread_t backup_thread;
 backup_info_struct backup_info;
 backup_info_struct old_backup_info;
 
-void backup_open(void *buffer, size_t length) {
+size_t backup_open(void *buffer, size_t length) {
+  size_t readed_length = 0;
   backup_info.buffer = buffer;
   backup_info.length = length;
   old_backup_info.buffer = calloc(length, 1);
@@ -25,7 +26,7 @@ void backup_open(void *buffer, size_t length) {
   if((backupfd = fopen(backup_file, "r")) == NULL) {
     log_write("No backup file: %s", strerror(errno));
   } else {
-    size_t readed_length = backup_read(old_backup_info.buffer, length);
+    readed_length = backup_read(old_backup_info.buffer, length);
     if(readed_length == 1) {
       log_write("Correct size, use backup");
       memcpy(buffer, old_backup_info.buffer, length);
@@ -41,6 +42,8 @@ void backup_open(void *buffer, size_t length) {
   //initial write
   backup_write(buffer, length);
   pthread_create(&backup_thread, NULL, backup_thread_loop, (void *)&backup_info);
+
+  return readed_length;
 }
 
 void backup_close() {

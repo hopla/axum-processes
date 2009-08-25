@@ -373,7 +373,24 @@ int main(int argc, char *argv[])
   }
 
   //Check for backup
-  backup_open((void *)&AxumData, sizeof(AxumData));
+  if (backup_open((void *)&AxumData, sizeof(AxumData)))
+  { //Backup loaded set processing data
+    for (int cntModule=0; cntModule<128; cntModule++)
+    {
+      for (int cntBand=0; cntBand<6; cntBand++)
+      {
+        SetAxum_EQ(cntModule, cntBand);
+      }
+      SetAxum_ModuleProcessing(cntModule);
+      SetAxum_ModuleMixMinus(cntModule, 0);
+      SetAxum_BussLevels(cntModule);
+    }
+    SetAxum_BussMasterLevels();
+    for (int cntBuss=0; cntBuss<16; cntBuss++)
+    {
+      SetAxum_MonitorBuss(cntBuss);
+    }
+  }
 
   if((mbn = mbnInit(&this_node, NULL, itf, error)) == NULL) {
     fprintf(stderr, "mbnInit: %s\n", error);

@@ -17,7 +17,7 @@ extern char backup_file[500];
 size_t backup_read(void *buffer, size_t length);
 void backup_write(const void *buffer, size_t length);
 void backup_close();
-void backup_open(void *buffer, size_t length);
+size_t backup_open(void *buffer, size_t length);
 void *backup_thread_loop(void *arg);
 
 extern volatile int main_quit;

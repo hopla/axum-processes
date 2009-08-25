@@ -406,7 +406,7 @@ void SetBackplane_Clock();
 
 void SetAxum_EQ(unsigned char ModuleNr, unsigned char BandNr);
 void SetAxum_ModuleProcessing(unsigned int ModuleNr);
-void SetAxum_BussLevels(unsigned int ChannelNr);
+void SetAxum_BussLevels(unsigned int ModuleNr);
 
 void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned int *r_ch);
 
@@ -416,8 +416,6 @@ void SetAxum_ModuleInsertSource(unsigned int ModuleNr);
 void SetAxum_DestinationSource(unsigned int DestinationNr);
 void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr);
 void SetAxum_TalkbackSource(unsigned int TalkbackNr);
-
-void SetModule_Switch(unsigned int SwitchNr, unsigned int ModuleNr, unsigned char State);
 
 void SetAxum_BussMasterLevels();
 void SetAxum_MonitorBuss(unsigned int MonitorBussNr);
