@@ -583,7 +583,7 @@ QTabWidget::tab-bar
 }</string>
      </property>
      <property name="text" >
-      <string>-</string>
+      <string></string>
      </property>
      <property name="textFormat" >
       <enum>Qt::PlainText</enum>
