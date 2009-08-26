@@ -9,7 +9,7 @@
 #include <string.h>
 #include <math.h>
 
-//#define LOG_DEBUG_ENABLED
+#define LOG_DEBUG_ENABLED
 
 #ifdef LOG_DEBUG_ENABLED
   #define LOG_DEBUG(...) log_write(__VA_ARGS__)
@@ -1615,7 +1615,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   int cntParams;
   int cntRow;
   unsigned int cntObject;
-  unsigned char *ObjectConfigChanged;
+  unsigned int *OldFunctions;
 
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -1628,15 +1628,13 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   //to make sure we can do 'if <'
   last_obj++;
 
-  ObjectConfigChanged = new unsigned char[last_obj-first_obj];
-  if (ObjectConfigChanged == NULL)
+  OldFunctions = new unsigned int[last_obj-first_obj];
+  if (OldFunctions == NULL)
   {
-    log_write("[%s] Error no memory available for array ObjectConfigChanged", __func__);
+    log_write("[%s] Error no memory available for array OldFunctions", __func__);
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
-
-  memset(ObjectConfigChanged, 0, last_obj-first_obj);
 
   for (cntParams=0; cntParams<3; cntParams++)
   {
@@ -1650,18 +1648,15 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   PGresult *qres = sql_exec("SELECT object, func FROM node_config WHERE addr=$1 AND object>=$2 AND object<=$3", 1, 3, params);
   if (qres == NULL)
   {
-    delete[] ObjectConfigChanged;
+    delete[] OldFunctions;
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
 
   for (cntObject=first_obj; cntObject<last_obj; cntObject++)
   {
-    if (node_info->SensorReceiveFunction[cntObject-1024].FunctionNr != ((unsigned int)-1))
-    {
-      node_info->SensorReceiveFunction[cntObject-1024].FunctionNr = -1;
-      ObjectConfigChanged[cntObject-1024] = 1;
-    }
+    OldFunctions[cntObject-1024] = node_info->SensorReceiveFunction[cntObject-1024].FunctionNr;
+    node_info->SensorReceiveFunction[cntObject-1024].FunctionNr = -1;
   }
 
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
@@ -1676,40 +1671,31 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
     sscanf(PQgetvalue(qres, cntRow, 1), "(%hhd,%hd,%hd)", &type, &seq_nr, &func_nr);
     TotalFunctionNr = (((unsigned int)type)<<24)|(((unsigned int)seq_nr)<<12)|func_nr;
 
-
     if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->NumberOfCustomObjects))
     {
       if (node_info->SensorReceiveFunction != NULL)
       {
         SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[ObjectNr-1024];
 
-        if (sensor_rcv_func->FunctionNr != TotalFunctionNr)
+        sensor_rcv_func->FunctionNr = TotalFunctionNr;
+        if (OldFunctions[ObjectNr-1024] != sensor_rcv_func->FunctionNr)
         {
-          sensor_rcv_func->FunctionNr = TotalFunctionNr;
           sensor_rcv_func->LastChangedTime = 0;
           sensor_rcv_func->PreviousLastChangedTime = 0;
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-          ObjectConfigChanged[ObjectNr-1024] = 1;
+          printf("Object:%d, Func: %08X\n", cntObject, sensor_rcv_func->FunctionNr);
+          MakeObjectListPerFunction(sensor_rcv_func->FunctionNr);
+
+          CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
+          delay_ms(1);
         }
       }
     }
   }
 
-  for (cntObject=first_obj; cntObject<last_obj; cntObject++)
-  {
-    if (ObjectConfigChanged[cntObject-1024])
-    {
-      SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[cntObject-1024];
-      printf("Object:%d, Func: %08X\n", cntObject, sensor_rcv_func->FunctionNr);
-      MakeObjectListPerFunction(sensor_rcv_func->FunctionNr);
-
-      CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
-      delay_ms(1);
-    }
-  }
   PQclear(qres);
 
-  delete[] ObjectConfigChanged;
+  delete[] OldFunctions;
 
   LOG_DEBUG("[%s] leave", __func__);
 
