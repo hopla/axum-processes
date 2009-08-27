@@ -4486,7 +4486,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
           if (OnlineNodeInformationElement->NumberOfCustomObjects>0)
           {
-            db_read_node_defaults(OnlineNodeInformationElement, 1024, OnlineNodeInformationElement->NumberOfCustomObjects+1023);
+            db_read_node_defaults(OnlineNodeInformationElement, 1024, OnlineNodeInformationElement->NumberOfCustomObjects+1023, 0);
             db_read_node_config(OnlineNodeInformationElement, 1024, OnlineNodeInformationElement->NumberOfCustomObjects+1023);
           }
           db_lock(0);

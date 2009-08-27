@@ -1445,7 +1445,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
   return 1;
 }
 
-int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj)
+int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj, bool DoNotCheckDefault)
 {
   char str[3][32];
   const char *params[3];
@@ -1502,7 +1502,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             unsigned long int DataValue;
             sscanf(PQgetvalue(qres, cntRow, 1), "(%ld,,,)", &DataValue);
 
-            if (DataValue != obj_info->CurrentActuatorDataDefault)
+            if ((DataValue != obj_info->CurrentActuatorDataDefault) || (DoNotCheckDefault))
             {
               data_size = obj_info->ActuatorDataSize;
               if (obj_info->ActuatorDataType == MBN_DATATYPE_UINT)
@@ -1522,7 +1522,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             long int DataValue;
             sscanf(PQgetvalue(qres, cntRow, 1), "(%ld,,,)", &DataValue);
 
-            if (DataValue != obj_info->CurrentActuatorDataDefault)
+            if ((DataValue != obj_info->CurrentActuatorDataDefault) || (DoNotCheckDefault))
             {
               data_size = obj_info->ActuatorDataSize;
               data.SInt = DataValue;
@@ -1551,7 +1551,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             float DataValue;
             sscanf(PQgetvalue(qres, cntRow, 1), "(,%f,,)", &DataValue);
 
-            if (DataValue != obj_info->CurrentActuatorDataDefault)
+            if ((DataValue != obj_info->CurrentActuatorDataDefault) || (DoNotCheckDefault))
             {
               data_size = obj_info->ActuatorDataSize;
               data.Float = DataValue;
@@ -2065,8 +2065,13 @@ void db_event_defaults_changed(char myself, char *arg)
 {
   LOG_DEBUG("[%s] enter", __func__);
   unsigned long int addr;
+  unsigned int obj;
 
-  sscanf(arg, "%ld", &addr);
+  if (sscanf(arg, "%ld %d", &addr, &obj) != 2)
+  {
+    log_write("defaults_changed notify has to less arguments");
+    LOG_DEBUG("[%s] leave with error", __func__);
+  }
 
   ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(addr);
   if (node_info == NULL)
@@ -2075,7 +2080,7 @@ void db_event_defaults_changed(char myself, char *arg)
     LOG_DEBUG("[%s] leave with error", __func__);
     return;
   }
-  db_read_node_defaults(node_info, 1024, node_info->NumberOfCustomObjects+1023);
+  db_read_node_defaults(node_info, obj, obj, 1);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
