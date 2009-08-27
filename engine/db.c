@@ -1692,6 +1692,22 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
       }
     }
   }
+  for (cntObject=first_obj; cntObject<last_obj; cntObject++)
+  {
+    if (node_info->SensorReceiveFunction != NULL)
+    {
+      SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[cntObject-1024];
+
+      if ((OldFunctions[cntObject-1024] != (unsigned int)-1) && (sensor_rcv_func->FunctionNr == (unsigned int)-1))
+      {
+        sensor_rcv_func->LastChangedTime = 0;
+        sensor_rcv_func->PreviousLastChangedTime = 0;
+        sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
+        log_write("Configuration changed addr: %08lX, obj:%d, old-func: %08X, func: %08X\n", node_info->MambaNetAddress, cntObject, OldFunctions[cntObject-1024], sensor_rcv_func->FunctionNr);
+        MakeObjectListPerFunction(OldFunctions[cntObject-1024]);
+      }
+    }
+  }
 
   PQclear(qres);
 
@@ -2039,7 +2055,7 @@ void db_event_node_config_changed(char myself, char *arg)
     LOG_DEBUG("[%s] leave with error", __func__);
     return;
   }
-  db_read_node_config(node_info, 1024, node_info->NumberOfCustomObjects+1024);
+  db_read_node_config(node_info, 1024, node_info->NumberOfCustomObjects+1023);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
@@ -2059,7 +2075,7 @@ void db_event_defaults_changed(char myself, char *arg)
     LOG_DEBUG("[%s] leave with error", __func__);
     return;
   }
-  db_read_node_defaults(node_info, 1024, node_info->NumberOfCustomObjects+1024);
+  db_read_node_defaults(node_info, 1024, node_info->NumberOfCustomObjects+1023);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
