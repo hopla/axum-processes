@@ -74,9 +74,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION defaults_changed() RETURNS trigger AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
-    INSERT INTO recent_changes (change, arguments) VALUES('defaults_changed', OLD.addr::text);
+    INSERT INTO recent_changes (change, arguments) VALUES('defaults_changed', OLD.addr::text||' '||OLD.object::text);
   ELSE
-    INSERT INTO recent_changes (change, arguments) VALUES('defaults_changed', NEW.addr::text);
+    INSERT INTO recent_changes (change, arguments) VALUES('defaults_changed', NEW.addr::text||' '||NEW.object::text);
   END IF;
   RETURN NULL;
 END
