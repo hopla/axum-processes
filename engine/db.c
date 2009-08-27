@@ -1683,7 +1683,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
           sensor_rcv_func->LastChangedTime = 0;
           sensor_rcv_func->PreviousLastChangedTime = 0;
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-          printf("Object:%d, Func: %08X\n", cntObject, sensor_rcv_func->FunctionNr);
+          log_write("Configuration changed addr: %08lX, obj:%d, func: %08X\n", node_info->MambaNetAddress, ObjectNr, sensor_rcv_func->FunctionNr);
           MakeObjectListPerFunction(sensor_rcv_func->FunctionNr);
 
           CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
