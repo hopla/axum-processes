@@ -1698,13 +1698,16 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
     {
       SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[cntObject-1024];
 
-      if ((OldFunctions[cntObject-1024] != (unsigned int)-1) && (sensor_rcv_func->FunctionNr == (unsigned int)-1))
+      if (OldFunctions[cntObject-1024] != sensor_rcv_func->FunctionNr)
       {
-        sensor_rcv_func->LastChangedTime = 0;
-        sensor_rcv_func->PreviousLastChangedTime = 0;
-        sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-        log_write("Configuration changed addr: %08lX, obj:%d, old-func: %08X, func: %08X\n", node_info->MambaNetAddress, cntObject, OldFunctions[cntObject-1024], sensor_rcv_func->FunctionNr);
-        MakeObjectListPerFunction(OldFunctions[cntObject-1024]);
+        if (OldFunctions[cntObject-1024] != (unsigned int)-1)
+        {
+          sensor_rcv_func->LastChangedTime = 0;
+          sensor_rcv_func->PreviousLastChangedTime = 0;
+          sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
+          log_write("Configuration changed addr: %08lX, obj:%d, old-func: %08X, func: %08X\n", node_info->MambaNetAddress, cntObject, OldFunctions[cntObject-1024], sensor_rcv_func->FunctionNr);
+          MakeObjectListPerFunction(OldFunctions[cntObject-1024]);
+        }
       }
     }
   }
