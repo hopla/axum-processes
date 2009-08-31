@@ -482,6 +482,9 @@ int main(int argc, char *argv[])
     if (DeleteOnlineNodeInformationElement->SensorReceiveFunction != NULL)
     {
       delete[] DeleteOnlineNodeInformationElement->SensorReceiveFunction;
+    }
+    if (DeleteOnlineNodeInformationElement->ObjectInformation != NULL)
+    {
       delete[] DeleteOnlineNodeInformationElement->ObjectInformation;
     }
     delete DeleteOnlineNodeInformationElement;
@@ -4682,6 +4685,9 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
           if (OnlineNodeInformationElement->SensorReceiveFunction != NULL)
           {
             delete[] OnlineNodeInformationElement->SensorReceiveFunction;
+          }
+          if (OnlineNodeInformationElement->ObjectInformation != NULL)
+          {
             delete[] OnlineNodeInformationElement->ObjectInformation;
           }
 
