@@ -169,9 +169,30 @@ int mSensorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned
   m++;
 }
 
+#define WHITESPACE_CHARS  " \f\n\r\t\v"
+
+char *trim(char *string)
+{
+  char *result = NULL, *ptr = NULL;
+
+  if (string)
+  {
+    ptr = string;
+    while (strchr(WHITESPACE_CHARS, *ptr))
+      ++ptr;
+    result = strdup(ptr);
+    for (ptr = result; *ptr; ptr++);
+    for (--ptr; strchr(WHITESPACE_CHARS, *ptr); --ptr);
+    *(++ptr) = '\0';
+  }
+  return result;
+}
+
+
 
 int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsigned short obj, unsigned char type, union mbn_data dat) {
   struct db_node node;
+  unsigned char s, e, i, x;
 
   if(obj != MBN_NODEOBJ_NAME || type != MBN_DATATYPE_OCTETS)
     return 1;
@@ -179,6 +200,22 @@ int mActuatorDataResponse(struct mbn_handler *m, struct mbn_message *msg, unsign
   db_lock(1);
   if(db_getnode(&node, msg->AddressFrom)) {
     strncpy(node.Name, (char *)dat.Octets, 32);
+
+    i = 0;
+    x = 0;
+    s = 0;
+    e = 31;
+    while ((strchr(WHITESPACE_CHARS, node.Name[s])) && (s<32))
+      s++;
+    while ((strchr(WHITESPACE_CHARS, node.Name[e])) && (e>0))
+      e--;
+
+    for (i=s; i<e; i++)
+    {
+      node.Name[x++] = node.Name[i];
+    }
+    node.Name[31] = '\0';
+
     node.flags &= ~DB_FLAGS_REFRESH;
     log_write("Received name of %08lX: %s", msg->AddressFrom, node.Name);
     db_setnode(msg->AddressFrom, &node);
