@@ -559,6 +559,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             else if (type == MBN_DATATYPE_STATE)
             {
+              CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
+
               if (data.State)
               {
                 switch (FunctionNr)
