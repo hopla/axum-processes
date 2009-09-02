@@ -374,7 +374,12 @@ int main(int argc, char *argv[])
 
   //Check for backup
   if (backup_open((void *)&AxumData, sizeof(AxumData)))
-  { //Backup loaded set processing data
+  { //Backup loaded, clear rack-config and set processing data
+    for (unsigned char cntSlot=0; cntSlot<42; cntSlot++)
+    {
+      AxumData.RackOrganization[cntSlot] = 0x00000000;
+    }
+
     for (int cntModule=0; cntModule<128; cntModule++)
     {
       for (int cntBand=0; cntBand<6; cntBand++)
