@@ -4656,8 +4656,12 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
       OnlineNodeInformationElement->Next = NewOnlineNodeInformationElement;
     }
 
-    unsigned int ObjectNr = 7;//Firmware major revision;
-    mbnGetSensorData(mbn, new_info->MambaNetAddr, ObjectNr, 1);
+    if (mbn->node.Services&0x80)
+    {
+      unsigned int ObjectNr = 7;//Firmware major revision;
+      mbnGetSensorData(mbn, new_info->MambaNetAddr, ObjectNr, 1);
+      log_write("Get firmware: %08lX", new_info->MambaNetAddr);
+    }
   }
   else if (new_info == NULL)
   {
@@ -4834,9 +4838,12 @@ void Timer100HzDone(int Value)
       if ((OnlineNodeInformationElement->MambaNetAddress != 0x00000000) &&
           (OnlineNodeInformationElement->FirmwareMajorRevision == -1))
       { //Read firmware...
-        unsigned int ObjectNr = 7; //Firmware major revision
-        printf("timer: Get firmware 0x%08X\n", OnlineNodeInformationElement->MambaNetAddress);
-        mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, ObjectNr, 0);
+        if (mbn->node.Services&0x80)
+        {
+          unsigned int ObjectNr = 7; //Firmware major revision
+          printf("timer: Get firmware 0x%08X\n", OnlineNodeInformationElement->MambaNetAddress);
+          mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, ObjectNr, 0);
+        }
       }
       OnlineNodeInformationElement = OnlineNodeInformationElement->Next;
     }
