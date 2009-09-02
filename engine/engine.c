@@ -4626,7 +4626,7 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
   lock_node_info(__FUNCTION__);
   if (old_info == NULL)
   {
-    log_write("Add node with MambaNet address: %08lX", new_info->MambaNetAddr);
+    log_write("Add node with MambaNet address: %08lX, Services: %02X", new_info->MambaNetAddr, new_info->Services);
     ONLINE_NODE_INFORMATION_STRUCT *NewOnlineNodeInformationElement = new ONLINE_NODE_INFORMATION_STRUCT;
     NewOnlineNodeInformationElement->Next = NULL;
     NewOnlineNodeInformationElement->MambaNetAddress = new_info->MambaNetAddr;
@@ -4736,7 +4736,7 @@ void mError(struct mbn_handler *m, int code, char *str) {
 }
 
 void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
-  log_write("Acknowledge timeout for message to %08lX", msg->AddressTo);
+  log_write("Acknowledge timeout for message to %08lX, obj: %d", msg->AddressTo, msg->Message.Object.Number);
   m=NULL;
 }
 

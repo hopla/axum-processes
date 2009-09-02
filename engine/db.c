@@ -9,7 +9,7 @@
 #include <string.h>
 #include <math.h>
 
-#define LOG_DEBUG_ENABLED
+//#define LOG_DEBUG_ENABLED
 
 #ifdef LOG_DEBUG_ENABLED
   #define LOG_DEBUG(...) log_write(__VA_ARGS__)
@@ -1683,7 +1683,6 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
           sensor_rcv_func->LastChangedTime = 0;
           sensor_rcv_func->PreviousLastChangedTime = 0;
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-          log_write("Configuration changed addr: %08lX, obj:%d, func: %08X\n", node_info->MambaNetAddress, ObjectNr, sensor_rcv_func->FunctionNr);
           MakeObjectListPerFunction(sensor_rcv_func->FunctionNr);
 
           CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
@@ -1705,7 +1704,6 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
           sensor_rcv_func->LastChangedTime = 0;
           sensor_rcv_func->PreviousLastChangedTime = 0;
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-          log_write("Configuration changed addr: %08lX, obj:%d, old-func: %08X, func: %08X\n", node_info->MambaNetAddress, cntObject, OldFunctions[cntObject-1024], sensor_rcv_func->FunctionNr);
           MakeObjectListPerFunction(OldFunctions[cntObject-1024]);
         }
       }
