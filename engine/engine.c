@@ -175,13 +175,13 @@ int CallbackNodeIndex = -1;
 void lock_node_info(const char *Caller)
 {
   printf("lock node_info (%s)\n", Caller);
-//  int error = pthread_mutex_lock(&get_node_info_mutex);
+  pthread_mutex_lock(&get_node_info_mutex);
 //  if (error)
 //    perror("lni:");
 }
 void unlock_node_info(const char *Caller)
 {
-//  pthread_mutex_unlock(&get_node_info_mutex);
+  pthread_mutex_unlock(&get_node_info_mutex);
   printf("unlock node_info (%s)\n", Caller);
 }
 
