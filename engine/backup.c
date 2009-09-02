@@ -28,7 +28,7 @@ size_t backup_open(void *buffer, size_t length) {
   } else {
     readed_length = backup_read(old_backup_info.buffer, length);
     if(readed_length == 1) {
-      log_write("Correct size, use backup");
+      log_write("Backup file found, LOADING...");
       memcpy(buffer, old_backup_info.buffer, length);
     }
   }
@@ -85,7 +85,7 @@ void *backup_thread_loop(void *arg)
 {
   backup_info_struct *bi = (backup_info_struct *)arg;
 
-  log_write("start backup thread");
+  log_write("Starting background backup thread");
 
   while(!main_quit) {
     sleep(30);
