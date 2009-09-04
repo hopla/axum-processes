@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <math.h>
+#include <pthread.h>
 
 #define EEPROM_DELAY_TIME   15
 
@@ -48,6 +49,8 @@ unsigned int SummingDSPVUReleaseFactor          = 0x00000000;
 unsigned int SummingDSPPhaseRelease             = 0x00000000;
 
 unsigned int FXDSPEntryPoint                    = 0x00000000;
+
+pthread_mutex_t dsp_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int dsp_init(char *devname, DSPCARD_STRUCT *dsp_card);
 bool dsp_program_eeprom(int fd);
@@ -1408,3 +1411,13 @@ void dsp_read_module_meters(DSP_HANDLER_STRUCT *dsp_handler, float *dBLevel)
   }
   LOG_DEBUG("[%s] leave", __func__);
 }
+
+void dsp_lock(int l)
+{
+  if(l) {
+    pthread_mutex_lock(&dsp_mutex);
+  } else {
+    pthread_mutex_unlock(&dsp_mutex);
+  }
+}
+
