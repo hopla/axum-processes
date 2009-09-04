@@ -4644,6 +4644,9 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     NewOnlineNodeInformationElement->Parent.ProductID = 0;
     NewOnlineNodeInformationElement->Parent.UniqueIDPerProduct = 0;
     NewOnlineNodeInformationElement->NumberOfCustomObjects = 0;
+    NewOnlineNodeInformationElement->SensorReceiveFunction = NULL;
+    NewOnlineNodeInformationElement->ObjectInformation = NULL;
+
 
     if (OnlineNodeInformationList == NULL)
     {
