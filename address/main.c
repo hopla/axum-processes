@@ -245,6 +245,12 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
     return 0;
   }
 
+  /* invalid, check manufacter ID */
+  if ((nfo->ManufacturerID == 0) || (nfo->ProductID == 0) || (nfo->UniqueIDPerProduct == 0)) {
+    log_write("Invalid address request of %04X:%04X:%04X",
+      nfo->ManufacturerID, nfo->ProductID, nfo->UniqueIDPerProduct, nfo->MambaNetAddr);
+    return 0;
+  }
   /* invalid, update its address status */
   db_lock(1);
 
