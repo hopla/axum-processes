@@ -1472,7 +1472,9 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   sprintf(str[1], "%d", first_obj);
   sprintf(str[2], "%d", last_obj);
 
-  PGresult *qres = sql_exec("SELECT object, data FROM defaults WHERE addr=$1 AND object>=$2 AND object<=$3", 1, 3, params);
+  PGresult *qres = sql_exec("SELECT d.object, d.data FROM defaults d                            \
+                             WHERE d.addr=$1 AND d.object>=$2 AND d.object<=$3 AND NOT EXISTS   \
+                             (SELECT c.object FROM node_config c WHERE c.object=d.object AND c.addr=d.addr)", 1, 3, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -1684,9 +1686,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
           sensor_rcv_func->PreviousLastChangedTime = 0;
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
           MakeObjectListPerFunction(sensor_rcv_func->FunctionNr);
-
           CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
-          delay_ms(1);
         }
       }
     }
