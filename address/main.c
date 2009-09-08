@@ -264,9 +264,18 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
 
   /* found UniqueMediaAccessID in the DB? reply with its old address */
   if(db_nodebyid(&node, nfo->ManufacturerID, nfo->ProductID, nfo->UniqueIDPerProduct)) {
-    log_write("Address request of %04X:%04X:%04X, sent %08lX",
-      node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct, node.MambaNetAddr);
-    set_address_struct(node.MambaNetAddr, node);
+    if (time(NULL)-node.LastSeen > 5)
+    {
+      log_write("Address request of %04X:%04X:%04X, sent %08lX",
+        node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct, node.MambaNetAddr);
+      set_address_struct(node.MambaNetAddr, node);
+      node.LastSeen = time(NULL);
+    }
+    else
+    {
+      log_write("Address request of %04X:%04X:%04X, ignored because too short period",
+        node.ManufacturerID, node.ProductID, node.UniqueIDPerProduct);
+    }
     node.AddressRequests++;
     db_setnode(node.MambaNetAddr, &node);
   } else {
