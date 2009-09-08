@@ -164,6 +164,7 @@ int LinuxIfIndex;
 void *thread(void *vargp);
 
 ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationList = NULL;
+ONLINE_NODE_INFORMATION_STRUCT *GetFirmwareOnlineNodeInformationElement = NULL;
 //#define ADDRESS_TABLE_SIZE 65536
 //ONLINE_NODE_INFORMATION_STRUCT OnlineNodeInformation[ADDRESS_TABLE_SIZE];
 
@@ -409,6 +410,7 @@ int main(int argc, char *argv[])
   mbnSetSensorDataChangedCallback(mbn, mSensorDataChanged);
   mbnSetErrorCallback(mbn, mError);
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
+  mbnSetAcknowledgeReplyCallback(mbn, mAcknowledgeReply);
 
   //start interface for the mbn-handler
   mbnStartInterface(itf, error);
@@ -1388,10 +1390,22 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             CheckObjectsToSent(SensorReceiveFunctionNumber);
 
             unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+            if (AxumData.Control1Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+            {
+              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+            }
+            if (AxumData.Control2Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+            {
+              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+            }
+            if (AxumData.Control3Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+            {
+              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+            }
+            if (AxumData.Control4Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+            {
+              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+            }
 
             if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
                 ((CurrentLevel>-80) && (NewLevel<=-80)))
@@ -4647,7 +4661,6 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     NewOnlineNodeInformationElement->SensorReceiveFunction = NULL;
     NewOnlineNodeInformationElement->ObjectInformation = NULL;
 
-
     if (OnlineNodeInformationList == NULL)
     {
       OnlineNodeInformationList = NewOnlineNodeInformationElement;
@@ -4662,12 +4675,12 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
       OnlineNodeInformationElement->Next = NewOnlineNodeInformationElement;
     }
 
-    if (mbn->node.Services&0x80)
+    /*if (mbn->node.Services&0x80)
     {
       unsigned int ObjectNr = 7;//Firmware major revision;
       mbnGetSensorData(mbn, new_info->MambaNetAddr, ObjectNr, 1);
       log_write("Get firmware: %08lX", new_info->MambaNetAddr);
-    }
+    }*/
   }
   else if (new_info == NULL)
   {
@@ -4738,6 +4751,7 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     log_write("Address changed: %08lX => %08lX", old_info->MambaNetAddr, new_info->MambaNetAddr);
   }
   unlock_node_info(__FUNCTION__);
+  mbn = NULL;
 }
 
 void mError(struct mbn_handler *m, int code, char *str) {
@@ -4750,8 +4764,31 @@ void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
   m=NULL;
 }
 
+void mAcknowledgeReply(struct mbn_handler *m, struct mbn_message *request, struct mbn_message *reply, int retries) {
+  if (retries>0)
+  {
+    log_write("Acknowledge reply for message to %08lX, obj: %d, retries: %d", reply->AddressFrom, reply->Message.Object.Number, retries);
+  }
+  m=NULL;
+  request=NULL;
+}
+
+int First = 1;
+
 void Timer100HzDone(int Value)
 {
+  float dBLevel[256];
+
+  if (First)
+  { //First time wait 20 seconds before starting meters
+    PreviousCount_LevelMeter = cntMillisecondTimer+2000;
+    PreviousCount_SignalDetect = cntMillisecondTimer+2000;
+    //dummy read meters to empty level buffers
+    dsp_read_buss_meters(dsp_handler, SummingdBLevel);
+    dsp_read_module_meters(dsp_handler, dBLevel);
+    First = 0;
+  }
+
   if ((cntMillisecondTimer-PreviousCount_LevelMeter)>MeterFrequency)
   {
     PreviousCount_LevelMeter = cntMillisecondTimer;
@@ -4774,7 +4811,6 @@ void Timer100HzDone(int Value)
 
   if ((cntMillisecondTimer-PreviousCount_SignalDetect)>10)
   {
-    float dBLevel[256];
     PreviousCount_SignalDetect = cntMillisecondTimer;
     dsp_read_module_meters(dsp_handler, dBLevel);
 
@@ -4832,28 +4868,40 @@ void Timer100HzDone(int Value)
   }
 
   cntMillisecondTimer++;
-  if ((cntMillisecondTimer-PreviousCount_Second)>100)
+  if ((cntMillisecondTimer-PreviousCount_Second)>50)
   {
     PreviousCount_Second = cntMillisecondTimer;
 
     //Check for firmware requests
-    //lock_node_info(__FUNCTION__);
-    ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = OnlineNodeInformationList;
-    while (OnlineNodeInformationElement != NULL)
+//    lock_node_info(__FUNCTION__);
+    if (mbn->node.Services&0x80)
     {
-      if ((OnlineNodeInformationElement->MambaNetAddress != 0x00000000) &&
-          (OnlineNodeInformationElement->FirmwareMajorRevision == -1))
-      { //Read firmware...
-        if (mbn->node.Services&0x80)
+      if (GetFirmwareOnlineNodeInformationElement != NULL)
+      {
+        ONLINE_NODE_INFORMATION_STRUCT *WalkOnlineNodeInformationElement;
+
+        if ((GetFirmwareOnlineNodeInformationElement->MambaNetAddress != 0x00000000) &&
+            (GetFirmwareOnlineNodeInformationElement->FirmwareMajorRevision == -1))
         {
           unsigned int ObjectNr = 7; //Firmware major revision
-          printf("timer: Get firmware 0x%08X\n", OnlineNodeInformationElement->MambaNetAddress);
-          mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, ObjectNr, 0);
+          log_write("timer: Get firmware 0x%08X", GetFirmwareOnlineNodeInformationElement->MambaNetAddress);
+          mbnGetSensorData(mbn, GetFirmwareOnlineNodeInformationElement->MambaNetAddress, ObjectNr, 0);
         }
+
+        WalkOnlineNodeInformationElement = GetFirmwareOnlineNodeInformationElement->Next;
+        while ((WalkOnlineNodeInformationElement != NULL) && (WalkOnlineNodeInformationElement->FirmwareMajorRevision != -1))
+        {
+          WalkOnlineNodeInformationElement = WalkOnlineNodeInformationElement->Next;
+        }
+        GetFirmwareOnlineNodeInformationElement = WalkOnlineNodeInformationElement;
       }
-      OnlineNodeInformationElement = OnlineNodeInformationElement->Next;
     }
-    //unlock_node_info(__FUNCTION__);
+    if (GetFirmwareOnlineNodeInformationElement == NULL)
+    {
+      GetFirmwareOnlineNodeInformationElement = OnlineNodeInformationList;
+    }
+
+//    unlock_node_info(__FUNCTION__);
   }
 
   if (cntBroadcastPing)
@@ -5576,6 +5624,7 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
   else if ((src>=matrix_sources.src_offset.min.source) && (src<=matrix_sources.src_offset.max.source))
   {
     int SourceNr = src-matrix_sources.src_offset.min.source;
+    char SourceFound = 0;
 
     //Get slot number from MambaNet Address
     for (int cntSlot=0; cntSlot<15; cntSlot++)
@@ -5583,10 +5632,12 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
       if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[SourceNr].InputData[0].MambaNetAddress)
       {
         *l_ch = cntSlot*32;
+        SourceFound=1;
       }
       if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[SourceNr].InputData[1].MambaNetAddress)
       {
         *r_ch = cntSlot*32;
+        SourceFound=1;
       }
     }
     for (int cntSlot=15; cntSlot<19; cntSlot++)
@@ -5594,10 +5645,12 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
       if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[SourceNr].InputData[0].MambaNetAddress)
       {
         *l_ch = 480+((cntSlot-15)*32*5);
+        SourceFound=1;
       }
       if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[SourceNr].InputData[1].MambaNetAddress)
       {
         *r_ch = 480+((cntSlot-15)*32*5);
+        SourceFound=1;
       }
     }
     for (int cntSlot=21; cntSlot<42; cntSlot++)
@@ -5605,18 +5658,24 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
       if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[SourceNr].InputData[0].MambaNetAddress)
       {
         *l_ch = 1120+((cntSlot-21)*32);
+        SourceFound=1;
       }
       if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[SourceNr].InputData[0].MambaNetAddress)
       {
         *r_ch = 1120+((cntSlot-21)*32);
+        SourceFound=1;
       }
     }
-    *l_ch += AxumData.SourceData[SourceNr].InputData[0].SubChannel;
-    *r_ch += AxumData.SourceData[SourceNr].InputData[1].SubChannel;
 
-    //Because 0 = mute, add one per channel
-    *l_ch += 1;
-    *r_ch += 1;
+    if (SourceFound)
+    {
+      *l_ch += AxumData.SourceData[SourceNr].InputData[0].SubChannel;
+      *r_ch += AxumData.SourceData[SourceNr].InputData[1].SubChannel;
+
+      //Because 0 = mute, add one per channel
+      *l_ch += 1;
+      *r_ch += 1;
+    }
   }
 }
 
@@ -9046,10 +9105,22 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
         unsigned int FunctionNrToSent = (ModuleNr<<12);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+        if (AxumData.Control1Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+        }
+        if (AxumData.Control2Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+        }
+        if (AxumData.Control3Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+        }
+        if (AxumData.Control4Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+        }
 
         if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
             ((CurrentLevel>-80) && (NewLevel<=-80)))

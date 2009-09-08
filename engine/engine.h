@@ -367,7 +367,6 @@ struct ONLINE_NODE_INFORMATION_STRUCT
 
   int NumberOfCustomObjects;
 
-  //int *SensorReceiveFunction;
   SENSOR_RECEIVE_FUNCTION_STRUCT *SensorReceiveFunction;
   OBJECT_INFORMATION_STRUCT *ObjectInformation;
 
@@ -395,6 +394,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data);
 void mError(struct mbn_handler *m, int code, char *str);
 void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg);
+void mAcknowledgeReply(struct mbn_handler *m, struct mbn_message *request, struct mbn_message *reply, int retries);
 
 void Timer100HzDone(int Value);
 
@@ -452,7 +452,6 @@ void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock);
 void initialize_axum_data_struct();
 
 ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr);
-
 
 void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects);
 void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char SetAllObjects);
