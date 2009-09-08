@@ -63,50 +63,58 @@ void node_online(struct db_node *node) {
   int addr_f, id_f;
   union mbn_data dat;
 
-  /* check DB for MambaNet Address and UniqueID */
-  memset((void *)&addr, 0, sizeof(struct db_node));
-  memset((void *)&id, 0, sizeof(struct db_node));
-  addr_f = db_getnode(&addr, node->MambaNetAddr);
-  id_f = db_nodebyid(&id, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
+  if ((node->ManufacturerID != 0) && (node->ProductID != 0) && (node->UniqueIDPerProduct != 0))
+  {
+    /* check DB for MambaNet Address and UniqueID */
+    memset((void *)&addr, 0, sizeof(struct db_node));
+    memset((void *)&id, 0, sizeof(struct db_node));
+    addr_f = db_getnode(&addr, node->MambaNetAddr);
+    id_f = db_nodebyid(&id, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
 
-  /* Reset node address when the previous search didn't return the exact same node */
-  if((addr_f && !id_f) || (!addr_f && id_f)
-      || (addr_f && id_f && memcmp((void *)&addr, (void *)&id, sizeof(struct db_node)) != 0)) {
-    log_write("Address mismatch for %04X:%04X:%04X (%08lX), resetting valid bit",
-      node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct, node->MambaNetAddr);
-    set_address_struct(0, *node);
-    return;
-  }
+    /* Reset node address when the previous search didn't return the exact same node */
+    if((addr_f && !id_f) || (!addr_f && id_f)
+        || (addr_f && id_f && memcmp((void *)&addr, (void *)&id, sizeof(struct db_node)) != 0)) {
+      log_write("Address mismatch for %04X:%04X:%04X (%08lX), resetting valid bit",
+        node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct, node->MambaNetAddr);
+      set_address_struct(0, *node);
+      return;
+    }
 
-  /* not in the DB at all? Add it. */
-  if(!addr_f) {
-    log_write("New validated node found on the network but not in DB: %08lX (%04X:%04X:%04X)",
-      node->MambaNetAddr, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
-    node->flags |= DB_FLAGS_REFRESH;
-    node->FirstSeen = node->LastSeen = time(NULL);
-    db_setnode(0, node);
+    /* not in the DB at all? Add it. */
+    if(!addr_f) {
+      log_write("New validated node found on the network but not in DB: %08lX (%04X:%04X:%04X)",
+        node->MambaNetAddr, node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct);
+      node->flags |= DB_FLAGS_REFRESH;
+      node->FirstSeen = node->LastSeen = time(NULL);
+      db_setnode(0, node);
+    }
+    /* we don't have its name? get it! */
+    if(!addr_f || addr.flags & DB_FLAGS_REFRESH) {
+      mbnGetActuatorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_NAME, 1);
+      mbnGetSensorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_HWPARENT, 1);
+    }
+    /* not active or something changed? update! */
+    if(addr_f && (!addr.Active || addr.Services != node->Services || addr.EngineAddr != node->EngineAddr)) {
+      addr.Active = 1;
+      addr.Services = node->Services;
+      addr.EngineAddr = node->EngineAddr;
+      db_setnode(node->MambaNetAddr, &addr);
+    }
+    /* name was changed in the DB? send it to the node */
+    if(addr_f && addr.flags & DB_FLAGS_SETNAME) {
+      addr.flags &= ~DB_FLAGS_SETNAME;
+      dat.Octets = (unsigned char *)addr.Name;
+      mbnSetActuatorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_NAME, MBN_DATATYPE_OCTETS, 32, dat, 1);
+      db_setnode(node->MambaNetAddr, &addr);
+    }
+    /* always get firmware major revision to detect changes in the object list */
+    mbnGetSensorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_FWMAJOR, 1);
   }
-  /* we don't have its name? get it! */
-  if(!addr_f || addr.flags & DB_FLAGS_REFRESH) {
-    mbnGetActuatorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_NAME, 1);
-    mbnGetSensorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_HWPARENT, 1);
+  else
+  {
+    log_write("Invalid MediaAccessID for %04X:%04X:%04X (%08lX), doing nothing",
+        node->ManufacturerID, node->ProductID, node->UniqueIDPerProduct, node->MambaNetAddr);
   }
-  /* not active or something changed? update! */
-  if(addr_f && (!addr.Active || addr.Services != node->Services || addr.EngineAddr != node->EngineAddr)) {
-    addr.Active = 1;
-    addr.Services = node->Services;
-    addr.EngineAddr = node->EngineAddr;
-    db_setnode(node->MambaNetAddr, &addr);
-  }
-  /* name was changed in the DB? send it to the node */
-  if(addr_f && addr.flags & DB_FLAGS_SETNAME) {
-    addr.flags &= ~DB_FLAGS_SETNAME;
-    dat.Octets = (unsigned char *)addr.Name;
-    mbnSetActuatorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_NAME, MBN_DATATYPE_OCTETS, 32, dat, 1);
-    db_setnode(node->MambaNetAddr, &addr);
-  }
-  /* always get firmware major revision to detect changes in the object list */
-  mbnGetSensorData(mbn, node->MambaNetAddr, MBN_NODEOBJ_FWMAJOR, 1);
 }
 
 
@@ -247,7 +255,7 @@ int mReceiveMessage(struct mbn_handler *m, struct mbn_message *msg) {
 
   /* invalid, check manufacter ID */
   if ((nfo->ManufacturerID == 0) || (nfo->ProductID == 0) || (nfo->UniqueIDPerProduct == 0)) {
-    log_write("Invalid address request of %04X:%04X:%04X",
+    log_write("Invalid MediaAccessID %04X:%04X:%04X, Address request not processed",
       nfo->ManufacturerID, nfo->ProductID, nfo->UniqueIDPerProduct, nfo->MambaNetAddr);
     return 0;
   }
