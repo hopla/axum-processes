@@ -4819,7 +4819,7 @@ void Timer100HzDone(int Value)
       int FirstChannelNr = cntModule<<1;
       unsigned int DisplayFunctionNumber;
 
-      if ((dBLevel[FirstChannelNr]>-70) || (dBLevel[FirstChannelNr+1]>-70))
+      if ((dBLevel[FirstChannelNr]>-60) || (dBLevel[FirstChannelNr+1]>-60))
       {   //Signal
         if (!AxumData.ModuleData[cntModule].Signal)
         {
