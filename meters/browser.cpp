@@ -81,6 +81,52 @@ Browser::Browser(QWidget *parent)
   sprintf(CurrentLabel[2]," Mon. 2 ");
   sprintf(CurrentLabel[3],"  ----  ");
 
+  FILE *F = fopen("/var/lib/axum/OEMName", "r");
+  if (F != NULL)
+  {
+    char *line=NULL;
+    size_t len=0;
+    if (getline(&line, &len, F) != -1)
+    {
+      for (size_t i=0; i<len; i++)
+      {
+        if (line[i] == '\n')
+        {
+          line[i] = '\0';
+        }
+      }
+      label->setText(QString(line));
+    }
+    if (line)
+    {
+      free(line);
+    }
+    fclose(F);
+  }
+
+  F = fopen("/var/lib/axum/OEMCopyright", "r");
+  if (F != NULL)
+  {
+    char *line=NULL;
+    size_t len=0;
+    if (getline(&line, &len, F) != -1)
+    {
+      for (size_t i=0; i<len; i++)
+      {
+        if (line[i] == '\n')
+        {
+          line[i] = '\0';
+        }
+      }
+      label_2->setText(QString(line));
+    }
+    if (line)
+    {
+      free(line);
+    }
+    fclose(F);
+  }
+
   OnAirState = 0;
   CurrentOnAirState = 0;
 }

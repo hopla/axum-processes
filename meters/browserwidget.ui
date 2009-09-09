@@ -164,10 +164,10 @@ QTabWidget::tab-bar
 }</string>
    </property>
    <property name="text" >
-    <string>A∙X∙U∙M</string>
+    <string>OEMName</string>
    </property>
    <property name="textFormat" >
-    <enum>Qt::AutoText</enum>
+    <enum>Qt::PlainText</enum>
    </property>
    <property name="alignment" >
     <set>Qt::AlignCenter</set>
@@ -202,7 +202,7 @@ QTabWidget::tab-bar
 }</string>
    </property>
    <property name="text" >
-    <string>(C) Copyright 2009 - D&amp;R Electronica Weesp B.V.</string>
+    <string>OEMCopyright</string>
    </property>
    <property name="textFormat" >
     <enum>Qt::PlainText</enum>
