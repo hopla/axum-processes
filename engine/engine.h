@@ -437,7 +437,7 @@ void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr,
 void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
 
 void DoAxum_BussReset(int BussNr);
-void DoAxum_ModuleStatusChanged(int ModuleNr);
+void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule);
 void DoAxum_ModulePreStatusChanged(int BussNr);
 
 int Axum_MixMinusSourceUsed(unsigned int CurrentSource);

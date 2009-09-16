@@ -776,7 +776,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
                 ((OldLevel>-80) && (NewLevel<=-80)) ||
                 (OldOn != NewOn))
             { //fader on changed
-              DoAxum_ModuleStatusChanged(ModuleNr);
+              DoAxum_ModuleStatusChanged(ModuleNr, 1);
             }
           }
         }
@@ -815,7 +815,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       }
 
       //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 2))
-      { //All or dynamics 
+      { //All or dynamics
         SetAxum_ModuleProcessing(ModuleNr);
 
         unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
@@ -832,7 +832,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
           {
             SetAxum_BussLevels(ModuleNr);
 
-            SetBussOnOff(ModuleNr, cntBuss, 1);//load preset 
+            SetBussOnOff(ModuleNr, cntBuss, 1);//load preset
 
             unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_LEVEL);

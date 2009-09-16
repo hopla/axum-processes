@@ -1410,7 +1410,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
                 ((CurrentLevel>-80) && (NewLevel<=-80)))
             { //fader on changed
-              DoAxum_ModuleStatusChanged(ModuleNr);
+              DoAxum_ModuleStatusChanged(ModuleNr, 1);
 
               if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
               {
@@ -1485,7 +1485,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
               if (CurrentOn != NewOn)
               { //module on changed
-                DoAxum_ModuleStatusChanged(ModuleNr);
+                DoAxum_ModuleStatusChanged(ModuleNr, 1);
 
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
                 {
@@ -3198,7 +3198,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                     if (CurrentOn != NewOn)
                     { //module on changed
-                      DoAxum_ModuleStatusChanged(cntModule);
+                      DoAxum_ModuleStatusChanged(cntModule, 1);
 
                       SensorReceiveFunctionNumber = 0x05000000 | (SourceNr<<12);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_ON);
@@ -3289,7 +3289,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
                         ((CurrentLevel>-80) && (NewLevel<=-80)))
                     { //fader on changed
-                      DoAxum_ModuleStatusChanged(cntModule);
+                      DoAxum_ModuleStatusChanged(cntModule, 1);
 
                       SensorReceiveFunctionNumber = 0x05000000 | (SourceNr<<12);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON);
@@ -3360,7 +3360,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         ((CurrentLevel>-80) && (NewLevel<=-80)) ||
                         (CurrentOn != NewOn))
                     { //fader on changed
-                      DoAxum_ModuleStatusChanged(cntModule);
+                      DoAxum_ModuleStatusChanged(cntModule, 1);
 
                       SensorReceiveFunctionNumber = 0x05000000 | (SourceNr<<12);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_ON);
@@ -9125,7 +9125,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
             ((CurrentLevel>-80) && (NewLevel<=-80)))
         { //fader on changed
-          DoAxum_ModuleStatusChanged(ModuleNr);
+          DoAxum_ModuleStatusChanged(ModuleNr, 1);
 
           if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
           {
@@ -9158,6 +9158,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       case MODULE_CONTROL_MODE_BUSS_31_32:
       {   //Aux
         int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
+        float CurrentLevel = AxumData.ModuleData[ModuleNr].Buss[BussNr].Level;
         AxumData.ModuleData[ModuleNr].Buss[BussNr].Level += data.SInt;
         if (AxumData.ModuleData[ModuleNr].Buss[BussNr].Level < -140)
         {
@@ -9170,6 +9171,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
             AxumData.ModuleData[ModuleNr].Buss[BussNr].Level = (10-AxumData.LevelReserve);
           }
         }
+        float NewLevel = AxumData.ModuleData[ModuleNr].Buss[BussNr].Level;
         SetAxum_BussLevels(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -9179,6 +9181,12 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
         FunctionNrToSent = (ModuleNr<<12) | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(BussNr*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL)));
         CheckObjectsToSent(FunctionNrToSent);
+
+        if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
+            ((CurrentLevel>-80) && (NewLevel<=-80)))
+        { //level changed
+          DoAxum_ModuleStatusChanged(ModuleNr, 0);
+        }
       }
       break;
       case MODULE_CONTROL_MODE_BUSS_1_2_BALANCE:
@@ -9515,7 +9523,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
               ((CurrentLevel>-80) && (NewLevel<=-80)))
           { //fader on changed
-            DoAxum_ModuleStatusChanged(ModuleNr);
+            DoAxum_ModuleStatusChanged(ModuleNr, 1);
 
             if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
             {
@@ -9549,7 +9557,9 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         {   //Buss
           int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
           AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
-          SetAxum_BussLevels(ModuleNr);
+          SetBussOnOff(ModuleNr, BussNr, 0);
+
+/*        SetAxum_BussLevels(ModuleNr);
           SetAxum_ModuleMixMinus(ModuleNr, 0);
 
 
@@ -9565,12 +9575,14 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           FunctionNrToSent = 0x04000000;
           CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_BUSS_1_2_RESET+(BussNr*(GLOBAL_FUNCTION_BUSS_3_4_RESET-GLOBAL_FUNCTION_BUSS_1_2_RESET))));
 
+          DoAxum_ModuleStatusChanged(ModuleNr, 0);
+-
           if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
                 (AxumData.BussMasterData[BussNr].PreModuleLevel))
           {
             printf("Have to check monitor routing and muting\n");
             DoAxum_ModulePreStatusChanged(BussNr);
-          }
+          }*/
         }
         break;
         case MODULE_CONTROL_MODE_BUSS_1_2_BALANCE:
@@ -10433,7 +10445,7 @@ void DoAxum_BussReset(int BussNr)
 
       SetAxum_BussLevels(cntModule);
       SetAxum_ModuleMixMinus(cntModule, 0);
-
+      DoAxum_ModuleStatusChanged(cntModule, 0);
       unsigned int FunctionNrToSent = 0x00000000 | (cntModule<<12);
       CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
@@ -10540,7 +10552,81 @@ void DoAxum_BussReset(int BussNr)
   }
 }
 
-void DoAxum_ModuleStatusChanged(int ModuleNr)
+int SourceActive(unsigned int InputSourceNr)
+{
+  unsigned int cntModule;
+  unsigned int cntBuss;
+  unsigned char Active = 0;
+
+  for (cntModule=0; cntModule<128; cntModule++)
+  {
+    if (AxumData.ModuleData[cntModule].SelectedSource == (InputSourceNr+matrix_sources.src_offset.min.source))
+    {
+      unsigned char ModuleLevelActive = 0;
+      unsigned char ModuleOnActive = 0;
+
+      if (AxumData.ModuleData[cntModule].FaderLevel>-80)
+      {   //fader open
+        ModuleLevelActive = 1;
+      }
+      if (AxumData.ModuleData[cntModule].On)
+      { //module on
+        ModuleOnActive = 1;
+      }
+      for (cntBuss=0; cntBuss<16; cntBuss++)
+      {
+        unsigned char BussPreModuleLevelActive = 0;
+        unsigned char BussPreModuleOnActive = 0;
+        unsigned char BussLevelActive = 0;
+        unsigned char BussOnActive = 0;
+        unsigned char LevelActive = 0;
+        unsigned char OnActive = 0;
+
+        if ((AxumData.BussMasterData[cntBuss].PreModuleLevel) ||
+            (AxumData.ModuleData[cntModule].Buss[cntBuss].PreModuleLevel))
+        {
+          BussPreModuleLevelActive = 1;
+        }
+        if (AxumData.BussMasterData[cntBuss].PreModuleOn)
+        {
+          BussPreModuleOnActive = 1;
+        }
+        if (AxumData.ModuleData[cntModule].Buss[cntBuss].Level>-80)
+        {
+          BussLevelActive = 1;
+        }
+        if (AxumData.ModuleData[cntModule].Buss[cntBuss].On)
+        {
+          BussOnActive = 1;
+        }
+
+        if (BussLevelActive)
+        {
+          LevelActive |= ModuleLevelActive;
+          if (BussPreModuleLevelActive)
+          {
+            LevelActive = 1;
+          }
+        }
+
+        if (BussOnActive)
+        {
+          OnActive |= ModuleOnActive;
+          if (BussPreModuleOnActive)
+          {
+            OnActive = 1;
+          }
+        }
+
+        Active |= (OnActive && LevelActive);
+      }
+    }
+  }
+
+  return Active;
+}
+
+void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
 {
   unsigned char Redlight[8] = {0,0,0,0,0,0,0,0};
   unsigned char MonitorMute[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -10550,30 +10636,9 @@ void DoAxum_ModuleStatusChanged(int ModuleNr)
     unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
     unsigned int CurrentSourceActive = AxumData.SourceData[SourceNr].Active;
     unsigned int NewSourceActive = 0;
-    if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
-    {   //fader open
-      if (AxumData.ModuleData[ModuleNr].On)
-      { //module on
-        NewSourceActive = 1;
-      }
-    }
 
-    if (!NewSourceActive)
-    {
-      for (int cntModule=0; cntModule<128; cntModule++)
-      {
-        if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+matrix_sources.src_offset.min.source))
-        {
-          if (AxumData.ModuleData[cntModule].FaderLevel>-80)
-          {   //fader open
-            if (AxumData.ModuleData[cntModule].On)
-            { //module on
-              NewSourceActive = 1;
-            }
-          }
-        }
-      }
-    }
+    NewSourceActive = SourceActive(SourceNr);
+
     if (CurrentSourceActive != NewSourceActive)
     {
       AxumData.SourceData[SourceNr].Active = NewSourceActive;
@@ -10638,18 +10703,21 @@ void DoAxum_ModuleStatusChanged(int ModuleNr)
     }
   }
 
-  if (AxumData.ModuleData[ModuleNr].On == 1)
-  { //module turned on
-    if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
-    {   //fader open
-      //Module active, check global buss reset
-      for (int cntBuss=0; cntBuss<16; cntBuss++)
-      {
-        if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Active)
+  if (ByModule)
+  {
+    if (AxumData.ModuleData[ModuleNr].On == 1)
+    { //module turned on
+      if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
+      {   //fader open
+        //Module active, check global buss reset
+        for (int cntBuss=0; cntBuss<16; cntBuss++)
         {
-          if (AxumData.BussMasterData[cntBuss].GlobalBussReset)
+          if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Active)
           {
-            DoAxum_BussReset(cntBuss);
+            if (AxumData.BussMasterData[cntBuss].GlobalBussReset)
+            {
+              DoAxum_BussReset(cntBuss);
+            }
           }
         }
       }
@@ -11287,6 +11355,8 @@ void SetBussOnOff(int ModuleNr, int BussNr, int LoadPreset)
       }
     }
   }
+
+  DoAxum_ModuleStatusChanged(ModuleNr, 0);
 
   if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
         (AxumData.BussMasterData[BussNr].PreModuleLevel))
