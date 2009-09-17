@@ -90,7 +90,7 @@ void init(int argc, char *argv[])
   strcpy(log_file, DEFAULT_LOG_FILE);
   strcpy(hwparent_path, DEFAULT_GTW_PATH);
 
-  while((c =getopt(argc, argv, "e:g:l:i:qws")) != -1)
+  while((c =getopt(argc, argv, "e:g:l:i:")) != -1)
   {
     switch(c)
     {
@@ -121,12 +121,6 @@ void init(int argc, char *argv[])
           fprintf(stderr, "Invalid UniqueIDPerProduct");
           exit(1);
         }
-      }
-      break;
-      case 'q':
-      case 'w':
-      case 's':
-      {
       }
       break;
       default:
