@@ -30,7 +30,8 @@ extern volatile int main_quit;
 /* receives hardware parent from UNIX socket or command line */
 extern char hwparent_path[500];
 void hwparent(struct mbn_node_info *);
-
+void oem_short_product_name(struct mbn_node_info *node);
+int oem_name_short(char *name, int name_length);
 
 /* the sql connection, shouldn't really be used in the application,
  * but might be useful in some rare cases. */

@@ -192,6 +192,7 @@ void init(int argc, char **argv)
   char dbstr[256];
   pthread_mutexattr_t mattr;
   int c;
+  char oem_name[32];
 
   pthread_mutexattr_init(&mattr);
   //pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
@@ -270,11 +271,19 @@ void init(int argc, char **argv)
   if (!verbose)
     log_open();
 
-  log_write("----------------------------");
-  log_write("Try to start the Axum engine");
+  if (oem_name_short(oem_name, 32))
+  {
+    strncpy(this_node.Name, oem_name, 32);
+    strcat(this_node.Name, " Engine");
+
+    strncpy(this_node.Description, oem_name, 32);
+    strcat(this_node.Description, " Engine (Linux)");
+  }
+
+  log_write("------------------------------------------------");
+  log_write("Try to start the %s", this_node.Name);
 
   hwparent(&this_node);
-
   log_write("hwparent %04X:%04X:%04X", this_node.HardwareParent[0], this_node.HardwareParent[1], this_node.HardwareParent[2]);
 
   db_open(dbstr);

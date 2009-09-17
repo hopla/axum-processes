@@ -84,6 +84,7 @@ void init(int argc, char *argv[])
   char ethdev[50];
   struct mbn_object objects[NR_OF_STATIC_OBJECTS];
   int c;
+  char oem_name[32];
 
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(log_file, DEFAULT_LOG_FILE);
@@ -171,6 +172,16 @@ void init(int argc, char *argv[])
   this_node.NumberOfObjects = 9;
 
   log_open();
+
+  if (oem_name_short(oem_name, 32))
+  {
+    strncpy(this_node.Name, oem_name, 32);
+    strcat(this_node.Name, " Meters");
+
+    strncpy(this_node.Description, oem_name, 32);
+    strcat(this_node.Description, " Meters (Linux)");
+  }
+
   hwparent(&this_node);
 
   if ((itf=mbnEthernetOpen(ethdev, error)) == NULL)

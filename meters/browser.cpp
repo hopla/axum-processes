@@ -81,7 +81,7 @@ Browser::Browser(QWidget *parent)
   sprintf(CurrentLabel[2]," Mon. 2 ");
   sprintf(CurrentLabel[3],"  ----  ");
 
-  FILE *F = fopen("/var/lib/axum/OEMName", "r");
+  FILE *F = fopen("/var/lib/axum/OEMFullProductName", "r");
   if (F != NULL)
   {
     char *line=NULL;

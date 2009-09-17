@@ -373,6 +373,7 @@ void init(int argc, char *argv[]) {
   struct mbn_interface *itf;
   pthread_mutexattr_t mattr;
   int c;
+  char oem_name[32];
 
   pthread_mutexattr_init(&mattr);
   pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
@@ -428,6 +429,16 @@ void init(int argc, char *argv[]) {
 
   daemonize();
   log_open();
+
+  if (oem_name_short(oem_name, 32))
+  {
+    strncpy(this_node.Name, oem_name, 32);
+    strcat(this_node.Name, " Learner");
+
+    strncpy(this_node.Description, oem_name, 32);
+    strcat(this_node.Description, " Learner (Linux)");
+  }
+
   hwparent(&this_node);
   sql_open(dbstr, 1, notifies);
 
@@ -453,10 +464,9 @@ void init(int argc, char *argv[]) {
   mbnStartInterface(itf, err);
 
   daemonize_finish();
-  log_write("------------------------");
-  log_write("Axum Learner Initialized");
+  log_write("--------------------------------------");
+  log_write("%s Initialized", this_node.Name);
 }
-
 
 int main(int argc, char *argv[]) {
   struct timeval tv;

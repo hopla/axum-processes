@@ -33,7 +33,6 @@ char sql_lastnotify[50];
 pthread_mutex_t sql_mutex = PTHREAD_MUTEX_INITIALIZER;
 PGconn *sql_conn;
 
-
 void log_open() {
   if(logfd != NULL)
     fclose(logfd);
@@ -174,7 +173,6 @@ void hwparent(struct mbn_node_info *node) {
   }
 }
 
-
 PGresult *sql_exec(const char *query, char res, int nparams, const char * const *values) {
   PGresult *qs;
   qs = PQexecParams(sql_conn, query, nparams, NULL, values, NULL, NULL, 0);
@@ -305,4 +303,32 @@ int sql_loop() {
   return 0;
 }
 
-
+int oem_name_short(char *name, int name_length)
+{
+  int name_found = 0;
+  FILE *F = fopen("/var/lib/axum/OEMShortProductName", "r");
+  if (F != NULL)
+  {
+    char *line=NULL;
+    size_t len=0;
+    size_t i;
+    if (getline(&line, &len, F) != -1)
+    {
+      for (i=0; i<len; i++)
+      {
+        if (line[i] == '\n')
+        {
+          line[i] = '\0';
+        }
+      }
+      strncpy(name, line, name_length);
+      name_found = 1;
+    }
+    if (line)
+    {
+      free(line);
+    }
+    fclose(F);
+  }
+  return name_found;
+}

@@ -55,7 +55,7 @@
 
 struct mbn_node_info this_node = {
   0x00000000, 0x00, /* MambaNet Addr + Services */
-  "Axum MambaNet CAN+TCP+Ethernet Gateway",
+  "MambaNet CAN+TCP+Ethernet Gateway",
   "Axum MambaNet Gateway",
   0x0001, 0x000D, 0x0001,   /* UniqueMediaAccessId */
   0, 0,    /* Hardware revision */
@@ -310,6 +310,7 @@ void init(int argc, char **argv, char *upath) {
   struct mbn_object obj[6];
   char err[MBN_ERRSIZE], ican[50], tport[10];
   int c, itfcount = 0;
+  char oem_name[32];
 
   strcpy(upath, DEFAULT_UNIX_PATH);
   strcpy(data_path, DEFAULT_DATA_PATH);
@@ -371,6 +372,7 @@ void init(int argc, char **argv, char *upath) {
         break;
       /* hardwareparent */
       case 'p':
+        this_node.ProductID = 25; //UI ProductID;
         if(strcmp(optarg, "self") == 0) {
           this_node.HardwareParent[0] = this_node.ManufacturerID;
           this_node.HardwareParent[1] = this_node.ProductID;
@@ -416,6 +418,12 @@ void init(int argc, char **argv, char *upath) {
 
   if(!verbose)
     daemonize();
+
+  if (oem_name_short(oem_name, 32))
+  {
+    strncpy(this_node.Name, oem_name, 32);
+    strcat(this_node.Name, " MambaNet Gateway");
+  }
 
   /* init can */
   if(ican[0]) {

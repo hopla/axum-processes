@@ -335,6 +335,7 @@ void init(int argc, char **argv) {
   char dbstr[256];
   int c;
   int verbose;
+  char oem_name[32];
 
   verbose = 0;
 
@@ -391,6 +392,13 @@ void init(int argc, char **argv) {
     daemonize();
     log_open();
   }
+
+  if (oem_name_short(oem_name, 32))
+  {
+    strncpy(this_node.Name, oem_name, 32);
+    strcat(this_node.Name, " Address Server");
+  }
+
   hwparent(&this_node);
   db_init(dbstr);
 
@@ -419,8 +427,8 @@ void init(int argc, char **argv) {
 
   if(!verbose)
     daemonize_finish();
-  log_write("-------------------------------");
-  log_write("Axum Address Server Initialized");
+  log_write("--------------------------------------------------");
+  log_write("%s Initialized", this_node.Name);
 }
 
 
