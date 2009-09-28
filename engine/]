@@ -655,10 +655,6 @@ bool dsp_program_eeprom(int fd)
   EEpromRegisters.RSVD_2 = 0x00;
   EEpromRegisters.HPI_DWByte0 = 0x0F;
   EEpromRegisters.RSVD_3 = 0x00;
-  for (int cnt=0; cnt<16; cnt++)
-  {
-    EEpromRegisters.RSVD[cnt] = 0x00;
-  }
 
   pci2040_ioctl_linux pci2040_ioctl_message;
   PCI2040_WRITE_REG  reg;

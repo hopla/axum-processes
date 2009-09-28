@@ -244,11 +244,11 @@ void init(int argc, char **argv)
       case 'f':
         if (dsp_force_eeprom_prg(optarg))
         {
-          fprintf(stderr, "PCI2040 EEPROM NOT programmed in forced mode (%s).\n", optarg);
+          printf("PCI2040 EEPROM programmed in forced mode (%s).\n", optarg);
         }
         else
         {
-          printf("PCI2040 EEPROM programmed in forced mode (%s).\n", optarg);
+          fprintf(stderr, "PCI2040 EEPROM NOT programmed in forced mode (%s).\n", optarg);
         }
         exit(1);
         break;
