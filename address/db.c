@@ -70,6 +70,14 @@ int db_parserow(PGresult *q, int row, struct db_node *res) {
   sscanf(PQgetvalue(q, row, 11), "%d",  &(res->AddressRequests));
   if(sscanf(PQgetvalue(q, row, 12), "%hd", &(res->FirmMajor)) != 1)
     res->FirmMajor = -1;
+
+  time_t CurrentTime = time(NULL);
+  if (CurrentTime < res->LastSeen)
+  {
+    res->LastSeen = CurrentTime;
+    log_write("Current time is smaller than last time %04X:%04X:%04X seen", res->ManufacturerID, res->ProductID, res->UniqueIDPerProduct);
+  }
+
   return 1;
 }
 
