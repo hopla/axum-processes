@@ -164,7 +164,8 @@ typedef struct
 
 typedef struct
 {
-  unsigned int TemporySource;
+  unsigned int TemporySourceLocal;
+  unsigned int TemporySourceControlMode[4];
   unsigned int SelectedSource;
   unsigned int SourceA;
   unsigned int SourceB;
