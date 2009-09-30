@@ -53,11 +53,24 @@ END
 $$ LANGUAGE plpgsql;
 
 
+-- Renumbers the position column to be continues from '1'
+
+CREATE OR REPLACE FUNCTION t_pos := 1;
+  FOR _record IN ( SELECT rcv_type, xmt_type, (func).type AS type, (func).seq AS seq, (func).func AS func FROM functions ORDER BY pos )
+  LOOP
+    UPDATE functions SET pos = cnt_pos WHERE rcv_type = _record.rcv_type AND xmt_type = _record.xmt_type AND (func).type = _record.type AND (func).seq = _record.seq AND (func).func = _record.func;
+    cnt_pos := cnt_pos + 1;
+  END LOOP;
+  RETURN cnt_pos;
+END
+$$ LANGUAGE plpgsql;
+
+
 -- a VIEW with all channels available on the matrix
 
 CREATE OR REPLACE VIEW matrix_sources (pos, type, number, label, active) AS
   SELECT 1, 'none', 0, 'none', true
-  UNION 
+  UNION
   SELECT 1+pos, 'source', number+288, label, true
     FROM src_config
   UNION
