@@ -90,7 +90,8 @@ CREATE TABLE functions (
   func function_number NOT NULL,
   name varchar(64) NOT NULL,
   rcv_type smallint NOT NULL CHECK(rcv_type >= 0 AND rcv_type <= 6),
-  xmt_type smallint NOT NULL CHECK(xmt_type >= 0 AND xmt_type <= 6)
+  xmt_type smallint NOT NULL CHECK(xmt_type >= 0 AND xmt_type <= 6),
+  pos smallint NOT NULL DEFAULT 9999,
 );
 CREATE UNIQUE INDEX functions_unique ON functions (rcv_type, xmt_type, ((func).type), ((func).seq), ((func).func));
 
