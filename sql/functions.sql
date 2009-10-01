@@ -61,7 +61,7 @@ INSERT INTO functions VALUES ('(0,,55)', 'EQ Band 6 type', 2, 4);
 INSERT INTO functions VALUES ('(0,,56)', 'EQ on/off', 3, 3);
 INSERT INTO functions VALUES ('(0,,59)', 'Dynamics amount', 2, 4);
 INSERT INTO functions VALUES ('(0,,60)', 'Dynamics on/off', 3, 3);
-INSERT INTO functions VALUES ('(0,,61)', 'Mono', 3, 3);
+INSERT INTO functions VALUES ('(0,,61)', 'Mono On/Off', 3, 3);
 INSERT INTO functions VALUES ('(0,,62)', 'Pan', 2, 4);
 INSERT INTO functions VALUES ('(0,,63)', 'Pan reset', 3, 0);
 INSERT INTO functions VALUES ('(0,,64)', 'Module level', 1, 1);
@@ -227,6 +227,7 @@ INSERT INTO functions VALUES ('(0,,190)', 'Routing preset 6', 3, 0);
 INSERT INTO functions VALUES ('(0,,191)', 'Routing preset 7', 3, 0);
 INSERT INTO functions VALUES ('(0,,192)', 'Routing preset 8', 3, 0);
 INSERT INTO functions VALUES ('(0,,193)', 'Phase', 2, 4);
+INSERT INTO functions VALUES ('(0,,194)', 'Mono', 2, 4);
 
 
 -- buss functions
