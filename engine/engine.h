@@ -62,6 +62,14 @@ typedef struct
     unsigned int InsertSource;
     bool InsertOnOff;
 
+    bool UsePhase;
+    unsigned char Phase;
+    bool PhaseOnOff;
+
+    bool UseMono;
+    unsigned char Mono;
+    bool MonoOnOff;
+
     bool UseEQ;
     AXUM_EQ_BAND_PRESET_STRUCT EQBand[6];
     bool EQOnOff;
@@ -149,6 +157,8 @@ typedef struct
   float Gain;
   unsigned char Phase;
   bool PhaseOnOff;
+  unsigned char Mono;
+  bool MonoOnOff;
   AXUM_EQ_BAND_DATA_STRUCT Filter;
   bool FilterOnOff;
   AXUM_EQ_BAND_DATA_STRUCT EQBand[6];
@@ -158,8 +168,6 @@ typedef struct
   bool DynamicsOnOff;
 
   int Panorama;
-  unsigned char Mono;
-  bool MonoOnOff;
   float FaderLevel;
   bool On;
 } AXUM_DEFAULT_MODULE_DATA_STRUCT;

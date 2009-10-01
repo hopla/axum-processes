@@ -11674,6 +11674,14 @@ void initialize_axum_data_struct()
     AxumData.SourceData[cntSource].Preset.InsertSource = 0;
     AxumData.SourceData[cntSource].Preset.InsertOnOff = false;
 
+    AxumData.SourceData[cntSource].Preset.UsePhase = false;
+    AxumData.SourceData[cntSource].Preset.Phase = 0x03;
+    AxumData.SourceData[cntSource].Preset.PhaseOnOff = false;
+
+    AxumData.SourceData[cntSource].Preset.UseMono = false;
+    AxumData.SourceData[cntSource].Preset.Mono = 0;
+    AxumData.SourceData[cntSource].Preset.MonoOnOff = false;
+
     AxumData.SourceData[cntSource].Preset.UseEQ = false;
 
     AxumData.SourceData[cntSource].Preset.EQBand[0].Level = 0;
@@ -11865,8 +11873,12 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].Defaults.InsertSource = 0;
     AxumData.ModuleData[cntModule].Defaults.InsertOnOff = 0;
     AxumData.ModuleData[cntModule].Defaults.Gain = 0;
+
     AxumData.ModuleData[cntModule].Defaults.Phase = 0x03;
     AxumData.ModuleData[cntModule].Defaults.PhaseOnOff = 0;
+
+    AxumData.ModuleData[cntModule].Defaults.Mono = 0x03;
+    AxumData.ModuleData[cntModule].Defaults.MonoOnOff = 0;
 
     AxumData.ModuleData[cntModule].Defaults.Filter.Level = 0;
     AxumData.ModuleData[cntModule].Defaults.Filter.Frequency = 80;
@@ -11917,8 +11929,6 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].Defaults.DynamicsOnOff = 0;
 
     AxumData.ModuleData[cntModule].Defaults.Panorama = 512;
-    AxumData.ModuleData[cntModule].Defaults.Mono = 0x03;
-    AxumData.ModuleData[cntModule].Defaults.MonoOnOff = 0;
 
     AxumData.ModuleData[cntModule].Defaults.FaderLevel = -140;
     AxumData.ModuleData[cntModule].Defaults.On = 0;
@@ -12059,6 +12069,7 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
 {
   bool SetModuleProcessing = false;
   bool SetModuleControllers = false;
+  bool SetBussProcessing = false;
   unsigned char cntEQ;
   //parameters per module
   float Gain = 0;
@@ -12066,6 +12077,11 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
   bool FilterOnOff = 0;
   unsigned int InsertSource = 0;
   bool InsertOnOff = 0;
+  unsigned char Phase = 0x03;
+  bool PhaseOnOff = 0;
+  unsigned char Mono = 0x03;
+  bool MonoOnOff = 0;
+
   bool EQOnOff;
   AXUM_EQ_BAND_PRESET_STRUCT EQBand[6];
   int Dynamics = 0;
@@ -12114,6 +12130,33 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
       {
         InsertSource = AxumData.ModuleData[ModuleNr].Defaults.InsertSource;
         InsertOnOff = AxumData.ModuleData[ModuleNr].Defaults.InsertOnOff;
+      }
+    }
+
+    if ((SourceData->Preset.UsePhase) || (AxumData.UseModuleDefaults))
+    {
+      if (SourceData->Preset.UsePhase)
+      {
+        Phase = SourceData->Preset.Phase;
+        PhaseOnOff = SourceData->Preset.PhaseOnOff;
+      }
+      else
+      {
+        Phase = AxumData.ModuleData[ModuleNr].Defaults.Phase;
+        PhaseOnOff = AxumData.ModuleData[ModuleNr].Defaults.PhaseOnOff;
+      }
+    }
+    if ((SourceData->Preset.UseMono) || (AxumData.UseModuleDefaults))
+    {
+      if (SourceData->Preset.UseMono)
+      {
+        Mono = SourceData->Preset.Mono;
+        MonoOnOff = SourceData->Preset.MonoOnOff;
+      }
+      else
+      {
+        Mono = AxumData.ModuleData[ModuleNr].Defaults.Mono;
+        MonoOnOff = AxumData.ModuleData[ModuleNr].Defaults.MonoOnOff;
       }
     }
 
@@ -12182,6 +12225,13 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
 
     InsertSource = AxumData.ModuleData[ModuleNr].Defaults.InsertSource;
     InsertOnOff = AxumData.ModuleData[ModuleNr].Defaults.InsertOnOff;
+
+    Phase = AxumData.ModuleData[ModuleNr].Defaults.Phase;
+    PhaseOnOff = AxumData.ModuleData[ModuleNr].Defaults.PhaseOnOff;
+
+    Mono = AxumData.ModuleData[ModuleNr].Defaults.Mono;
+    MonoOnOff = AxumData.ModuleData[ModuleNr].Defaults.MonoOnOff;
+
     for (cntEQ=0; cntEQ<6; cntEQ++)
     {
       EQBand[cntEQ].Range = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Range;
@@ -12244,6 +12294,46 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_INSERT_ON_OFF);
 
     SetModuleProcessing = true;
+    SetModuleControllers = true;
+  }
+
+  if ((AxumData.ModuleData[ModuleNr].Phase != Phase) || (SetAllObjects))
+  {
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    AxumData.ModuleData[ModuleNr].Phase = Phase;
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE);
+
+    SetModuleProcessing = true;
+    SetModuleControllers = true;
+  }
+  if ((AxumData.ModuleData[ModuleNr].PhaseOnOff != PhaseOnOff) || (SetAllObjects))
+  {
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    AxumData.ModuleData[ModuleNr].PhaseOnOff = PhaseOnOff;
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE_ON_OFF);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE);
+
+    SetModuleProcessing = true;
+    SetModuleControllers = true;
+  }
+
+  if ((AxumData.ModuleData[ModuleNr].Mono != Mono) || (SetAllObjects))
+  {
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    AxumData.ModuleData[ModuleNr].Mono = Mono;
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MONO);
+
+    SetBussProcessing = true;
+    SetModuleControllers = true;
+  }
+  if ((AxumData.ModuleData[ModuleNr].MonoOnOff != MonoOnOff) || (SetAllObjects))
+  {
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    AxumData.ModuleData[ModuleNr].MonoOnOff = MonoOnOff;
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MONO_ON_OFF);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MONO);
+
+    SetBussProcessing = true;
     SetModuleControllers = true;
   }
 
@@ -12319,6 +12409,11 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
   if (SetModuleProcessing)
   {
     SetAxum_ModuleProcessing(ModuleNr);
+  }
+
+  if (SetBussProcessing)
+  {
+    SetAxum_BussLevels(ModuleNr);
   }
 
   if (SetModuleControllers)

@@ -281,6 +281,12 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
                                     use_insert_preset,    \
                                     insert_source,        \
                                     insert_on_off,        \
+                                    use_phase_preset,     \
+                                    phase,                \
+                                    phase_on_off,         \
+                                    use_mono_preset,      \
+                                    mono,                 \
+                                    mono_on_off,          \
                                     use_eq_preset,        \
                                     eq_band_1_range,      \
                                     eq_band_1_level,      \
@@ -390,6 +396,14 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->Preset.InsertSource);
     SourceData->Preset.InsertOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
+    SourceData->Preset.UsePhase = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->Preset.Phase);
+    SourceData->Preset.PhaseOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    SourceData->Preset.UseMono = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->Preset.Mono);
+    SourceData->Preset.MonoOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
     SourceData->Preset.UseEQ = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     for (cntEQ=0; cntEQ<6; cntEQ++)
     {
@@ -493,6 +507,10 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
                                     gain,                 \
                                     lc_frequency,         \
                                     lc_on_off,            \
+                                    phase,                \
+                                    phase_on_off,         \
+                                    mono,                 \
+                                    mono_on_off,          \
                                     eq_band_1_range,      \
                                     eq_band_1_level,      \
                                     eq_band_1_freq,       \
@@ -649,6 +667,10 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->Gain);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->Filter.Frequency);
       DefaultModuleData->FilterOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DefaultModuleData->Phase);
+      DefaultModuleData->PhaseOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DefaultModuleData->Mono);
+      DefaultModuleData->MonoOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       for (cntEQ=0; cntEQ<6; cntEQ++)
       {
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->EQBand[cntEQ].Range);
@@ -713,10 +735,12 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       ModuleData->InsertSource = DefaultModuleData->InsertSource;
       ModuleData->InsertOnOff = DefaultModuleData->InsertOnOff;
       ModuleData->Gain = DefaultModuleData->Gain;
-      ModuleData->Phase = DefaultModuleData->Phase;
-      ModuleData->PhaseOnOff = DefaultModuleData->PhaseOnOff;
       ModuleData->Filter = DefaultModuleData->Filter;
       ModuleData->FilterOnOff = DefaultModuleData->FilterOnOff;
+      ModuleData->Phase = DefaultModuleData->Phase;
+      ModuleData->PhaseOnOff = DefaultModuleData->PhaseOnOff;
+      ModuleData->Mono = DefaultModuleData->Mono;
+      ModuleData->MonoOnOff = DefaultModuleData->MonoOnOff;
       ModuleData->EQBand[0] = DefaultModuleData->EQBand[0];
       ModuleData->EQBand[1] = DefaultModuleData->EQBand[1];
       ModuleData->EQBand[2] = DefaultModuleData->EQBand[2];
@@ -727,8 +751,6 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       ModuleData->Dynamics = DefaultModuleData->Dynamics;
       ModuleData->DynamicsOnOff = DefaultModuleData->DynamicsOnOff;
       ModuleData->Panorama = DefaultModuleData->Panorama;
-      ModuleData->Mono = DefaultModuleData->Mono;
-      ModuleData->MonoOnOff = DefaultModuleData->MonoOnOff;
       if (force_all)
       {
         ModuleData->FaderLevel = DefaultModuleData->FaderLevel;
