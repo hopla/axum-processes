@@ -728,6 +728,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       ModuleData->DynamicsOnOff = DefaultModuleData->DynamicsOnOff;
       ModuleData->Panorama = DefaultModuleData->Panorama;
       ModuleData->Mono = DefaultModuleData->Mono;
+      ModuleData->MonoOnOff = DefaultModuleData->MonoOnOff;
       if (force_all)
       {
         ModuleData->FaderLevel = DefaultModuleData->FaderLevel;

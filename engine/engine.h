@@ -158,7 +158,8 @@ typedef struct
   bool DynamicsOnOff;
 
   int Panorama;
-  char Mono;
+  unsigned char Mono;
+  bool MonoOnOff;
   float FaderLevel;
   bool On;
 } AXUM_DEFAULT_MODULE_DATA_STRUCT;
@@ -186,7 +187,8 @@ typedef struct
   bool DynamicsOnOff;
 
   int Panorama;
-  char Mono;
+  unsigned char Mono;
+  bool MonoOnOff;
   float FaderLevel;
   bool FaderTouch;
   bool On;

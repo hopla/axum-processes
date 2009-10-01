@@ -135,7 +135,7 @@
 //#define MODULE_FUNCTION_EQ_TYPE_B             58
 #define MODULE_FUNCTION_DYNAMICS_AMOUNT         59
 #define MODULE_FUNCTION_DYNAMICS_ON_OFF         60
-#define MODULE_FUNCTION_MONO                  61
+#define MODULE_FUNCTION_MONO_ON_OFF             61
 #define MODULE_FUNCTION_PAN                 62
 #define MODULE_FUNCTION_PAN_RESET             63
 #define MODULE_FUNCTION_MODULE_LEVEL            64
