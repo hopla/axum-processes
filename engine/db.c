@@ -713,7 +713,8 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       ModuleData->InsertSource = DefaultModuleData->InsertSource;
       ModuleData->InsertOnOff = DefaultModuleData->InsertOnOff;
       ModuleData->Gain = DefaultModuleData->Gain;
-      ModuleData->PhaseReverse = DefaultModuleData->PhaseReverse;
+      ModuleData->Phase = DefaultModuleData->Phase;
+      ModuleData->PhaseOnOff = DefaultModuleData->PhaseOnOff;
       ModuleData->Filter = DefaultModuleData->Filter;
       ModuleData->FilterOnOff = DefaultModuleData->FilterOnOff;
       ModuleData->EQBand[0] = DefaultModuleData->EQBand[0];

@@ -147,7 +147,8 @@ typedef struct
   unsigned int InsertSource;
   bool InsertOnOff;
   float Gain;
-  bool PhaseReverse;
+  unsigned char Phase;
+  bool PhaseOnOff;
   AXUM_EQ_BAND_DATA_STRUCT Filter;
   bool FilterOnOff;
   AXUM_EQ_BAND_DATA_STRUCT EQBand[6];
@@ -174,7 +175,8 @@ typedef struct
   unsigned int InsertSource;
   bool InsertOnOff;
   float Gain;
-  bool PhaseReverse;
+  unsigned char Phase;
+  bool PhaseOnOff;
   AXUM_EQ_BAND_DATA_STRUCT Filter;
   bool FilterOnOff;
   AXUM_EQ_BAND_DATA_STRUCT EQBand[6];

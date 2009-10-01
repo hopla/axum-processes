@@ -782,14 +782,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               }
             }
             break;
-            case MODULE_FUNCTION_PHASE:
+            case MODULE_FUNCTION_PHASE_ON_OFF:
             {   //Phase
-              printf("Phase\n");
+              printf("Phase on/off\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
                 {
-                  AxumData.ModuleData[ModuleNr].PhaseReverse = !AxumData.ModuleData[ModuleNr].PhaseReverse;
+                  AxumData.ModuleData[ModuleNr].PhaseOnOff = !AxumData.ModuleData[ModuleNr].PhaseOnOff;
                 }
                 else
                 {
@@ -798,7 +798,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
                     {
-                      AxumData.ModuleData[ModuleNr].PhaseReverse = !AxumData.ModuleData[ModuleNr].PhaseReverse;
+                      AxumData.ModuleData[ModuleNr].PhaseOnOff = !AxumData.ModuleData[ModuleNr].PhaseOnOff;
                     }
                   }
                 }
@@ -811,8 +811,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-                FunctionNrToSent = (ModuleNr<<12) | MODULE_FUNCTION_PHASE;
-                CheckObjectsToSent(FunctionNrToSent);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE_ON_OFF); 
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE); 
               }
             }
             break;
@@ -1992,6 +1992,24 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     LoadRoutingPreset(ModuleNr, PresetNr, 0);
                   }
                 }
+              }
+            }
+            break;
+            case MODULE_FUNCTION_PHASE:
+            {
+              if (type == MBN_DATATYPE_SINT)
+              {
+                AxumData.ModuleData[ModuleNr].Phase += data.SInt;
+                AxumData.ModuleData[ModuleNr].Phase &= 0x03;
+                
+                SetAxum_ModuleProcessing(ModuleNr);
+                unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE);
               }
             }
             break;
@@ -5437,8 +5455,8 @@ void SetAxum_ModuleProcessing(unsigned int ModuleNr)
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Percent = AxumData.ModuleData[ModuleNr].Dynamics;
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.On = AxumData.ModuleData[ModuleNr].DynamicsOnOff;
   }
-  dspcard->data.ChannelData[DSPCardChannelNr+1].PhaseReverse = AxumData.ModuleData[ModuleNr].PhaseReverse;
-
+  dspcard->data.ChannelData[DSPCardChannelNr+0].PhaseReverse = AxumData.ModuleData[ModuleNr].PhaseOnOff && (AxumData.ModuleData[ModuleNr].Phase&0x01);
+  dspcard->data.ChannelData[DSPCardChannelNr+1].PhaseReverse = AxumData.ModuleData[ModuleNr].PhaseOnOff && (AxumData.ModuleData[ModuleNr].Phase&0x02);
 
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
@@ -6396,13 +6414,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           }
         }
         break;
-        case MODULE_FUNCTION_PHASE: //Phase
+        case MODULE_FUNCTION_PHASE_ON_OFF: //Phase
         {
           switch (DataType)
           {
             case MBN_DATATYPE_STATE:
             {
-              data.State = AxumData.ModuleData[ModuleNr].PhaseReverse;
+              data.State = AxumData.ModuleData[ModuleNr].PhaseOnOff;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
@@ -7013,6 +7031,48 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_BUSS_29_30_BALANCE_RESET:
         case MODULE_FUNCTION_BUSS_31_32_BALANCE_RESET:
         { //Buss balance reset
+        }
+        break;
+        case MODULE_FUNCTION_PHASE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+              if (AxumData.ModuleData[ModuleNr].PhaseOnOff)
+              {
+                switch (AxumData.ModuleData[ModuleNr].Phase)
+                {
+                  case 0x00:
+                  {
+                    sprintf(LCDText, " Normal ");
+                  }
+                  break;
+                  case 0x01:
+                  {
+                    sprintf(LCDText, "  Left  ");
+                  }
+                  break;
+                  case 0x02:
+                  {
+                    sprintf(LCDText, "  Right ");
+                  }
+                  break;
+                  case 0x03:
+                  {
+                    sprintf(LCDText, "  Both  ");
+                  }
+                  break;
+                }
+              }
+              else
+              {
+                sprintf(LCDText, "  Off   ");
+              }
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+          }
         }
         break;
       }
@@ -8884,14 +8944,9 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       break;
       case MODULE_CONTROL_MODE_PHASE:
       {   //Phase reverse
-        if (data.SInt>=0)
-        {
-          AxumData.ModuleData[ModuleNr].PhaseReverse = 1;
-        }
-        else
-        {
-          AxumData.ModuleData[ModuleNr].PhaseReverse = 0;
-        }
+        AxumData.ModuleData[ModuleNr].Phase += data.SInt;
+        AxumData.ModuleData[ModuleNr].Phase &= 0x03;
+        
         SetAxum_ModuleProcessing(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -9382,13 +9437,13 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         break;
         case MODULE_CONTROL_MODE_PHASE:
         {   //Phase reverse
-          if (AxumData.ModuleData[ModuleNr].PhaseReverse)
+          if (AxumData.ModuleData[ModuleNr].PhaseOnOff)
           {
-            AxumData.ModuleData[ModuleNr].PhaseReverse = 0;
+            AxumData.ModuleData[ModuleNr].PhaseOnOff = 0;
           }
           else
           {
-            AxumData.ModuleData[ModuleNr].PhaseReverse = 1;
+            AxumData.ModuleData[ModuleNr].PhaseOnOff = 1;
           }
           SetAxum_ModuleProcessing(ModuleNr);
 
@@ -9398,8 +9453,8 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-          FunctionNrToSent = (ModuleNr<<12) | MODULE_FUNCTION_PHASE;
-          CheckObjectsToSent(FunctionNrToSent);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE);
         }
         break;
         case MODULE_CONTROL_MODE_LOW_CUT:
@@ -9736,13 +9791,35 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
     break;
     case MODULE_CONTROL_MODE_PHASE:
     {
-      if (AxumData.ModuleData[ModuleNr].PhaseReverse)
+      if (AxumData.ModuleData[ModuleNr].PhaseOnOff)
       {
-        sprintf(LCDText, "Reverse ");
+        switch (AxumData.ModuleData[ModuleNr].Phase)
+        {
+          case 0x00:
+          {
+            sprintf(LCDText, " Normal ");
+          }
+          break;
+          case 0x01:
+          {
+            sprintf(LCDText, "  Left  ");
+          }
+          break;
+          case 0x02:
+          {
+            sprintf(LCDText, "  Right ");
+          }
+          break;
+          case 0x03:
+          {
+            sprintf(LCDText, "  Both  ");
+          }
+          break;
+        }
       }
       else
       {
-        sprintf(LCDText, " Normal ");
+        sprintf(LCDText, "  Off   ");
       }
     }
     break;
@@ -11551,7 +11628,9 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].InsertSource = 0;
     AxumData.ModuleData[cntModule].InsertOnOff = 0;
     AxumData.ModuleData[cntModule].Gain = 0;
-    AxumData.ModuleData[cntModule].PhaseReverse = 0;
+
+    AxumData.ModuleData[cntModule].Phase = 0x03;
+    AxumData.ModuleData[cntModule].PhaseOnOff = 0;
 
     AxumData.ModuleData[cntModule].Filter.Level = 0;
     AxumData.ModuleData[cntModule].Filter.Frequency = 80;
@@ -11637,7 +11716,8 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].Defaults.InsertSource = 0;
     AxumData.ModuleData[cntModule].Defaults.InsertOnOff = 0;
     AxumData.ModuleData[cntModule].Defaults.Gain = 0;
-    AxumData.ModuleData[cntModule].Defaults.PhaseReverse = 0;
+    AxumData.ModuleData[cntModule].Defaults.Phase = 0x03;
+    AxumData.ModuleData[cntModule].Defaults.PhaseOnOff = 0;
 
     AxumData.ModuleData[cntModule].Defaults.Filter.Level = 0;
     AxumData.ModuleData[cntModule].Defaults.Filter.Frequency = 80;
