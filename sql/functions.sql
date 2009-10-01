@@ -10,7 +10,7 @@ INSERT INTO functions VALUES ('(0,,5)', 'Source pad', 3, 3);
 INSERT INTO functions VALUES ('(0,,6)', 'Source gain level', 2, 4);
 INSERT INTO functions VALUES ('(0,,7)', 'Source gain level reset', 3, 0);
 INSERT INTO functions VALUES ('(0,,8)', 'Insert on/off', 3, 3);
-INSERT INTO functions VALUES ('(0,,9)', 'Phase', 3, 3);
+INSERT INTO functions VALUES ('(0,,9)', 'Phase on/off', 3, 3);
 INSERT INTO functions VALUES ('(0,,10)', 'Gain level', 2, 4);
 INSERT INTO functions VALUES ('(0,,10)', 'Gain level', 0, 1);
 INSERT INTO functions VALUES ('(0,,11)', 'Gain level reset', 3, 0);
@@ -226,6 +226,7 @@ INSERT INTO functions VALUES ('(0,,189)', 'Routing preset 5', 3, 0);
 INSERT INTO functions VALUES ('(0,,190)', 'Routing preset 6', 3, 0);
 INSERT INTO functions VALUES ('(0,,191)', 'Routing preset 7', 3, 0);
 INSERT INTO functions VALUES ('(0,,192)', 'Routing preset 8', 3, 0);
+INSERT INTO functions VALUES ('(0,,193)', 'Phase', 2, 4);
 
 
 -- buss functions
