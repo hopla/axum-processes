@@ -173,15 +173,16 @@ ONLINE_NODE_INFORMATION_STRUCT *GetFirmwareOnlineNodeInformationElement = NULL;
 
 int CallbackNodeIndex = -1;
 
-void lock_node_info(const char *Caller)
+void node_info_lock(int l)
 {
-  printf("lock node_info (%s)\n", Caller);
-  pthread_mutex_lock(&get_node_info_mutex);
-}
-void unlock_node_info(const char *Caller)
-{
-  pthread_mutex_unlock(&get_node_info_mutex);
-  printf("unlock node_info (%s)\n", Caller);
+  if (l)
+  {
+    pthread_mutex_lock(&get_node_info_mutex);
+  }
+  else
+  {
+    pthread_mutex_unlock(&get_node_info_mutex);
+  }
 }
 
 void init(int argc, char **argv)
@@ -811,8 +812,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE_ON_OFF); 
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE); 
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE_ON_OFF);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PHASE);
               }
             }
             break;
@@ -2001,7 +2002,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 AxumData.ModuleData[ModuleNr].Phase += data.SInt;
                 AxumData.ModuleData[ModuleNr].Phase &= 0x03;
-                
+
                 SetAxum_ModuleProcessing(ModuleNr);
                 unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -2020,7 +2021,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 AxumData.ModuleData[ModuleNr].Mono += data.SInt;
                 AxumData.ModuleData[ModuleNr].Mono &= 0x03;
                 SetAxum_BussLevels(ModuleNr);
-                
+
                 unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
@@ -4501,13 +4502,13 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 {
   printf("SensorDataResponse addr: %08lx, object: %d\n", message->AddressFrom, object);
 
-  lock_node_info(__FUNCTION__);
+  node_info_lock(1);
 
   ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = GetOnlineNodeInformation(message->AddressFrom);
 
   if (OnlineNodeInformationElement == NULL)
   {
-    unlock_node_info(__FUNCTION__);
+    node_info_lock(0);
     return 1;
   }
 
@@ -4710,14 +4711,14 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
     }
     break;
   }
-  unlock_node_info(__FUNCTION__);
+  node_info_lock(0);
 
   return 0;
 }
 
 void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_info, struct mbn_address_node *new_info)
 {
-  lock_node_info(__FUNCTION__);
+  node_info_lock(1);
   if (old_info == NULL)
   {
     log_write("Add node with MambaNet address: %08lX, Services: %02X", new_info->MambaNetAddr, new_info->Services);
@@ -4827,7 +4828,7 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     }
     log_write("Address changed: %08lX => %08lX", old_info->MambaNetAddr, new_info->MambaNetAddr);
   }
-  unlock_node_info(__FUNCTION__);
+  node_info_lock(0);
   mbn = NULL;
 }
 
@@ -4950,7 +4951,7 @@ void Timer100HzDone(int Value)
     PreviousCount_Second = cntMillisecondTimer;
 
     //Check for firmware requests
-//    lock_node_info(__FUNCTION__);
+//    node_info_lock(__FUNCTION__);
     if (mbn->node.Services&0x80)
     {
       if (GetFirmwareOnlineNodeInformationElement != NULL)
@@ -4978,7 +4979,7 @@ void Timer100HzDone(int Value)
       GetFirmwareOnlineNodeInformationElement = OnlineNodeInformationList;
     }
 
-//    unlock_node_info(__FUNCTION__);
+//    node_info_lock(__FUNCTION__);
   }
 
   if (cntBroadcastPing)
@@ -5611,7 +5612,7 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
                 dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
                 dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += BussBalancedB[0];
                 dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += BussBalancedB[1];
-  
+
                 if ((!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel) && (!AxumData.BussMasterData[cntBuss].PreModuleLevel))
                 {
                   dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
@@ -9077,7 +9078,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       {   //Phase reverse
         AxumData.ModuleData[ModuleNr].Phase += data.SInt;
         AxumData.ModuleData[ModuleNr].Phase &= 0x03;
-        
+
         SetAxum_ModuleProcessing(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -9710,8 +9711,8 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MONO_ON_OFF); 
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MONO); 
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MONO_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MONO);
         }
         break;
         case MODULE_CONTROL_MODE_PAN:
