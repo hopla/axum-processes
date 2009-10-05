@@ -325,6 +325,34 @@ void init(int argc, char **argv)
   log_write("Axum Engine Initialized");
 }
 
+
+void *timer_thread_loop(void *arg)
+{
+  struct timeval timeout;
+  timeout.tv_sec = 0;
+  timeout.tv_usec = 10000;
+
+  while (!main_quit)
+  {
+    int ReturnValue = select(0, NULL, NULL, NULL, &timeout);
+    if ((ReturnValue == 0) || ((ReturnValue<0) && (errno == EINTR)))
+    {//upon SIGALARM this happens :(
+    }
+    else if (ReturnValue<0)
+    { //error
+      log_write("select() failed: %s\n", strerror(errno));
+    }
+    if ((timeout.tv_sec == 0) && (timeout.tv_usec == 0))
+    {
+      Timer100HzDone(0);
+      timeout.tv_sec = 0;
+      timeout.tv_usec = 10000;
+    }
+  }
+  return NULL;
+  arg = NULL;
+}
+
 int main(int argc, char *argv[])
 {
   fd_set readfs;
@@ -428,29 +456,12 @@ int main(int argc, char *argv[])
 
   InitalizeAllObjectListPerFunction();
 
-//  log_write("using network interface device: %s [%02X:%02X:%02X:%02X:%02X:%02X]", NetworkInterface, LocalMACAddress[0], LocalMACAddress[1], LocalMACAddress[2], LocalMACAddress[3], LocalMACAddress[4], LocalMACAddress[5]);
-
   //**************************************************************/
-  //Initialize Timer
+  //Initialize Timer thread
   //**************************************************************/
-  struct itimerval MillisecondTimeOut;
-  struct sigaction signal_action;
-
   cntBroadcastPing = 6;
-
-  //An alarm timer is used to check the denied user file for changes every minute. Reload the file if it has changed.
-  MillisecondTimeOut.it_interval.tv_sec = 0;
-  MillisecondTimeOut.it_interval.tv_usec = 10000;
-  MillisecondTimeOut.it_value.tv_sec = 0;
-  MillisecondTimeOut.it_value.tv_usec = 10000;
-
-  sigemptyset(&signal_action.sa_mask);
-  sigaddset(&signal_action.sa_mask, SIGALRM);
-  signal_action.sa_flags = 0;
-  signal_action.sa_handler = Timer100HzDone;
-  sigaction(SIGALRM, &signal_action, 0);
-
-  setitimer(ITIMER_REAL, &MillisecondTimeOut, NULL);
+  pthread_t timer_thread;
+  pthread_create(&timer_thread, NULL, timer_thread_loop, NULL);
 
   while (!main_quit)
   {
