@@ -1,3 +1,13 @@
+/*****************************************************
+ *                                                   *
+ * The dsp functions uses an internal mutex locking. *
+ * This is the reason its not allowed to use these   *
+ * functions in a 'signal handler'.                  *
+ * You also may not use the dsp_lock functions/mutex *
+ * outside these dsp_functions                       *
+ *                                                   *
+ *****************************************************/
+
 #ifndef _dsp_h
 #define _dsp_h
 
@@ -102,5 +112,4 @@ void dsp_set_interpolation(DSP_HANDLER_STRUCT *dsp_handler, int Samplerate);
 void dsp_set_monitor_buss(DSP_HANDLER_STRUCT *dsp_handler, unsigned int MonitorChannelNr);
 void dsp_read_buss_meters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdBLevel);
 void dsp_read_module_meters(DSP_HANDLER_STRUCT *dsp_handler, float *dBLevel);
-void dsp_lock(int l);
 #endif

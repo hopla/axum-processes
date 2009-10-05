@@ -1,3 +1,13 @@
+/*****************************************************
+ *                                                   *
+ * The dsp functions uses an internal mutex locking. *
+ * This is the reason its not allowed to use these   *
+ * functions in a 'signal handler'.                  *
+ * You also may not use the dsp_lock functions/mutex *
+ * outside these dsp_functions                       *
+ *                                                   *
+ *****************************************************/
+
 #include "common.h"
 #include "engine.h"
 #include "dsp.h"
@@ -54,6 +64,7 @@ pthread_mutex_t dsp_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int dsp_init(char *devname, DSPCARD_STRUCT *dsp_card);
 bool dsp_program_eeprom(int fd);
+void dsp_lock(int l);
 
 DSP_HANDLER_STRUCT *dsp_open()
 {
@@ -183,6 +194,7 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
     //ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
     //unsigned long *PtrGPB_TBC = (unsigned long *)mmap(0, res.Length, PROT_READ|PROT_WRITE, MAP_SHARED | MAP_LOCKED, fd, res.PhysicalAddress);
 
+    dsp_lock(1);
     unsigned long cntPtrAddress = (unsigned long)PtrDSP_HPI;
     for (int cntDSP=0; cntDSP<4; cntDSP++)
     {
@@ -195,8 +207,8 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
       cntPtrAddress += 0x800;
       dspcard->dsp_regs[cntDSP].HPID = (unsigned long *)cntPtrAddress;
       cntPtrAddress += 0x800;
-
     }
+    dsp_lock(0);
 
 //GPIO5 = 1, so HCS1-4 are disconnected
 //         pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_DUMP_CONFIGURATION;
@@ -213,6 +225,7 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
 
     //Setup the PCI2040 CSR
+    dsp_lock(1);
     // HPI Reset
     *((unsigned long *)((unsigned long)PtrHPI_CSR+0x14)) |= 0x0000000F;
 
@@ -232,6 +245,7 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
 
     // HPI UnReset
     *((unsigned long *)((unsigned long)PtrHPI_CSR+0x14)) &= 0xFFFFFFF0;
+    dsp_lock(0);
 
     delay_ms(1);
     HPIConfigurationRegisters.GPBSelect = 0x00;
@@ -248,10 +262,12 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
     delay_ms(500);
 
     //default most significant is send first, we do both
+    dsp_lock(1);
     *dspcard->dsp_regs[0].HPIC |= 0x00010001;
     *dspcard->dsp_regs[1].HPIC |= 0x00010001;
     *dspcard->dsp_regs[2].HPIC |= 0x00010001;
     *dspcard->dsp_regs[3].HPIC |= 0x00010001;
+    dsp_lock(0);
 
     //file descriptor not used further
     close(fd);
@@ -371,8 +387,10 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
       {
         for (int cntDSP=0; cntDSP<2; cntDSP++)
         {
+          dsp_lock(1);
           *dspcard->dsp_regs[cntDSP].HPIA = 0x10001c00+cntAddress;
           *dspcard->dsp_regs[cntDSP].HPID = *PtrData;
+          dsp_lock(0);
         }
         cntAddress+=4;
       }
@@ -382,8 +400,10 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
       for (int cntDSP=0; cntDSP<2; cntDSP++)
       {
         //Entry point
+        dsp_lock(1);
         *dspcard->dsp_regs[cntDSP].HPIA = 0x10000714;
         *dspcard->dsp_regs[cntDSP].HPID = ModuleDSPEntryPoint;
+        dsp_lock(0);
       }
     }
 
@@ -476,8 +496,10 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
       {
         for (int cntDSP=2; cntDSP<3; cntDSP++)
         {
+          dsp_lock(1);
           *dspcard->dsp_regs[cntDSP].HPIA = 0x10001c00+cntAddress;
           *dspcard->dsp_regs[cntDSP].HPID = *PtrData;
+          dsp_lock(0);
         }
         cntAddress+=4;
       }
@@ -487,8 +509,10 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
       for (int cntDSP=2; cntDSP<3; cntDSP++)
       {
         //Entry point
+        dsp_lock(1);
         *dspcard->dsp_regs[cntDSP].HPIA = 0x10000714;
         *dspcard->dsp_regs[cntDSP].HPID = SummingDSPEntryPoint;
+        dsp_lock(0);
       }
     }
 
@@ -549,8 +573,10 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
       {
         for (int cntDSP=3; cntDSP<4; cntDSP++)
         {
+          dsp_lock(1);
           *dspcard->dsp_regs[cntDSP].HPIA = 0x10001c00+cntAddress;
           *dspcard->dsp_regs[cntDSP].HPID = *PtrData;
+          dsp_lock(0);
         }
         cntAddress+=4;
       }
@@ -560,16 +586,20 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
       for (int cntDSP=3; cntDSP<4; cntDSP++)
       {
         //Entry point
+        dsp_lock(1);
         *dspcard->dsp_regs[cntDSP].HPIA = 0x10000714;
         *dspcard->dsp_regs[cntDSP].HPID = FXDSPEntryPoint;
+        dsp_lock(0);
       }
     }
 
     for (int cntDSP=0; cntDSP<4; cntDSP++)
     {
       //Run
+      dsp_lock(1);
       *dspcard->dsp_regs[cntDSP].HPIA = 0x10000718;
       *dspcard->dsp_regs[cntDSP].HPID = 0x00000001;
+      dsp_lock(0);
     }
   }
 
@@ -579,10 +609,12 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
   delay_ms(1);
 
   //default most significant is send first, we do both
+  dsp_lock(1);
   *dspcard->dsp_regs[0].HPIC |= 0x00010001;
   *dspcard->dsp_regs[1].HPIC |= 0x00010001;
   *dspcard->dsp_regs[2].HPIC |= 0x00010001;
   *dspcard->dsp_regs[3].HPIC |= 0x00010001;
+  dsp_lock(0);
 
   //initialize DSPs after DSP are completely booted!
   delay_ms(50);
@@ -660,6 +692,7 @@ bool dsp_program_eeprom(int fd)
     EEpromRegisters.RSVD[cnt] = 0x00;
   }
 
+  dsp_lock(1);
   pci2040_ioctl_linux pci2040_ioctl_message;
   PCI2040_WRITE_REG  reg;
 
@@ -960,6 +993,7 @@ bool dsp_program_eeprom(int fd)
     ioctl(fd, PCI2040_IOCTL_LINUX, &pci2040_ioctl_message);
     delay_us(EEPROM_DELAY_TIME);
   }
+  dsp_lock(0);
   LOG_DEBUG("[%s] leave", __func__);
   return true;
 }
@@ -967,6 +1001,7 @@ bool dsp_program_eeprom(int fd)
 int dsp_card_available(DSP_HANDLER_STRUCT *dsp_handler, unsigned char CardNr)
 {
   LOG_DEBUG("[%s] enter", __func__);
+  dsp_lock(1);
   if (CardNr<4)
   {
     if ((dsp_handler->dspcard[CardNr].dsp_regs[0].HPIA != NULL) &&
@@ -974,10 +1009,12 @@ int dsp_card_available(DSP_HANDLER_STRUCT *dsp_handler, unsigned char CardNr)
         (dsp_handler->dspcard[CardNr].dsp_regs[2].HPIA != NULL) &&
         (dsp_handler->dspcard[CardNr].dsp_regs[3].HPIA != NULL))
     {
+      dsp_lock(0);
       LOG_DEBUG("[%s] leave", __func__);
       return 1;
     }
   }
+  dsp_lock(0);
   LOG_DEBUG("[%s] leave", __func__);
   return 0;
 }
@@ -989,6 +1026,7 @@ void dsp_set_interpolation(DSP_HANDLER_STRUCT *dsp_handler, int Samplerate)
   int cntDSPCard;
   LOG_DEBUG("[%s] enter", __func__);
 
+  dsp_lock(1);
   for (cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
   {
     DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[cntDSPCard];
@@ -1053,6 +1091,7 @@ void dsp_set_interpolation(DSP_HANDLER_STRUCT *dsp_handler, int Samplerate)
       *((float *)dspcard->dsp_regs[2].HPID) = PhaseRelease;
     }
   }
+  dsp_lock(0);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1070,8 +1109,8 @@ void dsp_set_eq(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr, u
   unsigned char DSPChannelNr = DSPCardChannelNr%32;
   LOG_DEBUG("[%s] enter", __func__);
 
+  dsp_lock(1);
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
-
   if (dspcard->data.ChannelData[DSPCardChannelNr].EQBand[BandNr].On)
   {
     float           Level               = dspcard->data.ChannelData[DSPCardChannelNr].EQBand[BandNr].Level;
@@ -1089,7 +1128,6 @@ void dsp_set_eq(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr, u
     b2 = Coefs[5]/Coefs[3];
   }
 
-  //MuteX implementation?
   if (dspcard->dsp_regs[DSPNr].HPIA != NULL)
   {
     *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPEQCoefficients+(((DSPChannelNr*5)+(BandNr*32*5))*4);
@@ -1099,6 +1137,7 @@ void dsp_set_eq(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr, u
     *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = a1;
     *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = a2;
   }
+  dsp_lock(0);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1110,8 +1149,8 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
   unsigned char DSPChannelNr = DSPCardChannelNr%32;
   LOG_DEBUG("[%s] enter", __func__);
 
+  dsp_lock(1);
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
-
   if (dspcard->dsp_regs[DSPNr].HPIA != NULL)
   {
     //Routing from (0: Gain input is default '0'->McASPA)
@@ -1156,7 +1195,6 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
     {
       factor *= -1;
     }
-    //MuteX implementation?
     *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPUpdate_InputGainFactor+(DSPChannelNr*4);
     *((float *)dspcard->dsp_regs[DSPNr].HPID) = factor;
 
@@ -1183,7 +1221,6 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
       b1 = Coefs[4]/Coefs[3];
       b2 = Coefs[5]/Coefs[3];
     }
-    //MuteX implementation?
     *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPFilterCoefficients+((DSPChannelNr*5)*4);
     *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = -b1;
     *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = -b2;
@@ -1191,13 +1228,6 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
     *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = a1;
     *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = a2;
 
-    for (int cntBand=0; cntBand<6; cntBand++)
-    {
-      dsp_set_eq(dsp_handler, DSPCardChannelNr, cntBand);
-    }
-
-
-    //MuteX implementation?
     float DynamicsProcessedFactor = 0;
     float DynamicsOriginalFactor = 1;
     if (dspcard->data.ChannelData[DSPCardChannelNr].Dynamics.On)
@@ -1212,6 +1242,13 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
     *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPDynamicsProcessedFactor+(DSPChannelNr*4);
     *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = DynamicsProcessedFactor;
   }
+  dsp_lock(0);
+
+  //dsp_set_eq uses intern dsp_lock, so places outside local dsp_lock
+  for (int cntBand=0; cntBand<6; cntBand++)
+  {
+    dsp_set_eq(dsp_handler, DSPCardChannelNr, cntBand);
+  }
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1221,8 +1258,8 @@ void dsp_set_buss_lvl(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChanne
   unsigned char DSPCardChannelNr = SystemChannelNr%64;
   LOG_DEBUG("[%s] enter", __func__);
 
+  dsp_lock(1);
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
-
   if (dspcard->dsp_regs[2].HPIA != NULL)
   {
     for (int cntBuss=0; cntBuss<32; cntBuss++)
@@ -1241,11 +1278,11 @@ void dsp_set_buss_lvl(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChanne
         }
       }
 
-      //MuteX implementation?
       *dspcard->dsp_regs[2].HPIA = SummingDSPUpdate_MatrixFactor+((cntBuss+(DSPCardChannelNr*32))*4);
       *((float *)dspcard->dsp_regs[2].HPID) = factor;
     }
   }
+  dsp_lock(0);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1256,14 +1293,14 @@ void dsp_set_mixmin(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelN
   unsigned char DSPChannelNr = DSPCardChannelNr%32;
   LOG_DEBUG("[%s] enter", __func__);
 
+  dsp_lock(1);
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
-
   if (dspcard->dsp_regs[2].HPIA != NULL)
   {
-    //MuteX implementation?
     *dspcard->dsp_regs[2].HPIA = SummingDSPSelectedMixMinusBuss+(DSPChannelNr*4);
     *((int *)dspcard->dsp_regs[2].HPID) = dspcard->data.MixMinusData[DSPCardChannelNr].Buss;
   }
+  dsp_lock(0);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1273,8 +1310,8 @@ void dsp_set_buss_mstr_lvl(DSP_HANDLER_STRUCT *dsp_handler)
 
   for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
   {
+    dsp_lock(1);
     DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[cntDSPCard];
-
     if (dspcard->dsp_regs[2].HPIA != NULL)
     {
       for (int cntBuss=0; cntBuss<32; cntBuss++)
@@ -1285,11 +1322,11 @@ void dsp_set_buss_mstr_lvl(DSP_HANDLER_STRUCT *dsp_handler)
           factor = 0;
         }
 
-        //MuteX implementation?
         *dspcard->dsp_regs[2].HPIA = SummingDSPUpdate_MatrixFactor+((64*32)*4)+(cntBuss*4);
         *((float *)dspcard->dsp_regs[2].HPID) = factor;
       }
     }
+    dsp_lock(0);
   }
   LOG_DEBUG("[%s] leave", __func__);
 }
@@ -1301,8 +1338,8 @@ void dsp_set_monitor_buss(DSP_HANDLER_STRUCT *dsp_handler, unsigned int MonitorC
   float factor = 0;
   LOG_DEBUG("[%s] enter", __func__);
 
+  dsp_lock(1);
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
-
   if (dspcard->dsp_regs[2].HPIA != NULL)
   {
     for (int cntMonitorInput=0; cntMonitorInput<48; cntMonitorInput++)
@@ -1316,7 +1353,6 @@ void dsp_set_monitor_buss(DSP_HANDLER_STRUCT *dsp_handler, unsigned int MonitorC
         factor = pow10(dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr].Level[cntMonitorInput]/20);
       }
 
-      //MuteX implementation?
       *dspcard->dsp_regs[2].HPIA = SummingDSPUpdate_MatrixFactor+((64*32)*4)+(32*4)+(DSPCardMonitorChannelNr*4)+((cntMonitorInput*8)*4);
       *((float *)dspcard->dsp_regs[2].HPID) = factor;
     }
@@ -1329,10 +1365,10 @@ void dsp_set_monitor_buss(DSP_HANDLER_STRUCT *dsp_handler, unsigned int MonitorC
     {
       factor = pow10(dspcard->data.MonitorChannelData[DSPCardMonitorChannelNr].MasterLevel/20);
     }
-    //MuteX implementation?
     *dspcard->dsp_regs[2].HPIA = SummingDSPUpdate_MatrixFactor+((64*32)*4)+(32*4)+(DSPCardMonitorChannelNr*4)+((48*8)*4);
     *((float *)dspcard->dsp_regs[2].HPID) = factor;
   }
+  dsp_lock(0);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1340,6 +1376,7 @@ void dsp_read_buss_meters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdBLevel
 {
   LOG_DEBUG("[%s] enter", __func__);
 
+  dsp_lock(1);
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[0];
   if (dspcard->dsp_regs[2].HPIA != NULL)
   {
@@ -1369,6 +1406,7 @@ void dsp_read_buss_meters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdBLevel
       }
     }
   }
+  dsp_lock(0);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1379,6 +1417,7 @@ void dsp_read_module_meters(DSP_HANDLER_STRUCT *dsp_handler, float *dBLevel)
 
   for (cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
   {
+    dsp_lock(1);
     DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[cntDSPCard];
     if (dspcard->dsp_regs[0].HPIA != NULL)
     {
@@ -1414,6 +1453,7 @@ void dsp_read_module_meters(DSP_HANDLER_STRUCT *dsp_handler, float *dBLevel)
         }
       }
     }
+    dsp_lock(0);
   }
   LOG_DEBUG("[%s] leave", __func__);
 }
