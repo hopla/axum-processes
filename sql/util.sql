@@ -55,7 +55,12 @@ $$ LANGUAGE plpgsql;
 
 -- Renumbers the position column to be continues from '1'
 
-CREATE OR REPLACE FUNCTION t_pos := 1;
+CREATE OR REPLACE FUNCTION functions_renumber() RETURNS integer AS $$
+DECLARE
+  _record RECORD;
+  cnt_pos smallint;
+BEGIN
+  cnt_pos := 1;
   FOR _record IN ( SELECT rcv_type, xmt_type, (func).type AS type, (func).seq AS seq, (func).func AS func FROM functions ORDER BY pos )
   LOOP
     UPDATE functions SET pos = cnt_pos WHERE rcv_type = _record.rcv_type AND xmt_type = _record.xmt_type AND (func).type = _record.type AND (func).seq = _record.seq AND (func).func = _record.func;
