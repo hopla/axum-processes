@@ -67,7 +67,8 @@ void log_write(const char *fmt, ...) {
   va_start(ap, fmt);
   vsnprintf(buf, 500, fmt, ap);
   va_end(ap);
-  strftime(tm, 20, "%Y-%m-%d %H:%M:%S", gmtime(&t));
+//  strftime(tm, 20, "%Y-%m-%d %H:%M:%S", gmtime(&t));
+  strftime(tm, 20, "%Y-%m-%d %H:%M:%S", localtime(&t));
   fprintf(fd, "[%s] %s\n", tm, buf);
   fflush(fd);
 }
