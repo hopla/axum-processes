@@ -228,6 +228,9 @@ INSERT INTO functions VALUES ('(0,,191)', 'Routing preset 7', 3, 0);
 INSERT INTO functions VALUES ('(0,,192)', 'Routing preset 8', 3, 0);
 INSERT INTO functions VALUES ('(0,,193)', 'Phase', 2, 4);
 INSERT INTO functions VALUES ('(0,,194)', 'Mono', 2, 4);
+INSERT INTO functions VALUES ('(0,,195)', 'Fader and on active', 3, 3);
+INSERT INTO functions VALUES ('(0,,196)', 'Fader and on inactive', 3, 3);
+
 
 
 -- buss functions
@@ -665,7 +668,18 @@ INSERT INTO functions VALUES ('(4,,354)', 'Master control 4', 2, 6);
 INSERT INTO functions VALUES ('(4,,354)', 'Master control 4', 1, 1);
 INSERT INTO functions VALUES ('(4,,355)', 'Master control 4 reset', 3, 0);
 INSERT INTO functions VALUES ('(4,,356)', 'Set modules to default processing', 3, 0);
-
+INSERT INTO functions VALUES ('(4,,357)', 'Control 1 mode EQ on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,358)', 'Control 1 mode Phantom on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,359)', 'Control 1 mode Pad on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,360)', 'Control 2 mode EQ on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,361)', 'Control 2 mode Phantom on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,362)', 'Control 2 mode Pad on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,363)', 'Control 3 mode EQ on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,364)', 'Control 3 mode Phantom on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,365)', 'Control 3 mode Pad on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,366)', 'Control 4 mode EQ on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,367)', 'Control 4 mode Phantom on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,368)', 'Control 4 mode Pad on/off', 3, 3);
 
 
 -- source functions
