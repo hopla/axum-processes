@@ -1,0 +1,656 @@
+<ui version="4.0" >
+ <class>Browser</class>
+ <widget class="QWidget" name="Browser" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>768</height>
+   </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Maximum" hsizetype="Maximum" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="palette" >
+   <palette>
+    <active>
+     <colorrole role="Base" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="AlternateBase" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </active>
+    <inactive>
+     <colorrole role="Base" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="AlternateBase" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </inactive>
+    <disabled>
+     <colorrole role="Base" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>234</red>
+        <green>234</green>
+        <blue>234</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="AlternateBase" >
+      <brush brushstyle="SolidPattern" >
+       <color alpha="255" >
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </disabled>
+   </palette>
+  </property>
+  <property name="windowTitle" >
+   <string>Axum</string>
+  </property>
+  <property name="windowIcon" >
+   <iconset>
+     <normaloff>/var/lib/axum/skins/meters/Axum.png</normaloff>/var/lib/axum/skins/meters/Axum.png</iconset>
+  </property>
+  <property name="autoFillBackground" >
+   <bool>false</bool>
+  </property>
+  <property name="styleSheet" >
+   <string notr="true" >QTabWidget
+{
+	background: rgb(0,0,0);
+}
+QTabWidget::pane
+{ 
+	border-top: -2px solid #00FF00;
+}
+
+QTabWidget::tab-bar 
+{         
+	left: 15px;
+}
+
+</string>
+  </property>
+  <widget class="QLabel" name="label" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1024</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="font" >
+    <font>
+     <family>Arial Unicode MS</family>
+     <pointsize>48</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="mouseTracking" >
+    <bool>false</bool>
+   </property>
+   <property name="acceptDrops" >
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet" >
+    <string notr="true" >QLabel
+{
+	color: rgba(200, 200, 200, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+   </property>
+   <property name="text" >
+    <string>OEMName</string>
+   </property>
+   <property name="textFormat" >
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment" >
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>673</y>
+     <width>1024</width>
+     <height>95</height>
+    </rect>
+   </property>
+   <property name="font" >
+    <font>
+     <family>Arial Unicode MS</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="mouseTracking" >
+    <bool>false</bool>
+   </property>
+   <property name="acceptDrops" >
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet" >
+    <string notr="true" >QLabel
+{
+	color: rgba(200, 200, 200, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+   </property>
+   <property name="text" >
+    <string>OEMCopyright</string>
+   </property>
+   <property name="textFormat" >
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment" >
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QTabWidget" name="tabWidget" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>73</y>
+     <width>1024</width>
+     <height>601</height>
+    </rect>
+   </property>
+   <property name="mouseTracking" >
+    <bool>false</bool>
+   </property>
+   <property name="acceptDrops" >
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet" >
+    <string notr="true" />
+   </property>
+   <property name="tabPosition" >
+    <enum>QTabWidget::North</enum>
+   </property>
+   <property name="tabShape" >
+    <enum>QTabWidget::Rounded</enum>
+   </property>
+   <property name="currentIndex" >
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tab" >
+    <attribute name="title" >
+     <string>Meters</string>
+    </attribute>
+    <widget class="DNRDigitalClock" name="NewDNRDigitalClock" >
+     <property name="geometry" >
+      <rect>
+       <x>569</x>
+       <y>325</y>
+       <width>211</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font" >
+      <font>
+       <family>Verdana</family>
+       <pointsize>12</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="toolTip" >
+      <string>The current time</string>
+     </property>
+     <property name="whatsThis" >
+      <string>The digital clock widget displays the current time.</string>
+     </property>
+    </widget>
+    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_3" >
+     <property name="geometry" >
+      <rect>
+       <x>214</x>
+       <y>44</y>
+       <width>12</width>
+       <height>448</height>
+      </rect>
+     </property>
+     <property name="toolTip" >
+      <string>The PPM Meter</string>
+     </property>
+     <property name="whatsThis" >
+      <string>The PPM Meter widget displays </string>
+     </property>
+     <property name="dBPosition" stdset="0" >
+      <double>0.000000000000000</double>
+     </property>
+     <property name="GradientForground" >
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_4" >
+     <property name="geometry" >
+      <rect>
+       <x>298</x>
+       <y>44</y>
+       <width>12</width>
+       <height>448</height>
+      </rect>
+     </property>
+     <property name="toolTip" >
+      <string>The PPM Meter</string>
+     </property>
+     <property name="whatsThis" >
+      <string>The PPM Meter widget displays </string>
+     </property>
+     <property name="dBPosition" stdset="0" >
+      <double>0.000000000000000</double>
+     </property>
+     <property name="GradientForground" >
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="DNRAnalogClock" name="NewDNRAnalogClock" >
+     <property name="geometry" >
+      <rect>
+       <x>469</x>
+       <y>82</y>
+       <width>410</width>
+       <height>410</height>
+      </rect>
+     </property>
+     <property name="toolTip" >
+      <string>The current time</string>
+     </property>
+     <property name="whatsThis" >
+      <string>The analog clock widget displays the current time.</string>
+     </property>
+     <property name="HourLines" >
+      <bool>false</bool>
+     </property>
+     <property name="MinuteLines" >
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_4" >
+     <property name="geometry" >
+      <rect>
+       <x>205</x>
+       <y>506</y>
+       <width>114</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="font" >
+      <font>
+       <family>Arial Unicode MS</family>
+       <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="acceptDrops" >
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet" >
+      <string notr="true" >QLabel
+{
+	color: rgba(208, 208, 0, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+     </property>
+     <property name="text" >
+      <string>Mon. 2</string>
+     </property>
+     <property name="textFormat" >
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3" >
+     <property name="geometry" >
+      <rect>
+       <x>26</x>
+       <y>506</y>
+       <width>114</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="font" >
+      <font>
+       <family>Arial Unicode MS</family>
+       <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="acceptDrops" >
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet" >
+      <string notr="true" >QLabel
+{
+	color: rgba(208, 208, 0, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+     </property>
+     <property name="text" >
+      <string>Mon. 1</string>
+     </property>
+     <property name="textFormat" >
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="DNRPPMMeter" name="NewDNRPPMMeter" >
+     <property name="geometry" >
+      <rect>
+       <x>34</x>
+       <y>45</y>
+       <width>12</width>
+       <height>448</height>
+      </rect>
+     </property>
+     <property name="toolTip" >
+      <string>The PPM Meter</string>
+     </property>
+     <property name="whatsThis" >
+      <string>The PPM Meter widget displays </string>
+     </property>
+     <property name="dBPosition" stdset="0" >
+      <double>0.000000000000000</double>
+     </property>
+     <property name="GradientForground" >
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="DNRImage" name="NewDNRImage" >
+     <property name="geometry" >
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>1024</width>
+       <height>580</height>
+      </rect>
+     </property>
+     <property name="sizePolicy" >
+      <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip" >
+      <string>The Image</string>
+     </property>
+     <property name="whatsThis" >
+      <string>The Image widget displays </string>
+     </property>
+     <property name="SkinEnvironmentVariable" >
+      <string></string>
+     </property>
+     <property name="ImageFileName" >
+       <string>/var/lib/axum/skins/meters/MeterBackground.png</string>
+     </property>
+     <property name="ScaleImage" >
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_2" >
+     <property name="geometry" >
+      <rect>
+       <x>120</x>
+       <y>45</y>
+       <width>12</width>
+       <height>448</height>
+      </rect>
+     </property>
+     <property name="toolTip" >
+      <string>The PPM Meter</string>
+     </property>
+     <property name="whatsThis" >
+      <string>The PPM Meter widget displays </string>
+     </property>
+     <property name="dBPosition" stdset="0" >
+      <double>0.000000000000000</double>
+     </property>
+     <property name="GradientForground" >
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5" >
+     <property name="geometry" >
+      <rect>
+       <x>26</x>
+       <y>536</y>
+       <width>114</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="font" >
+      <font>
+       <family>Arial Unicode MS</family>
+       <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="acceptDrops" >
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet" >
+      <string notr="true" >QLabel
+{
+	color: rgba(208, 208, 0, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+     </property>
+     <property name="text" >
+      <string>-</string>
+     </property>
+     <property name="textFormat" >
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_6" >
+     <property name="geometry" >
+      <rect>
+       <x>205</x>
+       <y>536</y>
+       <width>114</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="font" >
+      <font>
+       <family>Arial Unicode MS</family>
+       <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="acceptDrops" >
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet" >
+      <string notr="true" >QLabel
+{
+	color: rgba(208, 208, 0, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+     </property>
+     <property name="text" >
+      <string>-</string>
+     </property>
+     <property name="textFormat" >
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_7" >
+     <property name="geometry" >
+      <rect>
+       <x>370</x>
+       <y>44</y>
+       <width>114</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="font" >
+      <font>
+       <family>Arial Unicode MS</family>
+       <pointsize>14</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="acceptDrops" >
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet" >
+      <string notr="true" >QLabel
+{
+	color: rgba(255, 0, 0, 255);
+	background: rgba(0, 0, 0, 255);
+}</string>
+     </property>
+     <property name="text" >
+      <string></string>
+     </property>
+     <property name="textFormat" >
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="alignment" >
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <zorder>NewDNRImage</zorder>
+    <zorder>NewDNRDigitalClock</zorder>
+    <zorder>NewDNRPPMMeter_3</zorder>
+    <zorder>NewDNRPPMMeter_4</zorder>
+    <zorder>NewDNRAnalogClock</zorder>
+    <zorder>label_4</zorder>
+    <zorder>label_3</zorder>
+    <zorder>NewDNRPPMMeter</zorder>
+    <zorder>NewDNRPPMMeter_2</zorder>
+    <zorder>label_5</zorder>
+    <zorder>label_6</zorder>
+    <zorder>label_7</zorder>
+   </widget>
+  </widget>
+  <action name="insertRowAction" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="text" >
+    <string>&amp;Insert Row</string>
+   </property>
+   <property name="statusTip" >
+    <string>Inserts a new Row</string>
+   </property>
+  </action>
+  <action name="deleteRowAction" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="text" >
+    <string>&amp;Delete Row</string>
+   </property>
+   <property name="statusTip" >
+    <string>Deletes the current Row</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DNRAnalogClock</class>
+   <extends>QWidget</extends>
+   <header>DNRAnalogClock.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DNRDigitalClock</class>
+   <extends>QWidget</extends>
+   <header>DNRDigitalClock.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DNRPPMMeter</class>
+   <extends>QWidget</extends>
+   <header>DNRPPMMeter.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DNRImage</class>
+   <extends>QWidget</extends>
+   <header>DNRImage.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
