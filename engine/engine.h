@@ -469,4 +469,6 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
 void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects);
 void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char SetAllObjects);
 
+unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck);
+
 #endif

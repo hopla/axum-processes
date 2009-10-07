@@ -634,32 +634,35 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
                 {
                   unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-                  if (data.State)
+                  unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+
+                  if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM))
                   {
-                    AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                    if (data.State)
                     {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                      AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
+                    }
+                    else
+                    {
+                      int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                      if (SensorReceiveFunction->TimeBeforeMomentary>=0)
                       {
-                        AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
+                        if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                        {
+                          AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
+                        }
                       }
                     }
-                  }
 
-                  unsigned int DisplayFunctionNr = 0x05000000 | (SourceNr<<12) | SOURCE_FUNCTION_PHANTOM;
+                    CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM);
 
-                  CheckObjectsToSent(DisplayFunctionNr);
-
-                  for (int cntModule=0; cntModule<128; cntModule++)
-                  {
-                    if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+                    for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      unsigned int DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_PHANTOM;
-                      CheckObjectsToSent(DisplayFunctionNr);
+                      if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+                      {
+                        FunctionNrToSent = (cntModule<<12);
+                        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_PHANTOM);
+                      }
                     }
                   }
                 }
@@ -674,31 +677,35 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
                 {
                   unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-                  if (data.State)
+                  unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+
+                  if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PAD))
                   {
-                    AxumData.SourceData[SourceNr].Pad = !AxumData.SourceData[SourceNr].Pad;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                    if (data.State)
                     {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                      AxumData.SourceData[SourceNr].Pad = !AxumData.SourceData[SourceNr].Pad;
+                    }
+                    else
+                    {
+                      int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                      if (SensorReceiveFunction->TimeBeforeMomentary>=0)
                       {
-                        AxumData.SourceData[SourceNr].Pad = !AxumData.SourceData[SourceNr].Pad;
+                        if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                        {
+                          AxumData.SourceData[SourceNr].Pad = !AxumData.SourceData[SourceNr].Pad;
+                        }
                       }
                     }
-                  }
 
-                  unsigned int DisplayFunctionNr = 0x05000000 | (SourceNr<<12) | SOURCE_FUNCTION_PAD;
-                  CheckObjectsToSent(DisplayFunctionNr);
+                    CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PAD);
 
-                  for (int cntModule=0; cntModule<128; cntModule++)
-                  {
-                    if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+                    for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_PAD;
-                      CheckObjectsToSent(DisplayFunctionNr);
+                      if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+                      {
+                        FunctionNrToSent = (cntModule<<12);
+                        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_PAD);
+                      }
                     }
                   }
                 }
@@ -713,25 +720,29 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
                 {
                   unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-                  AxumData.SourceData[SourceNr].Gain += (float)data.SInt/10;
-                  if (AxumData.SourceData[SourceNr].Gain<20)
-                  {
-                    AxumData.SourceData[SourceNr].Gain = 20;
-                  }
-                  else if (AxumData.SourceData[SourceNr].Gain>20)
-                  {
-                    AxumData.SourceData[SourceNr].Gain = 75;
-                  }
+                  unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
-                  unsigned int DisplayFunctionNr = 0x05000000 | (SourceNr<<12) | SOURCE_FUNCTION_GAIN;
-                  CheckObjectsToSent(DisplayFunctionNr);
-
-                  for (int cntModule=0; cntModule<128; cntModule++)
+                  if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
                   {
-                    if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+                    AxumData.SourceData[SourceNr].Gain += (float)data.SInt/10;
+                    if (AxumData.SourceData[SourceNr].Gain<20)
                     {
-                      DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_GAIN_LEVEL;
-                      CheckObjectsToSent(DisplayFunctionNr);
+                      AxumData.SourceData[SourceNr].Gain = 20;
+                    }
+                    else if (AxumData.SourceData[SourceNr].Gain>20)
+                    {
+                      AxumData.SourceData[SourceNr].Gain = 75;
+                    }
+
+                    CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_GAIN);
+
+                    for (int cntModule=0; cntModule<128; cntModule++)
+                    {
+                      if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+                      {
+                        FunctionNrToSent = (cntModule<<12);
+                        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
+                      }
                     }
                   }
                 }
@@ -746,19 +757,23 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
                 {
                   unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-                  if (data.State)
+                  unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+
+                  if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
                   {
-                    AxumData.SourceData[SourceNr].Gain = 0;
-
-                    unsigned int DisplayFunctionNr = 0x05000000 | (SourceNr<<12) | SOURCE_FUNCTION_GAIN;
-                    CheckObjectsToSent(DisplayFunctionNr);
-
-                    for (int cntModule=0; cntModule<128; cntModule++)
+                    if (data.State)
                     {
-                      if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+                      AxumData.SourceData[SourceNr].Gain = 0;
+
+                      CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_GAIN);
+
+                      for (int cntModule=0; cntModule<128; cntModule++)
                       {
-                        DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_GAIN_LEVEL;
-                        CheckObjectsToSent(DisplayFunctionNr);
+                        if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+                        {
+                          FunctionNrToSent = (cntModule<<12);
+                          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
+                        }
                       }
                     }
                   }
@@ -4210,31 +4225,35 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               printf("phantom\n");
               if (type == MBN_DATATYPE_STATE)
               {
-                if (data.State)
+                unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+
+                if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM))
                 {
-                  AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
-                }
-                else
-                {
-                  int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                  if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                  if (data.State)
                   {
-                    if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                    AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
+                  }
+                  else
+                  {
+                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
                     {
-                      AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
+                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                      {
+                        AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
+                      }
                     }
                   }
-                }
 
-                unsigned int DisplayFunctionNr = 0x05000000 | (SourceNr<<12) | SOURCE_FUNCTION_PHANTOM;
-                CheckObjectsToSent(DisplayFunctionNr);
+                  CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM);
 
-                for (int cntModule=0; cntModule<128; cntModule++)
-                {
-                  if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+matrix_sources.src_offset.min.source))
+                  for (int cntModule=0; cntModule<128; cntModule++)
                   {
-                    DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_PHANTOM;
-                    CheckObjectsToSent(DisplayFunctionNr);
+                    if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+matrix_sources.src_offset.min.source))
+                    {
+                      FunctionNrToSent = (cntModule<<12);
+                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_PHANTOM);
+                    }
                   }
                 }
               }
@@ -6445,36 +6464,36 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
   //Clear function list
   switch (FunctionType)
   {
-  case MODULE_FUNCTIONS:
-  {   //Module
-    WalkAxumFunctionInformationStruct = ModuleFunctions[FunctionNumber][Function];
-  }
-  break;
-  case BUSS_FUNCTIONS:
-  {   //Buss
-    WalkAxumFunctionInformationStruct = BussFunctions[FunctionNumber][Function];
-  }
-  break;
-  case MONITOR_BUSS_FUNCTIONS:
-  {   //Monitor Buss
-    WalkAxumFunctionInformationStruct = MonitorBussFunctions[FunctionNumber][Function];
-  }
-  break;
-  case GLOBAL_FUNCTIONS:
-  {   //Global
-    WalkAxumFunctionInformationStruct = GlobalFunctions[Function];
-  }
-  break;
-  case SOURCE_FUNCTIONS:
-  {   //Source
-    WalkAxumFunctionInformationStruct = SourceFunctions[FunctionNumber][Function];
-  }
-  break;
-  case DESTINATION_FUNCTIONS:
-  {   //Destination
-    WalkAxumFunctionInformationStruct = DestinationFunctions[FunctionNumber][Function];
-  }
-  break;
+    case MODULE_FUNCTIONS:
+    {   //Module
+      WalkAxumFunctionInformationStruct = ModuleFunctions[FunctionNumber][Function];
+    }
+    break;
+    case BUSS_FUNCTIONS:
+    {   //Buss
+      WalkAxumFunctionInformationStruct = BussFunctions[FunctionNumber][Function];
+    }
+    break;
+    case MONITOR_BUSS_FUNCTIONS:
+    {   //Monitor Buss
+      WalkAxumFunctionInformationStruct = MonitorBussFunctions[FunctionNumber][Function];
+    }
+    break;
+    case GLOBAL_FUNCTIONS:
+    {   //Global
+      WalkAxumFunctionInformationStruct = GlobalFunctions[Function];
+    }
+    break;
+    case SOURCE_FUNCTIONS:
+    {   //Source
+      WalkAxumFunctionInformationStruct = SourceFunctions[FunctionNumber][Function];
+    }
+    break;
+    case DESTINATION_FUNCTIONS:
+    {   //Destination
+      WalkAxumFunctionInformationStruct = DestinationFunctions[FunctionNumber][Function];
+    }
+    break;
   }
   while (WalkAxumFunctionInformationStruct != NULL)
   {
@@ -6618,13 +6637,17 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
               {
                 int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+                unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
-                data.State = 0;
-                if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
+                if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
                 {
-                  data.State = AxumData.SourceData[SourceNr].Phantom;
+                  data.State = 0;
+                  if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
+                  {
+                    data.State = AxumData.SourceData[SourceNr].Phantom;
+                  }
+                  mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
                 }
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
             }
             break;
@@ -6640,13 +6663,17 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
               {
                 int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+                unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
-                data.State = 0;
-                if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
+                if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PAD))
                 {
-                  data.State = AxumData.SourceData[SourceNr].Pad;
+                  data.State = 0;
+                  if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
+                  {
+                    data.State = AxumData.SourceData[SourceNr].Pad;
+                  }
+                  mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
                 }
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
             }
             break;
@@ -6662,7 +6689,16 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
               {
                 int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-                sprintf(LCDText,     "%5.1fdB", AxumData.SourceData[SourceNr].Gain);
+                unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+
+                if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
+                {
+                  sprintf(LCDText,     "%5.1fdB", AxumData.SourceData[SourceNr].Gain);
+                }
+                else
+                {
+                  sprintf(LCDText, "Not used");
+                }
               }
               else
               {
@@ -9266,30 +9302,33 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
         {
           int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+          unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
-          AxumData.SourceData[SourceNr].Gain += (float)data.SInt/10;
-          if (AxumData.SourceData[SourceNr].Gain < 20)
+          if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
           {
-            AxumData.SourceData[SourceNr].Gain = 20;
-          }
-          else if (AxumData.SourceData[SourceNr].Gain > 75)
-          {
-            AxumData.SourceData[SourceNr].Gain = 75;
-          }
-
-          unsigned int DisplayFunctionNr = 0x05000000 | (SourceNr<<12);
-          CheckObjectsToSent(DisplayFunctionNr+SOURCE_FUNCTION_GAIN);
-
-          for (int cntModule=0; cntModule<128; cntModule++)
-          {
-            if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+matrix_sources.src_offset.min.source))
+            AxumData.SourceData[SourceNr].Gain += (float)data.SInt/10;
+            if (AxumData.SourceData[SourceNr].Gain < 20)
             {
-              unsigned int DisplayFunctionNr = (cntModule<<12);
-              CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1);
-              CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_2);
-              CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_3);
-              CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_4);
-              CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
+              AxumData.SourceData[SourceNr].Gain = 20;
+            }
+            else if (AxumData.SourceData[SourceNr].Gain > 75)
+            {
+              AxumData.SourceData[SourceNr].Gain = 75;
+            }
+
+            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_GAIN);
+
+            for (int cntModule=0; cntModule<128; cntModule++)
+            {
+              if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+matrix_sources.src_offset.min.source))
+              {
+                unsigned int FunctionNrToSent = (cntModule<<12);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
+              }
             }
           }
         }
@@ -9778,29 +9817,33 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
           {
             unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+            unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
-            AxumData.SourceData[SourceNr].Gain = 30;
-
-            unsigned int FunctionNrToSent = (ModuleNr<<12);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-
-            FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-            CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_GAIN);
-
-            for (int cntModule=0; cntModule<128; cntModule++)
+            if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
             {
-              if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+1))
-              {
-                FunctionNrToSent = (cntModule<<12);
-                CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_1);
-                CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_2);
-                CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_3);
-                CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_4);
+              AxumData.SourceData[SourceNr].Gain = 30;
 
-                CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
+              unsigned int FunctionNrToSent = (ModuleNr<<12);
+              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+
+              FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+              CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_GAIN);
+
+              for (int cntModule=0; cntModule<128; cntModule++)
+              {
+                if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+1))
+                {
+                  FunctionNrToSent = (cntModule<<12);
+                  CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_1);
+                  CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_2);
+                  CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_3);
+                  CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_4);
+
+                  CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
+                }
               }
             }
           }
@@ -10127,22 +10170,26 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
           {
             unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-            AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
-
             unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM);
 
-            for (int cntModule=0; cntModule<128; cntModule++)
+            if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM))
             {
-              if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
-              {
-                unsigned int FunctionNrToSent = (cntModule<<12);
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_PHANTOM);
+              AxumData.SourceData[SourceNr].Phantom = !AxumData.SourceData[SourceNr].Phantom;
 
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+              CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM);
+
+              for (int cntModule=0; cntModule<128; cntModule++)
+              {
+                if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+                {
+                  unsigned int FunctionNrToSent = (cntModule<<12);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_PHANTOM);
+
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+                }
               }
             }
           }
@@ -10153,22 +10200,27 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
           {
             unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-            AxumData.SourceData[SourceNr].Pad = !AxumData.SourceData[SourceNr].Pad;
-
             unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PAD);
 
-            for (int cntModule=0; cntModule<128; cntModule++)
+            if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PAD))
             {
-              if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
-              {
-                FunctionNrToSent = (cntModule<<12);
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_PAD);
+              AxumData.SourceData[SourceNr].Pad = !AxumData.SourceData[SourceNr].Pad;
 
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+              unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+              CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PAD);
+
+              for (int cntModule=0; cntModule<128; cntModule++)
+              {
+                if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+                {
+                  FunctionNrToSent = (cntModule<<12);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_PAD);
+
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+                }
               }
             }
           }
@@ -10237,7 +10289,16 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
       if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
       {
         unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-        sprintf(LCDText, "%5.1fdB", AxumData.SourceData[SourceNr].Gain);
+        unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+
+        if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
+        {
+          sprintf(LCDText, "%5.1fdB", AxumData.SourceData[SourceNr].Gain);
+        }
+        else
+        {
+          sprintf(LCDText, "Not used");
+        }
       }
       else
       {
@@ -10543,14 +10604,22 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
       if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
       {
         unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+        unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
-        if (AxumData.SourceData[SourceNr].Phantom)
+        if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM))
         {
-          sprintf(LCDText, "   On   ");
+          if (AxumData.SourceData[SourceNr].Phantom)
+          { 
+            sprintf(LCDText, "   On   ");
+          }
+          else
+          {
+            sprintf(LCDText, "   Off  ");
+          }
         }
         else
         {
-          sprintf(LCDText, "   Off  ");
+          sprintf(LCDText, "Not used");
         }
       }
       else
@@ -10564,14 +10633,22 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
       if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
       {
         unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+        unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
-        if (AxumData.SourceData[SourceNr].Pad)
+        if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PAD))
         {
-          sprintf(LCDText, "   On   ");
+          if (AxumData.SourceData[SourceNr].Pad)
+          {
+            sprintf(LCDText, "   On   ");
+          }
+          else
+          {
+            sprintf(LCDText, "   Off  ");
+          }
         }
         else
         {
-          sprintf(LCDText, "   Off  ");
+          sprintf(LCDText, "Not used");
         }
       }
       else
@@ -12893,4 +12970,54 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
   }
+}
+
+unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck)
+{
+  unsigned char FunctionType = (FunctionNumberToCheck>>24)&0xFF;
+  unsigned int FunctionNumber = (FunctionNumberToCheck>>12)&0xFFF;
+  unsigned int Function = FunctionNumberToCheck&0xFFF;
+  AXUM_FUNCTION_INFORMATION_STRUCT *WalkAxumFunctionInformationStruct = NULL;
+  int NumberOfObjects = 0;
+
+  //Clear function list
+  switch (FunctionType)
+  {
+    case MODULE_FUNCTIONS:
+    {   //Module
+      WalkAxumFunctionInformationStruct = ModuleFunctions[FunctionNumber][Function];
+    }
+    break;
+    case BUSS_FUNCTIONS:
+    {   //Buss
+      WalkAxumFunctionInformationStruct = BussFunctions[FunctionNumber][Function];
+    }
+    break;
+    case MONITOR_BUSS_FUNCTIONS:
+    {   //Monitor Buss
+      WalkAxumFunctionInformationStruct = MonitorBussFunctions[FunctionNumber][Function];
+    }
+    break;
+    case GLOBAL_FUNCTIONS:
+    {   //Global
+      WalkAxumFunctionInformationStruct = GlobalFunctions[Function];
+    }
+    break;
+    case SOURCE_FUNCTIONS:
+    {   //Source
+      WalkAxumFunctionInformationStruct = SourceFunctions[FunctionNumber][Function];
+    }
+    break;
+    case DESTINATION_FUNCTIONS:
+    {   //Destination
+      WalkAxumFunctionInformationStruct = DestinationFunctions[FunctionNumber][Function];
+    }
+    break;
+  }
+  while (WalkAxumFunctionInformationStruct != NULL)
+  {
+    NumberOfObjects++;
+    WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+  }
+  return NumberOfObjects;
 }
