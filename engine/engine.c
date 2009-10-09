@@ -12556,20 +12556,30 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
   bool SetBussProcessing = false;
   unsigned char cntEQ;
   //parameters per module
-  float Gain = 0;
-  unsigned int Frequency = 80;
-  bool FilterOnOff = 0;
-  unsigned int InsertSource = 0;
-  bool InsertOnOff = 0;
-  unsigned char Phase = 0x03;
-  bool PhaseOnOff = 0;
-  unsigned char Mono = 0x03;
-  bool MonoOnOff = 0;
+  float Gain = AxumData.ModuleData[ModuleNr].Gain;
+  unsigned int Frequency = AxumData.ModuleData[ModuleNr].Filter.Frequency;
+  bool FilterOnOff = AxumData.ModuleData[ModuleNr].FilterOnOff;
+  unsigned int InsertSource = AxumData.ModuleData[ModuleNr].InsertSource;
+  bool InsertOnOff = AxumData.ModuleData[ModuleNr].InsertOnOff;
+  unsigned char Phase = AxumData.ModuleData[ModuleNr].Phase;
+  bool PhaseOnOff = AxumData.ModuleData[ModuleNr].PhaseOnOff;
+  unsigned char Mono = AxumData.ModuleData[ModuleNr].Mono;
+  bool MonoOnOff = AxumData.ModuleData[ModuleNr].MonoOnOff;
 
-  bool EQOnOff;
+  bool EQOnOff = AxumData.ModuleData[ModuleNr].EQOnOff;
   AXUM_EQ_BAND_PRESET_STRUCT EQBand[6];
-  int Dynamics = 0;
-  bool DynamicsOnOff = 0;
+  int Dynamics = AxumData.ModuleData[ModuleNr].Dynamics;
+  bool DynamicsOnOff = AxumData.ModuleData[ModuleNr].DynamicsOnOff;
+
+  for (int cntEQ=0; cntEQ<6; cntEQ++)
+  {
+    EQBand[cntEQ].Range = AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Range;
+    EQBand[cntEQ].Level = AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Level;
+    EQBand[cntEQ].Frequency = AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Frequency;
+    EQBand[cntEQ].Bandwidth = AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Bandwidth;
+    EQBand[cntEQ].Slope = AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Slope;
+    EQBand[cntEQ].Type = AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Type;
+  }
 
   if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) &&
       (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
