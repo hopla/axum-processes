@@ -78,6 +78,10 @@ typedef struct
     char Dynamics;
     bool DynamicsOnOff;
 
+    bool UseModule;
+    float FaderLevel;
+    bool ModuleState;
+
     bool UseRouting;
     unsigned char RoutingPreset;
   } Preset;
@@ -91,6 +95,7 @@ typedef struct
   bool Pad;
   float Gain;
   char Alert;
+
 } AXUM_SOURCE_DATA_STRUCT;
 
 typedef struct
