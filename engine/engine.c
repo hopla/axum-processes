@@ -2369,7 +2369,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   }
                 }
               }
-              log_write("Prevent: %d", PreventDoingInterlock);
 
               if ((AxumData.Monitor[MonitorBussNr].Interlock) && (!PreventDoingInterlock))
               {
