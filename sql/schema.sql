@@ -192,6 +192,9 @@ CREATE TABLE src_config (
   use_dyn_preset boolean NOT NULL DEFAULT FALSE,
   dyn_on_off boolean NOT NULL DEFAULT FALSE,
   dyn_amount smallint NOT NULL DEFAULT 0,
+  use_mod_preset boolean NOT NULL DEFAULT FALSE,
+  mod_on_off boolean NOT NULL DEFAULT FALSE,
+  mod_lvl float NOT NULL DEFAULT -140;
   use_routing_preset boolean NOT NULL DEFAULT FALSE,
   routing_preset smallint NOT NULL DEFAULT 1 CHECK(routing_preset>=1 AND routing_preset<=8),
   redlight1 boolean NOT NULL DEFAULT FALSE,
