@@ -328,6 +328,9 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
                                     use_dyn_preset,       \
                                     dyn_amount,           \
                                     dyn_on_off,           \
+                                    use_mod_preset,       \
+                                    mod_lvl,              \
+                                    mod_on_off,           \
                                     use_routing_preset,   \
                                     routing_preset,       \
                                     redlight1,            \
@@ -419,6 +422,10 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     SourceData->Preset.UseDynamics = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->Preset.Dynamics);
     SourceData->Preset.DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    SourceData->Preset.UseModule = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Preset.FaderLevel);
+    SourceData->Preset.ModuleState = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     SourceData->Preset.UseRouting = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &PresetNr);
