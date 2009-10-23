@@ -11754,10 +11754,38 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
       SetAxum_ModuleMixMinus(ModuleNr, OldSource);
 
       unsigned int FunctionNrToSent = (ModuleNr<<12);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+      if ((AxumData.Control1Mode == MODULE_CONTROL_MODE_SOURCE) || (AxumData.Control1Mode == MODULE_CONTROL_MODE_NONE))
+      {
+        if (AxumData.Control1Mode == MODULE_CONTROL_MODE_SOURCE)
+        {
+          AxumData.ModuleData[ModuleNr].TemporySourceControlMode[0] = AxumData.ModuleData[ModuleNr].SelectedSource;
+        }
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+      }
+      if ((AxumData.Control2Mode == MODULE_CONTROL_MODE_SOURCE) || (AxumData.Control2Mode == MODULE_CONTROL_MODE_NONE))
+      {
+        if (AxumData.Control2Mode == MODULE_CONTROL_MODE_SOURCE)
+        {
+          AxumData.ModuleData[ModuleNr].TemporySourceControlMode[1] = AxumData.ModuleData[ModuleNr].SelectedSource;
+        }
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+      }
+      if ((AxumData.Control3Mode == MODULE_CONTROL_MODE_SOURCE) || (AxumData.Control3Mode == MODULE_CONTROL_MODE_NONE))
+      {
+        if (AxumData.Control3Mode == MODULE_CONTROL_MODE_SOURCE)
+        {
+          AxumData.ModuleData[ModuleNr].TemporySourceControlMode[2] = AxumData.ModuleData[ModuleNr].SelectedSource;
+        }
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+      }
+      if ((AxumData.Control4Mode == MODULE_CONTROL_MODE_SOURCE) || (AxumData.Control4Mode == MODULE_CONTROL_MODE_NONE))
+      {
+        if (AxumData.Control4Mode == MODULE_CONTROL_MODE_SOURCE)
+        {
+          AxumData.ModuleData[ModuleNr].TemporySourceControlMode[3] = AxumData.ModuleData[ModuleNr].SelectedSource;
+        }
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+      }
 
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_A);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_B);
