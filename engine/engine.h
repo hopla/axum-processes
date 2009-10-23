@@ -288,6 +288,7 @@ typedef struct
   float LevelReserve;
   bool AutoMomentary;
   bool UseModuleDefaults;
+  bool StartupState;
 
   AXUM_MONITOR_OUTPUT_DATA_STRUCT Monitor[16];
   AXUM_EXTERN_SOURCE_DATA_STRUCT ExternSource[4];

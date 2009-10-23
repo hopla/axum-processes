@@ -14,7 +14,7 @@ pthread_t backup_thread;
 backup_info_struct backup_info;
 backup_info_struct old_backup_info;
 
-size_t backup_open(void *buffer, size_t length) {
+size_t backup_open(void *buffer, size_t length, unsigned char write_only) {
   size_t readed_length = 0;
   backup_info.buffer = buffer;
   backup_info.length = length;
@@ -28,8 +28,11 @@ size_t backup_open(void *buffer, size_t length) {
   } else {
     readed_length = backup_read(old_backup_info.buffer, length);
     if(readed_length == 1) {
-      log_write("Backup file found, LOADING...");
-      memcpy(buffer, old_backup_info.buffer, length);
+      if (!write_only)
+      {
+        log_write("Backup file found, LOADING...");
+        memcpy(buffer, old_backup_info.buffer, length);
+      }
     }
   }
 
@@ -46,7 +49,7 @@ size_t backup_open(void *buffer, size_t length) {
   return readed_length;
 }
 
-void backup_close() {
+void backup_close(unsigned char remove_file) {
   pthread_cancel(backup_thread);
   pthread_join(backup_thread, NULL);
 
@@ -55,8 +58,12 @@ void backup_close() {
   backupfd = NULL;
   free(old_backup_info.buffer);
 
-  log_write("remove %s", backup_file);
-  remove(backup_file);
+  log_write("backup %s closed.", backup_file);
+  if (remove_file)
+  {
+    log_write("remove %s", backup_file);
+    remove(backup_file);
+  }
 }
 
 size_t backup_read(void *buffer, size_t length)

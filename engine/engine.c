@@ -410,27 +410,30 @@ int main(int argc, char *argv[])
   }
 
   //Check for backup
-  if (backup_open((void *)&AxumData, sizeof(AxumData)))
+  if (backup_open((void *)&AxumData, sizeof(AxumData), !AxumData.StartupState))
   { //Backup loaded, clear rack-config and set processing data
-    for (unsigned char cntSlot=0; cntSlot<42; cntSlot++)
+    if (AxumData.StartupState)
     {
-      AxumData.RackOrganization[cntSlot] = 0x00000000;
-    }
-
-    for (int cntModule=0; cntModule<128; cntModule++)
-    {
-      for (int cntBand=0; cntBand<6; cntBand++)
+      for (unsigned char cntSlot=0; cntSlot<42; cntSlot++)
       {
-        SetAxum_EQ(cntModule, cntBand);
+        AxumData.RackOrganization[cntSlot] = 0x00000000;
       }
-      SetAxum_ModuleProcessing(cntModule);
-      SetAxum_ModuleMixMinus(cntModule, 0);
-      SetAxum_BussLevels(cntModule);
-    }
-    SetAxum_BussMasterLevels();
-    for (int cntBuss=0; cntBuss<16; cntBuss++)
-    {
-      SetAxum_MonitorBuss(cntBuss);
+
+      for (int cntModule=0; cntModule<128; cntModule++)
+      {
+        for (int cntBand=0; cntBand<6; cntBand++)
+        {
+          SetAxum_EQ(cntModule, cntBand);
+        }
+        SetAxum_ModuleProcessing(cntModule);
+        SetAxum_ModuleMixMinus(cntModule, 0);
+        SetAxum_BussLevels(cntModule);
+      }
+      SetAxum_BussMasterLevels();
+      for (int cntBuss=0; cntBuss<16; cntBuss++)
+      {
+        SetAxum_MonitorBuss(cntBuss);
+      }
     }
   }
 
@@ -488,7 +491,7 @@ int main(int argc, char *argv[])
   }
   log_write("Closing Engine");
 
-  backup_close();
+  backup_close(0);
 
   DeleteAllObjectListPerFunction();
 
@@ -12492,6 +12495,7 @@ void initialize_axum_data_struct()
   AxumData.LevelReserve = 0;
   AxumData.AutoMomentary = false;
   AxumData.UseModuleDefaults = true;
+  AxumData.StartupState = false;
 
   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
   {
