@@ -4302,17 +4302,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case SOURCE_FUNCTION_GAIN:
             {
-              printf("Source gain\n");
+              printf("Source gain");
               if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.SourceData[SourceNr].Gain += (float)data.SInt/10;
-                if (AxumData.SourceData[SourceNr].Gain < -20)
-                {
-                  AxumData.SourceData[SourceNr].Gain = -20;
-                }
-                else if (AxumData.SourceData[SourceNr].Gain > 20)
+                if (AxumData.SourceData[SourceNr].Gain < 20)
                 {
                   AxumData.SourceData[SourceNr].Gain = 20;
+                }
+                else if (AxumData.SourceData[SourceNr].Gain > 75)
+                {
+                  AxumData.SourceData[SourceNr].Gain = 75;
                 }
 
                 unsigned int DisplayFunctionNr = 0x05000000 | ((SourceNr)<<12) | SOURCE_FUNCTION_GAIN;
@@ -4322,8 +4322,25 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+matrix_sources.src_offset.min.source))
                   {
-                    DisplayFunctionNr = (cntModule<<12) | MODULE_FUNCTION_SOURCE_GAIN_LEVEL;
-                    CheckObjectsToSent(DisplayFunctionNr);
+                    unsigned int FunctionNrToSent = (cntModule<<12);
+                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
+
+                    if (AxumData.Control1Mode == MODULE_CONTROL_MODE_SOURCE_GAIN)
+                    {
+                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+                    }
+                    if (AxumData.Control2Mode == MODULE_CONTROL_MODE_SOURCE_GAIN)
+                    {
+                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+                    }
+                    if (AxumData.Control3Mode == MODULE_CONTROL_MODE_SOURCE_GAIN)
+                    {
+                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+                    }
+                    if (AxumData.Control4Mode == MODULE_CONTROL_MODE_SOURCE_GAIN)
+                    {
+                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+                    }
                   }
                 }
               }
