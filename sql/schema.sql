@@ -534,6 +534,7 @@ CREATE TABLE global_config (
   level_reserve float NOT NULL DEFAULT 0.0,
   use_module_defaults boolean NOT NULL DEFAULT TRUE,
   auto_momentary boolean NOT NULL DEFAULT TRUE,
+  startup_state boolean NOT NULL DEFAULT FALSE,
   routing_preset_1_label varchar(32) NOT NULL DEFAULT 'Default',
   routing_preset_2_label varchar(32) NOT NULL DEFAULT 'Preset 2',
   routing_preset_3_label varchar(32) NOT NULL DEFAULT 'Preset 3',
