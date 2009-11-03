@@ -1686,7 +1686,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
 
   for (cntObject=first_obj; cntObject<last_obj; cntObject++)
   {
-    OldFunctions[cntObject-1024] = node_info->SensorReceiveFunction[cntObject-1024].FunctionNr;
+    OldFunctions[cntObject-first_obj] = node_info->SensorReceiveFunction[cntObject-1024].FunctionNr;
     node_info->SensorReceiveFunction[cntObject-1024].FunctionNr = -1;
   }
 
@@ -1709,7 +1709,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
         SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[ObjectNr-1024];
 
         sensor_rcv_func->FunctionNr = TotalFunctionNr;
-        if (OldFunctions[ObjectNr-1024] != sensor_rcv_func->FunctionNr)
+        if (OldFunctions[ObjectNr-first_obj] != sensor_rcv_func->FunctionNr)
         {
           sensor_rcv_func->LastChangedTime = 0;
           sensor_rcv_func->PreviousLastChangedTime = 0;
@@ -1726,14 +1726,14 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
     {
       SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[cntObject-1024];
 
-      if (OldFunctions[cntObject-1024] != sensor_rcv_func->FunctionNr)
+      if (OldFunctions[cntObject-first_obj] != sensor_rcv_func->FunctionNr)
       {
-        if (OldFunctions[cntObject-1024] != (unsigned int)-1)
+        if (OldFunctions[cntObject-first_obj] != (unsigned int)-1)
         {
           sensor_rcv_func->LastChangedTime = 0;
           sensor_rcv_func->PreviousLastChangedTime = 0;
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-          MakeObjectListPerFunction(OldFunctions[cntObject-1024]);
+          MakeObjectListPerFunction(OldFunctions[cntObject-first_obj]);
         }
       }
     }
