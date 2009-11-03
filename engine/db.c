@@ -1743,10 +1743,10 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
       }
     }
     delete[] ConfiguredObject;
+    PQclear(qres);
   }
 
   delete[] DefaultSet;
-  PQclear(qres);
   LOG_DEBUG("[%s] leave", __func__);
 
   return 1;
