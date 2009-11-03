@@ -1480,6 +1480,8 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   const char *params[3];
   int cntParams;
   int cntRow;
+  unsigned char *DefaultSet;
+  unsigned char *ConfiguredObject;
 
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -1497,6 +1499,18 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   //to make sure we can do 'if <'
   last_obj++;
 
+  DefaultSet = new unsigned char[last_obj-first_obj];
+  if (DefaultSet == NULL)
+  {
+    log_write("[%s] Error no memory available for array DefaultSet", __func__);
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  for (cntRow=0; cntRow<(last_obj-first_obj); cntRow++)
+  {
+    DefaultSet[cntRow] = 0;
+  }
+
   sprintf(str[0], "%d", node_info->MambaNetAddress);
   sprintf(str[1], "%d", first_obj);
   sprintf(str[2], "%d", last_obj);
@@ -1506,6 +1520,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
                              (SELECT c.object FROM node_config c WHERE c.object=d.object AND c.addr=d.addr)", 1, 3, params);
   if (qres == NULL)
   {
+    delete[] DefaultSet;
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
@@ -1627,13 +1642,111 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
         if (send_default_data)
         {
           mbnSetActuatorData(mbn, node_info->MambaNetAddress, ObjectNr, obj_info->ActuatorDataType, data_size, data ,1);
+          DefaultSet[ObjectNr-first_obj] = 1;
         }
       }
     }
   }
-
   PQclear(qres);
 
+  if (DoNotCheckDefault)
+  {
+    //next query to determine configured nodes
+    sprintf(str[0], "%d", node_info->MambaNetAddress);
+    sprintf(str[1], "%d", first_obj);
+    sprintf(str[2], "%d", last_obj);
+    qres = sql_exec("SELECT object, data FROM node_config                               \
+                             WHERE addr=$1 AND object>=$2 AND object<=$3)", 1, 3, params);
+    if (qres == NULL)
+    {
+      delete[] DefaultSet;
+      LOG_DEBUG("[%s] leave with error", __func__);
+      return 0;
+    }
+
+    ConfiguredObject = new unsigned char[last_obj-first_obj];
+    if (ConfiguredObject == NULL)
+    {
+      delete[] DefaultSet;
+      log_write("[%s] Error no memory available for array ConfiguredObject", __func__);
+      LOG_DEBUG("[%s] leave with error", __func__);
+      return 0;
+    }
+    for (cntRow=0; cntRow<(last_obj-first_obj); cntRow++)
+    {
+      ConfiguredObject[cntRow] = 0;
+    }
+
+    for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+    {
+      unsigned short int ObjectNr = -1;
+      sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
+
+      ConfiguredObject[ObjectNr-first_obj] = 1;
+    }
+
+    for (cntRow=0; cntRow<(last_obj-first_obj); cntRow++)
+    {
+      unsigned char send_default_data = 0;
+      unsigned short int ObjectNr = -1;
+      unsigned char data_size = 0;
+
+      mbn_data data;
+      if ((DefaultSet[cntRow] == 0) && (!ConfiguredObject[cntRow]))
+      {//need to set template default
+        ObjectNr = first_obj+cntRow;
+
+        if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->NumberOfCustomObjects))
+        {
+          OBJECT_INFORMATION_STRUCT *obj_info = &node_info->ObjectInformation[ObjectNr-1024];
+          if (obj_info->ActuatorDataType != MBN_DATATYPE_NODATA)
+          {
+            switch (obj_info->ActuatorDataType)
+            {
+              case MBN_DATATYPE_UINT:
+              case MBN_DATATYPE_STATE:
+              {
+                data_size = obj_info->ActuatorDataSize;
+                if (obj_info->ActuatorDataType == MBN_DATATYPE_UINT)
+                {
+                  data.UInt = obj_info->CurrentActuatorDataDefault;
+                }
+                else
+                {
+                  data.State = obj_info->CurrentActuatorDataDefault;
+                }
+                send_default_data = 1;
+              }
+              break;
+              case MBN_DATATYPE_SINT:
+              {
+                data_size = obj_info->ActuatorDataSize;
+                data.SInt = obj_info->CurrentActuatorDataDefault;
+                send_default_data = 1;
+              }
+              break;
+              case MBN_DATATYPE_FLOAT:
+              {
+                data_size = obj_info->ActuatorDataSize;
+                data.Float = obj_info->CurrentActuatorDataDefault;
+                send_default_data = 1;
+              }
+              break;
+            }
+
+            if (send_default_data)
+            {
+              mbnSetActuatorData(mbn, node_info->MambaNetAddress, ObjectNr, obj_info->ActuatorDataType, data_size, data ,1);
+            }
+          }
+        }
+      }
+    }
+    delete[] ConfiguredObject;
+  }
+
+  delete[] DefaultSet;
+  PQclear(qres);
   LOG_DEBUG("[%s] leave", __func__);
 
   return 1;
