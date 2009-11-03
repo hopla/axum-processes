@@ -230,6 +230,7 @@ INSERT INTO functions VALUES ('(0,,193)', 'Phase', 2, 4);
 INSERT INTO functions VALUES ('(0,,194)', 'Mono', 2, 4);
 INSERT INTO functions VALUES ('(0,,195)', 'Fader and on active', 3, 3);
 INSERT INTO functions VALUES ('(0,,196)', 'Fader and on inactive', 3, 3);
+INSERT INTO functions VALUES ('(0,,197)', 'Fader and on active/inactive', 3, 3);
 
 
 
