@@ -786,6 +786,9 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON);
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_OFF);
             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON_OFF);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_OFF);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON_OFF);
 
             if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
             {

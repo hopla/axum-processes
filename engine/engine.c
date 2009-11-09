@@ -1454,6 +1454,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_INACTIVE);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_OFF);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON_OFF);
 
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
                 {
@@ -1483,21 +1486,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   switch (FunctionNr)
                   {
-                  case MODULE_FUNCTION_MODULE_ON:
-                  {
-                    AxumData.ModuleData[ModuleNr].On = 1;
-                  }
-                  break;
-                  case MODULE_FUNCTION_MODULE_OFF:
-                  {
-                    AxumData.ModuleData[ModuleNr].On = 0;
-                  }
-                  break;
-                  case MODULE_FUNCTION_MODULE_ON_OFF:
-                  {
-                    AxumData.ModuleData[ModuleNr].On = !AxumData.ModuleData[ModuleNr].On;
-                  }
-                  break;
+                    case MODULE_FUNCTION_MODULE_ON:
+                    {
+                      AxumData.ModuleData[ModuleNr].On = 1;
+                    }
+                    break;
+                    case MODULE_FUNCTION_MODULE_OFF:
+                    {
+                      AxumData.ModuleData[ModuleNr].On = 0;
+                    }
+                    break;
+                    case MODULE_FUNCTION_MODULE_ON_OFF:
+                    {
+                      AxumData.ModuleData[ModuleNr].On = !AxumData.ModuleData[ModuleNr].On;
+                    }
+                    break;
                   }
                 }
                 else
@@ -2099,7 +2102,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     break;
                     case MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE:
                     {
-                      if ((AxumData.ModuleData[ModuleNr].FaderLevel >= -120) && (AxumData.ModuleData[ModuleNr].On))
+                      if ((AxumData.ModuleData[ModuleNr].FaderLevel >= -80) && (AxumData.ModuleData[ModuleNr].On))
                       {
                         AxumData.ModuleData[ModuleNr].FaderLevel = -140;
                         AxumData.ModuleData[ModuleNr].On = 0;
@@ -2143,6 +2146,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
                   CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_AND_ON_INACTIVE);
                   CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE);
+                  CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_ON);
+                  CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_OFF);
+                  CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_ON_OFF);
 
                   if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
                   {
@@ -2151,6 +2157,122 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_ON);
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_OFF);
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_ON_OFF);
+                    CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON);
+                    CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_OFF);
+                    CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
+                    CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
+                    CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+                  }
+                }
+              }
+            }
+            break;
+            case MODULE_FUNCTION_FADER_ON:
+            case MODULE_FUNCTION_FADER_OFF:
+            case MODULE_FUNCTION_FADER_ON_OFF:
+            {   //Module on
+              //Module off
+              //Module on/off
+              printf("Fader on/off\n");
+
+              float CurrentLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
+
+              if (type == MBN_DATATYPE_STATE)
+              {
+                if (data.State)
+                {
+                  switch (FunctionNr)
+                  {
+                    case MODULE_FUNCTION_FADER_ON:
+                    {
+                      AxumData.ModuleData[ModuleNr].FaderLevel = 0;
+                    }
+                    break;
+                    case MODULE_FUNCTION_FADER_OFF:
+                    {
+                      AxumData.ModuleData[ModuleNr].FaderLevel = -140;
+                    }
+                    break;
+                    case MODULE_FUNCTION_FADER_ON_OFF:
+                    {
+                      if (AxumData.ModuleData[ModuleNr].FaderLevel<-80)
+                      {
+                        AxumData.ModuleData[ModuleNr].FaderLevel = 0;
+                      }
+                      else
+                      {
+                        AxumData.ModuleData[ModuleNr].FaderLevel = -140;
+                      }
+                    }
+                    break;
+                  }
+                }
+                else
+                {
+                  int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                  if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                  {
+                    if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                    {
+                      switch (FunctionNr)
+                      {
+                        case MODULE_FUNCTION_FADER_ON_OFF:
+                        {
+                          if (AxumData.ModuleData[ModuleNr].FaderLevel<-80)
+                          {
+                            AxumData.ModuleData[ModuleNr].FaderLevel = 0;
+                          }
+                          else
+                          {
+                            AxumData.ModuleData[ModuleNr].FaderLevel = -140;
+                          }
+                        }
+                        break;
+                      }
+                    }
+                  }
+                }
+                float NewLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
+
+                SetAxum_BussLevels(ModuleNr);
+
+                unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
+
+                if (AxumData.Control1Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+                }
+                if (AxumData.Control2Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+                }
+                if (AxumData.Control3Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+                }
+                if (AxumData.Control4Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+                }
+
+                if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
+                    ((CurrentLevel>-80) && (NewLevel<=-80)))
+                { //fader on changed
+                  printf("Fader changed...\n");
+                  DoAxum_ModuleStatusChanged(ModuleNr, 1);
+
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_INACTIVE);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_OFF);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON_OFF);
+
+                  if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
+                  {
+                    unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource - matrix_sources.src_offset.min.source;
+                    SensorReceiveFunctionNumber = 0x05000000 | (SourceNr<<12);
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON);
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_OFF);
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
@@ -3592,6 +3714,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_AND_ON_INACTIVE);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE);
+                      CheckObjectsToSent(SensorReceiveFunctionNumber | MODULE_FUNCTION_FADER_ON);
+                      CheckObjectsToSent(SensorReceiveFunctionNumber | MODULE_FUNCTION_FADER_OFF);
+                      CheckObjectsToSent(SensorReceiveFunctionNumber | MODULE_FUNCTION_FADER_ON_OFF);
 
                       SensorReceiveFunctionNumber = 0x05000000 | (SourceNr<<12);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON);
@@ -3668,6 +3793,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_AND_ON_INACTIVE);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE);
+                      CheckObjectsToSent(SensorReceiveFunctionNumber | MODULE_FUNCTION_FADER_ON);
+                      CheckObjectsToSent(SensorReceiveFunctionNumber | MODULE_FUNCTION_FADER_OFF);
+                      CheckObjectsToSent(SensorReceiveFunctionNumber | MODULE_FUNCTION_FADER_ON_OFF);
 
                       SensorReceiveFunctionNumber = 0x05000000 | (SourceNr<<12);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_ON);
@@ -7476,8 +7604,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
       }
       if (((FunctionNr>=MODULE_FUNCTION_SOURCE_START) && (FunctionNr<MODULE_FUNCTION_CONTROL_1)) ||
-          ((FunctionNr>=MODULE_FUNCTION_FADER_AND_ON_ACTIVE) && (FunctionNr<=MODULE_FUNCTION_FADER_AND_ON_INACTIVE)) ||
-          (FunctionNr ==MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE))
+          ((FunctionNr>=MODULE_FUNCTION_FADER_AND_ON_ACTIVE) && (FunctionNr<=MODULE_FUNCTION_FADER_ON_OFF)))
       { //all state functions
         bool Active;
 
@@ -7539,6 +7666,25 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             }
 
             if (FunctionNr == MODULE_FUNCTION_FADER_AND_ON_INACTIVE)
+            {
+              Active = !Active;
+            }
+          }
+          break;
+          case MODULE_FUNCTION_FADER_ON:
+          case MODULE_FUNCTION_FADER_OFF:
+          case MODULE_FUNCTION_FADER_ON_OFF:
+          {
+            Active = 0;
+            if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
+            {
+              if (AxumData.ModuleData[ModuleNr].On)
+              {
+                Active = 1;
+              }
+            }
+
+            if (FunctionNr == MODULE_FUNCTION_FADER_OFF)
             {
               Active = !Active;
             }
@@ -9682,6 +9828,9 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
           CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
           CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_FADER_AND_ON_INACTIVE);
           CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_OFF);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON_OFF);
 
           if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
           {
@@ -10102,6 +10251,9 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
             CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
             CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_FADER_AND_ON_INACTIVE);
             CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_OFF);
+            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON_OFF);
 
             if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
             {
@@ -10656,7 +10808,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
         if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM))
         {
           if (AxumData.SourceData[SourceNr].Phantom)
-          { 
+          {
             sprintf(LCDText, "   On   ");
           }
           else
@@ -11843,6 +11995,9 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_INACTIVE);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_OFF);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON_OFF);
 
       if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
       {
@@ -13011,6 +13166,9 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_INACTIVE);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_OFF);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON_OFF);
 
       if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
       {
