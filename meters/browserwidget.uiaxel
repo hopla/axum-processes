@@ -133,7 +133,7 @@ QTabWidget::tab-bar
 
 </string>
   </property>
-  <widget class="QLabel" name="label" >
+  <widget class="DNRImage" name="NewDNRImageTop" >
    <property name="geometry" >
     <rect>
      <x>0</x>
@@ -142,73 +142,57 @@ QTabWidget::tab-bar
      <height>94</height>
     </rect>
    </property>
-   <property name="font" >
-    <font>
-     <family>Arial Unicode MS</family>
-     <pointsize>48</pointsize>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
+   <property name="sizePolicy" >
+    <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
    </property>
-   <property name="mouseTracking" >
+   <property name="toolTip" >
+    <string>The top image</string>
+   </property>
+   <property name="whatsThis" >
+    <string>The Image widget displays </string>
+   </property>
+   <property name="SkinEnvironmentVariable" >
+    <string></string>
+   </property>
+   <property name="ImageFileName" >
+     <string>/var/lib/axum/skins/meters/top.png</string>
+   </property>
+   <property name="ScaleImage" >
     <bool>false</bool>
-   </property>
-   <property name="acceptDrops" >
-    <bool>false</bool>
-   </property>
-   <property name="styleSheet" >
-    <string notr="true" >QLabel
-{
-	color: rgba(200, 200, 200, 255);
-	background: rgba(0, 0, 0, 255);
-}</string>
-   </property>
-   <property name="text" >
-    <string>OEMName</string>
-   </property>
-   <property name="textFormat" >
-    <enum>Qt::PlainText</enum>
-   </property>
-   <property name="alignment" >
-    <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QLabel" name="label_2" >
+  <widget class="DNRImage" name="NewDNRImageBottom" >
    <property name="geometry" >
     <rect>
      <x>0</x>
      <y>673</y>
      <width>1024</width>
-     <height>95</height>
+     <height>94</height>
     </rect>
    </property>
-   <property name="font" >
-    <font>
-     <family>Arial Unicode MS</family>
-     <pointsize>12</pointsize>
-    </font>
+   <property name="sizePolicy" >
+    <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
    </property>
-   <property name="mouseTracking" >
+   <property name="toolTip" >
+    <string>The top image</string>
+   </property>
+   <property name="whatsThis" >
+    <string>The Image widget displays </string>
+   </property>
+   <property name="SkinEnvironmentVariable" >
+    <string></string>
+   </property>
+   <property name="ImageFileName" >
+     <string>/var/lib/axum/skins/meters/bottom.png</string>
+   </property>
+   <property name="ScaleImage" >
     <bool>false</bool>
-   </property>
-   <property name="acceptDrops" >
-    <bool>false</bool>
-   </property>
-   <property name="styleSheet" >
-    <string notr="true" >QLabel
-{
-	color: rgba(200, 200, 200, 255);
-	background: rgba(0, 0, 0, 255);
-}</string>
-   </property>
-   <property name="text" >
-    <string>OEMCopyright</string>
-   </property>
-   <property name="textFormat" >
-    <enum>Qt::PlainText</enum>
-   </property>
-   <property name="alignment" >
-    <set>Qt::AlignCenter</set>
    </property>
   </widget>
   <widget class="QTabWidget" name="tabWidget" >
