@@ -1297,7 +1297,7 @@ void dsp_set_mixmin(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelN
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
   if (dspcard->dsp_regs[2].HPIA != NULL)
   {
-    *dspcard->dsp_regs[2].HPIA = SummingDSPSelectedMixMinusBuss+(DSPChannelNr*4);
+    *dspcard->dsp_regs[2].HPIA = SummingDSPSelectedMixMinusBuss+(DSPCardChannelNr*4);
     *((int *)dspcard->dsp_regs[2].HPID) = dspcard->data.MixMinusData[DSPCardChannelNr].Buss;
   }
   dsp_lock(0);
