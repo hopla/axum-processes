@@ -6249,13 +6249,9 @@ void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
 
 void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource)
 {
-  unsigned int SystemChannelNr = ModuleNr<<1;
-  unsigned char DSPCardNr = (SystemChannelNr/64);
-  unsigned char DSPCardChannelNr = SystemChannelNr%64;
   int cntDestination=0;
   int DestinationNr = -1;
 
-  DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
   while (cntDestination<1280)
   {
@@ -6270,48 +6266,60 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource)
         SetAxum_DestinationSource(DestinationNr);
       }
     }
-    if (AxumData.DestinationData[cntDestination].MixMinusSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+    if ((AxumData.DestinationData[cntDestination].MixMinusSource == AxumData.ModuleData[ModuleNr].SelectedSource) &&
+       ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source)))
     {
       DestinationNr = cntDestination;
 
-      if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
-      {
-        printf ("MixMinus@%s\n", AxumData.DestinationData[DestinationNr].DestinationName);
+      printf ("MixMinus@%s\n", AxumData.DestinationData[DestinationNr].DestinationName);
 
-        int BussToUse = -1;
-        for (int cntBuss=0; cntBuss<16; cntBuss++)
+      int BussToUse = -1;
+      int ModuleToUse = -1;
+      for (int cntModule=0; cntModule<128; cntModule++)
+      {
+        if (AxumData.DestinationData[cntDestination].MixMinusSource == AxumData.ModuleData[cntModule].SelectedSource) 
         {
-          if ((AxumData.ModuleData[ModuleNr].Buss[cntBuss].Active) && (AxumData.ModuleData[ModuleNr].Buss[cntBuss].On))
+          for (int cntBuss=0; cntBuss<16; cntBuss++)
           {
-            if (BussToUse == -1)
+            if ((AxumData.ModuleData[cntModule].Buss[cntBuss].Active) && (AxumData.ModuleData[cntModule].Buss[cntBuss].On))
             {
-              BussToUse = cntBuss;
+              if (BussToUse == -1)
+              {
+                ModuleToUse = cntModule;
+                BussToUse = cntBuss;
+              }
             }
           }
         }
+      }
 
-        if (BussToUse != -1)
+      if (BussToUse != -1)
+      {
+        unsigned int SystemChannelNr = ModuleToUse<<1;
+        unsigned char DSPCardNr = (SystemChannelNr/64);
+        unsigned char DSPCardChannelNr = SystemChannelNr%64;
+
+        DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
+
+        printf("Use buss %d, for MixMinus at module %d\n", BussToUse, ModuleToUse);
+
+        dspcard->data.MixMinusData[DSPCardChannelNr+0].Buss = (BussToUse<<1)+0;
+        dspcard->data.MixMinusData[DSPCardChannelNr+1].Buss = (BussToUse<<1)+1;
+
+        for (int cntChannel=0; cntChannel<2; cntChannel++)
         {
-          printf("Use buss %d, for MixMinus\n", BussToUse);
-
-          dspcard->data.MixMinusData[DSPCardChannelNr+0].Buss = (BussToUse<<1)+0;
-          dspcard->data.MixMinusData[DSPCardChannelNr+1].Buss = (BussToUse<<1)+1;
-
-          for (int cntChannel=0; cntChannel<2; cntChannel++)
-          {
-            dsp_set_mixmin(dsp_handler, SystemChannelNr+cntChannel);
-          }
-
-          AxumData.DestinationData[DestinationNr].MixMinusActive = 1;
-          SetAxum_DestinationSource(DestinationNr);
+          dsp_set_mixmin(dsp_handler, SystemChannelNr+cntChannel);
         }
-        else
-        {
-          printf("No buss routed, use default src\n");
 
-          AxumData.DestinationData[DestinationNr].MixMinusActive = 0;
-          SetAxum_DestinationSource(DestinationNr);
-        }
+        AxumData.DestinationData[DestinationNr].MixMinusActive = 1;
+        SetAxum_DestinationSource(DestinationNr);
+      }
+      else
+      {
+        printf("No buss routed, use default src\n");
+
+        AxumData.DestinationData[DestinationNr].MixMinusActive = 0;
+        SetAxum_DestinationSource(DestinationNr);
       }
     }
     cntDestination++;
@@ -6417,7 +6425,13 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
       {
         if ((AxumData.ModuleData[cntModule].SelectedSource == AxumData.DestinationData[DestinationNr].MixMinusSource))
         {
-          MixMinusNr = cntModule;
+          for (int cntBuss=0; cntBuss<16; cntBuss++)
+          {
+            if ((AxumData.ModuleData[cntModule].Buss[cntBuss].Active) && (AxumData.ModuleData[cntModule].Buss[cntBuss].On))
+            {
+              MixMinusNr = cntModule;
+            }
+          }
         }
         cntModule++;
       }
