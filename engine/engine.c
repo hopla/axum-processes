@@ -7901,6 +7901,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MONITOR_BUSS_FUNCTION_BUSS_25_26_ON_OFF:
         case MONITOR_BUSS_FUNCTION_BUSS_27_28_ON_OFF:
         case MONITOR_BUSS_FUNCTION_BUSS_29_30_ON_OFF:
+        case MONITOR_BUSS_FUNCTION_BUSS_31_32_ON_OFF:
         { //Prog
           int BussNr = FunctionNr-MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF;
           Active = AxumData.Monitor[MonitorBussNr].Buss[BussNr];
