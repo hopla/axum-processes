@@ -1410,7 +1410,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               }
               else if (type == MBN_DATATYPE_FLOAT)
               {
-                AxumData.ModuleData[ModuleNr].FaderLevel += data.Float;
+                AxumData.ModuleData[ModuleNr].FaderLevel = data.Float;
                 if (AxumData.ModuleData[ModuleNr].FaderLevel < -140)
                 {
                   AxumData.ModuleData[ModuleNr].FaderLevel = -140;
@@ -7380,6 +7380,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+            case MBN_DATATYPE_FLOAT:
+            {
+              data.Float = AxumData.ModuleData[ModuleNr].FaderLevel;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
             }
             break;
           }

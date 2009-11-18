@@ -66,6 +66,7 @@ INSERT INTO functions VALUES ('(0,,62)', 'Pan', 2, 4);
 INSERT INTO functions VALUES ('(0,,63)', 'Pan reset', 3, 0);
 INSERT INTO functions VALUES ('(0,,64)', 'Module level', 1, 1);
 INSERT INTO functions VALUES ('(0,,64)', 'Module level', 2, 4);
+INSERT INTO functions VALUES ('(0,,64)', 'Module level', 5, 5);
 INSERT INTO functions VALUES ('(0,,65)', 'Module on', 3, 3);
 INSERT INTO functions VALUES ('(0,,66)', 'Module off', 3, 3);
 INSERT INTO functions VALUES ('(0,,67)', 'Module on/off', 3, 3);
