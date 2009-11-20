@@ -11619,21 +11619,24 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
       {
         if (AxumData.ModuleData[cntModule].SelectedSource != 0)
         {
-          int SourceToCheck = AxumData.ModuleData[cntModule].SelectedSource-matrix_sources.src_offset.min.source;
-          if (AxumData.SourceData[SourceToCheck].Active)
+          if ((AxumData.ModuleData[cntModule].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[cntModule].SelectedSource<=matrix_sources.src_offset.max.source))
           {
-            for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
+            int SourceToCheck = AxumData.ModuleData[cntModule].SelectedSource-matrix_sources.src_offset.min.source;
+            if (AxumData.SourceData[SourceToCheck].Active)
             {
-              if (AxumData.SourceData[SourceToCheck].Redlight[cntRedlight])
+              for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
               {
-                Redlight[cntRedlight] = 1;
+                if (AxumData.SourceData[SourceToCheck].Redlight[cntRedlight])
+                {
+                  Redlight[cntRedlight] = 1;
+                }
               }
-            }
-            for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
-            {
-              if (AxumData.SourceData[SourceToCheck].MonitorMute[cntMonitorBuss])
+              for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
               {
-                MonitorMute[cntMonitorBuss] = 1;
+                if (AxumData.SourceData[SourceToCheck].MonitorMute[cntMonitorBuss])
+                {
+                  MonitorMute[cntMonitorBuss] = 1;
+                }
               }
             }
           }
