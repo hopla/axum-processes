@@ -76,7 +76,9 @@ typedef struct
 
     bool UseDynamics;
     char Dynamics;
+    float DynamicsThreshold;
     bool DynamicsOnOff;
+    float DownwardExpanderThreshold;
 
     bool UseModule;
     float FaderLevel;
@@ -170,7 +172,9 @@ typedef struct
   bool EQOnOff;
 
   char Dynamics;
+  float DynamicsThreshold;
   bool DynamicsOnOff;
+  float DownwardExpanderThreshold;
 
   int Panorama;
   float FaderLevel;
@@ -197,7 +201,9 @@ typedef struct
   bool EQOnOff;
 
   char Dynamics;
+  float DynamicsThreshold;
   bool DynamicsOnOff;
+  float DownwardExpanderThreshold;
 
   int Panorama;
   unsigned char Mono;

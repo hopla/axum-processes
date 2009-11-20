@@ -59,7 +59,7 @@ INSERT INTO functions VALUES ('(0,,53)', 'EQ Band 6 frequency reset', 3, 0);
 INSERT INTO functions VALUES ('(0,,54)', 'EQ Band 6 bandwidth reset', 3, 0);
 INSERT INTO functions VALUES ('(0,,55)', 'EQ Band 6 type', 2, 4);
 INSERT INTO functions VALUES ('(0,,56)', 'EQ on/off', 3, 3);
-INSERT INTO functions VALUES ('(0,,59)', 'Dynamics amount', 2, 4);
+INSERT INTO functions VALUES ('(0,,59)', 'AGC amount', 2, 4);
 INSERT INTO functions VALUES ('(0,,60)', 'Dynamics on/off', 3, 3);
 INSERT INTO functions VALUES ('(0,,61)', 'Mono On/Off', 3, 3);
 INSERT INTO functions VALUES ('(0,,62)', 'Pan', 2, 4);
@@ -235,6 +235,8 @@ INSERT INTO functions VALUES ('(0,,197)', 'Fader and on active/inactive', 3, 3);
 INSERT INTO functions VALUES ('(0,,198)', 'Fader on', 3, 3);
 INSERT INTO functions VALUES ('(0,,199)', 'Fader off', 3, 3);
 INSERT INTO functions VALUES ('(0,,200)', 'Fader on/off', 3, 3);
+INSERT INTO functions VALUES ('(0,,201)', 'AGC threshold', 2, 4);
+INSERT INTO functions VALUES ('(0,,202)', 'Downward expander threshold', 2, 4);
 
 
 
@@ -365,7 +367,7 @@ INSERT INTO functions VALUES ('(4,,49)', 'Control 1 mode EQ band 6 level', 3, 3)
 INSERT INTO functions VALUES ('(4,,50)', 'Control 1 mode EQ band 6 frequency', 3, 3);
 INSERT INTO functions VALUES ('(4,,51)', 'Control 1 mode EQ band 6 bandwidth', 3, 3);
 INSERT INTO functions VALUES ('(4,,52)', 'Control 1 mode EQ band 6 type', 3, 3);
-INSERT INTO functions VALUES ('(4,,53)', 'Control 1 mode dynamics', 3, 3);
+INSERT INTO functions VALUES ('(4,,53)', 'Control 1 mode AGC amount', 3, 3);
 INSERT INTO functions VALUES ('(4,,54)', 'Control 1 mode mono', 3, 3);
 INSERT INTO functions VALUES ('(4,,55)', 'Control 1 mode pan', 3, 3);
 INSERT INTO functions VALUES ('(4,,56)', 'Control 1 mode module level', 3, 3);
@@ -430,7 +432,7 @@ INSERT INTO functions VALUES ('(4,,114)', 'Control 2 mode EQ band 6 level', 3, 3
 INSERT INTO functions VALUES ('(4,,115)', 'Control 2 mode EQ band 6 frequency', 3, 3);
 INSERT INTO functions VALUES ('(4,,116)', 'Control 2 mode EQ band 6 bandwidth', 3, 3);
 INSERT INTO functions VALUES ('(4,,117)', 'Control 2 mode EQ band 6 type', 3, 3);
-INSERT INTO functions VALUES ('(4,,118)', 'Control 2 mode dynamics', 3, 3);
+INSERT INTO functions VALUES ('(4,,118)', 'Control 2 mode AGC amount', 3, 3);
 INSERT INTO functions VALUES ('(4,,119)', 'Control 2 mode mono', 3, 3);
 INSERT INTO functions VALUES ('(4,,120)', 'Control 2 mode pan', 3, 3);
 INSERT INTO functions VALUES ('(4,,121)', 'Control 2 mode module level', 3, 3);
@@ -495,7 +497,7 @@ INSERT INTO functions VALUES ('(4,,179)', 'Control 3 mode EQ band 6 level', 3, 3
 INSERT INTO functions VALUES ('(4,,180)', 'Control 3 mode EQ band 6 frequency', 3, 3);
 INSERT INTO functions VALUES ('(4,,181)', 'Control 3 mode EQ band 6 bandwidth', 3, 3);
 INSERT INTO functions VALUES ('(4,,182)', 'Control 3 mode EQ band 6 type', 3, 3);
-INSERT INTO functions VALUES ('(4,,183)', 'Control 3 mode dynamics', 3, 3);
+INSERT INTO functions VALUES ('(4,,183)', 'Control 3 mode AGC amount', 3, 3);
 INSERT INTO functions VALUES ('(4,,184)', 'Control 3 mode mono', 3, 3);
 INSERT INTO functions VALUES ('(4,,185)', 'Control 3 mode pan', 3, 3);
 INSERT INTO functions VALUES ('(4,,186)', 'Control 3 mode module level', 3, 3);
@@ -560,7 +562,7 @@ INSERT INTO functions VALUES ('(4,,244)', 'Control 4 mode EQ band 6 level', 3, 3
 INSERT INTO functions VALUES ('(4,,245)', 'Control 4 mode EQ band 6 frequency', 3, 3);
 INSERT INTO functions VALUES ('(4,,246)', 'Control 4 mode EQ band 6 bandwidth', 3, 3);
 INSERT INTO functions VALUES ('(4,,247)', 'Control 4 mode EQ band 6 type', 3, 3);
-INSERT INTO functions VALUES ('(4,,248)', 'Control 4 mode dynamics', 3, 3);
+INSERT INTO functions VALUES ('(4,,248)', 'Control 4 mode AGC amount', 3, 3);
 INSERT INTO functions VALUES ('(4,,249)', 'Control 4 mode mono', 3, 3);
 INSERT INTO functions VALUES ('(4,,250)', 'Control 4 mode pan', 3, 3);
 INSERT INTO functions VALUES ('(4,,251)', 'Control 4 mode module level', 3, 3);
@@ -685,6 +687,14 @@ INSERT INTO functions VALUES ('(4,,365)', 'Control 3 mode source pad on/off', 3,
 INSERT INTO functions VALUES ('(4,,366)', 'Control 4 mode EQ on/off', 3, 3);
 INSERT INTO functions VALUES ('(4,,367)', 'Control 4 mode source phantom on/off', 3, 3);
 INSERT INTO functions VALUES ('(4,,368)', 'Control 4 mode source pad on/off', 3, 3);
+INSERT INTO functions VALUES ('(4,,369)', 'Control 1 mode AGC threshold', 3, 3);
+INSERT INTO functions VALUES ('(4,,370)', 'Control 2 mode AGC threshold', 3, 3);
+INSERT INTO functions VALUES ('(4,,371)', 'Control 3 mode AGC threshold', 3, 3);
+INSERT INTO functions VALUES ('(4,,372)', 'Control 4 mode AGC threshold', 3, 3);
+INSERT INTO functions VALUES ('(4,,373)', 'Control 1 mode downward expander threshold', 3, 3);
+INSERT INTO functions VALUES ('(4,,374)', 'Control 2 mode downward expander threshold', 3, 3);
+INSERT INTO functions VALUES ('(4,,375)', 'Control 3 mode downward expander threshold', 3, 3);
+INSERT INTO functions VALUES ('(4,,376)', 'Control 4 mode downward expander threshold', 3, 3);
 
 
 -- source functions

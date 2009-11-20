@@ -28,7 +28,9 @@ typedef struct
 typedef struct
 {
   int Percent;
+  float Threshold;
   bool On;
+  float DownwardExpanderThreshold;
 } DSPCARD_DYNAMICS_DATA_STRUCT;
 
 typedef struct
