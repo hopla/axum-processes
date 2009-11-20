@@ -1332,7 +1332,7 @@ void dsp_set_mixmin(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelN
 {
   unsigned char DSPCardNr = (SystemChannelNr/64);
   unsigned char DSPCardChannelNr = SystemChannelNr%64;
-  unsigned char DSPChannelNr = DSPCardChannelNr%32;
+//  unsigned char DSPChannelNr = DSPCardChannelNr%32;
   LOG_DEBUG("[%s] enter", __func__);
 
   dsp_lock(1);

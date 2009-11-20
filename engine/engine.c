@@ -6403,7 +6403,7 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource)
       int ModuleToUse = -1;
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.DestinationData[cntDestination].MixMinusSource == AxumData.ModuleData[cntModule].SelectedSource) 
+        if (AxumData.DestinationData[cntDestination].MixMinusSource == AxumData.ModuleData[cntModule].SelectedSource)
         {
           for (int cntBuss=0; cntBuss<16; cntBuss++)
           {
