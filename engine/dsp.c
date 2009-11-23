@@ -1281,8 +1281,6 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
 
     *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPDynamicsOn+(DSPChannelNr*4);
     *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = dspcard->data.ChannelData[DSPCardChannelNr].Dynamics.On;
-
-    log_write("Th: %f, Mu: %f, iMu: %f\n", ThresholdFactor, MakeupGain, InverseMakeupGain);
   }
   dsp_lock(0);
 
