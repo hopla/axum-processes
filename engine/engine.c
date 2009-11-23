@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
   db_read_src_config(1, 1280);
 
   //module_configuration
-  db_read_module_config(1, 128, 1);
+  db_read_module_config(1, 128);
 
   //buss_configuration
   db_read_buss_config(1, 16);
