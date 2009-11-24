@@ -5002,8 +5002,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 //normally response on GetSensorData
 int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data)
 {
-  printf("SensorDataResponse addr: %08lx, object: %d\n", message->AddressFrom, object);
-
   node_info_lock(1);
 
   ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = GetOnlineNodeInformation(message->AddressFrom);
@@ -5208,6 +5206,51 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
           db_lock(1);
           db_update_slot_config_output_ch_cnt(message->AddressFrom, data.UInt);
           db_lock(0);
+        }
+      }
+      if (object>=1024)
+      {
+        float DataMinimal = OnlineNodeInformationElement->ObjectInformation[object-1024].SensorDataMinimal;
+        float DataMaximal = OnlineNodeInformationElement->ObjectInformation[object-1024].SensorDataMaximal;
+        int FunctionNr = OnlineNodeInformationElement->SensorReceiveFunction[object-1024].FunctionNr;
+
+        if ((FunctionNr&0xFF000FFF) == (0x02000000 | MONITOR_BUSS_FUNCTION_SPEAKER_LEVEL))
+        {
+          int Position = (data.UInt*1023)/(DataMaximal-DataMinimal);
+          float dB = Position2dB[Position];
+          int MonitorBussNr = (FunctionNr>>12)&0xFFF;
+          dB += 10;
+
+          AxumData.Monitor[MonitorBussNr].SpeakerLevel = dB;
+          CheckObjectsToSent(FunctionNr);
+
+          for (int cntDestination=0; cntDestination<1280; cntDestination++)
+          {
+            if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
+            {
+              unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
+              CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_SPEAKER_LEVEL);
+            }
+          }
+        }
+        if ((FunctionNr&0xFF000FFF) == (0x02000000 | MONITOR_BUSS_FUNCTION_PHONES_LEVEL))
+        {
+          int Position = (data.UInt*1023)/(DataMaximal-DataMinimal);
+          float dB = Position2dB[Position];
+          int MonitorBussNr = (FunctionNr>>12)&0xFFF;
+          dB += 10;
+
+          AxumData.Monitor[MonitorBussNr].PhonesLevel = dB;
+          CheckObjectsToSent(FunctionNr);
+
+          for (int cntDestination=0; cntDestination<1280; cntDestination++)
+          {
+            if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
+            {
+              unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
+              CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_PHONES_LEVEL);
+            }
+          }
         }
       }
     }
