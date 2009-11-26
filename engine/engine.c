@@ -529,12 +529,18 @@ int main(int argc, char *argv[])
 int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data)
 {
   printf("mSensorDataChanged addr: %08lx, obj: %d\n", message->AddressFrom, object);
-
+  node_info_lock(1);
   ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = GetOnlineNodeInformation(message->AddressFrom);
-
   if (OnlineNodeInformationElement == NULL)
   {
-    printf("OnlineNodeInformationElement == NULL\n");
+    log_write("[mSensorDataChanged] OnlineNodeInformationElement not found");
+    node_info_lock(0);
+    return 1;
+  }
+  if (object<(OnlineNodeInformationElement->NumberOfCustomObjects+1024))
+  {
+    log_write("[mSensorDataChanged] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->NumberOfCustomObjects);
+    node_info_lock(0);
     return 1;
   }
 
@@ -4990,13 +4996,10 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     }
     SensorReceiveFunction->PreviousLastChangedTime = SensorReceiveFunction->LastChangedTime;
   }
+  node_info_lock(0);
   return 0;
 
   mbn=NULL;
-  message=NULL;
-  object = 0;
-  type = 0;
-  data.State = 0;
 }
 
 //normally response on GetSensorData
@@ -5008,6 +5011,13 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
   if (OnlineNodeInformationElement == NULL)
   {
+    log_write("[mSensorDataResponse] OnlineNodeInformationElement not found");
+    node_info_lock(0);
+    return 1;
+  }
+  if (object<(OnlineNodeInformationElement->NumberOfCustomObjects+1024))
+  {
+    log_write("[mSensorDataResponse] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->NumberOfCustomObjects);
     node_info_lock(0);
     return 1;
   }
@@ -5257,7 +5267,6 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
     break;
   }
   node_info_lock(0);
-
   return 0;
 }
 
