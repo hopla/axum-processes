@@ -537,9 +537,15 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     node_info_lock(0);
     return 1;
   }
-  if (object<(OnlineNodeInformationElement->NumberOfCustomObjects+1024))
+  if (object>=(OnlineNodeInformationElement->NumberOfCustomObjects+1024))
   {
     log_write("[mSensorDataChanged] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->NumberOfCustomObjects);
+    node_info_lock(0);
+    return 1;
+  }
+  else if (object<1024)
+  {
+    log_write("[mSensorDataChanged] Sensor change is not allowed for object: %d (<1024)", object);
     node_info_lock(0);
     return 1;
   }
@@ -5015,7 +5021,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
     node_info_lock(0);
     return 1;
   }
-  if (object<(OnlineNodeInformationElement->NumberOfCustomObjects+1024))
+  if (object>=(OnlineNodeInformationElement->NumberOfCustomObjects+1024))
   {
     log_write("[mSensorDataResponse] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->NumberOfCustomObjects);
     node_info_lock(0);
