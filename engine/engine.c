@@ -3649,18 +3649,18 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   char NewMasterControl1Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
                   unsigned int OldFunctionNumber = 0x00000000;
 
-                  if (AxumData.MasterControl1Mode != MASTER_CONTROL_MODE_NONE)
+                  if (AxumData.MasterControlMode[0] != MASTER_CONTROL_MODE_NONE)
                   {
-                    OldFunctionNumber = 0x04000000 | (AxumData.MasterControl1Mode+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2);
+                    OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[0]+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2);
                   }
 
-                  if (AxumData.MasterControl1Mode != NewMasterControl1Mode)
+                  if (AxumData.MasterControlMode[0] != NewMasterControl1Mode)
                   {
-                    AxumData.MasterControl1Mode = NewMasterControl1Mode;
+                    AxumData.MasterControlMode[0] = NewMasterControl1Mode;
                   }
                   else
                   {
-                    AxumData.MasterControl1Mode = MASTER_CONTROL_MODE_NONE;
+                    AxumData.MasterControlMode[0] = MASTER_CONTROL_MODE_NONE;
                   }
                   if (OldFunctionNumber != 0x00000000)
                   {
@@ -3681,18 +3681,18 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   char NewMasterControl2Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2;
                   unsigned int OldFunctionNumber = 0x00000000;
 
-                  if (AxumData.MasterControl2Mode != MASTER_CONTROL_MODE_NONE)
+                  if (AxumData.MasterControlMode[1] != MASTER_CONTROL_MODE_NONE)
                   {
-                    OldFunctionNumber = 0x04000000 | (AxumData.MasterControl2Mode+GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2);
+                    OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[1]+GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2);
                   }
 
-                  if (AxumData.MasterControl2Mode != NewMasterControl2Mode)
+                  if (AxumData.MasterControlMode[1] != NewMasterControl2Mode)
                   {
-                    AxumData.MasterControl2Mode = NewMasterControl2Mode;
+                    AxumData.MasterControlMode[1] = NewMasterControl2Mode;
                   }
                   else
                   {
-                    AxumData.MasterControl2Mode = MASTER_CONTROL_MODE_NONE;
+                    AxumData.MasterControlMode[1] = MASTER_CONTROL_MODE_NONE;
                   }
                   if (OldFunctionNumber != 0x00000000)
                   {
@@ -3713,18 +3713,18 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   char NewMasterControl3Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2;
                   unsigned int OldFunctionNumber = 0x00000000;
 
-                  if (AxumData.MasterControl3Mode != MASTER_CONTROL_MODE_NONE)
+                  if (AxumData.MasterControlMode[2] != MASTER_CONTROL_MODE_NONE)
                   {
-                    OldFunctionNumber = 0x04000000 | (AxumData.MasterControl3Mode+GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2);
+                    OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[2]+GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2);
                   }
 
-                  if (AxumData.MasterControl3Mode != NewMasterControl3Mode)
+                  if (AxumData.MasterControlMode[2] != NewMasterControl3Mode)
                   {
-                    AxumData.MasterControl3Mode = NewMasterControl3Mode;
+                    AxumData.MasterControlMode[2] = NewMasterControl3Mode;
                   }
                   else
                   {
-                    AxumData.MasterControl3Mode = MASTER_CONTROL_MODE_NONE;
+                    AxumData.MasterControlMode[2] = MASTER_CONTROL_MODE_NONE;
                   }
                   if (OldFunctionNumber != 0x00000000)
                   {
@@ -3745,18 +3745,18 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   char NewMasterControl4Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2;
                   unsigned int OldFunctionNumber = 0x00000000;
 
-                  if (AxumData.MasterControl4Mode != MASTER_CONTROL_MODE_NONE)
+                  if (AxumData.MasterControlMode[3] != MASTER_CONTROL_MODE_NONE)
                   {
-                    OldFunctionNumber = 0x04000000 | (AxumData.MasterControl4Mode+GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2);
+                    OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[3]+GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2);
                   }
 
-                  if (AxumData.MasterControl4Mode != NewMasterControl4Mode)
+                  if (AxumData.MasterControlMode[3] != NewMasterControl4Mode)
                   {
-                    AxumData.MasterControl4Mode = NewMasterControl4Mode;
+                    AxumData.MasterControlMode[3] = NewMasterControl4Mode;
                   }
                   else
                   {
-                    AxumData.MasterControl4Mode = MASTER_CONTROL_MODE_NONE;
+                    AxumData.MasterControlMode[3] = MASTER_CONTROL_MODE_NONE;
                   }
                   if (OldFunctionNumber != 0x00000000)
                   {
@@ -8795,7 +8795,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2))
         { //Master control 1 mode
           unsigned char CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
-          if (AxumData.MasterControl1Mode == CorrespondingControlMode)
+          if (AxumData.MasterControlMode[0] == CorrespondingControlMode)
           {
             Active = 1;
           }
@@ -8806,7 +8806,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2))
         { //Master control 2 mode
           unsigned char CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2;
-          if (AxumData.MasterControl2Mode == CorrespondingControlMode)
+          if (AxumData.MasterControlMode[1] == CorrespondingControlMode)
           {
             Active = 1;
           }
@@ -8817,7 +8817,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2))
         { //Master control 3 mode
           unsigned char CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2;
-          if (AxumData.MasterControl3Mode == CorrespondingControlMode)
+          if (AxumData.MasterControlMode[2] == CorrespondingControlMode)
           {
             Active = 1;
           }
@@ -8828,7 +8828,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1))
         { //Master control 1 mode
           unsigned char CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2;
-          if (AxumData.MasterControl4Mode == CorrespondingControlMode)
+          if (AxumData.MasterControlMode[3] == CorrespondingControlMode)
           {
             Active = 1;
           }
@@ -11674,30 +11674,9 @@ void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsi
 {
   int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   int MasterControlMode = -1;
+  int ControlNr = (FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1)/(GLOBAL_FUNCTION_MASTER_CONTROL_2-GLOBAL_FUNCTION_MASTER_CONTROL_1);
 
-  switch (FunctionNr)
-  {
-    case GLOBAL_FUNCTION_MASTER_CONTROL_1:
-    {
-      MasterControlMode = AxumData.MasterControl1Mode;
-    }
-    break;
-    case GLOBAL_FUNCTION_MASTER_CONTROL_2:
-    {
-      MasterControlMode = AxumData.MasterControl2Mode;
-    }
-    break;
-    case GLOBAL_FUNCTION_MASTER_CONTROL_3:
-    {
-      MasterControlMode = AxumData.MasterControl3Mode;
-    }
-    break;
-    case GLOBAL_FUNCTION_MASTER_CONTROL_4:
-    {
-      MasterControlMode = AxumData.MasterControl4Mode;
-    }
-    break;
-  }
+  MasterControlMode = AxumData.ControlMode[ControlNr];
 
   if (type == MBN_DATATYPE_UINT)
   {
@@ -11800,30 +11779,9 @@ void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr,
 {
   int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   int MasterControlMode = -1;
+  int ControlNr = (FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET)/(GLOBAL_FUNCTION_MASTER_CONTROL_2_RESET-GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET);
 
-  switch (FunctionNr)
-  {
-    case GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET:
-    {
-      MasterControlMode = AxumData.MasterControl1Mode;
-    }
-    break;
-    case GLOBAL_FUNCTION_MASTER_CONTROL_2_RESET:
-    {
-      MasterControlMode = AxumData.MasterControl2Mode;
-    }
-    break;
-    case GLOBAL_FUNCTION_MASTER_CONTROL_3_RESET:
-    {
-      MasterControlMode = AxumData.MasterControl3Mode;
-    }
-    break;
-    case GLOBAL_FUNCTION_MASTER_CONTROL_4_RESET:
-    {
-      MasterControlMode = AxumData.MasterControl4Mode;
-    }
-    break;
-  }
+  MasterControlMode = AxumData.ControlMode[ControlNr];
 
   if (type == MBN_DATATYPE_STATE)
   {
@@ -11881,30 +11839,9 @@ void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned 
   float MasterLevel = -140;
   unsigned char Mask = 0x00;
   mbn_data data;
+  int ControlNr = (FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1)/(GLOBAL_FUNCTION_MASTER_CONTROL_2-GLOBAL_FUNCTION_MASTER_CONTROL_1);
 
-  switch (FunctionNr)
-  {
-    case GLOBAL_FUNCTION_MASTER_CONTROL_1:
-    {
-      MasterControlMode = AxumData.MasterControl1Mode;
-    }
-    break;
-    case GLOBAL_FUNCTION_MASTER_CONTROL_2:
-    {
-      MasterControlMode = AxumData.MasterControl2Mode;
-    }
-    break;
-    case GLOBAL_FUNCTION_MASTER_CONTROL_3:
-    {
-      MasterControlMode = AxumData.MasterControl3Mode;
-    }
-    break;
-    case GLOBAL_FUNCTION_MASTER_CONTROL_4:
-    {
-      MasterControlMode = AxumData.MasterControl4Mode;
-    }
-    break;
-  }
+  MasterControlMode = AxumData.ControlMode[ControlNr];
 
   switch (MasterControlMode)
   {
@@ -13273,13 +13210,13 @@ void initialize_axum_data_struct()
   }
 
   AxumData.ControlMode[0] = MODULE_CONTROL_MODE_NONE;
-  AxumData.ControlMode[0] = MODULE_CONTROL_MODE_NONE;
-  AxumData.ControlMode[0] = MODULE_CONTROL_MODE_NONE;
-  AxumData.ControlMode[0] = MODULE_CONTROL_MODE_NONE;
-  AxumData.MasterControl1Mode = MASTER_CONTROL_MODE_NONE;
-  AxumData.MasterControl2Mode = MASTER_CONTROL_MODE_NONE;
-  AxumData.MasterControl3Mode = MASTER_CONTROL_MODE_NONE;
-  AxumData.MasterControl4Mode = MASTER_CONTROL_MODE_NONE;
+  AxumData.ControlMode[1] = MODULE_CONTROL_MODE_NONE;
+  AxumData.ControlMode[2] = MODULE_CONTROL_MODE_NONE;
+  AxumData.ControlMode[3] = MODULE_CONTROL_MODE_NONE;
+  AxumData.MasterControlMode[0] = MASTER_CONTROL_MODE_NONE;
+  AxumData.MasterControlMode[1] = MASTER_CONTROL_MODE_NONE;
+  AxumData.MasterControlMode[2] = MASTER_CONTROL_MODE_NONE;
+  AxumData.MasterControlMode[3] = MASTER_CONTROL_MODE_NONE;
 
   for (int cntBuss=0; cntBuss<16; cntBuss++)
   {

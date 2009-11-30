@@ -296,15 +296,8 @@ typedef struct
   AXUM_BUSS_MASTER_DATA_STRUCT BussMasterData[16];
   AXUM_PRESET_DATA_STRUCT PresetData[1280];
 
-//  int Control1Mode;
-//  int Control2Mode;
-//  int Control3Mode;
-//  int Control4Mode;
   int ControlMode[4];
-  int MasterControl1Mode;
-  int MasterControl2Mode;
-  int MasterControl3Mode;
-  int MasterControl4Mode;
+  int MasterControlMode[4];
 
   bool Redlight[8];
   unsigned int Samplerate;
