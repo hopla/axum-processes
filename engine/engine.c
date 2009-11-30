@@ -885,6 +885,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 SetAxum_ModuleProcessing(ModuleNr);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -914,6 +915,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -929,6 +931,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -950,6 +953,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(DisplayFunctionNr);
 
                   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -985,6 +989,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1018,6 +1023,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1049,6 +1055,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1088,6 +1095,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1121,6 +1129,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1148,6 +1157,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(SensorReceiveFunctionNumber + (MODULE_FUNCTION_EQ_BAND_1_LEVEL+(BandNr*(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL))));
 
                   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1177,6 +1187,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(SensorReceiveFunctionNumber + (MODULE_FUNCTION_EQ_BAND_1_FREQUENCY+(BandNr*(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY))));
 
                   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1205,6 +1216,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(SensorReceiveFunctionNumber + (MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH+(BandNr*(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH))));
 
                   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1240,6 +1252,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1274,6 +1287,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 }
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1307,6 +1321,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1332,6 +1347,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1363,6 +1379,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 SetAxum_ModuleProcessing(ModuleNr);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1391,6 +1408,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1422,6 +1440,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 SetAxum_BussLevels(ModuleNr);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1450,6 +1469,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1470,6 +1490,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(DisplayFunctionNumber | MODULE_FUNCTION_PAN);
 
                   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1528,6 +1549,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               CheckObjectsToSent(SensorReceiveFunctionNumber);
 
               unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
               if (AxumData.Control1Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
               {
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -1680,6 +1702,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1703,6 +1726,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1726,6 +1750,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1763,6 +1788,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(DisplayFunctionNr | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(BussNr*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL))));
 
                   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1859,6 +1885,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1901,6 +1928,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -1938,6 +1966,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(DisplayFunctionNumber | (MODULE_FUNCTION_BUSS_1_2_BALANCE+(BussNr*(MODULE_FUNCTION_BUSS_3_4_BALANCE-MODULE_FUNCTION_BUSS_1_2_BALANCE))));
 
                   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -2081,6 +2110,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               }
             }
             break;
+            case MODULE_FUNCTION_CONTROL:
             case MODULE_FUNCTION_CONTROL_1:
             case MODULE_FUNCTION_CONTROL_2:
             case MODULE_FUNCTION_CONTROL_3:
@@ -2089,6 +2119,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               ModeControllerSensorChange(SensorReceiveFunctionNumber, type, data, DataType, DataSize, DataMinimal, DataMaximal);
             }
             break;
+            case MODULE_FUNCTION_CONTROL_LABEL:
             case MODULE_FUNCTION_CONTROL_1_LABEL:
             case MODULE_FUNCTION_CONTROL_2_LABEL:
             case MODULE_FUNCTION_CONTROL_3_LABEL:
@@ -2096,6 +2127,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             {   //Control 1 label, no receive
             }
             break;
+            case MODULE_FUNCTION_CONTROL_RESET:
             case MODULE_FUNCTION_CONTROL_1_RESET:
             case MODULE_FUNCTION_CONTROL_2_RESET:
             case MODULE_FUNCTION_CONTROL_3_RESET:
@@ -2145,6 +2177,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                 SetAxum_ModuleProcessing(ModuleNr);
                 unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -2163,6 +2196,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 SetAxum_BussLevels(ModuleNr);
 
                 unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -2338,6 +2372,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
 
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 if (AxumData.Control1Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
                 {
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -3262,6 +3297,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       break;
                     }
                     unsigned int FunctionNrToSent = (cntModule<<12);
+                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
+                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1_LABEL);
                   }
@@ -3374,6 +3411,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       break;
                     }
                     unsigned int FunctionNrToSent = (cntModule<<12);
+                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
+                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2_LABEL);
                   }
@@ -3481,6 +3520,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       break;
                     }
                     unsigned int FunctionNrToSent = (cntModule<<12);
+                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
+                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3_LABEL);
                   }
@@ -3590,6 +3631,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       break;
                     }
                     unsigned int FunctionNrToSent = (cntModule<<12);
+                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
+                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4_LABEL);
                   }
@@ -4080,6 +4123,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         CheckObjectsToSent(FunctionNrToSent | FunctionNr);
 
                         FunctionNrToSent = ((cntModule<<12)&0xFFF000);
+                        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -4108,6 +4152,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       FunctionNrToSent = ((cntModule)<<12);
                       CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
+                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -4242,6 +4287,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       FunctionNrToSent = ((cntModule)<<12);
                       CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
+                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -4405,6 +4451,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         FunctionNrToSent = ((cntModule)<<12);
                         CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
+                        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -4698,6 +4745,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     unsigned int FunctionNrToSent = (cntModule<<12);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
 
+                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                     if (AxumData.Control1Mode == MODULE_CONTROL_MODE_SOURCE_GAIN)
                     {
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -8036,6 +8084,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       }
       switch (FunctionNr)
       {
+        case MODULE_FUNCTION_CONTROL:
         case MODULE_FUNCTION_CONTROL_1:
         case MODULE_FUNCTION_CONTROL_2:
         case MODULE_FUNCTION_CONTROL_3:
@@ -8044,6 +8093,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           ModeControllerSetData(SensorReceiveFunctionNumber, MambaNetAddress, ObjectNr, DataType, DataSize, DataMinimal, DataMaximal);
         }
         break;
+        case MODULE_FUNCTION_CONTROL_LABEL:
         case MODULE_FUNCTION_CONTROL_1_LABEL:
         case MODULE_FUNCTION_CONTROL_2_LABEL:
         case MODULE_FUNCTION_CONTROL_3_LABEL:
@@ -8052,6 +8102,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           ModeControllerSetLabel(SensorReceiveFunctionNumber, MambaNetAddress, ObjectNr, DataType, DataSize, DataMinimal, DataMaximal);
         }
         break;
+        case MODULE_FUNCTION_CONTROL_RESET:
         case MODULE_FUNCTION_CONTROL_1_RESET:
         case MODULE_FUNCTION_CONTROL_2_RESET:
         case MODULE_FUNCTION_CONTROL_3_RESET:
@@ -9845,26 +9896,35 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
   unsigned int ModuleNr = (SensorReceiveFunctionNr>>12)&0xFFF;
   unsigned int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   char ControlMode = -1;
-  unsigned char ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1)/(MODULE_FUNCTION_CONTROL_2-MODULE_FUNCTION_CONTROL_1);
+  unsigned char ControlNr;
 
-  switch (FunctionNr)
+  if (FunctionNr == MODULE_FUNCTION_CONTROL)
   {
-    case MODULE_FUNCTION_CONTROL_1:
+    ControlNr = AxumData.ModuleData[ModuleNr].Console;
+  }
+  else
+  {
+    ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1)/(MODULE_FUNCTION_CONTROL_2-MODULE_FUNCTION_CONTROL_1);
+  }
+
+  switch (ControlNr)
+  {
+    case 0:
     {
       ControlMode = AxumData.Control1Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_2:
+    case 1:
     {
       ControlMode = AxumData.Control2Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_3:
+    case 2:
     {
       ControlMode = AxumData.Control3Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_4:
+    case 3:
     {
       ControlMode = AxumData.Control4Mode;
     }
@@ -9882,11 +9942,13 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr] = AdjustModuleSource(CurrentSource, data.SInt);
 
         unsigned int DisplayFunctionNr = (ModuleNr<<12);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_3);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_4);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_SOURCE);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_LABEL);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1_LABEL);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_2_LABEL);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_3_LABEL);
@@ -9900,10 +9962,12 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
         unsigned int DisplayFunctionNr = (ModuleNr<<12);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_PRESET);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_3);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_4);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_LABEL);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1_LABEL);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_2_LABEL);
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_3_LABEL);
@@ -9936,6 +10000,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
               if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+matrix_sources.src_offset.min.source))
               {
                 unsigned int FunctionNrToSent = (cntModule<<12);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -9960,6 +10025,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         }
         SetAxum_ModuleProcessing(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -9976,6 +10042,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
         SetAxum_ModuleProcessing(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10007,6 +10074,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
         SetAxum_ModuleProcessing(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10035,6 +10103,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         }
         SetAxum_EQ(ModuleNr, BandNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10071,6 +10140,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         }
         SetAxum_EQ(ModuleNr, BandNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10101,6 +10171,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         }
         SetAxum_EQ(ModuleNr, BandNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10133,6 +10204,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type = (FilterType)Type;
         SetAxum_EQ(ModuleNr, BandNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10155,6 +10227,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         }
         SetAxum_ModuleProcessing(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10177,6 +10250,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         }
         SetAxum_ModuleProcessing(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10199,6 +10273,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         }
         SetAxum_ModuleProcessing(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10215,6 +10290,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         SetAxum_BussLevels(ModuleNr);
 
         unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10237,6 +10313,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         }
         SetAxum_BussLevels(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10268,6 +10345,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
         unsigned int FunctionNrToSent = (ModuleNr<<12);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         if (AxumData.Control1Mode == MODULE_CONTROL_MODE_MODULE_LEVEL)
         {
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -10345,6 +10423,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         float NewLevel = AxumData.ModuleData[ModuleNr].Buss[BussNr].Level;
         SetAxum_BussLevels(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10391,6 +10470,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
         SetAxum_BussLevels(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10428,28 +10508,37 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
   unsigned int ModuleNr = (SensorReceiveFunctionNr>>12)&0xFFF;
   unsigned int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   char ControlMode = -1;
-  unsigned char ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1)/(MODULE_FUNCTION_CONTROL_2-MODULE_FUNCTION_CONTROL_1);
+  unsigned char ControlNr;
 
   printf("ModeControllerResetSensorChange\n");
 
-  switch (FunctionNr)
+  if (FunctionNr == MODULE_FUNCTION_CONTROL_RESET)
   {
-    case MODULE_FUNCTION_CONTROL_1_RESET:
+    ControlNr = AxumData.ModuleData[ModuleNr].Console;
+  }
+  else
+  {
+    ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1_RESET)/(MODULE_FUNCTION_CONTROL_2_RESET-MODULE_FUNCTION_CONTROL_1_RESET);
+  }
+
+  switch (ControlNr)
+  {
+    case 0:
     {
       ControlMode = AxumData.Control1Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_2_RESET:
+    case 1:
     {
       ControlMode = AxumData.Control2Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_3_RESET:
+    case 2:
     {
       ControlMode = AxumData.Control3Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_4_RESET:
+    case 3:
     {
       ControlMode = AxumData.Control4Mode;
     }
@@ -10467,6 +10556,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetNewSource(ModuleNr, AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr], 0, 1);
 
           unsigned int DisplayFunctionNr = (ModuleNr<<12);
+          CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_LABEL);
           CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1_LABEL);
           CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_2_LABEL);
           CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_3_LABEL);
@@ -10490,6 +10580,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
               AxumData.SourceData[SourceNr].Gain = 30;
 
               unsigned int FunctionNrToSent = (ModuleNr<<12);
+              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
               CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
               CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
               CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10503,6 +10594,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
                 if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+1))
                 {
                   FunctionNrToSent = (cntModule<<12);
+                  CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL);
                   CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_1);
                   CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_2);
                   CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_CONTROL_3);
@@ -10521,6 +10613,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_ModuleProcessing(ModuleNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10543,6 +10636,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_ModuleProcessing(ModuleNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10559,6 +10653,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_ModuleProcessing(ModuleNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10580,6 +10675,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_EQ(ModuleNr, BandNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10602,6 +10698,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_EQ(ModuleNr, BandNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10623,6 +10720,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_EQ(ModuleNr, BandNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10644,6 +10742,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_EQ(ModuleNr, BandNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10659,6 +10758,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_ModuleProcessing(ModuleNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10674,6 +10774,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_ModuleProcessing(ModuleNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10689,6 +10790,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_ModuleProcessing(ModuleNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10704,6 +10806,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_BussLevels(ModuleNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10719,6 +10822,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_BussLevels(ModuleNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10738,6 +10842,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10795,6 +10900,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
 
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10839,6 +10945,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           SetAxum_BussLevels(ModuleNr);
 
           unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10856,6 +10963,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           }
 
           unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10885,6 +10993,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
                   unsigned int FunctionNrToSent = (cntModule<<12);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_PHANTOM);
 
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10916,6 +11025,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
                   FunctionNrToSent = (cntModule<<12);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_PAD);
 
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -10945,27 +11055,36 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
   unsigned int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   char LCDText[9];
   char ControlMode = -1;
-  unsigned char ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1)/(MODULE_FUNCTION_CONTROL_2-MODULE_FUNCTION_CONTROL_1);
+  unsigned char ControlNr;
   mbn_data data;
 
-  switch (FunctionNr)
+  if (FunctionNr == MODULE_FUNCTION_CONTROL)
   {
-    case MODULE_FUNCTION_CONTROL_1:
+    ControlNr = AxumData.ModuleData[ModuleNr].Console;
+  }
+  else
+  {
+    ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1)/(MODULE_FUNCTION_CONTROL_2-MODULE_FUNCTION_CONTROL_1);
+  }
+
+  switch (ControlNr)
+  {
+    case 0:
     {
       ControlMode = AxumData.Control1Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_2:
+    case 1:
     {
       ControlMode = AxumData.Control2Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_3:
+    case 2:
     {
       ControlMode = AxumData.Control3Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_4:
+    case 3:
     {
       ControlMode = AxumData.Control4Mode;
     }
@@ -11392,27 +11511,36 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
   unsigned int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   char LCDText[9];
   char ControlMode = -1;
-  unsigned char ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1)/(MODULE_FUNCTION_CONTROL_2-MODULE_FUNCTION_CONTROL_1);
+  unsigned char ControlNr;
   mbn_data data;
 
-  switch (FunctionNr)
+  if (FunctionNr == MODULE_FUNCTION_CONTROL_LABEL)
   {
-    case MODULE_FUNCTION_CONTROL_1_LABEL:
+    ControlNr = AxumData.ModuleData[ModuleNr].Console;
+  }
+  else
+  {
+    ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1_LABEL)/(MODULE_FUNCTION_CONTROL_2_LABEL-MODULE_FUNCTION_CONTROL_1_LABEL);
+  }
+
+  switch (ControlNr)
+  {
+    case 0:
     {
       ControlMode = AxumData.Control1Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_2_LABEL:
+    case 1:
     {
       ControlMode = AxumData.Control2Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_3_LABEL:
+    case 2:
     {
       ControlMode = AxumData.Control3Mode;
     }
     break;
-    case MODULE_FUNCTION_CONTROL_4_LABEL:
+    case 3:
     {
       ControlMode = AxumData.Control4Mode;
     }
@@ -11938,6 +12066,7 @@ void DoAxum_BussReset(int BussNr)
       CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
       FunctionNrToSent = ((cntModule<<12)&0xFFF000);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -12520,6 +12649,7 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
         }
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
       }
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
 
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_A);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_B);
@@ -12766,6 +12896,7 @@ void SetBussOnOff(int ModuleNr, int BussNr, int LoadPreset)
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
   CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -12798,6 +12929,7 @@ void SetBussOnOff(int ModuleNr, int BussNr, int LoadPreset)
           CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
           FunctionNrToSent = ((cntModule<<12)&0xFFF000);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -13848,6 +13980,9 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigne
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4_LABEL);
     }
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
   }
 
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
@@ -13918,6 +14053,7 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
   }
   if (SetModuleControllers)
   {
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);

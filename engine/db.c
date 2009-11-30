@@ -763,11 +763,13 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
     if (number>0)
     {
       unsigned char SetModeControllers = 0;
+      int Console = 0;
 
       AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[number-1];
       AXUM_DEFAULT_MODULE_DATA_STRUCT *DefaultModuleData = &ModuleData->Defaults;
 
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Console);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &Console);
+      ModuleData->Console = Console-1;
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceA);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceB);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceC);

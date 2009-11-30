@@ -238,6 +238,9 @@ INSERT INTO functions VALUES ('(0,,200)', 'Fader on/off', 3, 3);
 INSERT INTO functions VALUES ('(0,,201)', 'AGC threshold', 2, 4);
 INSERT INTO functions VALUES ('(0,,202)', 'Downward expander threshold', 2, 4);
 INSERT INTO functions VALUES ('(0,,203)', 'Preset', 2, 4);
+INSERT INTO functions VALUES ('(0,,204)', 'Control', 2, 4);
+INSERT INTO functions VALUES ('(0,,205)', 'Control label', 0, 4);
+INSERT INTO functions VALUES ('(0,,206)', 'Control reset', 3, 0);
 
 
 

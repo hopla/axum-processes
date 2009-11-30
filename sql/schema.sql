@@ -226,7 +226,7 @@ CREATE TABLE module_config (
   dyn_on_off boolean NOT NULL DEFAULT FALSE,
   mod_level float NOT NULL DEFAULT -140,
   mod_on_off boolean NOT NULL DEFAULT FALSE,
-  console smallint NOT NULL DEFAULT 0,
+  console smallint NOT NULL DEFAULT 1 CHECK(console>=1 AND console<=4),
   buss_1_2_use_preset boolean[8] NOT NULL DEFAULT ARRAY[TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
   buss_1_2_level float[8] NOT NULL DEFAULT ARRAY[0,0,0,0,0,0,0,0],
   buss_1_2_on_off boolean[8] NOT NULL DEFAULT ARRAY[TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE],
@@ -596,13 +596,13 @@ CREATE TABLE src_preset (
   eq_band_6_type smallint NOT NULL DEFAULT 0 CHECK(eq_band_6_type>=0 AND eq_band_6_type<=7),
   use_dyn_preset boolean NOT NULL DEFAULT FALSE,
   dyn_on_off boolean NOT NULL DEFAULT FALSE,
-  d_exp_threshold float NOT NULL DEFAULT -30,
-  agc_amount smallint NOT NULL DEFAULT 0,
-  agc_threshold float NOT NULL DEFAULT -20,
+  d_exp_threshold float NOT NULL DEFAULT -30 CHECK(d_exp_threshold>=-50 AND d_exp_threshold<=0),
+  agc_amount smallint NOT NULL DEFAULT 0 CHECK(agc_amount>=0 AND agc_amount<=100),
+  agc_threshold float NOT NULL DEFAULT -20 CHECK(agc_threshold>=-30 AND agc_threshold<=0),
   use_mod_preset boolean NOT NULL DEFAULT FALSE,
   mod_on_off boolean NOT NULL DEFAULT FALSE,
-  mod_lvl float NOT NULL DEFAULT -140;
-  routing_preset smallint NOT NULL DEFAULT 1 CHECK(routing_preset>=1 AND routing_preset<=8),
+  mod_lvl float NOT NULL DEFAULT -140 CHECK(mod_lvl>=-140 AND mod_lvl<=10),
+  routing_preset smallint NOT NULL DEFAULT 1 CHECK(routing_preset>=1 AND routing_preset<=8);
 );
 
 
