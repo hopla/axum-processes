@@ -678,7 +678,7 @@ INSERT INTO functions VALUES ('(4,,353)', 'Master control 3 reset', 3, 0);
 INSERT INTO functions VALUES ('(4,,354)', 'Master control 4', 2, 6);
 INSERT INTO functions VALUES ('(4,,354)', 'Master control 4', 1, 1);
 INSERT INTO functions VALUES ('(4,,355)', 'Master control 4 reset', 3, 0);
-INSERT INTO functions VALUES ('(4,,356)', 'Set modules to default processing', 3, 0);
+-- INSERT INTO functions VALUES ('(4,,356)', 'Set modules to default processing', 3, 0);
 INSERT INTO functions VALUES ('(4,,357)', 'Control 1 mode EQ on/off', 3, 3);
 INSERT INTO functions VALUES ('(4,,358)', 'Control 1 mode source phantom on/off', 3, 3);
 INSERT INTO functions VALUES ('(4,,359)', 'Control 1 mode source pad on/off', 3, 3);
@@ -703,6 +703,10 @@ INSERT INTO functions VALUES ('(4,,377)', 'Control 1 mode module preset', 3, 3);
 INSERT INTO functions VALUES ('(4,,378)', 'Control 2 mode module preset', 3, 3);
 INSERT INTO functions VALUES ('(4,,379)', 'Control 3 mode module preset', 3, 3);
 INSERT INTO functions VALUES ('(4,,380)', 'Control 4 mode module preset', 3, 3);
+INSERT INTO functions VALUES ('(4,,381)', 'Reset console 1 to presets', 3, 3);
+INSERT INTO functions VALUES ('(4,,382)', 'Reset console 2 to presets', 3, 3);
+INSERT INTO functions VALUES ('(4,,383)', 'Reset console 3 to presets', 3, 3);
+INSERT INTO functions VALUES ('(4,,384)', 'Reset console 4 to presets', 3, 3);
 
 
 -- source functions

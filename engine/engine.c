@@ -3787,12 +3787,18 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 MasterModeControllerResetSensorChange(SensorReceiveFunctionNumber, type, data, DataType, DataSize, DataMinimal, DataMaximal);
               }
               break;
-              case GLOBAL_FUNCTION_MODULE_TO_DEFAULTS:
+              case GLOBAL_FUNCTION_CONSOLE_1_TO_PRESETS:
+              case GLOBAL_FUNCTION_CONSOLE_2_TO_PRESETS:
+              case GLOBAL_FUNCTION_CONSOLE_3_TO_PRESETS:
+              case GLOBAL_FUNCTION_CONSOLE_4_TO_PRESETS:
               {
+                unsigned char ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_1_TO_PRESETS;
                 for (int cntModule=0; cntModule<128; cntModule++)
                 {
-                  //Only set differences
-                  //LoadProcessingPreset(cntModule, AxumData.ModuleData[cntModule].CurrentSelectedPreset, false);
+                  if (AxumData.ModuleData[cntModule].Console == ConsoleNr)
+                  {
+                    LoadProcessingPreset(cntModule, AxumData.ModuleData[cntModule].SelectedPreset, false);
+                  }
                 }
               }
               break;
