@@ -237,6 +237,7 @@ INSERT INTO functions VALUES ('(0,,199)', 'Fader off', 3, 3);
 INSERT INTO functions VALUES ('(0,,200)', 'Fader on/off', 3, 3);
 INSERT INTO functions VALUES ('(0,,201)', 'AGC threshold', 2, 4);
 INSERT INTO functions VALUES ('(0,,202)', 'Downward expander threshold', 2, 4);
+INSERT INTO functions VALUES ('(0,,203)', 'Preset', 2, 4);
 
 
 
@@ -695,6 +696,10 @@ INSERT INTO functions VALUES ('(4,,373)', 'Control 1 mode downward expander thre
 INSERT INTO functions VALUES ('(4,,374)', 'Control 2 mode downward expander threshold', 3, 3);
 INSERT INTO functions VALUES ('(4,,375)', 'Control 3 mode downward expander threshold', 3, 3);
 INSERT INTO functions VALUES ('(4,,376)', 'Control 4 mode downward expander threshold', 3, 3);
+INSERT INTO functions VALUES ('(4,,377)', 'Control 1 mode module preset', 3, 3);
+INSERT INTO functions VALUES ('(4,,378)', 'Control 2 mode module preset', 3, 3);
+INSERT INTO functions VALUES ('(4,,379)', 'Control 3 mode module preset', 3, 3);
+INSERT INTO functions VALUES ('(4,,380)', 'Control 4 mode module preset', 3, 3);
 
 
 -- source functions

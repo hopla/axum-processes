@@ -45,48 +45,52 @@ typedef struct
   FilterType Type;
 } AXUM_EQ_BAND_PRESET_STRUCT;
 
+typedef struct {
+  char PresetName[32];
+  char Type;
+
+  bool UseGain;
+  float Gain;
+
+  bool UseFilter;
+  AXUM_EQ_BAND_PRESET_STRUCT Filter;
+  bool FilterOnOff;
+
+  bool UseInsert;
+  unsigned int InsertSource;
+  bool InsertOnOff;
+
+  bool UsePhase;
+  unsigned char Phase;
+  bool PhaseOnOff;
+
+  bool UseMono;
+  unsigned char Mono;
+  bool MonoOnOff;
+
+  bool UseEQ;
+  AXUM_EQ_BAND_PRESET_STRUCT EQBand[6];
+  bool EQOnOff;
+
+  bool UseDynamics;
+  char AGCAmount;
+  float AGCThreshold;
+  bool DynamicsOnOff;
+  float DownwardExpanderThreshold;
+
+  bool UseModule;
+  float FaderLevel;
+  bool ModuleState;
+
+  unsigned char RoutingPreset;
+} AXUM_PRESET_DATA_STRUCT;
+
 typedef struct
 {
   char SourceName[32];
   AXUM_INPUT_DATA_STRUCT InputData[8];
 
-  struct {
-    bool UseGain;
-    float Gain;
-
-    bool UseFilter;
-    AXUM_EQ_BAND_PRESET_STRUCT Filter;
-    bool FilterOnOff;
-
-    bool UseInsert;
-    unsigned int InsertSource;
-    bool InsertOnOff;
-
-    bool UsePhase;
-    unsigned char Phase;
-    bool PhaseOnOff;
-
-    bool UseMono;
-    unsigned char Mono;
-    bool MonoOnOff;
-
-    bool UseEQ;
-    AXUM_EQ_BAND_PRESET_STRUCT EQBand[6];
-    bool EQOnOff;
-
-    bool UseDynamics;
-    char Dynamics;
-    float DynamicsThreshold;
-    bool DynamicsOnOff;
-    float DownwardExpanderThreshold;
-
-    bool UseModule;
-    float FaderLevel;
-    bool ModuleState;
-
-    bool UseRouting;
-    unsigned char RoutingPreset;
-  } Preset;
+  unsigned int PresetType;
 
   bool Redlight[8];
   bool MonitorMute[16];
@@ -147,6 +151,7 @@ typedef struct
 
 typedef struct
 {
+  unsigned char Use;
   float Level;
   unsigned char On;
   int Balance;
@@ -159,6 +164,10 @@ typedef struct
   unsigned int SourceB;
   unsigned int SourceC;
   unsigned int SourceD;
+  unsigned int SourceAPreset;
+  unsigned int SourceBPreset;
+  unsigned int SourceCPreset;
+  unsigned int SourceDPreset;
   unsigned int InsertSource;
   bool InsertOnOff;
   float Gain;
@@ -171,8 +180,8 @@ typedef struct
   AXUM_EQ_BAND_DATA_STRUCT EQBand[6];
   bool EQOnOff;
 
-  char Dynamics;
-  float DynamicsThreshold;
+  char AGCAmount;
+  float AGCThreshold;
   bool DynamicsOnOff;
   float DownwardExpanderThreshold;
 
@@ -183,13 +192,21 @@ typedef struct
 
 typedef struct
 {
+  unsigned int Console;
   unsigned int TemporySourceLocal;
   unsigned int TemporySourceControlMode[4];
   unsigned int SelectedSource;
+  unsigned int TemporyPresetLocal;
+  unsigned int TemporyPresetControlMode[4];
+  unsigned int SelectedPreset;
   unsigned int SourceA;
   unsigned int SourceB;
   unsigned int SourceC;
   unsigned int SourceD;
+  unsigned int SourceAPreset;
+  unsigned int SourceBPreset;
+  unsigned int SourceCPreset;
+  unsigned int SourceDPreset;
   unsigned int InsertSource;
   bool InsertOnOff;
   float Gain;
@@ -200,8 +217,8 @@ typedef struct
   AXUM_EQ_BAND_DATA_STRUCT EQBand[6];
   bool EQOnOff;
 
-  char Dynamics;
-  float DynamicsThreshold;
+  char AGCAmount;
+  float AGCThreshold;
   bool DynamicsOnOff;
   float DownwardExpanderThreshold;
 
@@ -277,6 +294,7 @@ typedef struct
   AXUM_DESTINATION_DATA_STRUCT DestinationData[1280];
   AXUM_MODULE_DATA_STRUCT ModuleData[128];
   AXUM_BUSS_MASTER_DATA_STRUCT BussMasterData[16];
+  AXUM_PRESET_DATA_STRUCT PresetData[1280];
 
   int Control1Mode;
   int Control2Mode;
@@ -331,6 +349,19 @@ typedef struct
   src_offset_struct src_offset;
   src_list_struct pos[MAX_POS_LIST_SIZE];
 } matrix_sources_struct;
+
+#define MAX_NR_OF_PRESETS 1280
+typedef struct
+{
+  short int number;
+  int type;
+  unsigned char filled;
+} preset_list_struct;
+
+typedef struct
+{
+  preset_list_struct pos[MAX_NR_OF_PRESETS];
+} preset_pos_struct;
 
 //**************************************************************/
 //MambaNet Node information definitions
@@ -478,9 +509,12 @@ void initialize_axum_data_struct();
 
 ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr);
 
-void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects);
+void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigned char SetAllObjects);
 void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char SetAllObjects);
 
 unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck);
+
+unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset);
+void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength);
 
 #endif

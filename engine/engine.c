@@ -115,6 +115,7 @@ unsigned char MeterFrequency = 5; //20Hz
 
 AXUM_DATA_STRUCT AxumData;
 matrix_sources_struct matrix_sources;
+preset_pos_struct presets;
 
 float SummingdBLevel[48];
 unsigned int BackplaneMambaNetAddress = 0x00000000;
@@ -368,6 +369,9 @@ int main(int argc, char *argv[])
   db_lock(1);
   db_empty_slot_config();
 
+  //Presets
+  db_read_src_preset(1, 1280);
+
   //Source configuration
   db_read_src_config(1, 1280);
 
@@ -593,6 +597,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             {   //Source
               printf("Source\n");
               int CurrentSource = AxumData.ModuleData[ModuleNr].TemporySourceLocal;
+              int CurrentPreset = 0;
 
               if (type == MBN_DATATYPE_SINT)
               {
@@ -601,6 +606,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               else if (type == MBN_DATATYPE_STATE)
               {
                 CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
+                CurrentPreset = AxumData.ModuleData[ModuleNr].SelectedPreset;
 
                 if (data.State)
                 {
@@ -609,21 +615,25 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     case MODULE_FUNCTION_SOURCE_A:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceA;
+                      CurrentPreset = AxumData.ModuleData[ModuleNr].SourceAPreset;
                     }
                     break;
                     case MODULE_FUNCTION_SOURCE_B:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceB;
+                      CurrentPreset = AxumData.ModuleData[ModuleNr].SourceBPreset;
                     }
                     break;
                     case MODULE_FUNCTION_SOURCE_C:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceC;
+                      CurrentPreset = AxumData.ModuleData[ModuleNr].SourceCPreset;
                     }
                     break;
                     case MODULE_FUNCTION_SOURCE_D:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceD;
+                      CurrentPreset = AxumData.ModuleData[ModuleNr].SourceDPreset;
                     }
                     break;
                   }
@@ -631,6 +641,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   if (Axum_MixMinusSourceUsed(CurrentSource-1) != -1)
                   {
                     CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
+                    CurrentPreset = AxumData.ModuleData[ModuleNr].SelectedPreset;
                   }
                 }
               }
@@ -638,6 +649,32 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               if (FunctionNr != MODULE_FUNCTION_SOURCE)
               {
                 SetNewSource(ModuleNr, CurrentSource, 0, 1);
+                if (data.State)
+                {
+                  LoadProcessingPreset(ModuleNr, CurrentPreset, 0);
+                }
+              }
+            }
+            break;
+            case MODULE_FUNCTION_PRESET:
+            {
+              printf("preset\n");
+              int CurrentPreset = AxumData.ModuleData[ModuleNr].TemporyPresetLocal;
+              switch (type)
+              {
+                case MBN_DATATYPE_STATE:
+                {
+                  if (data.SInt)
+                  {
+                    LoadProcessingPreset(ModuleNr, CurrentPreset, 0);
+                  }
+                }
+                break;
+                case MBN_DATATYPE_SINT:
+                {
+                  AxumData.ModuleData[ModuleNr].TemporyPresetLocal = AdjustModulePreset(CurrentPreset, data.SInt);
+                }
+                break;
               }
             }
             break;
@@ -1252,19 +1289,19 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     //                              { //EQ Type A&B
     //                              }
     //                              break;
-            case MODULE_FUNCTION_DYNAMICS_THRESHOLD:
+            case MODULE_FUNCTION_AGC_THRESHOLD:
             { //Dynamics amount
-              printf("Dynamics threshold\n");
+              printf("AGC threshold\n");
               if (type == MBN_DATATYPE_SINT)
               {
-                AxumData.ModuleData[ModuleNr].DynamicsThreshold += ((float)data.SInt/2);
-                if (AxumData.ModuleData[ModuleNr].DynamicsThreshold < -30)
+                AxumData.ModuleData[ModuleNr].AGCThreshold += ((float)data.SInt/2);
+                if (AxumData.ModuleData[ModuleNr].AGCThreshold < -30)
                 {
-                  AxumData.ModuleData[ModuleNr].DynamicsThreshold = -30;
+                  AxumData.ModuleData[ModuleNr].AGCThreshold = -30;
                 }
-                else if (AxumData.ModuleData[ModuleNr].DynamicsThreshold > 0)
+                else if (AxumData.ModuleData[ModuleNr].AGCThreshold > 0)
                 {
-                  AxumData.ModuleData[ModuleNr].DynamicsThreshold = 0;
+                  AxumData.ModuleData[ModuleNr].AGCThreshold = 0;
                 }
                 SetAxum_ModuleProcessing(ModuleNr);
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
@@ -1277,19 +1314,19 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               }
             }
             break;
-            case MODULE_FUNCTION_DYNAMICS_AMOUNT:
+            case MODULE_FUNCTION_AGC_AMOUNT:
             { //Dynamics amount
-              printf("Dynamics\n");
+              printf("AGC Amount\n");
               if (type == MBN_DATATYPE_SINT)
               {
-                AxumData.ModuleData[ModuleNr].Dynamics += data.SInt;
-                if (AxumData.ModuleData[ModuleNr].Dynamics < 0)
+                AxumData.ModuleData[ModuleNr].AGCAmount += data.SInt;
+                if (AxumData.ModuleData[ModuleNr].AGCAmount < 0)
                 {
-                  AxumData.ModuleData[ModuleNr].Dynamics = 0;
+                  AxumData.ModuleData[ModuleNr].AGCAmount = 0;
                 }
-                else if (AxumData.ModuleData[ModuleNr].Dynamics > 100)
+                else if (AxumData.ModuleData[ModuleNr].AGCAmount > 100)
                 {
-                  AxumData.ModuleData[ModuleNr].Dynamics = 100;
+                  AxumData.ModuleData[ModuleNr].AGCAmount = 100;
                 }
                 SetAxum_ModuleProcessing(ModuleNr);
                 CheckObjectsToSent(SensorReceiveFunctionNumber);
@@ -3122,8 +3159,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE)) ||
                      ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF)) ||
-                     ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_DYN_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_1_MODE_DYN_THRESHOLD)) ||
-                     ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD)))
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET))
             { //Control 1 modes
               printf("Control 1 modes\n");
               if (type == MBN_DATATYPE_STATE)
@@ -3140,13 +3178,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF);
                 }
-                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_DYN_THRESHOLD)
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD)
                 {
-                  ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD;
+                  ReceivedControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
                 }
-                else
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD)
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
                 }
 
                 //Set the new control mode number depending on the state
@@ -3183,17 +3225,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       OldFunctionNumber |= (AxumData.Control1Mode+GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE);
                     }
-                    else if (AxumData.Control1Mode<MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD)
+                    else if (AxumData.Control1Mode<MODULE_CONTROL_MODE_AGC_THRESHOLD)
                     {
                       OldFunctionNumber |= ((AxumData.Control1Mode-MODULE_CONTROL_MODE_EQ_ON_OFF)+GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF);
                     }
                     else if (AxumData.Control1Mode<MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)
                     {
-                      OldFunctionNumber |= ((AxumData.Control1Mode-MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_1_MODE_DYN_THRESHOLD);
+                      OldFunctionNumber |= ((AxumData.Control1Mode-MODULE_CONTROL_MODE_AGC_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD);
+                    }
+                    else if (AxumData.Control1Mode<MODULE_CONTROL_MODE_MODULE_PRESET)
+                    {
+                      OldFunctionNumber |= ((AxumData.Control1Mode-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD);
                     }
                     else
                     {
-                      OldFunctionNumber |= ((AxumData.Control1Mode-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD);
+                      OldFunctionNumber |= ((AxumData.Control1Mode-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET);
                     }
                     AxumData.Control1Mode = NewControl1Mode;
                     CheckObjectsToSent(OldFunctionNumber);
@@ -3209,6 +3255,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         AxumData.ModuleData[cntModule].TemporySourceControlMode[0] = AxumData.ModuleData[cntModule].SelectedSource;
                       }
                       break;
+                      case MODULE_CONTROL_MODE_MODULE_PRESET:
+                      {
+                        AxumData.ModuleData[cntModule].TemporyPresetControlMode[0] = AxumData.ModuleData[cntModule].SelectedPreset;
+                      }
+                      break;
                     }
                     unsigned int FunctionNrToSent = (cntModule<<12);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
@@ -3219,8 +3270,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE)) ||
                      ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF)) ||
-                     ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_DYN_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_2_MODE_DYN_THRESHOLD)) ||
-                     ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD)))
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET))
             { //Control 2 modes
               printf("Control 2 modes\n");
               if (type == MBN_DATATYPE_STATE)
@@ -3237,13 +3289,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF);
                 }
-                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_DYN_THRESHOLD)
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD)
                 {
-                  ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD;
+                  ReceivedControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
                 }
-                else
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD)
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
                 }
 
                 if (data.State)
@@ -3280,17 +3336,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       OldFunctionNumber |= (AxumData.Control2Mode+GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE);
                     }
-                    else if (AxumData.Control2Mode<MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD)
+                    else if (AxumData.Control2Mode<MODULE_CONTROL_MODE_AGC_THRESHOLD)
                     {
                       OldFunctionNumber |= ((AxumData.Control2Mode-MODULE_CONTROL_MODE_EQ_ON_OFF)+GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF);
                     }
                     else if (AxumData.Control2Mode<MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)
                     {
-                      OldFunctionNumber |= ((AxumData.Control2Mode-MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_2_MODE_DYN_THRESHOLD);
+                      OldFunctionNumber |= ((AxumData.Control2Mode-MODULE_CONTROL_MODE_AGC_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD);
+                    }
+                    else if (AxumData.Control2Mode<MODULE_CONTROL_MODE_MODULE_PRESET)
+                    {
+                      OldFunctionNumber |= ((AxumData.Control2Mode-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD);
                     }
                     else
                     {
-                      OldFunctionNumber |= ((AxumData.Control2Mode-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD);
+                      OldFunctionNumber |= ((AxumData.Control2Mode-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET);
                     }
 
                     AxumData.Control2Mode = NewControl2Mode;
@@ -3307,6 +3367,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         AxumData.ModuleData[cntModule].TemporySourceControlMode[1] = AxumData.ModuleData[cntModule].SelectedSource;
                       }
                       break;
+                      case MODULE_CONTROL_MODE_MODULE_PRESET:
+                      {
+                        AxumData.ModuleData[cntModule].TemporyPresetControlMode[1] = AxumData.ModuleData[cntModule].SelectedPreset;
+                      }
+                      break;
                     }
                     unsigned int FunctionNrToSent = (cntModule<<12);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
@@ -3317,8 +3382,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE)) ||
                      ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF)) ||
-                     ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_DYN_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_3_MODE_DYN_THRESHOLD)) ||
-                     ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD)))
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET))
             { //Control 3 modes
               printf("Control 3 modes\n");
               if (type == MBN_DATATYPE_STATE)
@@ -3335,13 +3401,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF);
                 }
-                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_DYN_THRESHOLD)
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD)
                 {
-                  ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD;
+                  ReceivedControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
                 }
-                else
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD)
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
                 }
 
                 if (data.State)
@@ -3377,17 +3447,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       OldFunctionNumber |= (AxumData.Control3Mode+GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE);
                     }
-                    else if (AxumData.Control3Mode<MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD)
+                    else if (AxumData.Control3Mode<MODULE_CONTROL_MODE_AGC_THRESHOLD)
                     {
                       OldFunctionNumber |= ((AxumData.Control3Mode-MODULE_CONTROL_MODE_EQ_ON_OFF)+GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF);
                     }
                     else if (AxumData.Control3Mode<MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)
                     {
-                      OldFunctionNumber |= ((AxumData.Control3Mode-MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_3_MODE_DYN_THRESHOLD);
+                      OldFunctionNumber |= ((AxumData.Control3Mode-MODULE_CONTROL_MODE_AGC_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD);
                     }
-                    else
+                    else if (AxumData.Control3Mode<MODULE_CONTROL_MODE_MODULE_PRESET)
                     {
-                      OldFunctionNumber |= ((AxumData.Control3Mode-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD);
+                      OldFunctionNumber |= ((AxumData.Control3Mode-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET);
                     }
 
                     AxumData.Control3Mode = NewControl3Mode;
@@ -3404,6 +3474,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         AxumData.ModuleData[cntModule].TemporySourceControlMode[2] = AxumData.ModuleData[cntModule].SelectedSource;
                       }
                       break;
+                      case MODULE_CONTROL_MODE_MODULE_PRESET:
+                      {
+                        AxumData.ModuleData[cntModule].TemporyPresetControlMode[2] = AxumData.ModuleData[cntModule].SelectedPreset;
+                      }
+                      break;
                     }
                     unsigned int FunctionNrToSent = (cntModule<<12);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
@@ -3414,8 +3489,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2)) ||
                      ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_PAD_ON_OFF)) ||
-                     ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_DYN_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_DYN_THRESHOLD)) ||
-                     ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD)))
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET))
             { //control 4 modes
               printf("Control 4 modes\n");
               if (type == MBN_DATATYPE_STATE)
@@ -3431,13 +3507,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF);
                 }
-                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_DYN_THRESHOLD)
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD)
                 {
-                  ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD;
+                  ReceivedControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
                 }
-                else
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD)
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
                 }
 
                 if (data.State)
@@ -3473,17 +3553,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       OldFunctionNumber |= (AxumData.Control4Mode+GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE);
                     }
-                    else if (AxumData.Control4Mode<MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD)
+                    else if (AxumData.Control4Mode<MODULE_CONTROL_MODE_AGC_THRESHOLD)
                     {
                       OldFunctionNumber |= ((AxumData.Control4Mode-MODULE_CONTROL_MODE_EQ_ON_OFF)+GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF);
                     }
                     else if (AxumData.Control4Mode<MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)
                     {
-                      OldFunctionNumber |= ((AxumData.Control4Mode-MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_4_MODE_DYN_THRESHOLD);
+                      OldFunctionNumber |= ((AxumData.Control4Mode-MODULE_CONTROL_MODE_AGC_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD);
+                    }
+                    else if (AxumData.Control4Mode<MODULE_CONTROL_MODE_MODULE_PRESET)
+                    {
+                      OldFunctionNumber |= ((AxumData.Control4Mode-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD);
                     }
                     else
                     {
-                      OldFunctionNumber |= ((AxumData.Control4Mode-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD);
+                      OldFunctionNumber |= ((AxumData.Control4Mode-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET);
                     }
                     AxumData.Control4Mode = NewControl4Mode;
                     CheckObjectsToSent(OldFunctionNumber);
@@ -3497,6 +3581,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       case MODULE_CONTROL_MODE_SOURCE:
                       {
                         AxumData.ModuleData[cntModule].TemporySourceControlMode[3] = AxumData.ModuleData[cntModule].SelectedSource;
+                      }
+                      break;
+                      case MODULE_CONTROL_MODE_MODULE_PRESET:
+                      {
+                        AxumData.ModuleData[cntModule].TemporyPresetControlMode[3] = AxumData.ModuleData[cntModule].SelectedPreset;
                       }
                       break;
                     }
@@ -3660,7 +3749,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 for (int cntModule=0; cntModule<128; cntModule++)
                 {
                   //Only set differences
-                  LoadSourcePreset(cntModule, false);
+                  //LoadProcessingPreset(cntModule, AxumData.ModuleData[cntModule].CurrentSelectedPreset, false);
                 }
               }
               break;
@@ -6031,9 +6120,9 @@ void SetAxum_ModuleProcessing(unsigned int ModuleNr)
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.Slope = AxumData.ModuleData[ModuleNr].Filter.Slope;
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.Type = AxumData.ModuleData[ModuleNr].Filter.Type;
 
-    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Percent = AxumData.ModuleData[ModuleNr].Dynamics;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Percent = AxumData.ModuleData[ModuleNr].AGCAmount;
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.On = AxumData.ModuleData[ModuleNr].DynamicsOnOff;
-    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Threshold = AxumData.ModuleData[ModuleNr].DynamicsThreshold;
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Threshold = AxumData.ModuleData[ModuleNr].AGCThreshold;
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.DownwardExpanderThreshold = AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold;
   }
   dspcard->data.ChannelData[DSPCardChannelNr+0].PhaseReverse = AxumData.ModuleData[ModuleNr].PhaseOnOff && (AxumData.ModuleData[ModuleNr].Phase&0x01);
@@ -6932,6 +7021,21 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           }
         }
         break;
+        case MODULE_FUNCTION_PRESET:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+              GetPresetLabel(AxumData.ModuleData[ModuleNr].TemporyPresetLocal, LCDText, 8);
+
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+          }
+        }
+        break;
         case MODULE_FUNCTION_SOURCE_A:
         case MODULE_FUNCTION_SOURCE_B:
         case MODULE_FUNCTION_SOURCE_C:
@@ -6948,7 +7052,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 if (AxumData.ModuleData[ModuleNr].SourceA != 0)
                 {
-                  if (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceA)
+                  if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceA) &&
+                      (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceAPreset))
                   {
                     Active = 1;
                   }
@@ -6959,7 +7064,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 if (AxumData.ModuleData[ModuleNr].SourceB != 0)
                 {
-                  if (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceB)
+                  if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceB) &&
+                      (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceBPreset))
                   {
                     Active = 1;
                   }
@@ -6970,7 +7076,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 if (AxumData.ModuleData[ModuleNr].SourceC != 0)
                 {
-                  if (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceC)
+                  if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceC) &&
+                      (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceCPreset))
                   {
                     Active = 1;
                   }
@@ -6981,7 +7088,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 if (AxumData.ModuleData[ModuleNr].SourceD != 0)
                 {
-                  if (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceD)
+                  if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceD) &&
+                      (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceDPreset))
                   {
                     Active = 1;
                   }
@@ -7342,13 +7450,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
     //        {
     //        }
     //        break;
-        case MODULE_FUNCTION_DYNAMICS_THRESHOLD:
+        case MODULE_FUNCTION_AGC_THRESHOLD:
         { //Dynamics threshold
           switch (DataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].DynamicsThreshold);
+              sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].AGCThreshold);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -7356,13 +7464,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           }
         }
         break;
-        case MODULE_FUNCTION_DYNAMICS_AMOUNT:
+        case MODULE_FUNCTION_AGC_AMOUNT:
         { //Dynamics amount
           switch (DataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "  %3d%%  ", AxumData.ModuleData[ModuleNr].Dynamics);
+              sprintf(LCDText, "  %3d%%  ", AxumData.ModuleData[ModuleNr].AGCAmount);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -8485,8 +8593,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         }
         else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE)) ||
                  ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_DYN_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_1_MODE_DYN_THRESHOLD)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD)))
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET))
         { //Control 1 mode
           unsigned char CorrespondingControlMode;
           if (FunctionNr < GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE)
@@ -8497,13 +8606,17 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF);
           }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_DYN_THRESHOLD)
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD)
           {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD;
+            CorrespondingControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
           }
-          else
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD)
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
+          }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
           }
 
           if (AxumData.Control1Mode == CorrespondingControlMode)
@@ -8516,8 +8629,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         }
         else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE)) ||
                  ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_DYN_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_2_MODE_DYN_THRESHOLD)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD)))
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET))
         { //Control 2 mode
           unsigned char CorrespondingControlMode;
           if (FunctionNr < GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE)
@@ -8528,13 +8642,17 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF);
           }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_DYN_THRESHOLD)
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD)
           {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD;
+            CorrespondingControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
           }
-          else
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD)
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
+          }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
           }
 
           if (AxumData.Control2Mode == CorrespondingControlMode)
@@ -8547,8 +8665,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         }
         else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE)) ||
                  ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_DYN_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_3_MODE_DYN_THRESHOLD)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD)))
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET))
         { //Control 3 mode
           unsigned char CorrespondingControlMode;
           if (FunctionNr < GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE)
@@ -8559,13 +8678,17 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF);
           }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_DYN_THRESHOLD)
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD)
           {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD;
+            CorrespondingControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
           }
-          else
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD)
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
+          }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
           }
 
           if (AxumData.Control3Mode == CorrespondingControlMode)
@@ -8578,8 +8701,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         }
         else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2)) ||
                  ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_PAD_ON_OFF)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_DYN_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_DYN_THRESHOLD)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD)))
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET))
         { //Control 4 mode
           unsigned char CorrespondingControlMode;
           if (FunctionNr < GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2)
@@ -8590,13 +8714,17 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF);
           }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_DYN_THRESHOLD)
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD)
           {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD;
+            CorrespondingControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
           }
-          else
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD)
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
+          }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
           }
 
           if (AxumData.Control4Mode == CorrespondingControlMode)
@@ -9765,6 +9893,23 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_4_LABEL);
       }
       break;
+      case MODULE_CONTROL_MODE_MODULE_PRESET:
+      {
+        int CurrentPreset = AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr];
+        AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr] = AdjustModulePreset(CurrentPreset, data.SInt);
+
+        unsigned int DisplayFunctionNr = (ModuleNr<<12);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_PRESET);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_2);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_3);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_4);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1_LABEL);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_2_LABEL);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_3_LABEL);
+        CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_4_LABEL);
+      }
+      break;
       case MODULE_CONTROL_MODE_SOURCE_GAIN:
       {   //Source gain
         if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
@@ -9997,16 +10142,16 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         CheckObjectsToSent(DisplayFunctionNr);
       }
       break;
-      case MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD:
+      case MODULE_CONTROL_MODE_AGC_THRESHOLD:
       {   //Dynamics
-        AxumData.ModuleData[ModuleNr].DynamicsThreshold += ((float)data.SInt/2);
-        if (AxumData.ModuleData[ModuleNr].DynamicsThreshold < -30)
+        AxumData.ModuleData[ModuleNr].AGCThreshold += ((float)data.SInt/2);
+        if (AxumData.ModuleData[ModuleNr].AGCThreshold < -30)
         {
-          AxumData.ModuleData[ModuleNr].DynamicsThreshold = -30;
+          AxumData.ModuleData[ModuleNr].AGCThreshold = -30;
         }
-        else if (AxumData.ModuleData[ModuleNr].DynamicsThreshold > 0)
+        else if (AxumData.ModuleData[ModuleNr].AGCThreshold > 0)
         {
-          AxumData.ModuleData[ModuleNr].DynamicsThreshold = 0;
+          AxumData.ModuleData[ModuleNr].AGCThreshold = 0;
         }
         SetAxum_ModuleProcessing(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
@@ -10015,20 +10160,20 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-        unsigned int DisplayFunctionNr = (ModuleNr<<12) | MODULE_FUNCTION_DYNAMICS_THRESHOLD;
+        unsigned int DisplayFunctionNr = (ModuleNr<<12) | MODULE_FUNCTION_AGC_THRESHOLD;
         CheckObjectsToSent(DisplayFunctionNr);
       }
       break;
-      case MODULE_CONTROL_MODE_DYNAMICS:
-      {   //Dynamics
-        AxumData.ModuleData[ModuleNr].Dynamics += data.SInt;
-        if (AxumData.ModuleData[ModuleNr].Dynamics < 0)
+      case MODULE_CONTROL_MODE_AGC:
+      {   //AGC
+        AxumData.ModuleData[ModuleNr].AGCAmount += data.SInt;
+        if (AxumData.ModuleData[ModuleNr].AGCAmount < 0)
         {
-          AxumData.ModuleData[ModuleNr].Dynamics = 0;
+          AxumData.ModuleData[ModuleNr].AGCAmount = 0;
         }
-        else if (AxumData.ModuleData[ModuleNr].Dynamics > 100)
+        else if (AxumData.ModuleData[ModuleNr].AGCAmount > 100)
         {
-          AxumData.ModuleData[ModuleNr].Dynamics = 100;
+          AxumData.ModuleData[ModuleNr].AGCAmount = 100;
         }
         SetAxum_ModuleProcessing(ModuleNr);
         unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
@@ -10037,7 +10182,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-        unsigned int DisplayFunctionNr = (ModuleNr<<12) | MODULE_FUNCTION_DYNAMICS_AMOUNT;
+        unsigned int DisplayFunctionNr = (ModuleNr<<12) | MODULE_FUNCTION_AGC_AMOUNT;
         CheckObjectsToSent(DisplayFunctionNr);
       }
       break;
@@ -10328,6 +10473,11 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_4_LABEL);
         }
         break;
+        case MODULE_CONTROL_MODE_MODULE_PRESET:
+        {
+          LoadProcessingPreset(ModuleNr, AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr], 0);
+        }
+        break;
         case MODULE_CONTROL_MODE_SOURCE_GAIN:
         {   //Source gain
           if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
@@ -10503,7 +10653,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           CheckObjectsToSent(FunctionNrToSent);
         }
         break;
-        case MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD:
+        case MODULE_CONTROL_MODE_AGC_THRESHOLD:
         {   //Dynamics
           AxumData.ModuleData[ModuleNr].DynamicsOnOff = !AxumData.ModuleData[ModuleNr].DynamicsOnOff;
           SetAxum_ModuleProcessing(ModuleNr);
@@ -10518,7 +10668,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           CheckObjectsToSent(FunctionNrToSent);
         }
         break;
-        case MODULE_CONTROL_MODE_DYNAMICS:
+        case MODULE_CONTROL_MODE_AGC:
         {   //Dynamics
           AxumData.ModuleData[ModuleNr].DynamicsOnOff = !AxumData.ModuleData[ModuleNr].DynamicsOnOff;
           SetAxum_ModuleProcessing(ModuleNr);
@@ -10834,6 +10984,11 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
       GetSourceLabel(AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr], LCDText, 8);
     }
     break;
+    case MODULE_CONTROL_MODE_MODULE_PRESET:
+    {
+      GetPresetLabel(AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr], LCDText, 8);
+    }
+    break;
     case MODULE_CONTROL_MODE_SOURCE_GAIN:
     {
       if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
@@ -10993,14 +11148,14 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
       }
     }
     break;
-    case MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD:
+    case MODULE_CONTROL_MODE_AGC_THRESHOLD:
     {
-      sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].DynamicsThreshold);
+      sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].AGCThreshold);
     }
     break;
-    case MODULE_CONTROL_MODE_DYNAMICS:
+    case MODULE_CONTROL_MODE_AGC:
     {
-      sprintf(LCDText, "  %3d%%  ", AxumData.ModuleData[ModuleNr].Dynamics);
+      sprintf(LCDText, "  %3d%%  ", AxumData.ModuleData[ModuleNr].AGCAmount);
     }
     break;
     case MODULE_CONTROL_MODE_EXPANDER_THRESHOLD:
@@ -11294,6 +11449,18 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
       }
     }
     break;
+    case MODULE_CONTROL_MODE_MODULE_PRESET:
+    {
+      if (AxumData.ModuleData[ModuleNr].SelectedPreset != AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr])
+      {
+        sprintf(LCDText," Preset ");
+      }
+      else
+      {
+        sprintf(LCDText,">Preset<");
+      }
+    }
+    break;
     case MODULE_CONTROL_MODE_SOURCE_GAIN:
     {
       sprintf(LCDText,"Src gain");
@@ -11358,12 +11525,12 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
       sprintf(LCDText,"EQ%d type", BandNr+1);
     }
     break;
-    case MODULE_CONTROL_MODE_DYNAMICS_THRESHOLD:
+    case MODULE_CONTROL_MODE_AGC_THRESHOLD:
     {
       sprintf(LCDText," AGC Th ");
     }
     break;
-    case MODULE_CONTROL_MODE_DYNAMICS:
+    case MODULE_CONTROL_MODE_AGC:
     {
       sprintf(LCDText,"  AGC   ");
     }
@@ -12235,7 +12402,7 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
           check_for_next_pos = 0;
 
           CurrentPos++;
-          if (CurrentPos>MAX_POS_LIST_SIZE)
+          if (CurrentPos>=MAX_POS_LIST_SIZE)
           {
             CurrentPos = 0;
           }
@@ -12269,7 +12436,7 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
           CurrentPos--;
           if (CurrentPos<0)
           {
-            CurrentPos = MAX_POS_LIST_SIZE;
+            CurrentPos = MAX_POS_LIST_SIZE-1;
           }
 
           CurrentSource = matrix_sources.pos[CurrentPos].src;
@@ -12317,9 +12484,6 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
       AxumData.ModuleData[ModuleNr].SelectedSource = NewSource;
       AxumData.ModuleData[ModuleNr].Cough = 0;
 
-      //eventual 'reset' set a preset?
-      LoadSourcePreset(ModuleNr, Forced);
-
       SetAxum_ModuleSource(ModuleNr);
       SetAxum_ModuleMixMinus(ModuleNr, OldSource);
 
@@ -12359,6 +12523,8 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
 
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_A);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_B);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_C);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_D);
 
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_INSERT_ON_OFF);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_FREQUENCY);
@@ -12747,81 +12913,7 @@ void initialize_axum_data_struct()
       AxumData.SourceData[cntSource].InputData[cntInput].MambaNetAddress = 0x00000000;
       AxumData.SourceData[cntSource].InputData[cntInput].SubChannel = -1;
     }
-
-    AxumData.SourceData[cntSource].Preset.UseGain = false;
-    AxumData.SourceData[cntSource].Preset.Gain = 0;
-
-    AxumData.SourceData[cntSource].Preset.UseFilter = false;
-    AxumData.SourceData[cntSource].Preset.Filter.Level = 0;
-    AxumData.SourceData[cntSource].Preset.Filter.Frequency = 80;
-    AxumData.SourceData[cntSource].Preset.Filter.Bandwidth = 1;
-    AxumData.SourceData[cntSource].Preset.Filter.Slope = 1;
-    AxumData.SourceData[cntSource].Preset.Filter.Type = HPF;
-    AxumData.SourceData[cntSource].Preset.FilterOnOff = false;
-
-    AxumData.SourceData[cntSource].Preset.UseInsert = false;
-    AxumData.SourceData[cntSource].Preset.InsertSource = 0;
-    AxumData.SourceData[cntSource].Preset.InsertOnOff = false;
-
-    AxumData.SourceData[cntSource].Preset.UsePhase = false;
-    AxumData.SourceData[cntSource].Preset.Phase = 0x03;
-    AxumData.SourceData[cntSource].Preset.PhaseOnOff = false;
-
-    AxumData.SourceData[cntSource].Preset.UseMono = false;
-    AxumData.SourceData[cntSource].Preset.Mono = 0;
-    AxumData.SourceData[cntSource].Preset.MonoOnOff = false;
-
-    AxumData.SourceData[cntSource].Preset.UseEQ = false;
-
-    AxumData.SourceData[cntSource].Preset.EQBand[0].Level = 0;
-    AxumData.SourceData[cntSource].Preset.EQBand[0].Frequency = 12000;
-    AxumData.SourceData[cntSource].Preset.EQBand[0].Bandwidth = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[0].Slope = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[0].Type = PEAKINGEQ;
-
-    AxumData.SourceData[cntSource].Preset.EQBand[1].Level = 0;
-    AxumData.SourceData[cntSource].Preset.EQBand[1].Frequency = 4000;
-    AxumData.SourceData[cntSource].Preset.EQBand[1].Bandwidth = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[1].Slope = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[1].Type = PEAKINGEQ;
-
-    AxumData.SourceData[cntSource].Preset.EQBand[2].Level = 0;
-    AxumData.SourceData[cntSource].Preset.EQBand[2].Frequency = 800;
-    AxumData.SourceData[cntSource].Preset.EQBand[2].Bandwidth = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[2].Slope = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[2].Type = PEAKINGEQ;
-
-    AxumData.SourceData[cntSource].Preset.EQBand[3].Level = 0;
-    AxumData.SourceData[cntSource].Preset.EQBand[3].Frequency = 120;
-    AxumData.SourceData[cntSource].Preset.EQBand[3].Bandwidth = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[3].Slope = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[3].Type = LOWSHELF;
-
-    AxumData.SourceData[cntSource].Preset.EQBand[4].Level = 0;
-    AxumData.SourceData[cntSource].Preset.EQBand[4].Frequency = 300;
-    AxumData.SourceData[cntSource].Preset.EQBand[4].Bandwidth = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[4].Slope = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[4].Type = HPF;
-
-    AxumData.SourceData[cntSource].Preset.EQBand[5].Level = 0;
-    AxumData.SourceData[cntSource].Preset.EQBand[5].Frequency = 3000;
-    AxumData.SourceData[cntSource].Preset.EQBand[5].Bandwidth = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[5].Slope = 1;
-    AxumData.SourceData[cntSource].Preset.EQBand[5].Type = LPF;
-    AxumData.SourceData[cntSource].Preset.EQOnOff = false;
-
-    AxumData.SourceData[cntSource].Preset.UseDynamics = false;
-    AxumData.SourceData[cntSource].Preset.Dynamics = 0;
-    AxumData.SourceData[cntSource].Preset.DynamicsThreshold = -20;
-    AxumData.SourceData[cntSource].Preset.DynamicsOnOff = false;
-    AxumData.SourceData[cntSource].Preset.DownwardExpanderThreshold = -20;
-
-    AxumData.SourceData[cntSource].Preset.UseModule = false;
-    AxumData.SourceData[cntSource].Preset.FaderLevel = 0;
-    AxumData.SourceData[cntSource].Preset.ModuleState = false;
-
-    AxumData.SourceData[cntSource].Preset.UseRouting = false;
-    AxumData.SourceData[cntSource].Preset.RoutingPreset = 0;
+    AxumData.SourceData[cntSource].PresetType = 0;
 
     for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
     {
@@ -12837,6 +12929,87 @@ void initialize_axum_data_struct()
     AxumData.SourceData[cntSource].Pad = 0;
     AxumData.SourceData[cntSource].Gain = 30;
     AxumData.SourceData[cntSource].Alert = 0;
+  }
+
+  for (int cntPreset=0; cntPreset<1280; cntPreset++)
+  {
+    AxumData.PresetData[cntPreset].PresetName[0] = 0x00;
+    AxumData.PresetData[cntPreset].Type = 0;
+    //AxumData.PresetData[cntPreset].Pos = 0;
+
+    AxumData.PresetData[cntPreset].UseGain = false;
+    AxumData.PresetData[cntPreset].Gain = 0;
+
+    AxumData.PresetData[cntPreset].UseFilter = false;
+    AxumData.PresetData[cntPreset].Filter.Level = 0;
+    AxumData.PresetData[cntPreset].Filter.Frequency = 80;
+    AxumData.PresetData[cntPreset].Filter.Bandwidth = 1;
+    AxumData.PresetData[cntPreset].Filter.Slope = 1;
+    AxumData.PresetData[cntPreset].Filter.Type = HPF;
+    AxumData.PresetData[cntPreset].FilterOnOff = false;
+
+    AxumData.PresetData[cntPreset].UseInsert = false;
+    AxumData.PresetData[cntPreset].InsertSource = 0;
+    AxumData.PresetData[cntPreset].InsertOnOff = false;
+
+    AxumData.PresetData[cntPreset].UsePhase = false;
+    AxumData.PresetData[cntPreset].Phase = 0x03;
+    AxumData.PresetData[cntPreset].PhaseOnOff = false;
+
+    AxumData.PresetData[cntPreset].UseMono = false;
+    AxumData.PresetData[cntPreset].Mono = 0;
+    AxumData.PresetData[cntPreset].MonoOnOff = false;
+
+    AxumData.PresetData[cntPreset].UseEQ = false;
+
+    AxumData.PresetData[cntPreset].EQBand[0].Level = 0;
+    AxumData.PresetData[cntPreset].EQBand[0].Frequency = 12000;
+    AxumData.PresetData[cntPreset].EQBand[0].Bandwidth = 1;
+    AxumData.PresetData[cntPreset].EQBand[0].Slope = 1;
+    AxumData.PresetData[cntPreset].EQBand[0].Type = PEAKINGEQ;
+
+    AxumData.PresetData[cntPreset].EQBand[1].Level = 0;
+    AxumData.PresetData[cntPreset].EQBand[1].Frequency = 4000;
+    AxumData.PresetData[cntPreset].EQBand[1].Bandwidth = 1;
+    AxumData.PresetData[cntPreset].EQBand[1].Slope = 1;
+    AxumData.PresetData[cntPreset].EQBand[1].Type = PEAKINGEQ;
+
+    AxumData.PresetData[cntPreset].EQBand[2].Level = 0;
+    AxumData.PresetData[cntPreset].EQBand[2].Frequency = 800;
+    AxumData.PresetData[cntPreset].EQBand[2].Bandwidth = 1;
+    AxumData.PresetData[cntPreset].EQBand[2].Slope = 1;
+    AxumData.PresetData[cntPreset].EQBand[2].Type = PEAKINGEQ;
+
+    AxumData.PresetData[cntPreset].EQBand[3].Level = 0;
+    AxumData.PresetData[cntPreset].EQBand[3].Frequency = 120;
+    AxumData.PresetData[cntPreset].EQBand[3].Bandwidth = 1;
+    AxumData.PresetData[cntPreset].EQBand[3].Slope = 1;
+    AxumData.PresetData[cntPreset].EQBand[3].Type = LOWSHELF;
+
+    AxumData.PresetData[cntPreset].EQBand[4].Level = 0;
+    AxumData.PresetData[cntPreset].EQBand[4].Frequency = 300;
+    AxumData.PresetData[cntPreset].EQBand[4].Bandwidth = 1;
+    AxumData.PresetData[cntPreset].EQBand[4].Slope = 1;
+    AxumData.PresetData[cntPreset].EQBand[4].Type = HPF;
+
+    AxumData.PresetData[cntPreset].EQBand[5].Level = 0;
+    AxumData.PresetData[cntPreset].EQBand[5].Frequency = 3000;
+    AxumData.PresetData[cntPreset].EQBand[5].Bandwidth = 1;
+    AxumData.PresetData[cntPreset].EQBand[5].Slope = 1;
+    AxumData.PresetData[cntPreset].EQBand[5].Type = LPF;
+    AxumData.PresetData[cntPreset].EQOnOff = false;
+
+    AxumData.PresetData[cntPreset].UseDynamics = false;
+    AxumData.PresetData[cntPreset].AGCAmount = 0;
+    AxumData.PresetData[cntPreset].AGCThreshold = -20;
+    AxumData.PresetData[cntPreset].DynamicsOnOff = false;
+    AxumData.PresetData[cntPreset].DownwardExpanderThreshold = -30;
+
+    AxumData.PresetData[cntPreset].UseModule = false;
+    AxumData.PresetData[cntPreset].FaderLevel = 0;
+    AxumData.PresetData[cntPreset].ModuleState = false;
+
+    AxumData.PresetData[cntPreset].RoutingPreset = 0;
   }
 
   for (int cntDestination=0; cntDestination<1280; cntDestination++)
@@ -12866,16 +13039,27 @@ void initialize_axum_data_struct()
 
   for (int cntModule=0; cntModule<128; cntModule++)
   {
+    AxumData.ModuleData[cntModule].Console = 0;
     AxumData.ModuleData[cntModule].TemporySourceLocal = 0;
     AxumData.ModuleData[cntModule].TemporySourceControlMode[0]= 0;
     AxumData.ModuleData[cntModule].TemporySourceControlMode[1]= 0;
     AxumData.ModuleData[cntModule].TemporySourceControlMode[2]= 0;
     AxumData.ModuleData[cntModule].TemporySourceControlMode[3]= 0;
     AxumData.ModuleData[cntModule].SelectedSource = 0;
+    AxumData.ModuleData[cntModule].TemporyPresetLocal = 0;
+    AxumData.ModuleData[cntModule].TemporyPresetControlMode[0] = 0;
+    AxumData.ModuleData[cntModule].TemporyPresetControlMode[1] = 0;
+    AxumData.ModuleData[cntModule].TemporyPresetControlMode[2] = 0;
+    AxumData.ModuleData[cntModule].TemporyPresetControlMode[3] = 0;
+    AxumData.ModuleData[cntModule].SelectedPreset = 0;
     AxumData.ModuleData[cntModule].SourceA = 0;
     AxumData.ModuleData[cntModule].SourceB = 0;
     AxumData.ModuleData[cntModule].SourceC = 0;
     AxumData.ModuleData[cntModule].SourceD = 0;
+    AxumData.ModuleData[cntModule].SourceAPreset = 0;
+    AxumData.ModuleData[cntModule].SourceBPreset = 0;
+    AxumData.ModuleData[cntModule].SourceCPreset = 0;
+    AxumData.ModuleData[cntModule].SourceDPreset = 0;
     AxumData.ModuleData[cntModule].InsertSource = 0;
     AxumData.ModuleData[cntModule].InsertOnOff = 0;
     AxumData.ModuleData[cntModule].Gain = 0;
@@ -12928,10 +13112,10 @@ void initialize_axum_data_struct()
 
     AxumData.ModuleData[cntModule].EQOnOff = 1;
 
-    AxumData.ModuleData[cntModule].Dynamics = 0;
-    AxumData.ModuleData[cntModule].DynamicsThreshold = -20;
+    AxumData.ModuleData[cntModule].AGCAmount = 0;
+    AxumData.ModuleData[cntModule].AGCThreshold = -20;
     AxumData.ModuleData[cntModule].DynamicsOnOff = 0;
-    AxumData.ModuleData[cntModule].DownwardExpanderThreshold = -20;
+    AxumData.ModuleData[cntModule].DownwardExpanderThreshold = -30;
 
     AxumData.ModuleData[cntModule].Panorama = 512;
     AxumData.ModuleData[cntModule].Mono = 0x03;
@@ -12956,6 +13140,7 @@ void initialize_axum_data_struct()
 
       for (int cntPreset=0; cntPreset<8; cntPreset++)
       {
+        AxumData.ModuleData[cntModule].RoutingPreset[cntPreset][cntBuss].Use = 0;
         AxumData.ModuleData[cntModule].RoutingPreset[cntPreset][cntBuss].Level = 0; //0dB
         AxumData.ModuleData[cntModule].RoutingPreset[cntPreset][cntBuss].On = 0;
         AxumData.ModuleData[cntModule].RoutingPreset[cntPreset][cntBuss].Balance = 512;
@@ -12967,6 +13152,10 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].Defaults.SourceB = 0;
     AxumData.ModuleData[cntModule].Defaults.SourceC = 0;
     AxumData.ModuleData[cntModule].Defaults.SourceD = 0;
+    AxumData.ModuleData[cntModule].Defaults.SourceAPreset = 0;
+    AxumData.ModuleData[cntModule].Defaults.SourceBPreset = 0;
+    AxumData.ModuleData[cntModule].Defaults.SourceCPreset = 0;
+    AxumData.ModuleData[cntModule].Defaults.SourceDPreset = 0;
     AxumData.ModuleData[cntModule].Defaults.InsertSource = 0;
     AxumData.ModuleData[cntModule].Defaults.InsertOnOff = 0;
     AxumData.ModuleData[cntModule].Defaults.Gain = 0;
@@ -13022,8 +13211,8 @@ void initialize_axum_data_struct()
 
     AxumData.ModuleData[cntModule].Defaults.EQOnOff = 1;
 
-    AxumData.ModuleData[cntModule].Defaults.Dynamics = 0;
-    AxumData.ModuleData[cntModule].Defaults.DynamicsThreshold = -20;
+    AxumData.ModuleData[cntModule].Defaults.AGCAmount = 0;
+    AxumData.ModuleData[cntModule].Defaults.AGCThreshold = -20;
     AxumData.ModuleData[cntModule].Defaults.DynamicsOnOff = 0;
     AxumData.ModuleData[cntModule].Defaults.DownwardExpanderThreshold = -20;
 
@@ -13165,7 +13354,7 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
   return FoundOnlineNodeInformationElement;
 }
 
-void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
+void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigned char SetAllObjects)
 {
   bool SetModuleProcessing = false;
   bool SetModuleControllers = false;
@@ -13184,8 +13373,8 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
 
   bool EQOnOff = AxumData.ModuleData[ModuleNr].EQOnOff;
   AXUM_EQ_BAND_PRESET_STRUCT EQBand[6];
-  int Dynamics = AxumData.ModuleData[ModuleNr].Dynamics;
-  float DynamicsThreshold = AxumData.ModuleData[ModuleNr].DynamicsThreshold;
+  int AGCAmount = AxumData.ModuleData[ModuleNr].AGCAmount;
+  float AGCThreshold = AxumData.ModuleData[ModuleNr].AGCThreshold;
   bool DynamicsOnOff = AxumData.ModuleData[ModuleNr].DynamicsOnOff;
   float DownwardExpanderThreshold = AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold;
   float FaderLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
@@ -13201,17 +13390,15 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
     EQBand[cntEQ].Type = AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Type;
   }
 
-  if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) &&
-      (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
+  if (PresetNr>0)
   {
-    unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-    AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[SourceNr];
+    AXUM_PRESET_DATA_STRUCT *PresetData = &AxumData.PresetData[PresetNr-1];
 
-    if ((SourceData->Preset.UseGain) || (AxumData.UseModuleDefaults))
+    if ((PresetData->UseGain) || (AxumData.UseModuleDefaults))
     {
-      if (SourceData->Preset.UseGain)
+      if (PresetData->UseGain)
       {
-        Gain = SourceData->Preset.Gain;
+        Gain = PresetData->Gain;
       }
       else
       {
@@ -13219,12 +13406,12 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
       }
     }
 
-    if ((SourceData->Preset.UseFilter) || (AxumData.UseModuleDefaults))
+    if ((PresetData->UseFilter) || (AxumData.UseModuleDefaults))
     {
-      if (SourceData->Preset.UseFilter)
+      if (PresetData->UseFilter)
       {
-        Frequency = SourceData->Preset.Filter.Frequency;
-        FilterOnOff = SourceData->Preset.FilterOnOff;
+        Frequency = PresetData->Filter.Frequency;
+        FilterOnOff = PresetData->FilterOnOff;
       }
       else
       {
@@ -13233,12 +13420,12 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
       }
     }
 
-    if ((SourceData->Preset.UseInsert) || (AxumData.UseModuleDefaults))
+    if ((PresetData->UseInsert) || (AxumData.UseModuleDefaults))
     {
-      if (SourceData->Preset.UseInsert)
+      if (PresetData->UseInsert)
       {
-        InsertSource = SourceData->Preset.InsertSource;
-        InsertOnOff = SourceData->Preset.InsertOnOff;
+        InsertSource = PresetData->InsertSource;
+        InsertOnOff = PresetData->InsertOnOff;
       }
       else
       {
@@ -13247,12 +13434,12 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
       }
     }
 
-    if ((SourceData->Preset.UsePhase) || (AxumData.UseModuleDefaults))
+    if ((PresetData->UsePhase) || (AxumData.UseModuleDefaults))
     {
-      if (SourceData->Preset.UsePhase)
+      if (PresetData->UsePhase)
       {
-        Phase = SourceData->Preset.Phase;
-        PhaseOnOff = SourceData->Preset.PhaseOnOff;
+        Phase = PresetData->Phase;
+        PhaseOnOff = PresetData->PhaseOnOff;
       }
       else
       {
@@ -13260,12 +13447,12 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
         PhaseOnOff = AxumData.ModuleData[ModuleNr].Defaults.PhaseOnOff;
       }
     }
-    if ((SourceData->Preset.UseMono) || (AxumData.UseModuleDefaults))
+    if ((PresetData->UseMono) || (AxumData.UseModuleDefaults))
     {
-      if (SourceData->Preset.UseMono)
+      if (PresetData->UseMono)
       {
-        Mono = SourceData->Preset.Mono;
-        MonoOnOff = SourceData->Preset.MonoOnOff;
+        Mono = PresetData->Mono;
+        MonoOnOff = PresetData->MonoOnOff;
       }
       else
       {
@@ -13274,19 +13461,19 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
       }
     }
 
-    if ((SourceData->Preset.UseEQ) || (AxumData.UseModuleDefaults))
+    if ((PresetData->UseEQ) || (AxumData.UseModuleDefaults))
     {
-      if (SourceData->Preset.UseEQ)
+      if (PresetData->UseEQ)
       {
-        EQOnOff = SourceData->Preset.EQOnOff;
+        EQOnOff = PresetData->EQOnOff;
         for (cntEQ=0; cntEQ<6; cntEQ++)
         {
-          EQBand[cntEQ].Range = SourceData->Preset.EQBand[cntEQ].Range;
-          EQBand[cntEQ].Level = SourceData->Preset.EQBand[cntEQ].Level;
-          EQBand[cntEQ].Frequency = SourceData->Preset.EQBand[cntEQ].Frequency;
-          EQBand[cntEQ].Bandwidth = SourceData->Preset.EQBand[cntEQ].Bandwidth;
-          EQBand[cntEQ].Slope = SourceData->Preset.EQBand[cntEQ].Slope;
-          EQBand[cntEQ].Type = SourceData->Preset.EQBand[cntEQ].Type;
+          EQBand[cntEQ].Range = PresetData->EQBand[cntEQ].Range;
+          EQBand[cntEQ].Level = PresetData->EQBand[cntEQ].Level;
+          EQBand[cntEQ].Frequency = PresetData->EQBand[cntEQ].Frequency;
+          EQBand[cntEQ].Bandwidth = PresetData->EQBand[cntEQ].Bandwidth;
+          EQBand[cntEQ].Slope = PresetData->EQBand[cntEQ].Slope;
+          EQBand[cntEQ].Type = PresetData->EQBand[cntEQ].Type;
         }
       }
       else
@@ -13304,30 +13491,30 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
       }
     }
 
-    if ((SourceData->Preset.UseDynamics) || (AxumData.UseModuleDefaults))
+    if ((PresetData->UseDynamics) || (AxumData.UseModuleDefaults))
     {
-      if (SourceData->Preset.UseDynamics)
+      if (PresetData->UseDynamics)
       {
-        Dynamics = SourceData->Preset.Dynamics;
-        DynamicsThreshold = SourceData->Preset.DynamicsThreshold;
-        DynamicsOnOff = SourceData->Preset.DynamicsOnOff;
-        DownwardExpanderThreshold = SourceData->Preset.DownwardExpanderThreshold;
+        AGCAmount = PresetData->AGCAmount;
+        AGCThreshold = PresetData->AGCThreshold;
+        DynamicsOnOff = PresetData->DynamicsOnOff;
+        DownwardExpanderThreshold = PresetData->DownwardExpanderThreshold;
       }
       else
       {
-        Dynamics = AxumData.ModuleData[ModuleNr].Defaults.Dynamics;
-        DynamicsThreshold = AxumData.ModuleData[ModuleNr].Defaults.Dynamics;
+        AGCAmount = AxumData.ModuleData[ModuleNr].Defaults.AGCAmount;
+        AGCThreshold = AxumData.ModuleData[ModuleNr].Defaults.AGCAmount;
         DynamicsOnOff = AxumData.ModuleData[ModuleNr].Defaults.DynamicsOnOff;
         DownwardExpanderThreshold = AxumData.ModuleData[ModuleNr].Defaults.DownwardExpanderThreshold;
       }
     }
 
-    if ((SourceData->Preset.UseModule) || (AxumData.UseModuleDefaults))
+    if ((PresetData->UseModule) || (AxumData.UseModuleDefaults))
     {
-      if (SourceData->Preset.UseModule)
+      if (PresetData->UseModule)
       {
-        FaderLevel = SourceData->Preset.FaderLevel;
-        ModuleState = SourceData->Preset.ModuleState;
+        FaderLevel = PresetData->FaderLevel;
+        ModuleState = PresetData->ModuleState;
       }
       else
       {
@@ -13336,17 +13523,7 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
       }
     }
 
-    if ((SourceData->Preset.UseRouting) || (AxumData.UseModuleDefaults))
-    {
-      if (SourceData->Preset.UseRouting)
-      {
-        LoadRoutingPreset(ModuleNr, SourceData->Preset.RoutingPreset, SetAllObjects);
-      }
-      else
-      {
-        LoadRoutingPreset(ModuleNr, 0, SetAllObjects);
-      }
-    }
+    LoadRoutingPreset(ModuleNr, PresetData->RoutingPreset, SetAllObjects);
   }
   else if (AxumData.UseModuleDefaults)
   {
@@ -13374,13 +13551,23 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
       EQBand[cntEQ].Type = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQ].Type;
     }
     EQOnOff = AxumData.ModuleData[ModuleNr].Defaults.EQOnOff;
-    Dynamics = AxumData.ModuleData[ModuleNr].Defaults.Dynamics;
-    DynamicsThreshold = AxumData.ModuleData[ModuleNr].Defaults.DynamicsThreshold;
+    AGCAmount = AxumData.ModuleData[ModuleNr].Defaults.AGCAmount;
+    AGCThreshold = AxumData.ModuleData[ModuleNr].Defaults.AGCThreshold;
     DynamicsOnOff = AxumData.ModuleData[ModuleNr].Defaults.DynamicsOnOff;
     DownwardExpanderThreshold = AxumData.ModuleData[ModuleNr].Defaults.DownwardExpanderThreshold;
 
     LoadRoutingPreset(ModuleNr, 0, SetAllObjects);
   }
+
+  if (AxumData.ModuleData[ModuleNr].SelectedPreset != PresetNr)
+  {
+    AxumData.ModuleData[ModuleNr].SelectedPreset = PresetNr;
+
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET);
+    SetModuleControllers = true;
+  }
+
 
   //Set if there is a difference
   if ((AxumData.ModuleData[ModuleNr].Gain != Gain) || (SetAllObjects))
@@ -13523,19 +13710,19 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
       SetModuleControllers = true;
     }
   }
-  if ((AxumData.ModuleData[ModuleNr].Dynamics != Dynamics) || (SetAllObjects))
+  if ((AxumData.ModuleData[ModuleNr].AGCAmount != AGCAmount) || (SetAllObjects))
   {
-    AxumData.ModuleData[ModuleNr].Dynamics = Dynamics;
+    AxumData.ModuleData[ModuleNr].AGCAmount = AGCAmount;
     unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_AMOUNT);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_AGC_AMOUNT);
     SetModuleProcessing = true;
     SetModuleControllers = true;
   }
-  if ((AxumData.ModuleData[ModuleNr].DynamicsThreshold != DynamicsThreshold) || (SetAllObjects))
+  if ((AxumData.ModuleData[ModuleNr].AGCThreshold != AGCThreshold) || (SetAllObjects))
   {
-    AxumData.ModuleData[ModuleNr].DynamicsThreshold = DynamicsThreshold;
+    AxumData.ModuleData[ModuleNr].AGCThreshold = AGCThreshold;
     unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_THRESHOLD);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_AGC_THRESHOLD);
     SetModuleProcessing = true;
     SetModuleControllers = true;
   }
@@ -13543,7 +13730,7 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
   {
     AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold = DownwardExpanderThreshold;
     unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_AMOUNT);
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_EXPANDER_THRESHOLD);
     SetModuleProcessing = true;
     SetModuleControllers = true;
   }
@@ -13636,17 +13823,46 @@ void LoadSourcePreset(unsigned char ModuleNr, unsigned char SetAllObjects)
   if (SetModuleControllers)
   {
     unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+
+    if (AxumData.Control1Mode == MODULE_CONTROL_MODE_MODULE_PRESET)
+    {
+      AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[0] = PresetNr;
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1_LABEL);
+    }
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+    if (AxumData.Control2Mode == MODULE_CONTROL_MODE_MODULE_PRESET)
+    {
+      AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[1] = PresetNr;
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2_LABEL);
+    }
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+    if (AxumData.Control3Mode == MODULE_CONTROL_MODE_MODULE_PRESET)
+    {
+      AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[2] = PresetNr;
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3_LABEL);
+    }
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+    if (AxumData.Control4Mode == MODULE_CONTROL_MODE_MODULE_PRESET)
+    {
+      AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[3] = PresetNr;
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4_LABEL);
+    }
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
   }
+
+  unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_A);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_B);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_C);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_D);
 }
 
 void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char SetAllObjects)
 {
   unsigned char cntBuss;
-  AXUM_ROUTING_PRESET_STRUCT *RoutingPreset = AxumData.ModuleData[ModuleNr].RoutingPreset[PresetNr];
+  AXUM_ROUTING_PRESET_STRUCT *SelectedRoutingPreset = AxumData.ModuleData[ModuleNr].RoutingPreset[PresetNr];
+  AXUM_ROUTING_PRESET_STRUCT *DefaultRoutingPreset = AxumData.ModuleData[ModuleNr].RoutingPreset[0];
   bool BussChanged = false;
   bool SetModuleControllers = false;
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
@@ -13657,7 +13873,11 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
     bool On = 0;
     signed int Balance = 512;
     bool PreModuleLevel = 0;
-
+    AXUM_ROUTING_PRESET_STRUCT *RoutingPreset = DefaultRoutingPreset;
+    if (SelectedRoutingPreset[cntBuss].Use)
+    {
+      RoutingPreset = SelectedRoutingPreset;
+    }
     Level = RoutingPreset[cntBuss].Level;
     On = RoutingPreset[cntBuss].On;
     Balance = RoutingPreset[cntBuss].Balance;
@@ -13754,3 +13974,123 @@ unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck)
   }
   return NumberOfObjects;
 }
+
+unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset)
+{
+  char check_for_next_pos;
+
+  int cntPos;
+  int CurrentPos;
+  int PosBefore;
+  int PosAfter;
+
+  //Determin the current position
+  CurrentPos = -1;
+  PosBefore = -1;
+  PosAfter = MAX_NR_OF_PRESETS;
+  for (cntPos=0; cntPos<MAX_NR_OF_PRESETS; cntPos++)
+  {
+    if (presets.pos[cntPos].filled)
+    {
+      if (presets.pos[cntPos].number == (signed short int)CurrentPreset)
+      {
+        CurrentPos = cntPos;
+      }
+      else if (presets.pos[cntPos].number < (signed short int)CurrentPreset)
+      {
+        if (cntPos>PosBefore)
+        {
+          PosBefore = cntPos;
+        }
+      }
+      else if (presets.pos[cntPos].number > (signed short int)CurrentPreset)
+      {
+        if (cntPos<PosAfter)
+        {
+          PosAfter = cntPos;
+        }
+      }
+    }
+  }
+
+  //If current position not found...
+  if (CurrentPos == -1)
+  {
+    if (Offset<0)
+    {
+      CurrentPos = PosBefore;
+    }
+    else
+    {
+      CurrentPos = PosAfter;
+    }
+  }
+
+  if (CurrentPos != -1)
+  {
+    while (Offset != 0)
+    {
+      if (Offset>0)
+      {
+        check_for_next_pos = 1;
+        while (check_for_next_pos)
+        {
+          check_for_next_pos = 0;
+
+          CurrentPos++;
+          if (CurrentPos>=MAX_NR_OF_PRESETS)
+          {
+            CurrentPos = 0;
+          }
+
+          CurrentPreset = presets.pos[CurrentPos].number;
+
+          //not active, go further.
+          if (!presets.pos[CurrentPos].filled)
+          {
+            check_for_next_pos = 1;
+          }
+        }
+        Offset--;
+      }
+      else
+      {
+        check_for_next_pos = 1;
+        while (check_for_next_pos)
+        {
+          check_for_next_pos = 0;
+
+          CurrentPos--;
+          if (CurrentPos<0)
+          {
+            CurrentPos = MAX_NR_OF_PRESETS-1;
+          }
+
+          CurrentPreset = presets.pos[CurrentPos].number;
+
+          //not active, go further.
+          if (!presets.pos[CurrentPos].filled)
+          {
+            check_for_next_pos = 1;
+          }
+        }
+        Offset++;
+      }
+    }
+  }
+
+  return CurrentPreset;
+}
+
+void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength)
+{
+  if (PresetNr == 0)
+  {
+    strncpy(TextString, "None", MaxLength);
+  }
+  else if (PresetNr<MAX_NR_OF_PRESETS)
+  {
+    strncpy(TextString, AxumData.PresetData[PresetNr-1].PresetName, MaxLength);
+  }
+}
+

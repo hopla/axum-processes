@@ -25,6 +25,7 @@ extern int AxumApplicationAndDSPInitialized;
 extern DSP_HANDLER_STRUCT *dsp_handler;
 
 extern matrix_sources_struct matrix_sources;
+extern preset_pos_struct presets;
 
 extern PGconn *sql_conn;
 
@@ -42,6 +43,7 @@ struct sql_notify notifies[] = {
   { (char *)"dest_config_changed",          db_event_dest_config_changed},
   { (char *)"node_config_changed",          db_event_node_config_changed},
   { (char *)"defaults_changed",             db_event_defaults_changed},
+  { (char *)"src_preset_changed",           db_event_src_preset_changed},
 };
 
 double read_minmax(char *mambanet_minmax)
@@ -63,7 +65,7 @@ double read_minmax(char *mambanet_minmax)
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 13, notifies);
+  sql_open(dbstr, 14, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -247,7 +249,7 @@ int db_read_slot_config()
   return 1;
 }
 
-int db_read_src_config(unsigned short int first_src, unsigned short int last_src)
+int db_read_src_preset(unsigned short int first_preset, unsigned short int last_preset)
 {
   char str[2][32];
   const char *params[2];
@@ -261,18 +263,11 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     params[cntParams] = (const char *)str[cntParams];
   }
 
-  sprintf(str[0], "%hd", first_src);
-  sprintf(str[1], "%hd", last_src);
+  sprintf(str[0], "%hd", first_preset);
+  sprintf(str[1], "%hd", last_preset);
 
   PGresult *qres = sql_exec("SELECT number,               \
                                     label,                \
-                                    input1_addr,          \
-                                    input1_sub_ch,        \
-                                    input2_addr,          \
-                                    input2_sub_ch,        \
-                                    input_phantom,        \
-                                    input_pad,            \
-                                    input_gain,           \
                                     use_gain_preset,      \
                                     gain,                 \
                                     use_lc_preset,        \
@@ -326,13 +321,142 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
                                     eq_band_6_type,       \
                                     eq_on_off,            \
                                     use_dyn_preset,       \
-                                    dyn_amount,           \
+                                    d_exp_threshold,      \
+                                    agc_threshold,        \
+                                    agc_amount,           \
                                     dyn_on_off,           \
                                     use_mod_preset,       \
                                     mod_lvl,              \
                                     mod_on_off,           \
-                                    use_routing_preset,   \
-                                    routing_preset,       \
+                                    routing_preset        \
+                                    FROM src_preset       \
+                                    WHERE number>=$1 AND number<=$2", 1, 2, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    unsigned int number;
+    unsigned char PresetNr;
+    int cntField;
+    int cntEQ;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &number);
+
+    AXUM_PRESET_DATA_STRUCT *PresetData = &AxumData.PresetData[number-1];
+
+    strncpy(PresetData->PresetName, PQgetvalue(qres, cntRow, cntField++), 32);
+
+    PresetData->UseGain = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->Gain);
+
+    PresetData->UseFilter = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &PresetData->Filter.Frequency);
+    PresetData->FilterOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    PresetData->UseInsert = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &PresetData->InsertSource);
+    PresetData->InsertOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    PresetData->UsePhase = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &PresetData->Phase);
+    PresetData->PhaseOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    PresetData->UseMono = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &PresetData->Mono);
+    PresetData->MonoOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    PresetData->UseEQ = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    for (cntEQ=0; cntEQ<6; cntEQ++)
+    {
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cntEQ].Range);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cntEQ].Level);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &PresetData->EQBand[cntEQ].Frequency);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cntEQ].Bandwidth);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cntEQ].Slope);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&PresetData->EQBand[cntEQ].Type);
+    }
+    PresetData->EQOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    PresetData->UseDynamics = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->DownwardExpanderThreshold);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->AGCThreshold);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &PresetData->AGCAmount);
+    PresetData->DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    PresetData->UseModule = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->FaderLevel);
+    PresetData->ModuleState = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &PresetNr);
+    PresetData->RoutingPreset = PresetNr-1;
+  }
+  PQclear(qres);
+
+  //get position/type list for presets
+  qres = sql_exec("SELECT number,         \
+                          type            \
+                          FROM src_preset ORDER BY pos", 1, 0, NULL);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  for (int cntPreset=0; cntPreset<MAX_NR_OF_PRESETS; cntPreset++)
+  {
+    presets.pos[cntPreset].filled = 0;
+  }
+  presets.pos[0].number = 0;
+  presets.pos[0].type = 0;
+  presets.pos[0].filled = 1;
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    unsigned int number;
+    int cntField;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &number);
+    presets.pos[cntRow+1].number = number;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &presets.pos[cntRow+1].type);
+    presets.pos[cntRow+1].filled = 1;
+  }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+  return 1;
+}
+
+int db_read_src_config(unsigned short int first_src, unsigned short int last_src)
+{
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
+  int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_src);
+  sprintf(str[1], "%hd", last_src);
+
+  PGresult *qres = sql_exec("SELECT number,               \
+                                    label,                \
+                                    input1_addr,          \
+                                    input1_sub_ch,        \
+                                    input2_addr,          \
+                                    input2_sub_ch,        \
+                                    input_phantom,        \
+                                    input_pad,            \
+                                    input_gain,           \
+                                    preset_type,          \
                                     redlight1,            \
                                     redlight2,            \
                                     redlight3,            \
@@ -368,9 +492,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   {
     unsigned int number;
     unsigned char cntModule;
-    unsigned char PresetNr;
     int cntField;
-    int cntEQ;
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &number);
@@ -387,49 +509,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     SourceData->Phantom = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Pad = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Gain);
-
-    SourceData->Preset.UseGain = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Preset.Gain);
-
-    SourceData->Preset.UseFilter = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->Preset.Filter.Frequency);
-    SourceData->Preset.FilterOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-
-    SourceData->Preset.UseInsert = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->Preset.InsertSource);
-    SourceData->Preset.InsertOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-
-    SourceData->Preset.UsePhase = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->Preset.Phase);
-    SourceData->Preset.PhaseOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-
-    SourceData->Preset.UseMono = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->Preset.Mono);
-    SourceData->Preset.MonoOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-
-    SourceData->Preset.UseEQ = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    for (cntEQ=0; cntEQ<6; cntEQ++)
-    {
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Preset.EQBand[cntEQ].Range);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Preset.EQBand[cntEQ].Level);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->Preset.EQBand[cntEQ].Frequency);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Preset.EQBand[cntEQ].Bandwidth);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Preset.EQBand[cntEQ].Slope);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&SourceData->Preset.EQBand[cntEQ].Type);
-    }
-    SourceData->Preset.EQOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-
-    SourceData->Preset.UseDynamics = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->Preset.Dynamics);
-    SourceData->Preset.DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-
-    SourceData->Preset.UseModule = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Preset.FaderLevel);
-    SourceData->Preset.ModuleState = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-
-    SourceData->Preset.UseRouting = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &PresetNr);
-    SourceData->Preset.RoutingPreset = PresetNr-1;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->PresetType);
 
     SourceData->Redlight[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Redlight[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -460,7 +540,6 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM);
     CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_PAD);
     CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_GAIN);
-
 
     for (cntModule=0; cntModule<128; cntModule++)
     {
@@ -505,10 +584,15 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
   sprintf(str[1], "%hd", last_mod);
 
   PGresult *qres = sql_exec("SELECT number,               \
+                                    console,              \
                                     source_a,             \
                                     source_b,             \
                                     source_c,             \
                                     source_d,             \
+                                    source_a_preset,      \
+                                    source_b_preset,      \
+                                    source_c_preset,      \
+                                    source_d_preset,      \
                                     insert_source,        \
                                     insert_on_off,        \
                                     gain,                 \
@@ -555,85 +639,103 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
                                     eq_band_6_slope,      \
                                     eq_band_6_type,       \
                                     eq_on_off,            \
-                                    dyn_amount,           \
+                                    d_exp_threshold,      \
+                                    agc_threshold,        \
+                                    agc_amount,           \
                                     dyn_on_off,           \
                                     mod_level,            \
                                     mod_on_off,           \
+                                    buss_1_2_use_preset,  \
                                     buss_1_2_level,       \
                                     buss_1_2_on_off,      \
                                     buss_1_2_pre_post,    \
                                     buss_1_2_balance,     \
                                     buss_1_2_assignment,  \
+                                    buss_3_4_use_preset,  \
                                     buss_3_4_level,       \
                                     buss_3_4_on_off,      \
                                     buss_3_4_pre_post,    \
                                     buss_3_4_balance,     \
                                     buss_3_4_assignment,  \
+                                    buss_5_6_use_preset,  \
                                     buss_5_6_level,       \
                                     buss_5_6_on_off,      \
                                     buss_5_6_pre_post,    \
                                     buss_5_6_balance,     \
                                     buss_5_6_assignment,  \
+                                    buss_7_8_use_preset,  \
                                     buss_7_8_level,       \
                                     buss_7_8_on_off,      \
                                     buss_7_8_pre_post,    \
                                     buss_7_8_balance,     \
                                     buss_7_8_assignment,  \
+                                    buss_9_10_use_preset,  \
                                     buss_9_10_level,       \
                                     buss_9_10_on_off,      \
                                     buss_9_10_pre_post,    \
                                     buss_9_10_balance,     \
                                     buss_9_10_assignment,  \
+                                    buss_11_12_use_preset,  \
                                     buss_11_12_level,       \
                                     buss_11_12_on_off,      \
                                     buss_11_12_pre_post,    \
                                     buss_11_12_balance,     \
                                     buss_11_12_assignment,  \
+                                    buss_13_14_use_preset,  \
                                     buss_13_14_level,       \
                                     buss_13_14_on_off,      \
                                     buss_13_14_pre_post,    \
                                     buss_13_14_balance,     \
                                     buss_13_14_assignment,  \
+                                    buss_15_16_use_preset,  \
                                     buss_15_16_level,       \
                                     buss_15_16_on_off,      \
                                     buss_15_16_pre_post,    \
                                     buss_15_16_balance,     \
                                     buss_15_16_assignment,  \
+                                    buss_17_18_use_preset,  \
                                     buss_17_18_level,       \
                                     buss_17_18_on_off,      \
                                     buss_17_18_pre_post,    \
                                     buss_17_18_balance,     \
                                     buss_17_18_assignment,  \
+                                    buss_19_20_use_preset,  \
                                     buss_19_20_level,       \
                                     buss_19_20_on_off,      \
                                     buss_19_20_pre_post,    \
                                     buss_19_20_balance,     \
                                     buss_19_20_assignment,  \
+                                    buss_21_22_use_preset,  \
                                     buss_21_22_level,       \
                                     buss_21_22_on_off,      \
                                     buss_21_22_pre_post,    \
                                     buss_21_22_balance,     \
                                     buss_21_22_assignment,  \
+                                    buss_23_24_use_preset,  \
                                     buss_23_24_level,       \
                                     buss_23_24_on_off,      \
                                     buss_23_24_pre_post,    \
                                     buss_23_24_balance,     \
                                     buss_23_24_assignment,  \
+                                    buss_25_26_use_preset,  \
                                     buss_25_26_level,       \
                                     buss_25_26_on_off,      \
                                     buss_25_26_pre_post,    \
                                     buss_25_26_balance,     \
                                     buss_25_26_assignment,  \
+                                    buss_27_28_use_preset,  \
                                     buss_27_28_level,       \
                                     buss_27_28_on_off,      \
                                     buss_27_28_pre_post,    \
                                     buss_27_28_balance,     \
                                     buss_27_28_assignment,  \
+                                    buss_29_30_use_preset,  \
                                     buss_29_30_level,       \
                                     buss_29_30_on_off,      \
                                     buss_29_30_pre_post,    \
                                     buss_29_30_balance,     \
                                     buss_29_30_assignment,  \
+                                    buss_31_32_use_preset,  \
                                     buss_31_32_level,       \
                                     buss_31_32_on_off,      \
                                     buss_31_32_pre_post,    \
@@ -665,10 +767,15 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[number-1];
       AXUM_DEFAULT_MODULE_DATA_STRUCT *DefaultModuleData = &ModuleData->Defaults;
 
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Console);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceA);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceB);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceC);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceD);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceAPreset);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceBPreset);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceCPreset);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceDPreset);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->InsertSource);
       DefaultModuleData->InsertOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->Gain);
@@ -688,7 +795,9 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&DefaultModuleData->EQBand[cntEQ].Type);
       }
       DefaultModuleData->EQOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DefaultModuleData->Dynamics);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->DownwardExpanderThreshold);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->AGCThreshold);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DefaultModuleData->AGCAmount);
       DefaultModuleData->DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->FaderLevel);
       DefaultModuleData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -698,7 +807,9 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       {
         char OnChar[8];
         char PreChar[8];
+        char UseChar[8];
 
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c}", &UseChar[0], &UseChar[1], &UseChar[2], &UseChar[3], &UseChar[4], &UseChar[5], &UseChar[6], &UseChar[7]);
         sscanf(PQgetvalue(qres, cntRow, cntField++), "{%f,%f,%f,%f,%f,%f,%f,%f}", &ModuleData->RoutingPreset[0][cntBuss].Level,
                                                                                   &ModuleData->RoutingPreset[1][cntBuss].Level,
                                                                                   &ModuleData->RoutingPreset[2][cntBuss].Level,
@@ -711,6 +822,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
         sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c}", &PreChar[0], &PreChar[1], &PreChar[2], &PreChar[3], &PreChar[4], &PreChar[5], &PreChar[6], &PreChar[7]);
         for (int cntPreset=0; cntPreset<8; cntPreset++)
         {
+          ModuleData->RoutingPreset[cntPreset][cntBuss].Use = (UseChar[cntPreset] == 't');
           ModuleData->RoutingPreset[cntPreset][cntBuss].On = (OnChar[cntPreset] == 't');
           ModuleData->RoutingPreset[cntPreset][cntBuss].PreModuleLevel = (PreChar[cntPreset] == 't');
         }
@@ -726,10 +838,13 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
         ModuleData->Buss[cntBuss].Active = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
         //for now initialize with first settings
-        ModuleData->Buss[cntBuss].Level = ModuleData->RoutingPreset[0][cntBuss].Level;
-        ModuleData->Buss[cntBuss].On = ModuleData->RoutingPreset[0][cntBuss].On;
-        ModuleData->Buss[cntBuss].PreModuleLevel = ModuleData->RoutingPreset[0][cntBuss].PreModuleLevel;
-        ModuleData->Buss[cntBuss].Balance = ModuleData->RoutingPreset[0][cntBuss].Balance;
+        if (ModuleData->RoutingPreset[0][cntBuss].Use)
+        {
+          ModuleData->Buss[cntBuss].Level = ModuleData->RoutingPreset[0][cntBuss].Level;
+          ModuleData->Buss[cntBuss].On = ModuleData->RoutingPreset[0][cntBuss].On;
+          ModuleData->Buss[cntBuss].PreModuleLevel = ModuleData->RoutingPreset[0][cntBuss].PreModuleLevel;
+          ModuleData->Buss[cntBuss].Balance = ModuleData->RoutingPreset[0][cntBuss].Balance;
+        }
       }
 
       //Use defaults in current settings
@@ -739,6 +854,10 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       ModuleData->SourceB = DefaultModuleData->SourceB;
       ModuleData->SourceC = DefaultModuleData->SourceC;
       ModuleData->SourceD = DefaultModuleData->SourceD;
+      ModuleData->SourceAPreset = DefaultModuleData->SourceAPreset;
+      ModuleData->SourceBPreset = DefaultModuleData->SourceBPreset;
+      ModuleData->SourceCPreset = DefaultModuleData->SourceCPreset;
+      ModuleData->SourceDPreset = DefaultModuleData->SourceDPreset;
       ModuleData->InsertSource = DefaultModuleData->InsertSource;
       ModuleData->InsertOnOff = DefaultModuleData->InsertOnOff;
       ModuleData->Gain = DefaultModuleData->Gain;
@@ -755,7 +874,9 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       ModuleData->EQBand[4] = DefaultModuleData->EQBand[4];
       ModuleData->EQBand[5] = DefaultModuleData->EQBand[5];
       ModuleData->EQOnOff = DefaultModuleData->EQOnOff;
-      ModuleData->Dynamics = DefaultModuleData->Dynamics;
+      ModuleData->DownwardExpanderThreshold = DefaultModuleData->DownwardExpanderThreshold;
+      ModuleData->AGCThreshold = DefaultModuleData->AGCThreshold;
+      ModuleData->AGCAmount = DefaultModuleData->AGCAmount;
       ModuleData->DynamicsOnOff = DefaultModuleData->DynamicsOnOff;
       ModuleData->Panorama = DefaultModuleData->Panorama;
       ModuleData->FaderLevel = DefaultModuleData->FaderLevel;
@@ -769,6 +890,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
         {
           SetNewSource(ModuleNr, ModuleData->SourceA, 1, 1);
           SetAxum_ModuleInsertSource(ModuleNr);
+          LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1);
 
           //Set fader level and On;
           float NewLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
@@ -844,7 +966,9 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
         SetAxum_ModuleProcessing(ModuleNr);
 
         unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_AMOUNT);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_AGC_AMOUNT);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_AGC_THRESHOLD);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_EXPANDER_THRESHOLD);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_ON_OFF);
 
         SetModeControllers = 1;
@@ -2234,6 +2358,19 @@ void db_event_defaults_changed(char myself, char *arg)
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
 }
+
+void db_event_src_preset_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned short int number;
+
+  sscanf(arg, "%hd", &number);
+  db_read_src_preset(number, number);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
 
 void db_lock(int lock)
 {

@@ -193,6 +193,16 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION src_preset_changed() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('src_preset_changed', OLD.number::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('src_preset_changed', NEW.number::text);
+  END IF;
+  RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
 
 
 
@@ -211,4 +221,6 @@ CREATE TRIGGER monitor_buss_config_notify     AFTER UPDATE ON monitor_buss_confi
 CREATE TRIGGER extern_src_config_notify       AFTER UPDATE ON extern_src_config               FOR EACH ROW EXECUTE PROCEDURE extern_src_config_changed();
 CREATE TRIGGER talkback_config_notify         AFTER UPDATE ON talkback_config                 FOR EACH ROW EXECUTE PROCEDURE talkback_config_changed();
 CREATE TRIGGER global_config_notify           AFTER UPDATE ON global_config                   FOR EACH ROW EXECUTE PROCEDURE global_config_changed();
-CREATE TRIGGER dest_config_notify         AFTER INSERT OR DELETE OR UPDATE ON dest_config FOR EACH ROW EXECUTE PROCEDURE dest_config_changed();
+CREATE TRIGGER dest_config_notify             AFTER INSERT OR DELETE OR UPDATE ON dest_config FOR EACH ROW EXECUTE PROCEDURE dest_config_changed();
+CREATE TRIGGER src_preset_notify              AFTER INSERT OR DELETE OR UPDATE ON src_preset  FOR EACH ROW EXECUTE PROCEDURE src_preset_changed();
+

@@ -7,6 +7,7 @@ void db_open(char *dbstr);
 int db_get_fd();
 int db_get_matrix_sources();
 int db_read_slot_config();
+int db_read_src_preset(unsigned short int first_preset, unsigned short int last_preset);
 int db_read_src_config(unsigned short int first_src, unsigned short int last_src);
 int db_read_module_config(unsigned char first_mod, unsigned char last_mod);
 int db_read_buss_config(unsigned char first_buss, unsigned char last_buss);
@@ -49,5 +50,6 @@ void db_event_global_config_changed(char myself, char *arg);
 void db_event_dest_config_changed(char myself, char *arg);
 void db_event_node_config_changed(char myself, char *arg);
 void db_event_defaults_changed(char myself, char *arg);
+void db_event_src_preset_changed(char myself, char *arg);
 
 #endif
