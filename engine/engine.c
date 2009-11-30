@@ -11676,7 +11676,7 @@ void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsi
   int MasterControlMode = -1;
   int ControlNr = (FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1)/(GLOBAL_FUNCTION_MASTER_CONTROL_2-GLOBAL_FUNCTION_MASTER_CONTROL_1);
 
-  MasterControlMode = AxumData.ControlMode[ControlNr];
+  MasterControlMode = AxumData.MasterControlMode[ControlNr];
 
   if (type == MBN_DATATYPE_UINT)
   {
@@ -11781,7 +11781,7 @@ void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr,
   int MasterControlMode = -1;
   int ControlNr = (FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET)/(GLOBAL_FUNCTION_MASTER_CONTROL_2_RESET-GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET);
 
-  MasterControlMode = AxumData.ControlMode[ControlNr];
+  MasterControlMode = AxumData.MasterControlMode[ControlNr];
 
   if (type == MBN_DATATYPE_STATE)
   {
@@ -11841,7 +11841,7 @@ void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned 
   mbn_data data;
   int ControlNr = (FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1)/(GLOBAL_FUNCTION_MASTER_CONTROL_2-GLOBAL_FUNCTION_MASTER_CONTROL_1);
 
-  MasterControlMode = AxumData.ControlMode[ControlNr];
+  MasterControlMode = AxumData.MasterControlMode[ControlNr];
 
   switch (MasterControlMode)
   {
