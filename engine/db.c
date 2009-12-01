@@ -398,9 +398,7 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
   PQclear(qres);
 
   //get position/type list for presets
-  qres = sql_exec("SELECT number,         \
-                          type            \
-                          FROM src_preset ORDER BY pos", 1, 0, NULL);
+  qres = sql_exec("SELECT number FROM src_preset ORDER BY pos", 1, 0, NULL);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -411,7 +409,6 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
     presets.pos[cntPreset].filled = 0;
   }
   presets.pos[0].number = 0;
-  presets.pos[0].type = 0;
   presets.pos[0].filled = 1;
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
@@ -421,7 +418,6 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &number);
     presets.pos[cntRow+1].number = number;
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &presets.pos[cntRow+1].type);
     presets.pos[cntRow+1].filled = 1;
   }
   PQclear(qres);
@@ -456,7 +452,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
                                     input_phantom,        \
                                     input_pad,            \
                                     input_gain,           \
-                                    preset_type,          \
+                                    default_src_preset,   \
                                     redlight1,            \
                                     redlight2,            \
                                     redlight3,            \
@@ -509,7 +505,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     SourceData->Phantom = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Pad = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Gain);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->PresetType);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->DefaultProcessingPreset);
 
     SourceData->Redlight[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Redlight[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");

@@ -90,7 +90,7 @@ typedef struct
   char SourceName[32];
   AXUM_INPUT_DATA_STRUCT InputData[8];
 
-  unsigned int PresetType;
+  unsigned int DefaultProcessingPreset;
 
   bool Redlight[8];
   bool MonitorMute[16];
@@ -350,7 +350,6 @@ typedef struct
 typedef struct
 {
   short int number;
-  int type;
   unsigned char filled;
 } preset_list_struct;
 

@@ -602,6 +602,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               if (type == MBN_DATATYPE_SINT)
               {
                 CurrentSource = AdjustModuleSource(CurrentSource, data.SInt);
+                AxumData.ModuleData[ModuleNr].TemporySourceLocal = CurrentSource;
               }
               else if (type == MBN_DATATYPE_STATE)
               {
@@ -612,6 +613,15 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   switch (FunctionNr)
                   {
+                    case MODULE_FUNCTION_SOURCE:
+                    {
+                      if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
+                      {
+                        unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+                        CurrentPreset = AxumData.SourceData[SourceNr].DefaultProcessingPreset;
+                      }
+                    }
+                    break;
                     case MODULE_FUNCTION_SOURCE_A:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceA;
@@ -10536,6 +10546,14 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         case MODULE_CONTROL_MODE_SOURCE:
         {
           SetNewSource(ModuleNr, AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr], 0, 1);
+          if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
+          {
+            unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+            if (AxumData.SourceData[SourceNr].DefaultProcessingPreset>0)
+            {
+              LoadProcessingPreset(ModuleNr, AxumData.SourceData[SourceNr].DefaultProcessingPreset, 0);
+            }
+          }
 
           unsigned int DisplayFunctionNr = (ModuleNr<<12);
           CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_LABEL);
@@ -12940,7 +12958,7 @@ void initialize_axum_data_struct()
       AxumData.SourceData[cntSource].InputData[cntInput].MambaNetAddress = 0x00000000;
       AxumData.SourceData[cntSource].InputData[cntInput].SubChannel = -1;
     }
-    AxumData.SourceData[cntSource].PresetType = 0;
+    AxumData.SourceData[cntSource].DefaultProcessingPreset = 0;
 
     for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
     {
