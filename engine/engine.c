@@ -648,10 +648,30 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
               if (FunctionNr != MODULE_FUNCTION_SOURCE)
               {
-                SetNewSource(ModuleNr, CurrentSource, 0, 1);
-                if (data.State)
+                int SourceActive = 0;
+                if (AxumData.ModuleData[ModuleNr].On)
                 {
-                  LoadProcessingPreset(ModuleNr, CurrentPreset, 0);
+                  if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
+                  {
+                    SourceActive = 1;
+                  }
+                }
+
+                if (!SourceActive)
+                {
+                  SetNewSource(ModuleNr, CurrentSource, 0, 1);
+                  if (data.State)
+                  {
+                    LoadProcessingPreset(ModuleNr, CurrentPreset, 0);
+                  }
+                }
+                else
+                {
+                  if (data.State)
+                  {
+                    AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
+                    AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
+                  }
                 }
               }
             }
@@ -696,7 +716,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     }
                     else
                     {
-                      int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                      int delay_time = (SensorReceiveFunction->LastChangedTime-cntMillisecondTimer);
                       if (SensorReceiveFunction->TimeBeforeMomentary>=0)
                       {
                         if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
@@ -12178,24 +12198,44 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
     }
   }
 
+  char ModuleActive = 0;
+  if (AxumData.ModuleData[ModuleNr].On == 1)
+  { //module turned on
+    if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
+    {   //fader open
+      ModuleActive = 1;
+    }
+  }
+
   if (ByModule)
   {
-    if (AxumData.ModuleData[ModuleNr].On == 1)
-    { //module turned on
-      if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
-      {   //fader open
-        //Module active, check global buss reset
-        for (int cntBuss=0; cntBuss<16; cntBuss++)
+    if (ModuleActive)
+    {
+      //Module active, check global buss reset
+      for (int cntBuss=0; cntBuss<16; cntBuss++)
+      {
+        if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Active)
         {
-          if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Active)
+          if (AxumData.BussMasterData[cntBuss].GlobalBussReset)
           {
-            if (AxumData.BussMasterData[cntBuss].GlobalBussReset)
-            {
-              DoAxum_BussReset(cntBuss);
-            }
+            DoAxum_BussReset(cntBuss);
           }
         }
       }
+    }
+  }
+
+  if (!ModuleActive)
+  {
+    if (AxumData.ModuleData[ModuleNr].WaitingSource != -1)
+    {
+      SetNewSource(ModuleNr, AxumData.ModuleData[ModuleNr].WaitingSource, 0, 1);
+      AxumData.ModuleData[ModuleNr].WaitingSource = -1;
+    }
+    if (AxumData.ModuleData[ModuleNr].WaitingProcessingPreset != -1)
+    {
+      LoadProcessingPreset(ModuleNr, AxumData.ModuleData[ModuleNr].WaitingProcessingPreset, 0);
+      AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = -1;
     }
   }
 }
@@ -13047,6 +13087,8 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].SourceBPreset = 0;
     AxumData.ModuleData[cntModule].SourceCPreset = 0;
     AxumData.ModuleData[cntModule].SourceDPreset = 0;
+    AxumData.ModuleData[cntModule].WaitingSource = -1;
+    AxumData.ModuleData[cntModule].WaitingProcessingPreset = -1;
     AxumData.ModuleData[cntModule].InsertSource = 0;
     AxumData.ModuleData[cntModule].InsertOnOff = 0;
     AxumData.ModuleData[cntModule].Gain = 0;

@@ -207,6 +207,8 @@ typedef struct
   unsigned int SourceBPreset;
   unsigned int SourceCPreset;
   unsigned int SourceDPreset;
+  int WaitingSource;
+  int WaitingProcessingPreset;
   unsigned int InsertSource;
   bool InsertOnOff;
   float Gain;
