@@ -447,7 +447,8 @@ CREATE TABLE buss_config (
   on_off boolean NOT NULL DEFAULT TRUE,
   interlock boolean NOT NULL DEFAULT FALSE,
   exclusive boolean NOT NULL DEFAULT FALSE,
-  global_reset boolean NOT NULL DEFAULT FALSE
+  global_reset boolean NOT NULL DEFAULT FALSE,
+  console smallint NOT NULL DEFAULT 1 CHECK(console>=1 AND console<=4)
 );
 
 CREATE TABLE monitor_buss_config (
@@ -471,7 +472,8 @@ CREATE TABLE monitor_buss_config (
   buss_27_28 boolean NOT NULL DEFAULT FALSE,
   buss_29_30 boolean NOT NULL DEFAULT FALSE,
   buss_31_32 boolean NOT NULL DEFAULT FALSE,
-  dim_level float NOT NULL DEFAULT -20.0
+  dim_level float NOT NULL DEFAULT -20.0 CHECK(dim_level>=-140 AND dim_level<=0),
+  console smallint NOT NULL DEFAULT 1 CHECK(console>=1 AND console<=4)
 );
 
 CREATE TABLE extern_src_config (
