@@ -505,7 +505,10 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     SourceData->Phantom = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Pad = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Gain);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->DefaultProcessingPreset);
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->DefaultProcessingPreset) < 0)
+    {
+      SourceData->DefaultProcessingPreset = 0;
+    }
 
     SourceData->Redlight[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Redlight[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -770,10 +773,22 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceB);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceC);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceD);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceAPreset);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceBPreset);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceCPreset);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceDPreset);
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceAPreset) < 0)
+      {
+        DefaultModuleData->SourceAPreset = 0;
+      }
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceBPreset) < 0)
+      {
+        DefaultModuleData->SourceBPreset = 0;
+      }
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceCPreset) < 0)
+      {
+        DefaultModuleData->SourceCPreset = 0;
+      }
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceDPreset) < 0)
+      {
+        DefaultModuleData->SourceDPreset = 0;
+      }
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->InsertSource);
       DefaultModuleData->InsertOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->Gain);
