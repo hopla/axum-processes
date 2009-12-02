@@ -137,7 +137,7 @@ CREATE TABLE src_config (
   input_phantom boolean NOT NULL DEFAULT FALSE,
   input_pad boolean NOT NULL DEFAULT FALSE,
   input_gain float NOT NULL DEFAULT 30 CHECK(input_gain >= 20::double precision AND input_gain <= 75::double precision),
-  default_src_preset smallint NOT NULL DEFAULT 0 CHECK(default_src_preset>=0 AND default_src_preset<=1280),
+  default_src_preset smallint DEFAULT NULL CHECK(default_src_preset>=1 AND default_src_preset<=1280),
   redlight1 boolean NOT NULL DEFAULT FALSE,
   redlight2 boolean NOT NULL DEFAULT FALSE,
   redlight3 boolean NOT NULL DEFAULT FALSE,
@@ -612,14 +612,15 @@ CREATE TABLE src_preset (
 
 -- F O R E I G N   K E Y S
 
-ALTER TABLE node_config   ADD FOREIGN KEY (addr) REFERENCES addresses (addr)         ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE defaults      ADD FOREIGN KEY (addr) REFERENCES addresses (addr)         ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE slot_config   ADD FOREIGN KEY (addr) REFERENCES addresses (addr)         ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE src_config    ADD FOREIGN KEY (input1_addr) REFERENCES addresses (addr)  ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE src_config    ADD FOREIGN KEY (input2_addr) REFERENCES addresses (addr)  ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE dest_config   ADD FOREIGN KEY (output1_addr) REFERENCES addresses (addr) ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE dest_config   ADD FOREIGN KEY (output2_addr) REFERENCES addresses (addr) ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE module_config ADD FOREIGN KEY (source_a_preset) REFERENCES src_preset (number) ON DELETE SET NULL;
-ALTER TABLE module_config ADD FOREIGN KEY (source_b_preset) REFERENCES src_preset (number) ON DELETE SET NULL;
-ALTER TABLE module_config ADD FOREIGN KEY (source_c_preset) REFERENCES src_preset (number) ON DELETE SET NULL;
-ALTER TABLE module_config ADD FOREIGN KEY (source_d_preset) REFERENCES src_preset (number) ON DELETE SET NULL;
+ALTER TABLE node_config   ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE defaults      ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE slot_config   ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE src_config    ADD FOREIGN KEY (input1_addr)        REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE src_config    ADD FOREIGN KEY (input2_addr)        REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE dest_config   ADD FOREIGN KEY (output1_addr)       REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE dest_config   ADD FOREIGN KEY (output2_addr)       REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE module_config ADD FOREIGN KEY (source_a_preset)    REFERENCES src_preset (number) ON DELETE SET NULL;
+ALTER TABLE module_config ADD FOREIGN KEY (source_b_preset)    REFERENCES src_preset (number) ON DELETE SET NULL;
+ALTER TABLE module_config ADD FOREIGN KEY (source_c_preset)    REFERENCES src_preset (number) ON DELETE SET NULL;
+ALTER TABLE module_config ADD FOREIGN KEY (source_d_preset)    REFERENCES src_preset (number) ON DELETE SET NULL;
+ALTER TABLE src_config    ADD FOREIGN KEY (default_src_preset) REFERENCES src_preset (number) ON DELETE SET NULL;
