@@ -76,4 +76,8 @@ INSERT INTO talkback_config (number, source) VALUES (16, 0);
 -- module_config
 
 INSERT INTO module_config (number) SELECT * FROM generate_series(1, 128);
+INSERT INTO routing_preset (mod_number, mod_input) SELECT *, 'A' FROM generate_series(1, 128);
+INSERT INTO routing_preset (mod_number, mod_input) SELECT *, 'B' FROM generate_series(1, 128);
+INSERT INTO routing_preset (mod_number, mod_input) SELECT *, 'C' FROM generate_series(1, 128);
+INSERT INTO routing_preset (mod_number, mod_input) SELECT *, 'D' FROM generate_series(1, 128);
 
