@@ -374,14 +374,22 @@ CREATE TABLE monitor_buss_config (
 
 CREATE TABLE extern_src_config (
   number smallint NOT NULL CHECK(number>=1 AND number<=4) PRIMARY KEY,
-  ext1 smallint NOT NULL,
-  ext2 smallint NOT NULL,
-  ext3 smallint NOT NULL,
-  ext4 smallint NOT NULL,
-  ext5 smallint NOT NULL,
-  ext6 smallint NOT NULL,
-  ext7 smallint NOT NULL,
-  ext8 smallint NOT NULL
+  ext1 smallint NOT NULL DEFAULT 0,
+  ext2 smallint NOT NULL DEFAULT 0,
+  ext3 smallint NOT NULL DEFAULT 0,
+  ext4 smallint NOT NULL DEFAULT 0,
+  ext5 smallint NOT NULL DEFAULT 0,
+  ext6 smallint NOT NULL DEFAULT 0,
+  ext7 smallint NOT NULL DEFAULT 0,
+  ext8 smallint NOT NULL DEFAULT 0,
+  safe1 boolean NOT NULL DEFAULT TRUE,
+  safe2 boolean NOT NULL DEFAULT TRUE,
+  safe3 boolean NOT NULL DEFAULT TRUE,
+  safe4 boolean NOT NULL DEFAULT TRUE,
+  safe5 boolean NOT NULL DEFAULT TRUE,
+  safe6 boolean NOT NULL DEFAULT TRUE,
+  safe7 boolean NOT NULL DEFAULT TRUE,
+  safe8 boolean NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE talkback_config (
@@ -397,14 +405,6 @@ CREATE TABLE global_config (
   use_module_defaults boolean NOT NULL DEFAULT TRUE,
   auto_momentary boolean NOT NULL DEFAULT TRUE,
   startup_state boolean NOT NULL DEFAULT FALSE,
-  routing_preset_1_label varchar(32) NOT NULL DEFAULT 'Default',
-  routing_preset_2_label varchar(32) NOT NULL DEFAULT 'Preset 2',
-  routing_preset_3_label varchar(32) NOT NULL DEFAULT 'Preset 3',
-  routing_preset_4_label varchar(32) NOT NULL DEFAULT 'Preset 4',
-  routing_preset_5_label varchar(32) NOT NULL DEFAULT 'Preset 5',
-  routing_preset_6_label varchar(32) NOT NULL DEFAULT 'Preset 6',
-  routing_preset_7_label varchar(32) NOT NULL DEFAULT 'Preset 7',
-  routing_preset_8_label varchar(32) NOT NULL DEFAULT 'Preset 8'
 );
 
 CREATE TABLE dest_config (
@@ -587,19 +587,53 @@ CREATE TABLE routing_preset (
   PRIMARY KEY(mod_number, mod_input)
 );
 
+CREATE TABLE buss_preset (
+  pos smallint NOT NULL DEFAULT 9999,
+  number smallint NOT NULL CHECK (number>=1 AND number<=1280) PRIMARY KEY,
+  label varchar(32) NOT NULL,
+);
+
+CREATE TABLE buss_preset_rows (
+  number smallint NOT NULL CHECK(number>=1 AND number<=1280),
+  buss smallint NOT NULL CHECK(buss>=1 AND buss<=16),
+  use_preset boolean NOT NULL DEFAULT FALSE,
+  level float NOT NULL DEFAULT 0.0,
+  on_off boolean NOT NULL DEFAULT TRUE,
+  PRIMARY KEY(number, buss)
+);
+
+CREATE TABLE monitor_buss_preset_rows (
+  number smallint NOT NULL CHECK(number>=1 AND number<=1280),
+  monitor_buss smallint NOT NULL CHECK(monitor_buss>=1 AND monitor_buss<=16),
+  use_preset boolean[24] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  on_off boolean[24] NOT NULL DEFAULT ARRAY[FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE],
+  PRIMARY KEY(number, monitor_buss)
+)
+
+CREATE TABLE console_preset (
+  pos smallint NOT NULL DEFAULT 9999,
+  number smallint NOT NULL CHECK(number>=1 AND number<=8) PRIMARY KEY,
+  label varchar(32) NOT NULL DEFAULT 'Preset',
+  input varchar(1) NOT NULL DEFAULT 'A' CHECK(input='A' OR input='B' OR input='C' OR input='D'),
+  buss_preset smallint CHECK(number>=1 AND number<=1280)
+);
 
 
 -- F O R E I G N   K E Y S
 
-ALTER TABLE node_config   ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE defaults      ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE slot_config   ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE src_config    ADD FOREIGN KEY (input1_addr)        REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE src_config    ADD FOREIGN KEY (input2_addr)        REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE dest_config   ADD FOREIGN KEY (output1_addr)       REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE dest_config   ADD FOREIGN KEY (output2_addr)       REFERENCES addresses (addr)    ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE module_config ADD FOREIGN KEY (source_a_preset)    REFERENCES src_preset (number) ON DELETE SET NULL;
-ALTER TABLE module_config ADD FOREIGN KEY (source_b_preset)    REFERENCES src_preset (number) ON DELETE SET NULL;
-ALTER TABLE module_config ADD FOREIGN KEY (source_c_preset)    REFERENCES src_preset (number) ON DELETE SET NULL;
-ALTER TABLE module_config ADD FOREIGN KEY (source_d_preset)    REFERENCES src_preset (number) ON DELETE SET NULL;
-ALTER TABLE src_config    ADD FOREIGN KEY (default_src_preset) REFERENCES src_preset (number) ON DELETE SET NULL;
+ALTER TABLE node_config               ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE defaults                  ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE slot_config               ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE src_config                ADD FOREIGN KEY (input1_addr)        REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE src_config                ADD FOREIGN KEY (input2_addr)        REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE dest_config               ADD FOREIGN KEY (output1_addr)       REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE dest_config               ADD FOREIGN KEY (output2_addr)       REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_a_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_b_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_c_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_d_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
+ALTER TABLE src_config                ADD FOREIGN KEY (default_src_preset) REFERENCES src_preset (number)   ON DELETE SET NULL;
+ALTER TABLE buss_preset_rows          ADD FOREIGN KEY (number)             REFERENCES buss_preset (number)  ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE monitor_buss_preset_rows  ADD FOREIGN KEY (number)             REFERENCES buss_preset (number)  ON DELETE CASCADE ON UPDATE CASCADE;
+
+

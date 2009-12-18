@@ -204,23 +204,71 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION buss_preset_changed() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('buss_preset_changed', OLD.number::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('buss_preset_changed', NEW.number::text);
+  END IF;
+  RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION buss_preset_rows_changed() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('buss_preset_rows_changed', OLD.number::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('buss_preset_rows_changed', NEW.number::text);
+  END IF;
+  RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION monitor_buss_preset_rows_changed() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('monitor_buss_preset_rows_changed', OLD.number::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('monitor_buss_preset_rows_changed', NEW.number::text);
+  END IF;
+  RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION console_preset_changed() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('console_preset_changed', OLD.number::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('console_preset_changed', NEW.number::text);
+  END IF;
+  RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
 
 
 -- T R I G G E R S
 
-CREATE TRIGGER template_change_notify         AFTER DELETE ON templates                       FOR EACH ROW EXECUTE PROCEDURE templates_changed();
-CREATE TRIGGER before_addresses_change_notify BEFORE UPDATE ON addresses                      FOR EACH ROW EXECUTE PROCEDURE before_addresses_change();
-CREATE TRIGGER addresses_change_notify        AFTER DELETE OR UPDATE ON addresses             FOR EACH ROW EXECUTE PROCEDURE addresses_changed();
-CREATE TRIGGER defaults_change_notify         AFTER INSERT OR DELETE OR UPDATE ON defaults    FOR EACH ROW EXECUTE PROCEDURE defaults_changed();
-CREATE TRIGGER node_config_change_notify      AFTER INSERT OR DELETE OR UPDATE ON node_config FOR EACH ROW EXECUTE PROCEDURE node_config_changed();
-CREATE TRIGGER slot_config_notify             AFTER INSERT OR DELETE OR UPDATE ON slot_config FOR EACH ROW EXECUTE PROCEDURE slot_config_changed();
-CREATE TRIGGER src_config_notify              AFTER INSERT OR DELETE OR UPDATE ON src_config  FOR EACH ROW EXECUTE PROCEDURE src_config_changed();
-CREATE TRIGGER module_config_notify           AFTER UPDATE ON module_config                   FOR EACH ROW EXECUTE PROCEDURE module_config_changed();
-CREATE TRIGGER buss_config_notify             AFTER UPDATE ON buss_config                     FOR EACH ROW EXECUTE PROCEDURE buss_config_changed();
-CREATE TRIGGER monitor_buss_config_notify     AFTER UPDATE ON monitor_buss_config             FOR EACH ROW EXECUTE PROCEDURE monitor_buss_config_changed();
-CREATE TRIGGER extern_src_config_notify       AFTER UPDATE ON extern_src_config               FOR EACH ROW EXECUTE PROCEDURE extern_src_config_changed();
-CREATE TRIGGER talkback_config_notify         AFTER UPDATE ON talkback_config                 FOR EACH ROW EXECUTE PROCEDURE talkback_config_changed();
-CREATE TRIGGER global_config_notify           AFTER UPDATE ON global_config                   FOR EACH ROW EXECUTE PROCEDURE global_config_changed();
-CREATE TRIGGER dest_config_notify             AFTER INSERT OR DELETE OR UPDATE ON dest_config FOR EACH ROW EXECUTE PROCEDURE dest_config_changed();
-CREATE TRIGGER src_preset_notify              AFTER INSERT OR DELETE OR UPDATE ON src_preset  FOR EACH ROW EXECUTE PROCEDURE src_preset_changed();
+CREATE TRIGGER template_change_notify           AFTER DELETE ON templates                                     FOR EACH ROW EXECUTE PROCEDURE templates_changed();
+CREATE TRIGGER before_addresses_change_notify   BEFORE UPDATE ON addresses                                    FOR EACH ROW EXECUTE PROCEDURE before_addresses_change();
+CREATE TRIGGER addresses_change_notify          AFTER DELETE OR UPDATE ON addresses                           FOR EACH ROW EXECUTE PROCEDURE addresses_changed();
+CREATE TRIGGER defaults_change_notify           AFTER INSERT OR DELETE OR UPDATE ON defaults                  FOR EACH ROW EXECUTE PROCEDURE defaults_changed();
+CREATE TRIGGER node_config_change_notify        AFTER INSERT OR DELETE OR UPDATE ON node_config               FOR EACH ROW EXECUTE PROCEDURE node_config_changed();
+CREATE TRIGGER slot_config_notify               AFTER INSERT OR DELETE OR UPDATE ON slot_config               FOR EACH ROW EXECUTE PROCEDURE slot_config_changed();
+CREATE TRIGGER src_config_notify                AFTER INSERT OR DELETE OR UPDATE ON src_config                FOR EACH ROW EXECUTE PROCEDURE src_config_changed();
+CREATE TRIGGER module_config_notify             AFTER UPDATE ON module_config                                 FOR EACH ROW EXECUTE PROCEDURE module_config_changed();
+CREATE TRIGGER buss_config_notify               AFTER UPDATE ON buss_config                                   FOR EACH ROW EXECUTE PROCEDURE buss_config_changed();
+CREATE TRIGGER monitor_buss_config_notify       AFTER UPDATE ON monitor_buss_config                           FOR EACH ROW EXECUTE PROCEDURE monitor_buss_config_changed();
+CREATE TRIGGER extern_src_config_notify         AFTER UPDATE ON extern_src_config                             FOR EACH ROW EXECUTE PROCEDURE extern_src_config_changed();
+CREATE TRIGGER talkback_config_notify           AFTER UPDATE ON talkback_config                               FOR EACH ROW EXECUTE PROCEDURE talkback_config_changed();
+CREATE TRIGGER global_config_notify             AFTER UPDATE ON global_config                                 FOR EACH ROW EXECUTE PROCEDURE global_config_changed();
+CREATE TRIGGER dest_config_notify               AFTER INSERT OR DELETE OR UPDATE ON dest_config               FOR EACH ROW EXECUTE PROCEDURE dest_config_changed();
+CREATE TRIGGER src_preset_notify                AFTER INSERT OR DELETE OR UPDATE ON src_preset                FOR EACH ROW EXECUTE PROCEDURE src_preset_changed();
+CREATE TRIGGER buss_preset_notify               AFTER INSERT OR DELETE OR UPDATE ON buss_preset               FOR EACH ROW EXECUTE PROCEDURE buss_preset_changed();
+CREATE TRIGGER buss_preset_rows_notify          AFTER INSERT OR DELETE OR UPDATE ON buss_preset_rows          FOR EACH ROW EXECUTE PROCEDURE buss_preset_rows_changed();
+CREATE TRIGGER monitor_buss_preset_rows_notify  AFTER INSERT OR DELETE OR UPDATE ON monitor_buss_preset_rows  FOR EACH ROW EXECUTE PROCEDURE monitor_buss_preset_rows_changed();
+CREATE TRIGGER console_preset_notify            AFTER INSERT OR DELETE OR UPDATE ON console_preset            FOR EACH ROW EXECUTE PROCEDURE console_preset_changed();
+
 
