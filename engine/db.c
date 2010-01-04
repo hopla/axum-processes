@@ -9,7 +9,7 @@
 #include <string.h>
 #include <math.h>
 
-//#define LOG_DEBUG_ENABLED
+#define LOG_DEBUG_ENABLED
 
 #ifdef LOG_DEBUG_ENABLED
   #define LOG_DEBUG(...) log_write(__VA_ARGS__)
@@ -30,20 +30,25 @@ extern preset_pos_struct presets;
 extern PGconn *sql_conn;
 
 struct sql_notify notifies[] = {
-  { (char *)"templates_changed",            db_event_templates_changed},
-  { (char *)"address_removed",              db_event_address_removed},
-  { (char *)"slot_config_changed",          db_event_slot_config_changed},
-  { (char *)"src_config_changed",           db_event_src_config_changed},
-  { (char *)"module_config_changed",        db_event_module_config_changed},
-  { (char *)"buss_config_changed",          db_event_buss_config_changed},
-  { (char *)"monitor_buss_config_changed",  db_event_monitor_buss_config_changed},
-  { (char *)"extern_src_config_changed",    db_event_extern_src_config_changed},
-  { (char *)"talkback_config_changed",      db_event_talkback_config_changed},
-  { (char *)"global_config_changed",        db_event_global_config_changed},
-  { (char *)"dest_config_changed",          db_event_dest_config_changed},
-  { (char *)"node_config_changed",          db_event_node_config_changed},
-  { (char *)"defaults_changed",             db_event_defaults_changed},
-  { (char *)"src_preset_changed",           db_event_src_preset_changed},
+  { (char *)"templates_changed",                      db_event_templates_changed},
+  { (char *)"address_removed",                        db_event_address_removed},
+  { (char *)"slot_config_changed",                    db_event_slot_config_changed},
+  { (char *)"src_config_changed",                     db_event_src_config_changed},
+  { (char *)"module_config_changed",                  db_event_module_config_changed},
+  { (char *)"buss_config_changed",                    db_event_buss_config_changed},
+  { (char *)"monitor_buss_config_changed",            db_event_monitor_buss_config_changed},
+  { (char *)"extern_src_config_changed",              db_event_extern_src_config_changed},
+  { (char *)"talkback_config_changed",                db_event_talkback_config_changed},
+  { (char *)"global_config_changed",                  db_event_global_config_changed},
+  { (char *)"dest_config_changed",                    db_event_dest_config_changed},
+  { (char *)"node_config_changed",                    db_event_node_config_changed},
+  { (char *)"defaults_changed",                       db_event_defaults_changed},
+  { (char *)"src_preset_changed",                     db_event_src_preset_changed},
+  { (char *)"routing_preset_changed",                 db_event_routing_preset_changed},
+  { (char *)"buss_preset_changed",                    db_event_buss_preset_changed},
+  { (char *)"buss_preset_rows_changed",               db_event_buss_preset_rows_changed},
+  { (char *)"monitor_buss_preset_rows_changed",       db_event_monitor_buss_preset_rows_changed},
+  { (char *)"console_preset_changed",                 db_event_console_preset_changed},
 };
 
 double read_minmax(char *mambanet_minmax)
@@ -65,7 +70,7 @@ double read_minmax(char *mambanet_minmax)
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 14, notifies);
+  sql_open(dbstr, 19, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -326,9 +331,9 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
                                     agc_amount,           \
                                     dyn_on_off,           \
                                     use_mod_preset,       \
+                                    mod_pan,              \
                                     mod_lvl,              \
-                                    mod_on_off,           \
-                                    routing_preset        \
+                                    mod_on_off            \
                                     FROM src_preset       \
                                     WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
@@ -339,7 +344,6 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     unsigned int number;
-    unsigned char PresetNr;
     int cntField;
     int cntEQ;
 
@@ -389,11 +393,9 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
     PresetData->DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     PresetData->UseModule = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &PresetData->Panorama);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->FaderLevel);
     PresetData->ModuleState = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &PresetNr);
-    PresetData->RoutingPreset = PresetNr-1;
   }
   PQclear(qres);
 
@@ -592,15 +594,21 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
                                     source_b_preset,      \
                                     source_c_preset,      \
                                     source_d_preset,      \
+                                    use_insert_preset,    \
                                     insert_source,        \
                                     insert_on_off,        \
+                                    use_gain_preset,      \
                                     gain,                 \
+                                    use_lc_preset,        \
                                     lc_frequency,         \
                                     lc_on_off,            \
+                                    use_phase_preset,     \
                                     phase,                \
                                     phase_on_off,         \
+                                    use_mono_preset,      \
                                     mono,                 \
                                     mono_on_off,          \
+                                    use_eq_preset,        \
                                     eq_band_1_range,      \
                                     eq_band_1_level,      \
                                     eq_band_1_freq,       \
@@ -638,10 +646,12 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
                                     eq_band_6_slope,      \
                                     eq_band_6_type,       \
                                     eq_on_off,            \
+                                    use_dyn_preset,       \
                                     d_exp_threshold,      \
                                     agc_threshold,        \
                                     agc_amount,           \
                                     dyn_on_off,           \
+                                    use_mod_preset,       \
                                     mod_level,            \
                                     mod_on_off,           \
                                     buss_1_2_use_preset,  \
@@ -789,15 +799,21 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       {
         DefaultModuleData->SourceDPreset = 0;
       }
+      DefaultModuleData->InsertUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->InsertSource);
       DefaultModuleData->InsertOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      DefaultModuleData->GainUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->Gain);
+      DefaultModuleData->FilterUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->Filter.Frequency);
       DefaultModuleData->FilterOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      DefaultModuleData->PhaseUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DefaultModuleData->Phase);
       DefaultModuleData->PhaseOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      DefaultModuleData->MonoUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DefaultModuleData->Mono);
       DefaultModuleData->MonoOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      DefaultModuleData->EQUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       for (cntEQ=0; cntEQ<6; cntEQ++)
       {
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->EQBand[cntEQ].Range);
@@ -808,55 +824,32 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&DefaultModuleData->EQBand[cntEQ].Type);
       }
       DefaultModuleData->EQOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      DefaultModuleData->DynamicsUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->DownwardExpanderThreshold);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->AGCThreshold);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DefaultModuleData->AGCAmount);
       DefaultModuleData->DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      DefaultModuleData->ModuleUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->FaderLevel);
       DefaultModuleData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
       //Next are routing presets and assignment of modules to busses.
       for (cntBuss=0; cntBuss<16; cntBuss++)
       {
-        char OnChar[8];
-        char PreChar[8];
-        char UseChar[8];
+        DefaultModuleData->Buss[cntBuss].Use = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
-        sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c}", &UseChar[0], &UseChar[1], &UseChar[2], &UseChar[3], &UseChar[4], &UseChar[5], &UseChar[6], &UseChar[7]);
-        sscanf(PQgetvalue(qres, cntRow, cntField++), "{%f,%f,%f,%f,%f,%f,%f,%f}", &ModuleData->RoutingPreset[0][cntBuss].Level,
-                                                                                  &ModuleData->RoutingPreset[1][cntBuss].Level,
-                                                                                  &ModuleData->RoutingPreset[2][cntBuss].Level,
-                                                                                  &ModuleData->RoutingPreset[3][cntBuss].Level,
-                                                                                  &ModuleData->RoutingPreset[4][cntBuss].Level,
-                                                                                  &ModuleData->RoutingPreset[5][cntBuss].Level,
-                                                                                  &ModuleData->RoutingPreset[6][cntBuss].Level,
-                                                                                  &ModuleData->RoutingPreset[7][cntBuss].Level);
-        sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c}", &OnChar[0], &OnChar[1], &OnChar[2], &OnChar[3], &OnChar[4], &OnChar[5], &OnChar[6], &OnChar[7]);
-        sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c}", &PreChar[0], &PreChar[1], &PreChar[2], &PreChar[3], &PreChar[4], &PreChar[5], &PreChar[6], &PreChar[7]);
-        for (int cntPreset=0; cntPreset<8; cntPreset++)
-        {
-          ModuleData->RoutingPreset[cntPreset][cntBuss].Use = (UseChar[cntPreset] == 't');
-          ModuleData->RoutingPreset[cntPreset][cntBuss].On = (OnChar[cntPreset] == 't');
-          ModuleData->RoutingPreset[cntPreset][cntBuss].PreModuleLevel = (PreChar[cntPreset] == 't');
-        }
-        sscanf(PQgetvalue(qres, cntRow, cntField++), "{%d,%d,%d,%d,%d,%d,%d,%d}", &ModuleData->RoutingPreset[0][cntBuss].Balance,
-                                                                                  &ModuleData->RoutingPreset[1][cntBuss].Balance,
-                                                                                  &ModuleData->RoutingPreset[2][cntBuss].Balance,
-                                                                                  &ModuleData->RoutingPreset[3][cntBuss].Balance,
-                                                                                  &ModuleData->RoutingPreset[4][cntBuss].Balance,
-                                                                                  &ModuleData->RoutingPreset[5][cntBuss].Balance,
-                                                                                  &ModuleData->RoutingPreset[6][cntBuss].Balance,
-                                                                                  &ModuleData->RoutingPreset[7][cntBuss].Balance);
-
-        ModuleData->Buss[cntBuss].Active = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->Buss[cntBuss].Level);
+        DefaultModuleData->Buss[cntBuss].On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+        DefaultModuleData->Buss[cntBuss].PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->Buss[cntBuss].Balance);
 
         //for now initialize with first settings
-        if (ModuleData->RoutingPreset[0][cntBuss].Use)
+        if (DefaultModuleData->Buss[cntBuss].Use)
         {
-          ModuleData->Buss[cntBuss].Level = ModuleData->RoutingPreset[0][cntBuss].Level;
-          ModuleData->Buss[cntBuss].On = ModuleData->RoutingPreset[0][cntBuss].On;
-          ModuleData->Buss[cntBuss].PreModuleLevel = ModuleData->RoutingPreset[0][cntBuss].PreModuleLevel;
-          ModuleData->Buss[cntBuss].Balance = ModuleData->RoutingPreset[0][cntBuss].Balance;
+          ModuleData->Buss[cntBuss].Level = DefaultModuleData->Buss[cntBuss].Level;
+          ModuleData->Buss[cntBuss].On = DefaultModuleData->Buss[cntBuss].On;
+          ModuleData->Buss[cntBuss].PreModuleLevel = DefaultModuleData->Buss[cntBuss].PreModuleLevel;
+          ModuleData->Buss[cntBuss].Balance = DefaultModuleData->Buss[cntBuss].Balance;
         }
       }
 
@@ -1040,7 +1033,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
   sprintf(str[0], "%hd", first_buss);
   sprintf(str[1], "%hd", last_buss);
 
-  PGresult *qres = sql_exec("SELECT number, label, pre_on, pre_level, pre_balance, level, on_off, interlock, exclusive, global_reset FROM buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
+  PGresult *qres = sql_exec("SELECT number, label, console, pre_on, pre_level, pre_balance, level, on_off, interlock, exclusive, global_reset FROM buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -1055,8 +1048,9 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_BUSS_MASTER_DATA_STRUCT *BussMasterData = &AxumData.BussMasterData[number-1];
-
     strncpy(BussMasterData->Label, PQgetvalue(qres, cntRow, cntField++), 32);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &BussMasterData->Console);
+    BussMasterData->Console--;
     BussMasterData->PreModuleOn = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->PreModuleBalance = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -1113,7 +1107,7 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
   sprintf(str[0], "%hd", first_mon_buss);
   sprintf(str[1], "%hd", last_mon_buss);
 
-  PGresult *qres = sql_exec("SELECT number, label, interlock, default_selection, buss_1_2, buss_3_4, buss_5_6, buss_7_8, buss_9_10, buss_11_12, buss_13_14, buss_15_16, buss_17_18, buss_19_20, buss_21_22, buss_23_24, buss_25_26, buss_27_28, buss_29_30, buss_31_32, dim_level FROM monitor_buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
+  PGresult *qres = sql_exec("SELECT number, label, console, interlock, default_selection, buss_1_2, buss_3_4, buss_5_6, buss_7_8, buss_9_10, buss_11_12, buss_13_14, buss_15_16, buss_17_18, buss_19_20, buss_21_22, buss_23_24, buss_25_26, buss_27_28, buss_29_30, buss_31_32, dim_level FROM monitor_buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -1129,8 +1123,10 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
 
     AXUM_MONITOR_OUTPUT_DATA_STRUCT *MonitorData = &AxumData.Monitor[number-1];
-
     strncpy(MonitorData->Label, PQgetvalue(qres, cntRow, cntField++), 32);
+
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &MonitorData->Console);
+    MonitorData->Console--;
 
     MonitorData->Interlock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &MonitorData->DefaultSelection);
@@ -1183,7 +1179,7 @@ int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_d
   sprintf(str[0], "%hd", first_dsp_card);
   sprintf(str[1], "%hd", last_dsp_card);
 
-  PGresult *qres = sql_exec("SELECT number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8 FROM extern_src_config WHERE number>=$1 AND number<=$2", 1, 2, params);
+  PGresult *qres = sql_exec("SELECT number, ext1, ext2, ext3, ext4, ext5, ext6, ext7, ext8, safe1, safe2, safe3, safe4, safe5, safe6, safe7, safe8 FROM extern_src_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -1203,6 +1199,10 @@ int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_d
     for (cntExternSource=0; cntExternSource<8; cntExternSource++)
     {
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ExternSource->Ext[cntExternSource]);
+    }
+    for (cntExternSource=0; cntExternSource<8; cntExternSource++)
+    {
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ExternSource->InterlockSafe[cntExternSource]);
     }
 
     if (AxumApplicationAndDSPInitialized)
@@ -1263,7 +1263,7 @@ int db_read_global_config()
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve, auto_momentary, use_module_defaults, startup_state FROM global_config", 1, 0, NULL);
+  PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve, auto_momentary, startup_state FROM global_config", 1, 0, NULL);
 
   if (qres == NULL)
   {
@@ -1280,7 +1280,6 @@ int db_read_global_config()
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.Headroom);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.LevelReserve);
     AxumData.AutoMomentary = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    AxumData.UseModuleDefaults = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     AxumData.StartupState = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     if (AxumApplicationAndDSPInitialized)
@@ -2004,6 +2003,323 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   return 1;
 }
 
+int db_read_routing_preset(unsigned char first_mod, unsigned char last_mod)
+{
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
+  int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_mod);
+  sprintf(str[1], "%hd", last_mod);
+
+  PGresult *qres = sql_exec("SELECT mod_number,           \
+                                    mod_input,            \
+                                    buss_1_2_use_preset,  \
+                                    buss_1_2_level,       \
+                                    buss_1_2_on_off,      \
+                                    buss_1_2_pre_post,    \
+                                    buss_1_2_balance,     \
+                                    buss_3_4_use_preset,  \
+                                    buss_3_4_level,       \
+                                    buss_3_4_on_off,      \
+                                    buss_3_4_pre_post,    \
+                                    buss_3_4_balance,     \
+                                    buss_5_6_use_preset,  \
+                                    buss_5_6_level,       \
+                                    buss_5_6_on_off,      \
+                                    buss_5_6_pre_post,    \
+                                    buss_5_6_balance,     \
+                                    buss_7_8_use_preset,  \
+                                    buss_7_8_level,       \
+                                    buss_7_8_on_off,      \
+                                    buss_7_8_pre_post,    \
+                                    buss_7_8_balance,     \
+                                    buss_9_10_use_preset,  \
+                                    buss_9_10_level,       \
+                                    buss_9_10_on_off,      \
+                                    buss_9_10_pre_post,    \
+                                    buss_9_10_balance,     \
+                                    buss_11_12_use_preset,  \
+                                    buss_11_12_level,       \
+                                    buss_11_12_on_off,      \
+                                    buss_11_12_pre_post,    \
+                                    buss_11_12_balance,     \
+                                    buss_13_14_use_preset,  \
+                                    buss_13_14_level,       \
+                                    buss_13_14_on_off,      \
+                                    buss_13_14_pre_post,    \
+                                    buss_13_14_balance,     \
+                                    buss_15_16_use_preset,  \
+                                    buss_15_16_level,       \
+                                    buss_15_16_on_off,      \
+                                    buss_15_16_pre_post,    \
+                                    buss_15_16_balance,     \
+                                    buss_17_18_use_preset,  \
+                                    buss_17_18_level,       \
+                                    buss_17_18_on_off,      \
+                                    buss_17_18_pre_post,    \
+                                    buss_17_18_balance,     \
+                                    buss_19_20_use_preset,  \
+                                    buss_19_20_level,       \
+                                    buss_19_20_on_off,      \
+                                    buss_19_20_pre_post,    \
+                                    buss_19_20_balance,     \
+                                    buss_21_22_use_preset,  \
+                                    buss_21_22_level,       \
+                                    buss_21_22_on_off,      \
+                                    buss_21_22_pre_post,    \
+                                    buss_21_22_balance,     \
+                                    buss_23_24_use_preset,  \
+                                    buss_23_24_level,       \
+                                    buss_23_24_on_off,      \
+                                    buss_23_24_pre_post,    \
+                                    buss_23_24_balance,     \
+                                    buss_25_26_use_preset,  \
+                                    buss_25_26_level,       \
+                                    buss_25_26_on_off,      \
+                                    buss_25_26_pre_post,    \
+                                    buss_25_26_balance,     \
+                                    buss_27_28_use_preset,  \
+                                    buss_27_28_level,       \
+                                    buss_27_28_on_off,      \
+                                    buss_27_28_pre_post,    \
+                                    buss_27_28_balance,     \
+                                    buss_29_30_use_preset,  \
+                                    buss_29_30_level,       \
+                                    buss_29_30_on_off,      \
+                                    buss_29_30_pre_post,    \
+                                    buss_29_30_balance,     \
+                                    buss_31_32_use_preset,  \
+                                    buss_31_32_level,       \
+                                    buss_31_32_on_off,      \
+                                    buss_31_32_pre_post,    \
+                                    buss_31_32_balance      \
+                                    FROM routing_preset     \
+                                    WHERE mod_number>=$1 AND mod_number<=$2 \
+                                    ORDER BY mod_input, mod_number", 1, 2, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    unsigned char input;
+    unsigned int cntField;
+    unsigned char cntBuss;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &input);
+    if ((number>=1) && (number<=128) &&
+        (input>='A') && (number<='D'))
+    {
+      //Next are routing presets and assignment of modules to busses.
+      for (cntBuss=0; cntBuss<16; cntBuss++)
+      {
+        AXUM_ROUTING_PRESET_DATA_STRUCT *RoutingPresetData = &AxumData.ModuleData[number-1].RoutingPreset[input-'A'][cntBuss];
+
+        RoutingPresetData->Use = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &RoutingPresetData->Level);
+        RoutingPresetData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+        RoutingPresetData->PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+        sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &RoutingPresetData->Balance);
+
+        log_write("mod:%d, inp:%d, buss:%d, use:%d, on:%d", number-1, input-'A', cntBuss, RoutingPresetData->Use, RoutingPresetData->On);
+      }
+    }
+  }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
+}
+
+int db_read_buss_preset(unsigned short int first_preset, unsigned short int last_preset)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  LOG_DEBUG("[%s] leave", __func__);
+  return 0;
+  first_preset = 0;
+  last_preset = 0;
+}
+
+int db_read_buss_preset_rows(unsigned short int first_preset, unsigned short int last_preset)
+{
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
+  int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_preset);
+  sprintf(str[1], "%hd", last_preset);
+
+  PGresult *qres = sql_exec("SELECT number,               \
+                                    buss,                 \
+                                    use_preset,           \
+                                    level,                \
+                                    on_off                \
+                                    FROM buss_preset_rows \
+                                    WHERE number>=$1 AND number<=$2 \
+                                    ORDER BY number", 1, 2, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    short int buss;
+    unsigned int cntField;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &buss);
+    AXUM_BUSS_PRESET_DATA_STRUCT *BussPresetData = &AxumData.BussPresetData[number-1][buss-1];
+    BussPresetData->Use = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &BussPresetData->Level);
+    BussPresetData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+  }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
+}
+
+int db_read_monitor_buss_preset_rows(unsigned short int first_preset, unsigned short int last_preset)
+{
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
+  int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_preset);
+  sprintf(str[1], "%hd", last_preset);
+
+  PGresult *qres = sql_exec("SELECT number,                         \
+                                    monitor_buss,                   \
+                                    use_preset,                     \
+                                    on_off                          \
+                                    FROM monitor_buss_preset_rows   \
+                                    WHERE number>=$1 AND number<=$2 \
+                                    ORDER BY number", 1, 2, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    short int monitor_buss;
+    unsigned int cntField;
+    char BoolChar[24];
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &monitor_buss);
+    AXUM_MONITOR_BUSS_PRESET_DATA_STRUCT *MonitorBussPresetData = &AxumData.MonitorBussPresetData[number-1][monitor_buss-1];
+
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c}",
+                                                   &BoolChar[0], &BoolChar[1], &BoolChar[2], &BoolChar[3], &BoolChar[4], &BoolChar[5], &BoolChar[6], &BoolChar[7],
+                                                   &BoolChar[8], &BoolChar[9], &BoolChar[10], &BoolChar[11], &BoolChar[12], &BoolChar[13], &BoolChar[14], &BoolChar[15],
+                                                   &BoolChar[16], &BoolChar[17], &BoolChar[18], &BoolChar[19], &BoolChar[20], &BoolChar[21], &BoolChar[22], &BoolChar[23]);
+    for (int cntBuss=0; cntBuss<24; cntBuss++)
+    {
+      MonitorBussPresetData->Use[cntBuss] = (BoolChar[cntBuss] == 't');
+    }
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "{%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c}",
+                                                   &BoolChar[0], &BoolChar[1], &BoolChar[2], &BoolChar[3], &BoolChar[4], &BoolChar[5], &BoolChar[6], &BoolChar[7],
+                                                   &BoolChar[8], &BoolChar[9], &BoolChar[10], &BoolChar[11], &BoolChar[12], &BoolChar[13], &BoolChar[14], &BoolChar[15],
+                                                   &BoolChar[16], &BoolChar[17], &BoolChar[18], &BoolChar[19], &BoolChar[20], &BoolChar[21], &BoolChar[22], &BoolChar[23]);
+    for (int cntBuss=0; cntBuss<24; cntBuss++)
+    {
+      MonitorBussPresetData->On[cntBuss] = (BoolChar[cntBuss] == 't');
+    }
+  }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
+}
+
+int db_read_console_preset(unsigned short int first_preset, unsigned short int last_preset)
+{
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
+  int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_preset);
+  sprintf(str[1], "%hd", last_preset);
+
+  PGresult *qres = sql_exec("SELECT number,               \
+                                    label,                \
+                                    input,                \
+                                    buss_preset           \
+                                    FROM console_preset   \
+                                    WHERE number>=$1 AND number<=$2 \
+                                    ORDER BY number", 1, 2, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    unsigned int cntField;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+    AXUM_CONSOLE_PRESET_DATA_STRUCT *ConsolePresetData = &AxumData.ConsolePresetData[number-1];
+
+    strncpy(ConsolePresetData->Label, PQgetvalue(qres, cntRow, cntField++), 32);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ConsolePresetData->Input);
+    ConsolePresetData->Input -= 'A';
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &ConsolePresetData->MixMonitorPreset);
+  }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
+}
+
 int db_insert_slot_config(unsigned char slot_nr, unsigned long int addr, unsigned char input_ch_cnt, unsigned char output_ch_cnt)
 {
   char str[4][32];
@@ -2384,6 +2700,65 @@ void db_event_src_preset_changed(char myself, char *arg)
   LOG_DEBUG("[%s] leave", __func__);
 }
 
+void db_event_routing_preset_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned short int number;
+
+  sscanf(arg, "%hd", &number);
+  db_read_routing_preset(number, number);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_buss_preset_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned short int number;
+
+  sscanf(arg, "%hd", &number);
+  db_read_buss_preset(number, number);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_buss_preset_rows_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned short int number;
+
+  sscanf(arg, "%hd", &number);
+  db_read_buss_preset_rows(number, number);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_monitor_buss_preset_rows_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned short int number;
+
+  sscanf(arg, "%hd", &number);
+  db_read_monitor_buss_preset_rows(number, number);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_console_preset_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned short int number;
+
+  sscanf(arg, "%hd", &number);
+  db_read_console_preset(number, number);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
 
 void db_lock(int lock)
 {

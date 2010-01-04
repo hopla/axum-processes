@@ -79,11 +79,30 @@ typedef struct {
   float DownwardExpanderThreshold;
 
   bool UseModule;
+  int Panorama;
   float FaderLevel;
   bool ModuleState;
-
-  unsigned char RoutingPreset;
 } AXUM_PRESET_DATA_STRUCT;
+
+typedef struct
+{
+  bool Use;
+  float Level;
+  bool On;
+} AXUM_BUSS_PRESET_DATA_STRUCT;
+
+typedef struct
+{
+  bool Use[24];
+  bool On[24];
+} AXUM_MONITOR_BUSS_PRESET_DATA_STRUCT;
+
+typedef struct
+{
+  char Label[32];
+  unsigned char Input;
+  short int MixMonitorPreset;
+} AXUM_CONSOLE_PRESET_DATA_STRUCT;
 
 typedef struct
 {
@@ -156,7 +175,7 @@ typedef struct
   unsigned char On;
   int Balance;
   unsigned char PreModuleLevel;
-} AXUM_ROUTING_PRESET_STRUCT;
+} AXUM_ROUTING_PRESET_DATA_STRUCT;
 
 typedef struct
 {
@@ -168,26 +187,43 @@ typedef struct
   unsigned int SourceBPreset;
   unsigned int SourceCPreset;
   unsigned int SourceDPreset;
+
+  bool InsertUsePreset;
   unsigned int InsertSource;
   bool InsertOnOff;
+
+  bool GainUsePreset;
   float Gain;
+
+  bool PhaseUsePreset;
   unsigned char Phase;
   bool PhaseOnOff;
+
+  bool MonoUsePreset;
   unsigned char Mono;
   bool MonoOnOff;
+
+  bool FilterUsePreset;
   AXUM_EQ_BAND_DATA_STRUCT Filter;
   bool FilterOnOff;
+
+  bool EQUsePreset;
   AXUM_EQ_BAND_DATA_STRUCT EQBand[6];
   bool EQOnOff;
 
+  bool DynamicsUsePreset;
   char AGCAmount;
   float AGCThreshold;
   bool DynamicsOnOff;
   float DownwardExpanderThreshold;
 
+  bool ModuleUsePreset;
   int Panorama;
   float FaderLevel;
   bool On;
+
+  AXUM_ROUTING_PRESET_DATA_STRUCT Buss[16];
+
 } AXUM_DEFAULT_MODULE_DATA_STRUCT;
 
 typedef struct
@@ -237,7 +273,7 @@ typedef struct
 
   AXUM_BUSS_DATA_STRUCT Buss[16];
 
-  AXUM_ROUTING_PRESET_STRUCT RoutingPreset[8][16];
+  AXUM_ROUTING_PRESET_DATA_STRUCT RoutingPreset[4][16];
 
   AXUM_DEFAULT_MODULE_DATA_STRUCT Defaults;
 
@@ -246,6 +282,7 @@ typedef struct
 typedef struct
 {
   char Label[32];
+  unsigned char Console;
   bool Interlock;
   char DefaultSelection;
   bool AutoSwitchingBuss[16];
@@ -267,12 +304,14 @@ typedef struct
 typedef struct
 {
   unsigned int Ext[8];
+  unsigned int InterlockSafe[8];
 } AXUM_EXTERN_SOURCE_DATA_STRUCT;
 
 typedef struct
 {
   float Level;
   char Label[32];
+  unsigned char Console;
   bool On;
 
   bool PreModuleOn;
@@ -297,6 +336,9 @@ typedef struct
   AXUM_MODULE_DATA_STRUCT ModuleData[128];
   AXUM_BUSS_MASTER_DATA_STRUCT BussMasterData[16];
   AXUM_PRESET_DATA_STRUCT PresetData[1280];
+  AXUM_BUSS_PRESET_DATA_STRUCT BussPresetData[1280][16];
+  AXUM_MONITOR_BUSS_PRESET_DATA_STRUCT MonitorBussPresetData[1280][16];
+  AXUM_CONSOLE_PRESET_DATA_STRUCT ConsolePresetData[32];
 
   int ControlMode[4];
   int MasterControlMode[4];
@@ -307,7 +349,6 @@ typedef struct
   float Headroom;
   float LevelReserve;
   bool AutoMomentary;
-  bool UseModuleDefaults;
   bool StartupState;
 
   AXUM_MONITOR_OUTPUT_DATA_STRUCT Monitor[16];

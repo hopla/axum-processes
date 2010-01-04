@@ -17,6 +17,12 @@ int db_read_talkback_config(unsigned char first_tb, unsigned char last_tb);
 int db_read_global_config();
 int db_read_dest_config(unsigned short int first_dest, unsigned short int last_dest);
 int db_read_db_to_position();
+int db_read_routing_preset(unsigned char first_mod, unsigned char last_mod);
+int db_read_buss_preset(unsigned short int first_preset, unsigned short int last_preset);
+int db_read_buss_preset_rows(unsigned short int first_preset, unsigned short int last_preset);
+int db_read_monitor_buss_preset_rows(unsigned short int first_preset, unsigned short int last_preset);
+int db_read_console_preset(unsigned short int first_preset, unsigned short int last_preset);
+
 
 int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned char in_powerup_state);
 int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj, bool DoNotCheckDefault);
@@ -51,5 +57,10 @@ void db_event_dest_config_changed(char myself, char *arg);
 void db_event_node_config_changed(char myself, char *arg);
 void db_event_defaults_changed(char myself, char *arg);
 void db_event_src_preset_changed(char myself, char *arg);
+void db_event_routing_preset_changed(char myself, char *arg);
+void db_event_buss_preset_changed(char myself, char *arg);
+void db_event_buss_preset_rows_changed(char myself, char *arg);
+void db_event_monitor_buss_preset_rows_changed(char myself, char *arg);
+void db_event_console_preset_changed(char myself, char *arg);
 
 #endif
