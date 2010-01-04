@@ -232,6 +232,7 @@ CREATE TABLE module_config (
   agc_threshold float NOT NULL DEFAULT -20 CHECK(agc_threshold>=-30 AND agc_threshold<=0),
   dyn_on_off boolean NOT NULL DEFAULT FALSE,
   use_mod_preset boolean NOT NULL DEFAULT FALSE,
+  mod_pan smallint NOT NULL DEFAULT 512 CHECK(mod_pan>=0 AND mod_pan<=1023),
   mod_level float NOT NULL DEFAULT -140 CHECK(mod_level>=-140 AND mod_level<=10),
   mod_on_off boolean NOT NULL DEFAULT FALSE,
   console smallint NOT NULL DEFAULT 1 CHECK(console>=1 AND console<=4),
@@ -402,7 +403,6 @@ CREATE TABLE global_config (
   ext_clock boolean NOT NULL DEFAULT FALSE,
   headroom float NOT NULL DEFAULT 20.0,
   level_reserve float NOT NULL DEFAULT 0.0,
-  use_module_defaults boolean NOT NULL DEFAULT TRUE,
   auto_momentary boolean NOT NULL DEFAULT TRUE,
   startup_state boolean NOT NULL DEFAULT FALSE,
 );
@@ -497,6 +497,7 @@ CREATE TABLE src_preset (
   agc_amount smallint NOT NULL DEFAULT 0 CHECK(agc_amount>=0 AND agc_amount<=100),
   agc_threshold float NOT NULL DEFAULT -20 CHECK(agc_threshold>=-30 AND agc_threshold<=0),
   use_mod_preset boolean NOT NULL DEFAULT FALSE,
+  mod_pan smallint NOT NULL DEFAULT 512 CHECK(mod_pan>=0 AND mod_pan<=1023),
   mod_on_off boolean NOT NULL DEFAULT FALSE,
   mod_lvl float NOT NULL DEFAULT -140 CHECK(mod_lvl>=-140 AND mod_lvl<=10),
 );
@@ -612,7 +613,7 @@ CREATE TABLE monitor_buss_preset_rows (
 
 CREATE TABLE console_preset (
   pos smallint NOT NULL DEFAULT 9999,
-  number smallint NOT NULL CHECK(number>=1 AND number<=8) PRIMARY KEY,
+  number smallint NOT NULL CHECK(number>=1 AND number<=32) PRIMARY KEY,
   label varchar(32) NOT NULL DEFAULT 'Preset',
   input varchar(1) NOT NULL DEFAULT 'A' CHECK(input='A' OR input='B' OR input='C' OR input='D'),
   buss_preset smallint CHECK(number>=1 AND number<=1280)

@@ -204,6 +204,17 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION routing_preset_changed() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO recent_changes (change, arguments) VALUES('routing_preset_changed', OLD.mod_number::text);
+  ELSE
+    INSERT INTO recent_changes (change, arguments) VALUES('routing_preset_changed', NEW.mod_number::text);
+  END IF;
+  RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION buss_preset_changed() RETURNS trigger AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
@@ -266,6 +277,7 @@ CREATE TRIGGER talkback_config_notify           AFTER UPDATE ON talkback_config 
 CREATE TRIGGER global_config_notify             AFTER UPDATE ON global_config                                 FOR EACH ROW EXECUTE PROCEDURE global_config_changed();
 CREATE TRIGGER dest_config_notify               AFTER INSERT OR DELETE OR UPDATE ON dest_config               FOR EACH ROW EXECUTE PROCEDURE dest_config_changed();
 CREATE TRIGGER src_preset_notify                AFTER INSERT OR DELETE OR UPDATE ON src_preset                FOR EACH ROW EXECUTE PROCEDURE src_preset_changed();
+CREATE TRIGGER routing_preset_notify            AFTER INSERT OR DELETE OR UPDATE ON routing_preset            FOR EACH ROW EXECUTE PROCEDURE routing_preset_changed();
 CREATE TRIGGER buss_preset_notify               AFTER INSERT OR DELETE OR UPDATE ON buss_preset               FOR EACH ROW EXECUTE PROCEDURE buss_preset_changed();
 CREATE TRIGGER buss_preset_rows_notify          AFTER INSERT OR DELETE OR UPDATE ON buss_preset_rows          FOR EACH ROW EXECUTE PROCEDURE buss_preset_rows_changed();
 CREATE TRIGGER monitor_buss_preset_rows_notify  AFTER INSERT OR DELETE OR UPDATE ON monitor_buss_preset_rows  FOR EACH ROW EXECUTE PROCEDURE monitor_buss_preset_rows_changed();
