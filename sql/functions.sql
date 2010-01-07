@@ -707,6 +707,39 @@ INSERT INTO functions VALUES ('(4,,381)', 'Reset console 1 to presets', 3, 3);
 INSERT INTO functions VALUES ('(4,,382)', 'Reset console 2 to presets', 3, 3);
 INSERT INTO functions VALUES ('(4,,383)', 'Reset console 3 to presets', 3, 3);
 INSERT INTO functions VALUES ('(4,,384)', 'Reset console 4 to presets', 3, 3);
+INSERT INTO functions VALUES ('(4,,385)', 'Console preset 1', 3, 3);
+INSERT INTO functions VALUES ('(4,,386)', 'Console preset 2', 3, 3);
+INSERT INTO functions VALUES ('(4,,387)', 'Console preset 3', 3, 3);
+INSERT INTO functions VALUES ('(4,,388)', 'Console preset 4', 3, 3);
+INSERT INTO functions VALUES ('(4,,389)', 'Console preset 5', 3, 3);
+INSERT INTO functions VALUES ('(4,,390)', 'Console preset 6', 3, 3);
+INSERT INTO functions VALUES ('(4,,391)', 'Console preset 7', 3, 3);
+INSERT INTO functions VALUES ('(4,,392)', 'Console preset 8', 3, 3);
+INSERT INTO functions VALUES ('(4,,393)', 'Console preset 9', 3, 3);
+INSERT INTO functions VALUES ('(4,,394)', 'Console preset 10', 3, 3);
+INSERT INTO functions VALUES ('(4,,395)', 'Console preset 11', 3, 3);
+INSERT INTO functions VALUES ('(4,,396)', 'Console preset 12', 3, 3);
+INSERT INTO functions VALUES ('(4,,397)', 'Console preset 13', 3, 3);
+INSERT INTO functions VALUES ('(4,,398)', 'Console preset 14', 3, 3);
+INSERT INTO functions VALUES ('(4,,399)', 'Console preset 15', 3, 3);
+INSERT INTO functions VALUES ('(4,,400)', 'Console preset 16', 3, 3);
+INSERT INTO functions VALUES ('(4,,401)', 'Console preset 17', 3, 3);
+INSERT INTO functions VALUES ('(4,,402)', 'Console preset 18', 3, 3);
+INSERT INTO functions VALUES ('(4,,403)', 'Console preset 19', 3, 3);
+INSERT INTO functions VALUES ('(4,,404)', 'Console preset 20', 3, 3);
+INSERT INTO functions VALUES ('(4,,405)', 'Console preset 21', 3, 3);
+INSERT INTO functions VALUES ('(4,,406)', 'Console preset 22', 3, 3);
+INSERT INTO functions VALUES ('(4,,407)', 'Console preset 23', 3, 3);
+INSERT INTO functions VALUES ('(4,,408)', 'Console preset 24', 3, 3);
+INSERT INTO functions VALUES ('(4,,409)', 'Console preset 25', 3, 3);
+INSERT INTO functions VALUES ('(4,,410)', 'Console preset 26', 3, 3);
+INSERT INTO functions VALUES ('(4,,411)', 'Console preset 27', 3, 3);
+INSERT INTO functions VALUES ('(4,,412)', 'Console preset 28', 3, 3);
+INSERT INTO functions VALUES ('(4,,413)', 'Console preset 29', 3, 3);
+INSERT INTO functions VALUES ('(4,,414)', 'Console preset 30', 3, 3);
+INSERT INTO functions VALUES ('(4,,415)', 'Console preset 31', 3, 3);
+INSERT INTO functions VALUES ('(4,,416)', 'Console preset 32', 3, 3);
+
 
 
 -- source functions

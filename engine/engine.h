@@ -547,6 +547,9 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
 
 void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigned char SetAllObjects);
 void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char SetAllObjects);
+void LoadBussMasterPreset(unsigned char PresetNr, bool SetAllObjects);
+void LoadMonitorBussPreset(unsigned char PresetNr, bool SetAllObjects);
+void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects);
 
 unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck);
 

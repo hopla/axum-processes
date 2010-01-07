@@ -3814,42 +3814,80 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             {
               switch (FunctionNr)
               {
-              case GLOBAL_FUNCTION_MASTER_CONTROL_1:
-              case GLOBAL_FUNCTION_MASTER_CONTROL_2:
-              case GLOBAL_FUNCTION_MASTER_CONTROL_3:
-              case GLOBAL_FUNCTION_MASTER_CONTROL_4:
-              {
-                MasterModeControllerSensorChange(SensorReceiveFunctionNumber, type, data, DataType, DataSize, DataMinimal, DataMaximal);
-              }
-              break;
-              case GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET:
-              case GLOBAL_FUNCTION_MASTER_CONTROL_2_RESET:
-              case GLOBAL_FUNCTION_MASTER_CONTROL_3_RESET:
-              case GLOBAL_FUNCTION_MASTER_CONTROL_4_RESET:
-              {
-                MasterModeControllerResetSensorChange(SensorReceiveFunctionNumber, type, data, DataType, DataSize, DataMinimal, DataMaximal);
-              }
-              break;
-              case GLOBAL_FUNCTION_CONSOLE_1_TO_PRESETS:
-              case GLOBAL_FUNCTION_CONSOLE_2_TO_PRESETS:
-              case GLOBAL_FUNCTION_CONSOLE_3_TO_PRESETS:
-              case GLOBAL_FUNCTION_CONSOLE_4_TO_PRESETS:
-              {
-                unsigned char ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_1_TO_PRESETS;
-                for (int cntModule=0; cntModule<128; cntModule++)
+                case GLOBAL_FUNCTION_MASTER_CONTROL_1:
+                case GLOBAL_FUNCTION_MASTER_CONTROL_2:
+                case GLOBAL_FUNCTION_MASTER_CONTROL_3:
+                case GLOBAL_FUNCTION_MASTER_CONTROL_4:
                 {
-                  if (AxumData.ModuleData[cntModule].Console == ConsoleNr)
+                  MasterModeControllerSensorChange(SensorReceiveFunctionNumber, type, data, DataType, DataSize, DataMinimal, DataMaximal);
+                }
+                break;
+                case GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET:
+                case GLOBAL_FUNCTION_MASTER_CONTROL_2_RESET:
+                case GLOBAL_FUNCTION_MASTER_CONTROL_3_RESET:
+                case GLOBAL_FUNCTION_MASTER_CONTROL_4_RESET:
+                {
+                  MasterModeControllerResetSensorChange(SensorReceiveFunctionNumber, type, data, DataType, DataSize, DataMinimal, DataMaximal);
+                }
+                break;
+                case GLOBAL_FUNCTION_CONSOLE_1_TO_PRESETS:
+                case GLOBAL_FUNCTION_CONSOLE_2_TO_PRESETS:
+                case GLOBAL_FUNCTION_CONSOLE_3_TO_PRESETS:
+                case GLOBAL_FUNCTION_CONSOLE_4_TO_PRESETS:
+                {
+                  unsigned char ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_1_TO_PRESETS;
+                  for (int cntModule=0; cntModule<128; cntModule++)
                   {
-                    LoadProcessingPreset(cntModule, AxumData.ModuleData[cntModule].SelectedPreset, false);
+                    if (AxumData.ModuleData[cntModule].Console == ConsoleNr)
+                    {
+                      LoadProcessingPreset(cntModule, AxumData.ModuleData[cntModule].SelectedPreset, false);
+                    }
                   }
                 }
-              }
-              break;
-              default:
-              { //not implemented function
-                printf("FunctionNr %d\n", FunctionNr);
-              }
-              break;
+                break;
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_1:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_2:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_3:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_4:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_5:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_6:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_7:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_8:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_9:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_10:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_11:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_12:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_13:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_14:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_15:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_16:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_17:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_18:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_19:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_20:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_21:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_22:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_23:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_24:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_25:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_26:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_27:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_28:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_29:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_30:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_31:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_32:
+                {
+                  int PresetNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_PRESET_32;
+
+                  LoadConsolePreset(PresetNr, 0);
+                }
+                break;
+                default:
+                { //not implemented function
+                  printf("FunctionNr %d\n", FunctionNr);
+                }
+                break;
               }
             }
           }
@@ -14073,6 +14111,112 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+  }
+}
+
+void LoadBussMasterPreset(unsigned char PresetNr, bool SetAllObjects)
+{
+  int cntBuss;
+
+  for (cntBuss=0; cntBuss<16; cntBuss++)
+  {
+    float Level = AxumData.BussMasterData[cntBuss].Level;
+    bool On = AxumData.BussMasterData[cntBuss].On;
+    if (AxumData.BussPresetData[PresetNr][cntBuss].Use)
+    {
+      Level = AxumData.BussPresetData[PresetNr][cntBuss].Level;
+      On = AxumData.BussPresetData[PresetNr][cntBuss].On;
+    }
+
+    unsigned int FunctionNrToSent = 0x01000000 | (((cntBuss-1)<<12)&0xFFF000);
+    if ((AxumData.BussMasterData[cntBuss].Level != Level) || SetAllObjects)
+    {
+      AxumData.BussMasterData[cntBuss].Level = Level;
+
+      CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_LEVEL);
+    }
+    if ((AxumData.BussMasterData[cntBuss].On != On) || SetAllObjects)
+    {
+      AxumData.BussMasterData[cntBuss].On = On;
+
+      CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_ON_OFF);
+    }
+
+    SetAxum_BussMasterLevels();
+
+    FunctionNrToSent = 0x04000000;
+    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
+    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
+    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
+    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
+  }
+}
+
+void LoadMonitorBussPreset(unsigned char PresetNr, bool SetAllObjects)
+{
+  int cntMonitorBuss;
+  int cntBuss;
+
+  for (cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
+  {
+    bool Change = false;
+    for (cntBuss=0; cntBuss<24; cntBuss++)
+    {
+      bool On;
+      bool *CurrentBussOn;
+      if (cntBuss<16)
+      {
+        CurrentBussOn = &AxumData.Monitor[cntMonitorBuss].Buss[cntBuss];
+      }
+      else if (cntBuss<24)
+      {
+        CurrentBussOn = &AxumData.Monitor[cntMonitorBuss].Ext[cntBuss-16];
+      }
+      On = *CurrentBussOn;
+
+      if ((AxumData.MonitorBussPresetData[PresetNr][cntMonitorBuss].Use[cntBuss]) || (SetAllObjects))
+      {
+        On = AxumData.MonitorBussPresetData[PresetNr][cntMonitorBuss].On[cntBuss];
+      }
+
+      if ((*CurrentBussOn != On) || (SetAllObjects))
+      {
+        *CurrentBussOn = On;
+        Change = true;
+
+        unsigned int FunctionNrToSent = 0x02000000 | ((cntMonitorBuss<<12)&0xFFF000);
+        if (cntBuss<16)
+        {
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+cntBuss));
+        }
+        else if (cntBuss<24)
+        {
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+(cntBuss-16)));
+        }
+      }
+    }
+
+    if (Change)
+    {
+      SetAxum_MonitorBuss(cntMonitorBuss);
+    }
+  }
+}
+
+void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects)
+{
+  if (PresetNr<32)
+  {
+    unsigned char Input = AxumData.ConsolePresetData[PresetNr].Input;
+    int MixMonitorPresetNr = AxumData.ConsolePresetData[PresetNr].MixMonitorPreset;
+
+    printf("%d", Input);
+
+    if ((MixMonitorPresetNr>=0) && (MixMonitorPresetNr<1280))
+    {
+      LoadBussMasterPreset(MixMonitorPresetNr, SetAllObjects);
+      LoadMonitorBussPreset(MixMonitorPresetNr, SetAllObjects);
+    }
   }
 }
 
