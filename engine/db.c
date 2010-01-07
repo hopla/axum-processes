@@ -1068,6 +1068,14 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
       CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_ON_OFF);
       CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_LABEL);
 
+      SetAxum_BussMasterLevels();
+
+      FunctionNrToSent = 0x04000000;
+      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
+      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
+      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
+      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
+
       for (int cntModule=0; cntModule<128; cntModule++)
       {
         SetAxum_BussLevels(cntModule);
