@@ -615,7 +615,7 @@ CREATE TABLE console_preset (
   pos smallint NOT NULL DEFAULT 9999,
   number smallint NOT NULL CHECK(number>=1 AND number<=32) PRIMARY KEY,
   label varchar(32) NOT NULL DEFAULT 'Preset',
-  input varchar(1) NOT NULL DEFAULT 'A' CHECK(input='A' OR input='B' OR input='C' OR input='D'),
+  input varchar(1) DEFAULT 'A' CHECK(input='A' OR input='B' OR input='C' OR input='D'),
   buss_preset smallint CHECK(number>=1 AND number<=1280)
 );
 
