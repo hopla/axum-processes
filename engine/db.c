@@ -2297,6 +2297,10 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
 
   PGresult *qres = sql_exec("SELECT number,               \
                                     label,                \
+                                    console1,             \
+                                    console2,             \
+                                    console3,             \
+                                    console4,             \
                                     mod_preset,           \
                                     buss_preset           \
                                     FROM console_preset   \
@@ -2317,6 +2321,10 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
     AXUM_CONSOLE_PRESET_DATA_STRUCT *ConsolePresetData = &AxumData.ConsolePresetData[number-1];
 
     strncpy(ConsolePresetData->Label, PQgetvalue(qres, cntRow, cntField++), 32);
+    ConsolePresetData->Console[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    ConsolePresetData->Console[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    ConsolePresetData->Console[2] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    ConsolePresetData->Console[3] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ConsolePresetData->ModulePreset);
     ConsolePresetData->ModulePreset -= 'A';
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &ConsolePresetData->MixMonitorPreset);

@@ -13121,6 +13121,16 @@ void initialize_axum_data_struct()
       }
     }
   }
+  for (int cntPreset=0; cntPreset<32; cntPreset++)
+  {
+    AxumData.ConsolePresetData[cntPreset].Label[0] = 0;
+    AxumData.ConsolePresetData[cntPreset].Console[0] = 0;
+    AxumData.ConsolePresetData[cntPreset].Console[1] = 0;
+    AxumData.ConsolePresetData[cntPreset].Console[2] = 0;
+    AxumData.ConsolePresetData[cntPreset].Console[3] = 0;
+    AxumData.ConsolePresetData[cntPreset].ModulePreset = -1;
+    AxumData.ConsolePresetData[cntPreset].MixMonitorPreset = -1;
+  }
 
   for (int cntDestination=0; cntDestination<1280; cntDestination++)
   {
@@ -14114,91 +14124,97 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
   }
 }
 
-void LoadBussMasterPreset(unsigned char PresetNr, bool SetAllObjects)
+void LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool SetAllObjects)
 {
   int cntBuss;
 
   for (cntBuss=0; cntBuss<16; cntBuss++)
   {
-    float Level = AxumData.BussMasterData[cntBuss].Level;
-    bool On = AxumData.BussMasterData[cntBuss].On;
-    if (AxumData.BussPresetData[PresetNr][cntBuss].Use)
+    if (Console[AxumData.BussMasterData[cntBuss].Console])
     {
-      Level = AxumData.BussPresetData[PresetNr][cntBuss].Level;
-      On = AxumData.BussPresetData[PresetNr][cntBuss].On;
+      float Level = AxumData.BussMasterData[cntBuss].Level;
+      bool On = AxumData.BussMasterData[cntBuss].On;
+      if (AxumData.BussPresetData[PresetNr][cntBuss].Use)
+      {
+        Level = AxumData.BussPresetData[PresetNr][cntBuss].Level;
+        On = AxumData.BussPresetData[PresetNr][cntBuss].On;
+      }
+
+      unsigned int FunctionNrToSent = 0x01000000 | (((cntBuss-1)<<12)&0xFFF000);
+      if ((AxumData.BussMasterData[cntBuss].Level != Level) || SetAllObjects)
+      {
+        AxumData.BussMasterData[cntBuss].Level = Level;
+
+        CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_LEVEL);
+      }
+      if ((AxumData.BussMasterData[cntBuss].On != On) || SetAllObjects)
+      {
+        AxumData.BussMasterData[cntBuss].On = On;
+
+        CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_ON_OFF);
+      }
+
+      SetAxum_BussMasterLevels();
+
+      FunctionNrToSent = 0x04000000;
+      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
+      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
+      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
+      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
     }
-
-    unsigned int FunctionNrToSent = 0x01000000 | (((cntBuss-1)<<12)&0xFFF000);
-    if ((AxumData.BussMasterData[cntBuss].Level != Level) || SetAllObjects)
-    {
-      AxumData.BussMasterData[cntBuss].Level = Level;
-
-      CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_LEVEL);
-    }
-    if ((AxumData.BussMasterData[cntBuss].On != On) || SetAllObjects)
-    {
-      AxumData.BussMasterData[cntBuss].On = On;
-
-      CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_MASTER_ON_OFF);
-    }
-
-    SetAxum_BussMasterLevels();
-
-    FunctionNrToSent = 0x04000000;
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
   }
 }
 
-void LoadMonitorBussPreset(unsigned char PresetNr, bool SetAllObjects)
+void LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool SetAllObjects)
 {
   int cntMonitorBuss;
   int cntBuss;
 
   for (cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
   {
-    bool Change = false;
-    for (cntBuss=0; cntBuss<24; cntBuss++)
+    if (Console[AxumData.Monitor[cntMonitorBuss].Console])
     {
-      bool On;
-      bool *CurrentBussOn;
-      if (cntBuss<16)
+      bool Change = false;
+      for (cntBuss=0; cntBuss<24; cntBuss++)
       {
-        CurrentBussOn = &AxumData.Monitor[cntMonitorBuss].Buss[cntBuss];
-      }
-      else if (cntBuss<24)
-      {
-        CurrentBussOn = &AxumData.Monitor[cntMonitorBuss].Ext[cntBuss-16];
-      }
-      On = *CurrentBussOn;
-
-      if ((AxumData.MonitorBussPresetData[PresetNr][cntMonitorBuss].Use[cntBuss]) || (SetAllObjects))
-      {
-        On = AxumData.MonitorBussPresetData[PresetNr][cntMonitorBuss].On[cntBuss];
-      }
-
-      if ((*CurrentBussOn != On) || (SetAllObjects))
-      {
-        *CurrentBussOn = On;
-        Change = true;
-
-        unsigned int FunctionNrToSent = 0x02000000 | ((cntMonitorBuss<<12)&0xFFF000);
+        bool On;
+        bool *CurrentBussOn;
         if (cntBuss<16)
         {
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+cntBuss));
+          CurrentBussOn = &AxumData.Monitor[cntMonitorBuss].Buss[cntBuss];
         }
         else if (cntBuss<24)
         {
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+(cntBuss-16)));
+          CurrentBussOn = &AxumData.Monitor[cntMonitorBuss].Ext[cntBuss-16];
+        }
+        On = *CurrentBussOn;
+
+        if ((AxumData.MonitorBussPresetData[PresetNr][cntMonitorBuss].Use[cntBuss]) || (SetAllObjects))
+        {
+          On = AxumData.MonitorBussPresetData[PresetNr][cntMonitorBuss].On[cntBuss];
+        }
+
+        if ((*CurrentBussOn != On) || (SetAllObjects))
+        {
+          *CurrentBussOn = On;
+          Change = true;
+
+          unsigned int FunctionNrToSent = 0x02000000 | ((cntMonitorBuss<<12)&0xFFF000);
+          if (cntBuss<16)
+          {
+            CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+cntBuss));
+          }
+          else if (cntBuss<24)
+          {
+            CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+(cntBuss-16)));
+          }
         }
       }
-    }
 
-    if (Change)
-    {
-      SetAxum_MonitorBuss(cntMonitorBuss);
+      if (Change)
+      {
+        SetAxum_MonitorBuss(cntMonitorBuss);
+      }
     }
   }
 }
@@ -14217,64 +14233,67 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects)
     {
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        switch (ModulePreset)
+        if (AxumData.ConsolePresetData[PresetNr].Console[AxumData.ModuleData[cntModule].Console])
         {
-          case 0:
+          switch (ModulePreset)
           {
-            CurrentSource = AxumData.ModuleData[cntModule].SourceA;
-            CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+            case 0:
+            {
+              CurrentSource = AxumData.ModuleData[cntModule].SourceA;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+            }
+            break;
+            case 1:
+            {
+              CurrentSource = AxumData.ModuleData[cntModule].SourceA;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+            }
+            break;
+            case 2:
+            {
+              CurrentSource = AxumData.ModuleData[cntModule].SourceA;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+            }
+            break;
+            case 3:
+            {
+              CurrentSource = AxumData.ModuleData[cntModule].SourceA;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+            }
+            break;
           }
-          break;
-          case 1:
-          {
-            CurrentSource = AxumData.ModuleData[cntModule].SourceA;
-            CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
-          }
-          break;
-          case 2:
-          {
-            CurrentSource = AxumData.ModuleData[cntModule].SourceA;
-            CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
-          }
-          break;
-          case 3:
-          {
-            CurrentSource = AxumData.ModuleData[cntModule].SourceA;
-            CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
-          }
-          break;
-        }
-        CurrentRoutingPreset = ModulePreset;
+          CurrentRoutingPreset = ModulePreset;
 
-        int SourceActive = 0;
-        if (AxumData.ModuleData[cntModule].On)
-        {
-          if (AxumData.ModuleData[cntModule].FaderLevel>-80)
+          int SourceActive = 0;
+          if (AxumData.ModuleData[cntModule].On)
           {
-            SourceActive = 1;
+            if (AxumData.ModuleData[cntModule].FaderLevel>-80)
+            {
+              SourceActive = 1;
+            }
           }
-        }
 
-        if (!SourceActive)
-        {
-          SetNewSource(cntModule, CurrentSource, 0, 1);
-          LoadProcessingPreset(cntModule, CurrentPreset, 0);
-          if (CurrentRoutingPreset>=0) {
-            LoadRoutingPreset(cntModule, CurrentRoutingPreset, 0);
+          if (!SourceActive)
+          {
+            SetNewSource(cntModule, CurrentSource, 0, 1);
+            LoadProcessingPreset(cntModule, CurrentPreset, 0);
+            if (CurrentRoutingPreset>=0) {
+              LoadRoutingPreset(cntModule, CurrentRoutingPreset, 0);
+            }
           }
-        }
-        else
-        {
-          AxumData.ModuleData[cntModule].WaitingSource = CurrentSource;
-          AxumData.ModuleData[cntModule].WaitingProcessingPreset = CurrentPreset;
+          else
+          {
+            AxumData.ModuleData[cntModule].WaitingSource = CurrentSource;
+            AxumData.ModuleData[cntModule].WaitingProcessingPreset = CurrentPreset;
+          }
         }
       }
     }
 
     if ((MixMonitorPresetNr>=0) && (MixMonitorPresetNr<1280))
     {
-      LoadBussMasterPreset(MixMonitorPresetNr, SetAllObjects);
-      LoadMonitorBussPreset(MixMonitorPresetNr, SetAllObjects);
+      LoadBussMasterPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr].Console, SetAllObjects);
+      LoadMonitorBussPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr].Console, SetAllObjects);
     }
   }
 }
