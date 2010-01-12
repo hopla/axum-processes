@@ -10600,7 +10600,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
           {
             unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-            if (AxumData.SourceData[SourceNr].DefaultProcessingPreset>0)
+            if (AxumData.SourceData[SourceNr].DefaultProcessingPreset<=1280)
             {
               LoadProcessingPreset(ModuleNr, AxumData.SourceData[SourceNr].DefaultProcessingPreset, 0);
             }
