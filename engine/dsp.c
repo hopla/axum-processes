@@ -1507,3 +1507,16 @@ void dsp_lock(int l)
   }
 }
 
+float dsp_read_float(DSP_HANDLER_STRUCT *dsp_handler, unsigned char CardNr, unsigned char DSPNr, unsigned int Address)
+{
+  float ReturnValue;
+
+  dsp_lock(1);
+  DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[CardNr];
+  *dspcard->dsp_regs[DSPNr].HPIA = Address;
+  ReturnValue = *((float *)dspcard->dsp_regs[DSPNr].HPID);
+  dsp_lock(0);
+
+  return ReturnValue;
+}
+
