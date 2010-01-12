@@ -14207,10 +14207,69 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects)
 {
   if (PresetNr<32)
   {
-    unsigned char Input = AxumData.ConsolePresetData[PresetNr].Input;
+    char ModulePreset = AxumData.ConsolePresetData[PresetNr].ModulePreset;
     int MixMonitorPresetNr = AxumData.ConsolePresetData[PresetNr].MixMonitorPreset;
+    int CurrentSource = 0;
+    int CurrentPreset = 0;
+    int CurrentRoutingPreset = -1;
 
-    printf("%d", Input);
+    if ((ModulePreset>-1) && (ModulePreset<4))
+    {
+      for (int cntModule=0; cntModule<128; cntModule++)
+      {
+        switch (ModulePreset)
+        {
+          case 0:
+          {
+            CurrentSource = AxumData.ModuleData[cntModule].SourceA;
+            CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+          }
+          break;
+          case 1:
+          {
+            CurrentSource = AxumData.ModuleData[cntModule].SourceA;
+            CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+          }
+          break;
+          case 2:
+          {
+            CurrentSource = AxumData.ModuleData[cntModule].SourceA;
+            CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+          }
+          break;
+          case 3:
+          {
+            CurrentSource = AxumData.ModuleData[cntModule].SourceA;
+            CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+          }
+          break;
+        }
+        CurrentRoutingPreset = ModulePreset;
+
+        int SourceActive = 0;
+        if (AxumData.ModuleData[cntModule].On)
+        {
+          if (AxumData.ModuleData[cntModule].FaderLevel>-80)
+          {
+            SourceActive = 1;
+          }
+        }
+
+        if (!SourceActive)
+        {
+          SetNewSource(cntModule, CurrentSource, 0, 1);
+          LoadProcessingPreset(cntModule, CurrentPreset, 0);
+          if (CurrentRoutingPreset>=0) {
+            LoadRoutingPreset(cntModule, CurrentRoutingPreset, 0);
+          }
+        }
+        else
+        {
+          AxumData.ModuleData[cntModule].WaitingSource = CurrentSource;
+          AxumData.ModuleData[cntModule].WaitingProcessingPreset = CurrentPreset;
+        }
+      }
+    }
 
     if ((MixMonitorPresetNr>=0) && (MixMonitorPresetNr<1280))
     {
