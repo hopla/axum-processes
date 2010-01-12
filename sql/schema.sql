@@ -504,7 +504,7 @@ CREATE TABLE src_preset (
 
 CREATE TABLE routing_preset (
   mod_number smallint NOT NULL CHECK (mod_number>=1 AND mod_number<=128),
-  mod_input varchar(1) NOT NULL CHECK(mod_input='A' OR mod_input='B' OR mod_input='C' OR mod_input='D'),
+  mod_preset varchar(1) NOT NULL CHECK(mod_preset='A' OR mod_preset='B' OR mod_preset='C' OR mod_preset='D'),
   buss_1_2_use_preset boolean NOT NULL DEFAULT FALSE,
   buss_1_2_level float NOT NULL DEFAULT 0 CHECK(buss_1_2_level>=-140 AND buss_1_2_level<=10),
   buss_1_2_on_off boolean NOT NULL DEFAULT TRUE,
@@ -585,7 +585,7 @@ CREATE TABLE routing_preset (
   buss_31_32_on_off boolean NOT NULL DEFAULT TRUE,
   buss_31_32_pre_post boolean NOT NULL DEFAULT FALSE,
   buss_31_32_balance smallint NOT NULL DEFAULT 512 CHECK(buss_31_32_balance>=0 AND buss_31_32_balance<=1023),
-  PRIMARY KEY(mod_number, mod_input)
+  PRIMARY KEY(mod_number, mod_preset)
 );
 
 CREATE TABLE buss_preset (
@@ -619,7 +619,7 @@ CREATE TABLE console_preset (
   console2 boolean NOT NULL DEFAULT FALSE;
   console3 boolean NOT NULL DEFAULT FALSE;
   console4 boolean NOT NULL DEFAULT FALSE;
-  input varchar(1) DEFAULT 'A' CHECK(input='A' OR input='B' OR input='C' OR input='D'),
+  mod_preset varchar(1) DEFAULT 'A' CHECK(input='A' OR input='B' OR input='C' OR input='D'),
   buss_preset smallint CHECK(number>=1 AND number<=1280)
 );
 

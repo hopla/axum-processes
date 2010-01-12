@@ -100,7 +100,7 @@ typedef struct
 typedef struct
 {
   char Label[32];
-  unsigned char Input;
+  char ModulePreset;
   short int MixMonitorPreset;
 } AXUM_CONSOLE_PRESET_DATA_STRUCT;
 

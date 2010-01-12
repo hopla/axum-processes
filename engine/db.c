@@ -2029,7 +2029,7 @@ int db_read_routing_preset(unsigned char first_mod, unsigned char last_mod)
   sprintf(str[1], "%hd", last_mod);
 
   PGresult *qres = sql_exec("SELECT mod_number,           \
-                                    mod_input,            \
+                                    mod_preset,           \
                                     buss_1_2_use_preset,  \
                                     buss_1_2_level,       \
                                     buss_1_2_on_off,      \
@@ -2112,7 +2112,7 @@ int db_read_routing_preset(unsigned char first_mod, unsigned char last_mod)
                                     buss_31_32_balance      \
                                     FROM routing_preset     \
                                     WHERE mod_number>=$1 AND mod_number<=$2 \
-                                    ORDER BY mod_input, mod_number", 1, 2, params);
+                                    ORDER BY mod_preset, mod_number", 1, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -2121,20 +2121,20 @@ int db_read_routing_preset(unsigned char first_mod, unsigned char last_mod)
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     short int number;
-    unsigned char input;
+    unsigned char preset;
     unsigned int cntField;
     unsigned char cntBuss;
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &input);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &preset);
     if ((number>=1) && (number<=128) &&
-        (input>='A') && (number<='D'))
+        (preset>='A') && (preset<='D'))
     {
       //Next are routing presets and assignment of modules to busses.
       for (cntBuss=0; cntBuss<16; cntBuss++)
       {
-        AXUM_ROUTING_PRESET_DATA_STRUCT *RoutingPresetData = &AxumData.ModuleData[number-1].RoutingPreset[input-'A'][cntBuss];
+        AXUM_ROUTING_PRESET_DATA_STRUCT *RoutingPresetData = &AxumData.ModuleData[number-1].RoutingPreset[preset-'A'][cntBuss];
 
         RoutingPresetData->Use = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &RoutingPresetData->Level);
@@ -2142,7 +2142,7 @@ int db_read_routing_preset(unsigned char first_mod, unsigned char last_mod)
         RoutingPresetData->PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &RoutingPresetData->Balance);
 
-        log_write("mod:%d, inp:%d, buss:%d, use:%d, on:%d", number-1, input-'A', cntBuss, RoutingPresetData->Use, RoutingPresetData->On);
+        log_write("mod:%d, inp:%d, buss:%d, use:%d, on:%d", number-1, preset-'A', cntBuss, RoutingPresetData->Use, RoutingPresetData->On);
       }
     }
   }
@@ -2297,7 +2297,7 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
 
   PGresult *qres = sql_exec("SELECT number,               \
                                     label,                \
-                                    input,                \
+                                    mod_preset,           \
                                     buss_preset           \
                                     FROM console_preset   \
                                     WHERE number>=$1 AND number<=$2 \
@@ -2317,8 +2317,8 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
     AXUM_CONSOLE_PRESET_DATA_STRUCT *ConsolePresetData = &AxumData.ConsolePresetData[number-1];
 
     strncpy(ConsolePresetData->Label, PQgetvalue(qres, cntRow, cntField++), 32);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ConsolePresetData->Input);
-    ConsolePresetData->Input -= 'A';
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ConsolePresetData->ModulePreset);
+    ConsolePresetData->ModulePreset -= 'A';
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &ConsolePresetData->MixMonitorPreset);
   }
   PQclear(qres);
