@@ -2727,7 +2727,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     }
                     for (int cntExt=0; cntExt<8; cntExt++)
                     {
-                      if (AxumData.Monitor[MonitorBussNr].Ext[cntExt])
+                      if ((AxumData.Monitor[MonitorBussNr].Ext[cntExt]) &&
+                          (!AxumData.ExternSource[MonitorBussNr/4].InterlockSafe[cntExt]))
                       {
                         AxumData.Monitor[MonitorBussNr].Ext[cntExt] = 0;
 
@@ -2762,7 +2763,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       if (ExtNr != cntExt)
                       {
-                        if (AxumData.Monitor[MonitorBussNr].Ext[cntExt])
+                        if ((AxumData.Monitor[MonitorBussNr].Ext[cntExt]) &&
+                           (!AxumData.ExternSource[MonitorBussNr/4].InterlockSafe[cntExt]))
                         {
                           AxumData.Monitor[MonitorBussNr].Ext[cntExt] = 0;
 
