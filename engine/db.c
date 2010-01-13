@@ -9,7 +9,7 @@
 #include <string.h>
 #include <math.h>
 
-#define LOG_DEBUG_ENABLED
+//#define LOG_DEBUG_ENABLED
 
 #ifdef LOG_DEBUG_ENABLED
   #define LOG_DEBUG(...) log_write(__VA_ARGS__)

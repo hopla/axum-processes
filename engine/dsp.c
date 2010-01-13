@@ -1265,7 +1265,8 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
     float ThresholdFactor = pow10(dspcard->data.ChannelData[DSPCardChannelNr].Dynamics.Threshold/20)*(2147483648.0*0.1);//*0.1=20 dB headroom
     float MakeupGain = ((float)214748364.8)/ThresholdFactor;
     float InverseMakeupGain = ((float)1.0)/MakeupGain;
-    float DownwardExpanderThresholdFactor = pow10(dspcard->data.ChannelData[DSPCardChannelNr].Dynamics.DownwardExpanderThreshold/20)*(2147483648.0*0.1);//*0.1=20 dB headroom
+    float DownwardExpanderThresholdFactor = pow10((dspcard->data.ChannelData[DSPCardChannelNr].Dynamics.DownwardExpanderThreshold-23)/20)*2147483648.0;
+    DownwardExpanderThresholdFactor *= DownwardExpanderThresholdFactor;
 
     *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPAGCThreshold+(DSPChannelNr*4);
     *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = ThresholdFactor;
@@ -1280,7 +1281,7 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
     *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = DownwardExpanderThresholdFactor;
 
     *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPDynamicsOn+(DSPChannelNr*4);
-    *((float *)dspcard->dsp_regs[DSPNr].HPID_Inc) = dspcard->data.ChannelData[DSPCardChannelNr].Dynamics.On;
+    *((int *)dspcard->dsp_regs[DSPNr].HPID_Inc) = dspcard->data.ChannelData[DSPCardChannelNr].Dynamics.On;
   }
   dsp_lock(0);
 
