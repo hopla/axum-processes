@@ -2629,6 +2629,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             if (type == MBN_DATATYPE_STATE)
             {
               bool *MonitorSwitchState;
+              bool PreventDoingInterlock = false;
 
               switch (FunctionNr)
               {
@@ -2664,11 +2665,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   int ExtNr = FunctionNr - MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF;
                   MonitorSwitchState = &AxumData.Monitor[MonitorBussNr].Ext[ExtNr];
+                  if (AxumData.ExternSource[MonitorBussNr/4].InterlockSafe[ExtNr])
+                  {
+                    PreventDoingInterlock = true;
+                  }
                 }
                 break;
               }
 
-              bool PreventDoingInterlock = false;
               if (MonitorSwitchState != NULL)
               {
                 if (data.State)
