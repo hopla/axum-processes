@@ -3842,12 +3842,15 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 case GLOBAL_FUNCTION_CONSOLE_3_TO_PRESETS:
                 case GLOBAL_FUNCTION_CONSOLE_4_TO_PRESETS:
                 {
-                  unsigned char ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_1_TO_PRESETS;
-                  for (int cntModule=0; cntModule<128; cntModule++)
+                  if (data.State)
                   {
-                    if (AxumData.ModuleData[cntModule].Console == ConsoleNr)
+                    unsigned char ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_1_TO_PRESETS;
+                    for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      LoadProcessingPreset(cntModule, AxumData.ModuleData[cntModule].SelectedPreset, false);
+                      if (AxumData.ModuleData[cntModule].Console == ConsoleNr)
+                      {
+                        LoadProcessingPreset(cntModule, AxumData.ModuleData[cntModule].SelectedPreset, false);
+                      }
                     }
                   }
                 }
@@ -3885,9 +3888,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 case GLOBAL_FUNCTION_CONSOLE_PRESET_31:
                 case GLOBAL_FUNCTION_CONSOLE_PRESET_32:
                 {
-                  int PresetNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_PRESET_32;
+                  if (data.State)
+                  {
+                    int PresetNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_PRESET_1;
 
-                  LoadConsolePreset(PresetNr, 0);
+                    LoadConsolePreset(PresetNr, 0);
+                  }
                 }
                 break;
                 default:
@@ -14068,8 +14074,6 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
   bool SetModuleControllers = false;
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
 
-  log_write("LoadRoutingPreset(%d, %d, %d)", ModuleNr, PresetNr, SetAllObjects);
-
   for (cntBuss=0; cntBuss<16; cntBuss++)
   {
     float Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
@@ -14084,7 +14088,6 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
       On = SelectedRoutingPreset->On;
       Balance = SelectedRoutingPreset->Balance;
       PreModuleLevel = SelectedRoutingPreset->PreModuleLevel;
-      log_write("use preset - mod:%d, buss:%d, on:%d", ModuleNr, cntBuss, On);
     }
     else if (AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].Use)
     {
@@ -14092,7 +14095,6 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
       On = AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].On;
       Balance = AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].Balance;
       PreModuleLevel = AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].PreModuleLevel;
-      log_write("use default - mod:%d, buss:%d, on:%d", ModuleNr, cntBuss, On);
     }
 
     if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level != Level) || (SetAllObjects))
@@ -14259,20 +14261,20 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects)
             break;
             case 1:
             {
-              CurrentSource = AxumData.ModuleData[cntModule].SourceA;
-              CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+              CurrentSource = AxumData.ModuleData[cntModule].SourceB;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceBPreset;
             }
             break;
             case 2:
             {
-              CurrentSource = AxumData.ModuleData[cntModule].SourceA;
-              CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+              CurrentSource = AxumData.ModuleData[cntModule].SourceC;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceCPreset;
             }
             break;
             case 3:
             {
-              CurrentSource = AxumData.ModuleData[cntModule].SourceA;
-              CurrentPreset = AxumData.ModuleData[cntModule].SourceAPreset;
+              CurrentSource = AxumData.ModuleData[cntModule].SourceD;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceDPreset;
             }
             break;
           }
