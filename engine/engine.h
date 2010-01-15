@@ -166,7 +166,7 @@ typedef struct
   int Balance;
   unsigned char PreModuleLevel;
 
-  unsigned char Active;
+  unsigned char Assigned;
 } AXUM_BUSS_DATA_STRUCT;
 
 typedef struct

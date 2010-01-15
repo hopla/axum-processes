@@ -842,6 +842,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
         DefaultModuleData->Buss[cntBuss].On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
         DefaultModuleData->Buss[cntBuss].PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->Buss[cntBuss].Balance);
+        ModuleData->Buss[cntBuss].Assigned = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
         //for now initialize with first settings
         if (DefaultModuleData->Buss[cntBuss].Use)

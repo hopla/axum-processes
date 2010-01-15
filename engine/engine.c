@@ -6352,7 +6352,7 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
       dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
       dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
 
-      if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Active)
+      if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Assigned)
       {
         if ((AxumData.ModuleData[ModuleNr].Mono) && (AxumData.ModuleData[ModuleNr].MonoOnOff))
         {
@@ -6691,7 +6691,7 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource)
         {
           for (int cntBuss=0; cntBuss<16; cntBuss++)
           {
-            if ((AxumData.ModuleData[cntModule].Buss[cntBuss].Active) && (AxumData.ModuleData[cntModule].Buss[cntBuss].On))
+            if ((AxumData.ModuleData[cntModule].Buss[cntBuss].Assigned) && (AxumData.ModuleData[cntModule].Buss[cntBuss].On))
             {
               if (BussToUse == -1)
               {
@@ -6837,7 +6837,7 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
         {
           for (int cntBuss=0; cntBuss<16; cntBuss++)
           {
-            if ((AxumData.ModuleData[cntModule].Buss[cntBuss].Active) && (AxumData.ModuleData[cntModule].Buss[cntBuss].On))
+            if ((AxumData.ModuleData[cntModule].Buss[cntBuss].Assigned) && (AxumData.ModuleData[cntModule].Buss[cntBuss].On))
             {
               MixMinusNr = cntModule;
             }
@@ -12285,7 +12285,7 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
       //Module active, check global buss reset
       for (int cntBuss=0; cntBuss<16; cntBuss++)
       {
-        if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Active)
+        if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Assigned)
         {
           if (AxumData.BussMasterData[cntBuss].GlobalBussReset)
           {
@@ -13260,7 +13260,7 @@ void initialize_axum_data_struct()
       AxumData.ModuleData[cntModule].Buss[cntBuss].PreviousOn = 0;
       AxumData.ModuleData[cntModule].Buss[cntBuss].Balance = 512;
       AxumData.ModuleData[cntModule].Buss[cntBuss].PreModuleLevel = 0;
-      AxumData.ModuleData[cntModule].Buss[cntBuss].Active = 1;
+      AxumData.ModuleData[cntModule].Buss[cntBuss].Assigned = 1;
 
       for (int cntPreset=0; cntPreset<4; cntPreset++)
       {
@@ -14073,7 +14073,7 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
       On = SelectedRoutingPreset->On;
       Balance = SelectedRoutingPreset->Balance;
       PreModuleLevel = SelectedRoutingPreset->PreModuleLevel;
-      log_write("use mod:%d, buss:%d, on:%d", ModuleNr, cntBuss, On);
+      log_write("use preset - mod:%d, buss:%d, on:%d", ModuleNr, cntBuss, On);
     }
     else if (AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].Use)
     {
@@ -14081,6 +14081,7 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
       On = AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].On;
       Balance = AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].Balance;
       PreModuleLevel = AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].PreModuleLevel;
+      log_write("use default - mod:%d, buss:%d, on:%d", ModuleNr, cntBuss, On);
     }
 
     if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level != Level) || (SetAllObjects))
