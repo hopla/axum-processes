@@ -694,6 +694,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
                     AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
+                    AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = CurrentRoutingPreset;
                   }
                 }
               }
@@ -12308,6 +12309,11 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
       LoadProcessingPreset(ModuleNr, AxumData.ModuleData[ModuleNr].WaitingProcessingPreset, 0);
       AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = -1;
     }
+    if (AxumData.ModuleData[ModuleNr].WaitingRoutingPreset != -1)
+    {
+      LoadRoutingPreset(ModuleNr, AxumData.ModuleData[ModuleNr].WaitingRoutingPreset, 0);
+      AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = -1;
+    }
   }
 }
 
@@ -13184,6 +13190,7 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].SourceDPreset = 0;
     AxumData.ModuleData[cntModule].WaitingSource = -1;
     AxumData.ModuleData[cntModule].WaitingProcessingPreset = -1;
+    AxumData.ModuleData[cntModule].WaitingRoutingPreset = -1;
     AxumData.ModuleData[cntModule].InsertSource = 0;
     AxumData.ModuleData[cntModule].InsertOnOff = 0;
     AxumData.ModuleData[cntModule].Gain = 0;
