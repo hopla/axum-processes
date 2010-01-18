@@ -771,7 +771,6 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
 
     if (number>0)
     {
-      unsigned char SetModeControllers = 0;
       int Console = 0;
 
       AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[number-1];
@@ -845,13 +844,6 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
         ModuleData->Buss[cntBuss].Assigned = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
         //for now initialize with first settings
-        if (DefaultModuleData->Buss[cntBuss].Use)
-        {
-          ModuleData->Buss[cntBuss].Level = DefaultModuleData->Buss[cntBuss].Level;
-          ModuleData->Buss[cntBuss].On = DefaultModuleData->Buss[cntBuss].On;
-          ModuleData->Buss[cntBuss].PreModuleLevel = DefaultModuleData->Buss[cntBuss].PreModuleLevel;
-          ModuleData->Buss[cntBuss].Balance = DefaultModuleData->Buss[cntBuss].Balance;
-        }
       }
 
       //Use defaults in current settings
@@ -865,6 +857,8 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       ModuleData->SourceBPreset = DefaultModuleData->SourceBPreset;
       ModuleData->SourceCPreset = DefaultModuleData->SourceCPreset;
       ModuleData->SourceDPreset = DefaultModuleData->SourceDPreset;
+
+      //Place data in module data, but may be overide by a preset later on...
       ModuleData->InsertSource = DefaultModuleData->InsertSource;
       ModuleData->InsertOnOff = DefaultModuleData->InsertOnOff;
       ModuleData->Gain = DefaultModuleData->Gain;
@@ -888,125 +882,54 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       ModuleData->Panorama = DefaultModuleData->Panorama;
       ModuleData->FaderLevel = DefaultModuleData->FaderLevel;
       ModuleData->On = DefaultModuleData->On;
+      for (cntBuss=0; cntBuss<16; cntBuss++)
+      {
+        ModuleData->Buss[cntBuss].Level = DefaultModuleData->Buss[cntBuss].Level;
+        ModuleData->Buss[cntBuss].On = DefaultModuleData->Buss[cntBuss].On;
+        ModuleData->Buss[cntBuss].PreModuleLevel = DefaultModuleData->Buss[cntBuss].PreModuleLevel;
+        ModuleData->Buss[cntBuss].Balance = DefaultModuleData->Buss[cntBuss].Balance;
+      }
 
       int ModuleNr = number-1;
-
-      //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 1))
-      { //All or input
-        if (AxumApplicationAndDSPInitialized)
-        {
-          SetNewSource(ModuleNr, ModuleData->SourceA, 1, 1);
-          SetAxum_ModuleInsertSource(ModuleNr);
-          LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1);
-
-          //Set fader level and On;
-          float NewLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
-          int NewOn = AxumData.ModuleData[ModuleNr].On;
-
-          SetAxum_BussLevels(ModuleNr);
-
-          unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_OFF);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON_OFF);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_OFF);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON_OFF);
-
-          if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
-          {
-            unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-            FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_OFF);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
-            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
-          }
-
-          SetModeControllers = 1;
-
-          if (((OldLevel<=-80) && (NewLevel>-80)) ||
-              ((OldLevel>-80) && (NewLevel<=-80)) ||
-              (OldOn != NewOn))
-          { //fader on changed
-            DoAxum_ModuleStatusChanged(ModuleNr, 1);
-          }
-        }
-      }
-
-      //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 2))
-      { //All or eq
-        for (int cntBand=0; cntBand<6; cntBand++)
-        {
-          if (AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level>AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range)
-          {
-            AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level = AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range;
-          }
-          else if (AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level < -AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range)
-          {
-            AxumData.ModuleData[ModuleNr].EQBand[cntBand].Level = -AxumData.ModuleData[ModuleNr].EQBand[cntBand].Range;
-          }
-
-          if (AxumApplicationAndDSPInitialized)
-          {
-            SetAxum_EQ(ModuleNr, cntBand);
-
-            unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_LEVEL+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL))));
-            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_FREQUENCY+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY))));
-            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH))));
-            //CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_SLOPE+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_SLOPE-MODULE_FUNCTION_EQ_BAND_1_SLOPE))));
-            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_EQ_BAND_1_TYPE+(cntBand*(MODULE_FUNCTION_EQ_BAND_2_TYPE-MODULE_FUNCTION_EQ_BAND_1_TYPE))));
-          }
-        }
-
-        unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_EQ_ON_OFF);
-
-        SetModeControllers = 1;
-      }
-
-      //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 2))
-      { //All or dynamics
-        SetAxum_ModuleProcessing(ModuleNr);
-
-        unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_AGC_AMOUNT);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_AGC_THRESHOLD);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_EXPANDER_THRESHOLD);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_ON_OFF);
-
-        SetModeControllers = 1;
-      }
-      //if ((*((int *)UpdateType) == 0) || (*((int *)UpdateType) == 3))
-      { //All or busses
-        for (int cntBuss=0; cntBuss<16; cntBuss++)
-        {
-          if (AxumApplicationAndDSPInitialized)
-          {
-            SetAxum_BussLevels(ModuleNr);
-
-            SetBussOnOff(ModuleNr, cntBuss, 1);//load preset
-
-            unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_LEVEL);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_PRE);
-            CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_BUSS_1_2_BALANCE);
-
-            SetModeControllers = 1;
-          }
-        }
-      }
-
-      if (SetModeControllers)
+      if (AxumApplicationAndDSPInitialized)
       {
+        SetNewSource(ModuleNr, ModuleData->SourceA, 1, 1);
+        SetAxum_ModuleInsertSource(ModuleNr);
+        LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1);
+        LoadRoutingPreset(ModuleNr, 0, 1);
+
+        //Set fader level and On;
+        float NewLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
+        int NewOn = AxumData.ModuleData[ModuleNr].On;
+
+        SetAxum_BussLevels(ModuleNr);
+
         unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_OFF);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_ON_OFF);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_OFF);
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_ON_OFF);
+
+        if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
+        {
+          unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+          FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON);
+          CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_OFF);
+          CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
+          CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+        }
+
+        if (((OldLevel<=-80) && (NewLevel>-80)) ||
+            ((OldLevel>-80) && (NewLevel<=-80)) ||
+            (OldOn != NewOn))
+        { //fader on changed
+          DoAxum_ModuleStatusChanged(ModuleNr, 1);
+        }
       }
     }
   }
