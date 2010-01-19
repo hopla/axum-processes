@@ -338,7 +338,6 @@ CREATE TABLE buss_config (
   number smallint NOT NULL CHECK(number>=1 AND number<=16) PRIMARY KEY,
   label varchar(32) NOT NULL,
   pre_on boolean NOT NULL DEFAULT FALSE,
-  pre_level boolean NOT NULL DEFAULT FALSE,
   pre_balance boolean NOT NULL DEFAULT FALSE,
   level float NOT NULL DEFAULT 0.0,
   on_off boolean NOT NULL DEFAULT TRUE,
