@@ -13978,6 +13978,7 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigne
         CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
       }
     }
+    SetBussProcessing = true;
     SetModuleProcessing = true;
     SetModuleControllers = true;
   }
@@ -14011,6 +14012,7 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigne
         CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
       }
     }
+    SetBussProcessing = true;
     SetModuleProcessing = true;
     SetModuleControllers = true;
   }
