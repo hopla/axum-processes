@@ -957,7 +957,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
   sprintf(str[0], "%hd", first_buss);
   sprintf(str[1], "%hd", last_buss);
 
-  PGresult *qres = sql_exec("SELECT number, label, console, pre_on, pre_balance, level, on_off, interlock, exclusive, global_reset FROM buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
+  PGresult *qres = sql_exec("SELECT number, label, console, mono, pre_on, pre_balance, level, on_off, interlock, exclusive, global_reset FROM buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -975,6 +975,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
     strncpy(BussMasterData->Label, PQgetvalue(qres, cntRow, cntField++), 32);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &BussMasterData->Console);
     BussMasterData->Console--;
+    BussMasterData->Mono = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->PreModuleOn = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->PreModuleBalance = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &BussMasterData->Level);

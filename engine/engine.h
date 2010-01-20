@@ -319,6 +319,8 @@ typedef struct
   bool PreModuleOn;
   bool PreModuleBalance;
 
+  bool Mono;
+
   bool Interlock;
   bool Exclusive;
   bool GlobalBussReset;

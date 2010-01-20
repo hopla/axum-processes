@@ -339,6 +339,7 @@ CREATE TABLE buss_config (
   label varchar(32) NOT NULL,
   pre_on boolean NOT NULL DEFAULT FALSE,
   pre_balance boolean NOT NULL DEFAULT FALSE,
+  mono boolean NOT NULL DEFAULT FALSE,
   level float NOT NULL DEFAULT 0.0,
   on_off boolean NOT NULL DEFAULT TRUE,
   interlock boolean NOT NULL DEFAULT FALSE,

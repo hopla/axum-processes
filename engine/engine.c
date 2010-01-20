@@ -6436,9 +6436,20 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
 
       if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Assigned)
       {
-        if ((AxumData.ModuleData[ModuleNr].Mono) && (AxumData.ModuleData[ModuleNr].MonoOnOff))
+        if (((AxumData.ModuleData[ModuleNr].Mono) && (AxumData.ModuleData[ModuleNr].MonoOnOff)) || (AxumData.BussMasterData[cntBuss].Mono))
         {
-          switch (AxumData.ModuleData[ModuleNr].Mono)
+          unsigned char Mono = 0;
+          if (AxumData.ModuleData[ModuleNr].MonoOnOff)
+          { //If mono is active, use mono state
+            Mono = AxumData.ModuleData[ModuleNr].Mono;
+          }
+          if (Mono == 0)
+          { //If mono is still stereo, its because the buss in mono.
+            //Make mono out of L+R
+            Mono = 0x03;
+          }
+
+          switch (Mono)
           {
             case 0x01:
             { //L Mono
@@ -13516,6 +13527,8 @@ void initialize_axum_data_struct()
 
     AxumData.BussMasterData[cntBuss].PreModuleOn = 0;
     AxumData.BussMasterData[cntBuss].PreModuleBalance = 0;
+
+    AxumData.BussMasterData[cntBuss].Mono = 0;
 
     AxumData.BussMasterData[cntBuss].Interlock = 0;
     AxumData.BussMasterData[cntBuss].Exclusive = 0;
