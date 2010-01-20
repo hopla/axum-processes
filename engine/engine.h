@@ -540,7 +540,7 @@ int Axum_MixMinusSourceUsed(unsigned int CurrentSource);
 void GetSourceLabel(unsigned int SourceNr, char *TextString, int MaxLength);
 #define AdjustDestinationSource AdjustModuleSource
 unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset);
-void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAorBSettings);
+bool SetNewSource(int ModuleNr, unsigned int NewSource, int Forced);
 void SetBussOnOff(int ModuleNr, int BussNr, int UseInterlock);
 
 void initialize_axum_data_struct();

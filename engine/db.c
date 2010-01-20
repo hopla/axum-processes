@@ -893,7 +893,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       int ModuleNr = number-1;
       if (AxumApplicationAndDSPInitialized)
       {
-        SetNewSource(ModuleNr, ModuleData->SourceA, 1, 1);
+        SetNewSource(ModuleNr, ModuleData->SourceA, 1);
         SetAxum_ModuleInsertSource(ModuleNr);
         LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1);
         LoadRoutingPreset(ModuleNr, 0, 1);

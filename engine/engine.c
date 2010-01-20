@@ -679,7 +679,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                 if (!SourceActive)
                 {
-                  SetNewSource(ModuleNr, CurrentSource, 0, 1);
+                  SetNewSource(ModuleNr, CurrentSource, 0);
                   if (data.State)
                   {
                     LoadProcessingPreset(ModuleNr, CurrentPreset, 0);
@@ -10609,22 +10609,24 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       {
         case MODULE_CONTROL_MODE_SOURCE:
         {
-          SetNewSource(ModuleNr, AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr], 0, 1);
-          if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
+          if (SetNewSource(ModuleNr, AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr], 0))
           {
-            unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-            if (AxumData.SourceData[SourceNr].DefaultProcessingPreset<=1280)
+            if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
             {
-              LoadProcessingPreset(ModuleNr, AxumData.SourceData[SourceNr].DefaultProcessingPreset, 0);
+              unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+              if (AxumData.SourceData[SourceNr].DefaultProcessingPreset<=1280)
+              {
+                LoadProcessingPreset(ModuleNr, AxumData.SourceData[SourceNr].DefaultProcessingPreset, 0);
+              }
             }
-          }
 
-          unsigned int DisplayFunctionNr = (ModuleNr<<12);
-          CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_LABEL);
-          CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1_LABEL);
-          CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_2_LABEL);
-          CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_3_LABEL);
-          CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_4_LABEL);
+            unsigned int DisplayFunctionNr = (ModuleNr<<12);
+            CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_LABEL);
+            CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_1_LABEL);
+            CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_2_LABEL);
+            CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_3_LABEL);
+            CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_4_LABEL);
+          }
         }
         break;
         case MODULE_CONTROL_MODE_MODULE_PRESET:
@@ -12311,7 +12313,7 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
   {
     if (AxumData.ModuleData[ModuleNr].WaitingSource != -1)
     {
-      SetNewSource(ModuleNr, AxumData.ModuleData[ModuleNr].WaitingSource, 0, 1);
+      SetNewSource(ModuleNr, AxumData.ModuleData[ModuleNr].WaitingSource, 0);
       AxumData.ModuleData[ModuleNr].WaitingSource = -1;
     }
     if (AxumData.ModuleData[ModuleNr].WaitingProcessingPreset != -1)
@@ -12575,21 +12577,21 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
   return CurrentSource;
 }
 
-void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAorBSettings)
+bool SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
 {
   unsigned int OldSource = AxumData.ModuleData[ModuleNr].SelectedSource;
   int OldSourceActive = 0;
 
+  if (AxumData.ModuleData[ModuleNr].On)
+  {
+    if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
+    {
+      OldSourceActive = 1;
+    }
+  }
+
   if (OldSource != NewSource)
   {
-    if (AxumData.ModuleData[ModuleNr].On)
-    {
-      if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
-      {
-        OldSourceActive = 1;
-      }
-    }
-
     if ((!OldSourceActive) || (Forced))
     {
       AxumData.ModuleData[ModuleNr].SelectedSource = NewSource;
@@ -12795,7 +12797,8 @@ void SetNewSource(int ModuleNr, unsigned int NewSource, int Forced, int ApplyAor
       }
     }
   }
-  ApplyAorBSettings = 0;
+
+  return ((!OldSourceActive) || (Forced));
 }
 
 void SetBussOnOff(int ModuleNr, int BussNr, int LoadPreset)
@@ -14293,7 +14296,7 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects)
 
           if (!SourceActive)
           {
-            SetNewSource(cntModule, CurrentSource, 0, 1);
+            SetNewSource(cntModule, CurrentSource, 0);
             LoadProcessingPreset(cntModule, CurrentPreset, 0);
             if (CurrentRoutingPreset>=0) {
               LoadRoutingPreset(cntModule, CurrentRoutingPreset, 0);
