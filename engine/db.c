@@ -2253,6 +2253,7 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ConsolePresetData->ModulePreset);
     ConsolePresetData->ModulePreset -= 'A';
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &ConsolePresetData->MixMonitorPreset);
+    ConsolePresetData->MixMonitorPreset--;
   }
   PQclear(qres);
 
