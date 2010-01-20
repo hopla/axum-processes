@@ -595,10 +595,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             break;
             case MODULE_FUNCTION_SOURCE:
-            case MODULE_FUNCTION_SOURCE_A:
-            case MODULE_FUNCTION_SOURCE_B:
-            case MODULE_FUNCTION_SOURCE_C:
-            case MODULE_FUNCTION_SOURCE_D:
+            case MODULE_FUNCTION_PRESET_A:
+            case MODULE_FUNCTION_PRESET_B:
+            case MODULE_FUNCTION_PRESET_C:
+            case MODULE_FUNCTION_PRESET_D:
+            case MODULE_FUNCTION_PRESET_E:
+            case MODULE_FUNCTION_PRESET_F:
+            case MODULE_FUNCTION_PRESET_G:
+            case MODULE_FUNCTION_PRESET_H:
             {   //Source
               printf("Source\n");
               int CurrentSource = AxumData.ModuleData[ModuleNr].TemporySourceLocal;
@@ -628,32 +632,60 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       }
                     }
                     break;
-                    case MODULE_FUNCTION_SOURCE_A:
+                    case MODULE_FUNCTION_PRESET_A:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceA;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceAPreset;
                       CurrentRoutingPreset = 0;
                     }
                     break;
-                    case MODULE_FUNCTION_SOURCE_B:
+                    case MODULE_FUNCTION_PRESET_B:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceB;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceBPreset;
                       CurrentRoutingPreset = 1;
                     }
                     break;
-                    case MODULE_FUNCTION_SOURCE_C:
+                    case MODULE_FUNCTION_PRESET_C:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceC;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceCPreset;
                       CurrentRoutingPreset = 2;
                     }
                     break;
-                    case MODULE_FUNCTION_SOURCE_D:
+                    case MODULE_FUNCTION_PRESET_D:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceD;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceDPreset;
                       CurrentRoutingPreset = 3;
+                    }
+                    break;
+                    case MODULE_FUNCTION_PRESET_E:
+                    {
+                      CurrentSource = AxumData.ModuleData[ModuleNr].SourceE;
+                      CurrentPreset = AxumData.ModuleData[ModuleNr].SourceEPreset;
+                      CurrentRoutingPreset = 4;
+                    }
+                    break;
+                    case MODULE_FUNCTION_PRESET_F:
+                    {
+                      CurrentSource = AxumData.ModuleData[ModuleNr].SourceF;
+                      CurrentPreset = AxumData.ModuleData[ModuleNr].SourceFPreset;
+                      CurrentRoutingPreset = 5;
+                    }
+                    break;
+                    case MODULE_FUNCTION_PRESET_G:
+                    {
+                      CurrentSource = AxumData.ModuleData[ModuleNr].SourceG;
+                      CurrentPreset = AxumData.ModuleData[ModuleNr].SourceGPreset;
+                      CurrentRoutingPreset = 6;
+                    }
+                    break;
+                    case MODULE_FUNCTION_PRESET_H:
+                    {
+                      CurrentSource = AxumData.ModuleData[ModuleNr].SourceH;
+                      CurrentPreset = AxumData.ModuleData[ModuleNr].SourceHPreset;
+                      CurrentRoutingPreset = 7;
                     }
                     break;
                   }
@@ -7273,10 +7305,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           }
         }
         break;
-        case MODULE_FUNCTION_SOURCE_A:
-        case MODULE_FUNCTION_SOURCE_B:
-        case MODULE_FUNCTION_SOURCE_C:
-        case MODULE_FUNCTION_SOURCE_D:
+        case MODULE_FUNCTION_PRESET_A:
+        case MODULE_FUNCTION_PRESET_B:
+        case MODULE_FUNCTION_PRESET_C:
+        case MODULE_FUNCTION_PRESET_D:
+        case MODULE_FUNCTION_PRESET_E:
+        case MODULE_FUNCTION_PRESET_F:
+        case MODULE_FUNCTION_PRESET_G:
+        case MODULE_FUNCTION_PRESET_H:
         { //Not implemented
           switch (DataType)
           {
@@ -7285,54 +7321,102 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               int Active = 0;
               switch (FunctionNr)
               {
-              case MODULE_FUNCTION_SOURCE_A: //Source A
-              {
-                if (AxumData.ModuleData[ModuleNr].SourceA != 0)
+                case MODULE_FUNCTION_PRESET_A: //Preset A
                 {
-                  if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceA) &&
-                      (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceAPreset))
+                  if (AxumData.ModuleData[ModuleNr].SourceA != 0)
                   {
-                    Active = 1;
+                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceA) &&
+                        (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceAPreset))
+                    {
+                      Active = 1;
+                    }
                   }
                 }
-              }
-              break;
-              case MODULE_FUNCTION_SOURCE_B: //Source B
-              {
-                if (AxumData.ModuleData[ModuleNr].SourceB != 0)
+                break;
+                case MODULE_FUNCTION_PRESET_B: //Preset B
                 {
-                  if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceB) &&
-                      (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceBPreset))
+                  if (AxumData.ModuleData[ModuleNr].SourceB != 0)
                   {
-                    Active = 1;
+                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceB) &&
+                        (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceBPreset))
+                    {
+                      Active = 1;
+                    }
                   }
                 }
-              }
-              break;
-              case MODULE_FUNCTION_SOURCE_C: //Source C
-              {
-                if (AxumData.ModuleData[ModuleNr].SourceC != 0)
+                break;
+                case MODULE_FUNCTION_PRESET_C: //Preset C
                 {
-                  if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceC) &&
-                      (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceCPreset))
+                  if (AxumData.ModuleData[ModuleNr].SourceC != 0)
                   {
-                    Active = 1;
+                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceC) &&
+                        (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceCPreset))
+                    {
+                      Active = 1;
+                    }
                   }
                 }
-              }
-              break;
-              case MODULE_FUNCTION_SOURCE_D: //Source D
-              {
-                if (AxumData.ModuleData[ModuleNr].SourceD != 0)
+                break;
+                case MODULE_FUNCTION_PRESET_D: //Preset D
                 {
-                  if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceD) &&
-                      (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceDPreset))
+                  if (AxumData.ModuleData[ModuleNr].SourceD != 0)
                   {
-                    Active = 1;
+                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceD) &&
+                        (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceDPreset))
+                    {
+                      Active = 1;
+                    }
                   }
                 }
-              }
-              break;
+                break;
+                case MODULE_FUNCTION_PRESET_E: //Preset E
+                {
+                  if (AxumData.ModuleData[ModuleNr].SourceE != 0)
+                  {
+                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceE) &&
+                        (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceEPreset))
+                    {
+                      Active = 1;
+                    }
+                  }
+                }
+                break;
+                case MODULE_FUNCTION_PRESET_F: //Preset F
+                {
+                  if (AxumData.ModuleData[ModuleNr].SourceF != 0)
+                  {
+                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceF) &&
+                        (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceFPreset))
+                    {
+                      Active = 1;
+                    }
+                  }
+                }
+                break;
+                case MODULE_FUNCTION_PRESET_G: //Preset G
+                {
+                  if (AxumData.ModuleData[ModuleNr].SourceG != 0)
+                  {
+                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceG) &&
+                        (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceGPreset))
+                    {
+                      Active = 1;
+                    }
+                  }
+                }
+                break;
+                case MODULE_FUNCTION_PRESET_H: //Preset H
+                {
+                  if (AxumData.ModuleData[ModuleNr].SourceH != 0)
+                  {
+                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceH) &&
+                        (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceHPreset))
+                    {
+                      Active = 1;
+                    }
+                  }
+                }
+                break;
               }
 
               data.State = Active;
@@ -12755,10 +12839,14 @@ bool SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
       }
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
 
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_A);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_B);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_C);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_D);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_C);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_D);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_E);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_F);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_G);
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_H);
 
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_INSERT_ON_OFF);
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_FREQUENCY);
@@ -13327,10 +13415,18 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].SourceB = 0;
     AxumData.ModuleData[cntModule].SourceC = 0;
     AxumData.ModuleData[cntModule].SourceD = 0;
+    AxumData.ModuleData[cntModule].SourceE = 0;
+    AxumData.ModuleData[cntModule].SourceF = 0;
+    AxumData.ModuleData[cntModule].SourceG = 0;
+    AxumData.ModuleData[cntModule].SourceH = 0;
     AxumData.ModuleData[cntModule].SourceAPreset = 0;
     AxumData.ModuleData[cntModule].SourceBPreset = 0;
     AxumData.ModuleData[cntModule].SourceCPreset = 0;
     AxumData.ModuleData[cntModule].SourceDPreset = 0;
+    AxumData.ModuleData[cntModule].SourceEPreset = 0;
+    AxumData.ModuleData[cntModule].SourceFPreset = 0;
+    AxumData.ModuleData[cntModule].SourceGPreset = 0;
+    AxumData.ModuleData[cntModule].SourceHPreset = 0;
     AxumData.ModuleData[cntModule].WaitingSource = -1;
     AxumData.ModuleData[cntModule].WaitingProcessingPreset = -1;
     AxumData.ModuleData[cntModule].WaitingRoutingPreset = -1;
@@ -13421,15 +13517,6 @@ void initialize_axum_data_struct()
         AxumData.ModuleData[cntModule].RoutingPreset[cntPreset][cntBuss].PreModuleLevel = 0;
       }
     }
-
-    AxumData.ModuleData[cntModule].Defaults.SourceA = 0;
-    AxumData.ModuleData[cntModule].Defaults.SourceB = 0;
-    AxumData.ModuleData[cntModule].Defaults.SourceC = 0;
-    AxumData.ModuleData[cntModule].Defaults.SourceD = 0;
-    AxumData.ModuleData[cntModule].Defaults.SourceAPreset = 0;
-    AxumData.ModuleData[cntModule].Defaults.SourceBPreset = 0;
-    AxumData.ModuleData[cntModule].Defaults.SourceCPreset = 0;
-    AxumData.ModuleData[cntModule].Defaults.SourceDPreset = 0;
 
     AxumData.ModuleData[cntModule].Defaults.InsertUsePreset = 0;
     AxumData.ModuleData[cntModule].Defaults.InsertSource = 0;
@@ -14197,10 +14284,14 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigne
 
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_A);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_B);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_C);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_D);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_C);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_D);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_E);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_F);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_G);
+  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_H);
 }
 
 void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char SetAllObjects)
@@ -14381,7 +14472,7 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects)
     int CurrentPreset = 0;
     int CurrentRoutingPreset = -1;
 
-    if ((ModulePreset>-1) && (ModulePreset<4))
+    if ((ModulePreset>-1) && (ModulePreset<8))
     {
       for (int cntModule=0; cntModule<128; cntModule++)
       {
@@ -14411,6 +14502,30 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects)
             {
               CurrentSource = AxumData.ModuleData[cntModule].SourceD;
               CurrentPreset = AxumData.ModuleData[cntModule].SourceDPreset;
+            }
+            break;
+            case 4:
+            {
+              CurrentSource = AxumData.ModuleData[cntModule].SourceE;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceEPreset;
+            }
+            break;
+            case 5:
+            {
+              CurrentSource = AxumData.ModuleData[cntModule].SourceF;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceFPreset;
+            }
+            break;
+            case 6:
+            {
+              CurrentSource = AxumData.ModuleData[cntModule].SourceG;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceGPreset;
+            }
+            break;
+            case 7:
+            {
+              CurrentSource = AxumData.ModuleData[cntModule].SourceH;
+              CurrentPreset = AxumData.ModuleData[cntModule].SourceHPreset;
             }
             break;
           }

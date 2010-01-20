@@ -179,15 +179,6 @@ typedef struct
 
 typedef struct
 {
-  unsigned int SourceA;
-  unsigned int SourceB;
-  unsigned int SourceC;
-  unsigned int SourceD;
-  unsigned int SourceAPreset;
-  unsigned int SourceBPreset;
-  unsigned int SourceCPreset;
-  unsigned int SourceDPreset;
-
   bool InsertUsePreset;
   unsigned int InsertSource;
   bool InsertOnOff;
@@ -239,10 +230,18 @@ typedef struct
   unsigned int SourceB;
   unsigned int SourceC;
   unsigned int SourceD;
+  unsigned int SourceE;
+  unsigned int SourceF;
+  unsigned int SourceG;
+  unsigned int SourceH;
   unsigned int SourceAPreset;
   unsigned int SourceBPreset;
   unsigned int SourceCPreset;
   unsigned int SourceDPreset;
+  unsigned int SourceEPreset;
+  unsigned int SourceFPreset;
+  unsigned int SourceGPreset;
+  unsigned int SourceHPreset;
   int WaitingSource;
   int WaitingProcessingPreset;
   int WaitingRoutingPreset;

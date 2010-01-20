@@ -76,8 +76,8 @@
 
 #define MODULE_FUNCTION_LABEL               0
 #define MODULE_FUNCTION_SOURCE                1
-#define MODULE_FUNCTION_SOURCE_A              2
-#define MODULE_FUNCTION_SOURCE_B              3
+#define MODULE_FUNCTION_PRESET_A              2
+#define MODULE_FUNCTION_PRESET_B              3
 #define MODULE_FUNCTION_SOURCE_PHANTOM          4
 #define MODULE_FUNCTION_SOURCE_PAD              5
 #define MODULE_FUNCTION_SOURCE_GAIN_LEVEL       6
@@ -257,8 +257,8 @@
 #define MODULE_FUNCTION_CONTROL_4_RESET         180
 #define MODULE_FUNCTION_PEAK                  181
 #define MODULE_FUNCTION_SIGNAL                182
-#define MODULE_FUNCTION_SOURCE_C              183
-#define MODULE_FUNCTION_SOURCE_D              184
+#define MODULE_FUNCTION_PRESET_C              183
+#define MODULE_FUNCTION_PRESET_D              184
 #define MODULE_FUNCTION_ROUTING_PRESET_1      185
 #define MODULE_FUNCTION_ROUTING_PRESET_2      186
 #define MODULE_FUNCTION_ROUTING_PRESET_3      187
@@ -281,8 +281,12 @@
 #define MODULE_FUNCTION_CONTROL               204
 #define MODULE_FUNCTION_CONTROL_LABEL         205
 #define MODULE_FUNCTION_CONTROL_RESET         206
+#define MODULE_FUNCTION_PRESET_E              207
+#define MODULE_FUNCTION_PRESET_F              208
+#define MODULE_FUNCTION_PRESET_G              209
+#define MODULE_FUNCTION_PRESET_H              210
 
-#define NUMBER_OF_MODULE_FUNCTIONS              207
+#define NUMBER_OF_MODULE_FUNCTIONS            211
 #define  NUMBER_OF_MODULES                    128
 
 #define BUSS_FUNCTION_MASTER_LEVEL              0

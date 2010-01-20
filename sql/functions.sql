@@ -241,7 +241,10 @@ INSERT INTO functions VALUES ('(0,,203)', 'Preset', 2, 4);
 INSERT INTO functions VALUES ('(0,,204)', 'Control', 2, 4);
 INSERT INTO functions VALUES ('(0,,205)', 'Control label', 0, 4);
 INSERT INTO functions VALUES ('(0,,206)', 'Control reset', 3, 0);
-
+INSERT INTO functions VALUES ('(0,,207)', 'Source E', 3, 3);
+INSERT INTO functions VALUES ('(0,,208)', 'Source F', 3, 3);
+INSERT INTO functions VALUES ('(0,,209)', 'Source G', 3, 3);
+INSERT INTO functions VALUES ('(0,,210)', 'Source H', 3, 3);
 
 
 -- buss functions

@@ -588,10 +588,18 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
                                     source_b,             \
                                     source_c,             \
                                     source_d,             \
+                                    source_e,             \
+                                    source_f,             \
+                                    source_g,             \
+                                    source_h,             \
                                     source_a_preset,      \
                                     source_b_preset,      \
                                     source_c_preset,      \
                                     source_d_preset,      \
+                                    source_e_preset,      \
+                                    source_f_preset,      \
+                                    source_g_preset,      \
+                                    source_h_preset,      \
                                     use_insert_preset,    \
                                     insert_source,        \
                                     insert_on_off,        \
@@ -776,25 +784,45 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
 
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &Console);
       ModuleData->Console = Console-1;
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceA);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceB);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceC);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceD);
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceAPreset) < 0)
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceA);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceB);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceC);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceD);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceE);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceF);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceG);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceH);
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceAPreset) < 0)
       {
-        DefaultModuleData->SourceAPreset = 0;
+        ModuleData->SourceAPreset = 0;
       }
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceBPreset) < 0)
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceBPreset) < 0)
       {
-        DefaultModuleData->SourceBPreset = 0;
+        ModuleData->SourceBPreset = 0;
       }
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceCPreset) < 0)
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceCPreset) < 0)
       {
-        DefaultModuleData->SourceCPreset = 0;
+        ModuleData->SourceCPreset = 0;
       }
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->SourceDPreset) < 0)
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceDPreset) < 0)
       {
-        DefaultModuleData->SourceDPreset = 0;
+        ModuleData->SourceDPreset = 0;
+      }
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceEPreset) < 0)
+      {
+        ModuleData->SourceEPreset = 0;
+      }
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceFPreset) < 0)
+      {
+        ModuleData->SourceFPreset = 0;
+      }
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceGPreset) < 0)
+      {
+        ModuleData->SourceGPreset = 0;
+      }
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceHPreset) < 0)
+      {
+        ModuleData->SourceHPreset = 0;
       }
       DefaultModuleData->InsertUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->InsertSource);
@@ -847,14 +875,6 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
       //Use defaults in current settings
       OldLevel = ModuleData->FaderLevel;
       OldOn = ModuleData->On;
-      ModuleData->SourceA = DefaultModuleData->SourceA;
-      ModuleData->SourceB = DefaultModuleData->SourceB;
-      ModuleData->SourceC = DefaultModuleData->SourceC;
-      ModuleData->SourceD = DefaultModuleData->SourceD;
-      ModuleData->SourceAPreset = DefaultModuleData->SourceAPreset;
-      ModuleData->SourceBPreset = DefaultModuleData->SourceBPreset;
-      ModuleData->SourceCPreset = DefaultModuleData->SourceCPreset;
-      ModuleData->SourceDPreset = DefaultModuleData->SourceDPreset;
 
       //Place data in module data, but may be overide by a preset later on...
       ModuleData->InsertSource = DefaultModuleData->InsertSource;
