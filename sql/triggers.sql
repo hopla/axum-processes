@@ -112,6 +112,10 @@ BEGIN
     UPDATE module_config SET source_b = 0 WHERE source_b = OLD.number+288;
     UPDATE module_config SET source_c = 0 WHERE source_c = OLD.number+288;
     UPDATE module_config SET source_d = 0 WHERE source_d = OLD.number+288;
+    UPDATE module_config SET source_e = 0 WHERE source_e = OLD.number+288;
+    UPDATE module_config SET source_f = 0 WHERE source_f = OLD.number+288;
+    UPDATE module_config SET source_g = 0 WHERE source_g = OLD.number+288;
+    UPDATE module_config SET source_h = 0 WHERE source_h = OLD.number+288;
     UPDATE module_config SET insert_source = 0 WHERE insert_source = OLD.number+288;
     UPDATE dest_config SET source = 0 WHERE source = OLD.number+288;
     UPDATE dest_config SET mix_minus_source = 0 WHERE mix_minus_source = OLD.number+288;

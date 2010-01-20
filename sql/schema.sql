@@ -174,6 +174,14 @@ CREATE TABLE module_config (
   source_c_preset smallint,
   source_d smallint NOT NULL DEFAULT 0,
   source_d_preset smallint,
+  source_e smallint NOT NULL DEFAULT 0,
+  source_e_preset smallint,
+  source_f smallint NOT NULL DEFAULT 0,
+  source_f_preset smallint,
+  source_g smallint NOT NULL DEFAULT 0,
+  source_g_preset smallint,
+  source_h smallint NOT NULL DEFAULT 0,
+  source_h_preset smallint,
   use_insert_preset boolean NOT NULL DEFAULT FALSE,
   insert_source smallint NOT NULL DEFAULT 0,
   insert_on_off boolean NOT NULL DEFAULT FALSE,
@@ -503,7 +511,7 @@ CREATE TABLE src_preset (
 
 CREATE TABLE routing_preset (
   mod_number smallint NOT NULL CHECK (mod_number>=1 AND mod_number<=128),
-  mod_preset varchar(1) NOT NULL CHECK(mod_preset='A' OR mod_preset='B' OR mod_preset='C' OR mod_preset='D'),
+  mod_preset varchar(1) NOT NULL CHECK(mod_preset>='A' AND mod_preset<='H'),
   buss_1_2_use_preset boolean NOT NULL DEFAULT FALSE,
   buss_1_2_level float NOT NULL DEFAULT 0 CHECK(buss_1_2_level>=-140 AND buss_1_2_level<=10),
   buss_1_2_on_off boolean NOT NULL DEFAULT TRUE,
@@ -618,7 +626,7 @@ CREATE TABLE console_preset (
   console2 boolean NOT NULL DEFAULT FALSE;
   console3 boolean NOT NULL DEFAULT FALSE;
   console4 boolean NOT NULL DEFAULT FALSE;
-  mod_preset varchar(1) DEFAULT 'A' CHECK(input='A' OR input='B' OR input='C' OR input='D'),
+  mod_preset varchar(1) DEFAULT 'A' CHECK(mod_preset>='A' AND mod_preset<='H'),
   buss_preset smallint CHECK(number>=1 AND number<=1280)
 );
 
@@ -636,6 +644,10 @@ ALTER TABLE module_config             ADD FOREIGN KEY (source_a_preset)    REFER
 ALTER TABLE module_config             ADD FOREIGN KEY (source_b_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
 ALTER TABLE module_config             ADD FOREIGN KEY (source_c_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
 ALTER TABLE module_config             ADD FOREIGN KEY (source_d_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_e_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_f_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_g_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_h_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
 ALTER TABLE src_config                ADD FOREIGN KEY (default_src_preset) REFERENCES src_preset (number)   ON DELETE SET NULL;
 ALTER TABLE buss_preset_rows          ADD FOREIGN KEY (number)             REFERENCES buss_preset (number)  ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE monitor_buss_preset_rows  ADD FOREIGN KEY (number)             REFERENCES buss_preset (number)  ON DELETE CASCADE ON UPDATE CASCADE;
