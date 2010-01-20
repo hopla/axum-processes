@@ -2573,9 +2573,28 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
           {
             if (type == MBN_DATATYPE_STATE)
             {
+              int NrOfBussPre = 0;
+              int NrOfModules = 0;
+              bool BussPre = 0;
+              for (int cntModule=0; cntModule<128; cntModule++)
+              {
+                if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
+                {
+                  NrOfModules++;
+                  if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
+                  {
+                    NrOfBussPre++;
+                  }
+                }
+              }
+              if ((NrOfBussPre*2) > NrOfModules)
+              {
+                BussPre = 1;
+              }
+
               if (data.State)
               {
-                AxumData.BussMasterData[BussNr].PreModuleLevel = !AxumData.BussMasterData[BussNr].PreModuleLevel;
+                BussPre = !BussPre;
               }
               else
               {
@@ -2584,20 +2603,24 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
                   {
-                    AxumData.BussMasterData[BussNr].PreModuleLevel = !AxumData.BussMasterData[BussNr].PreModuleLevel;
+                    BussPre = !BussPre;
                   }
                 }
               }
 
               for (int cntModule=0; cntModule<128; cntModule++)
               {
-                SetAxum_BussLevels(cntModule);
+                if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
+                {
+                  AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel = BussPre;
+                  SetAxum_BussLevels(cntModule);
+                }
               }
 
               CheckObjectsToSent(SensorReceiveFunctionNumber);
 
               if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-                    (AxumData.BussMasterData[BussNr].PreModuleLevel))
+                    (BussPre))
               {
                 printf("Have to check monitor routing and muting\n");
                 DoAxum_ModulePreStatusChanged(BussNr);
@@ -2846,9 +2869,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               case MONITOR_BUSS_FUNCTION_BUSS_31_32_ON_OFF:
               {
                 int BussNr = FunctionNr - MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF;
+                bool BussPre = 0;
+
+                for (int cntModule=0; cntModule<128; cntModule++)
+                {
+                  if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
+                  {
+                    if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
+                    {
+                      BussPre = 1;
+                    }
+                  }
+                }
 
                 if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-                      (AxumData.BussMasterData[BussNr].PreModuleLevel))
+                      (BussPre))
                 {
                   printf("Have to check monitor routing and muting\n");
                   DoAxum_ModulePreStatusChanged(BussNr);
@@ -4329,8 +4364,20 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     }
                   }
 
+                  bool BussPre = 0;
+                  for (int cntModule=0; cntModule<128; cntModule++)
+                  {
+                    if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
+                    {
+                      if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
+                      {
+                        BussPre = 1;
+                      }
+                    }
+                  }
+
                   if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-                        (AxumData.BussMasterData[BussNr].PreModuleLevel))
+                        (BussPre))
                   {
                     printf("Have to check monitor routing and muting\n");
                     DoAxum_ModulePreStatusChanged(BussNr);
@@ -4463,8 +4510,20 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     }
                   }
 
+                  bool BussPre = 0;
+                  for (int cntModule=0; cntModule<128; cntModule++)
+                  {
+                    if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
+                    {
+                      if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
+                      {
+                        BussPre = 1;
+                      }
+                    }
+                  }
+
                   if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-                        (AxumData.BussMasterData[BussNr].PreModuleLevel))
+                        (BussPre))
                   {
                     printf("Have to check monitor routing and muting\n");
                     DoAxum_ModulePreStatusChanged(BussNr);
@@ -4629,8 +4688,20 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   }
                 }
 
+                bool BussPre = 0;
+                for (int cntModule=0; cntModule<128; cntModule++)
+                {
+                  if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
+                  {
+                    if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
+                    {
+                      BussPre = 1;
+                    }
+                  }
+                }
+
                 if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-                      (AxumData.BussMasterData[BussNr].PreModuleLevel))
+                      (BussPre))
                 {
                   printf("Have to check monitor routing and muting\n");
                   DoAxum_ModulePreStatusChanged(BussNr);
@@ -6380,7 +6451,7 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
                 dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += BussBalancedB[0];
                 dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += BussBalancedB[1];
 
-                if ((!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel) && (!AxumData.BussMasterData[cntBuss].PreModuleLevel))
+                if (!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel)
                 {
                   dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
                   dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
@@ -6412,7 +6483,7 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
                 dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += BussBalancedB[0];
                 dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += BussBalancedB[1];
 
-                if ((!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel) && (!AxumData.BussMasterData[cntBuss].PreModuleLevel))
+                if (!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel)
                 {
                   dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
                   dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
@@ -6444,7 +6515,7 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
               dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += -6;
               dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += -6;
 
-              if ((!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel) && (!AxumData.BussMasterData[cntBuss].PreModuleLevel))
+              if (!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel)
               {
                 dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
                 dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
@@ -6472,7 +6543,7 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
           dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
           dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level += BussBalancedB[cntChannel];
 
-          if ((!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel) && (!AxumData.BussMasterData[cntBuss].PreModuleLevel))
+          if (!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel)
           {
             dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
           }
@@ -8326,7 +8397,26 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_STATE:
             {
-              data.State = AxumData.BussMasterData[BussNr].PreModuleLevel;
+              int NrOfBussPre = 0;
+              int NrOfModules = 0;
+              bool BussPre = 0;
+              for (int cntModule=0; cntModule<128; cntModule++)
+              {
+                if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
+                {
+                  NrOfModules++;
+                  if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
+                  {
+                    NrOfBussPre++;
+                  }
+                }
+              }
+              if ((NrOfBussPre*2) > NrOfModules)
+              {
+                BussPre = 1;
+              }
+
+              data.State = BussPre;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
@@ -12108,8 +12198,21 @@ void DoAxum_BussReset(int BussNr)
 
   if (BussWasActive)
   {
+    bool BussPre = 0;
+
+    for (int cntModule=0; cntModule<128; cntModule++)
+    {
+      if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
+      {
+        if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
+        {
+          BussPre = 1;
+        }
+      }
+    }
+
     if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-          (AxumData.BussMasterData[BussNr].PreModuleLevel))
+          (BussPre))
     {
       printf("Have to check monitor routing and muting\n");
       DoAxum_ModulePreStatusChanged(BussNr);
@@ -12158,8 +12261,7 @@ int SourceActive(unsigned int InputSourceNr)
         unsigned char LevelActive = 0;
         unsigned char OnActive = 0;
 
-        if ((AxumData.BussMasterData[cntBuss].PreModuleLevel) ||
-            (AxumData.ModuleData[cntModule].Buss[cntBuss].PreModuleLevel))
+        if (AxumData.ModuleData[cntModule].Buss[cntBuss].PreModuleLevel)
         {
           BussPreModuleLevelActive = 1;
         }
@@ -13000,8 +13102,19 @@ void SetBussOnOff(int ModuleNr, int BussNr, int LoadPreset)
 
   DoAxum_ModuleStatusChanged(ModuleNr, 0);
 
+  bool BussPre = 0;
+  for (int cntModule=0; cntModule<128; cntModule++)
+  {
+    if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
+    {
+      if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
+      {
+        BussPre = 1;
+      }
+    }
+  }
   if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-        (AxumData.BussMasterData[BussNr].PreModuleLevel))
+        (BussPre))
   {
     printf("Have to check monitor routing and muting\n");
     DoAxum_ModulePreStatusChanged(BussNr);
@@ -13402,7 +13515,6 @@ void initialize_axum_data_struct()
     AxumData.BussMasterData[cntBuss].Console = 0;
 
     AxumData.BussMasterData[cntBuss].PreModuleOn = 0;
-    AxumData.BussMasterData[cntBuss].PreModuleLevel = 0;
     AxumData.BussMasterData[cntBuss].PreModuleBalance = 0;
 
     AxumData.BussMasterData[cntBuss].Interlock = 0;

@@ -317,7 +317,6 @@ typedef struct
   bool On;
 
   bool PreModuleOn;
-  bool PreModuleLevel;
   bool PreModuleBalance;
 
   bool Interlock;
