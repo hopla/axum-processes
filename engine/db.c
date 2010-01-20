@@ -279,7 +279,6 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
                                     lc_frequency,         \
                                     lc_on_off,            \
                                     use_insert_preset,    \
-                                    insert_source,        \
                                     insert_on_off,        \
                                     use_phase_preset,     \
                                     phase,                \
@@ -362,7 +361,6 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
     PresetData->FilterOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     PresetData->UseInsert = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &PresetData->InsertSource);
     PresetData->InsertOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     PresetData->UsePhase = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");

@@ -6329,7 +6329,14 @@ void SetAxum_ModuleProcessing(unsigned int ModuleNr)
 
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
-    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Insert = AxumData.ModuleData[ModuleNr].InsertOnOff;
+    if (AxumData.ModuleData[ModuleNr].InsertSource>0)
+    { // only turn on the insert if there is a source.
+      dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Insert = AxumData.ModuleData[ModuleNr].InsertOnOff;
+    }
+    else
+    {
+      dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Insert = 0;
+    }
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Gain = AxumData.ModuleData[ModuleNr].Gain;
 
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.On = AxumData.ModuleData[ModuleNr].FilterOnOff;
@@ -13190,7 +13197,6 @@ void initialize_axum_data_struct()
     AxumData.PresetData[cntPreset].FilterOnOff = false;
 
     AxumData.PresetData[cntPreset].UseInsert = false;
-    AxumData.PresetData[cntPreset].InsertSource = 0;
     AxumData.PresetData[cntPreset].InsertOnOff = false;
 
     AxumData.PresetData[cntPreset].UsePhase = false;
@@ -13722,7 +13728,7 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigne
     {
       if (PresetData->UseInsert)
       {
-        InsertSource = PresetData->InsertSource;
+        InsertSource = AxumData.ModuleData[ModuleNr].Defaults.InsertSource;
         InsertOnOff = PresetData->InsertOnOff;
       }
       else

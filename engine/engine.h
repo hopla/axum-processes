@@ -57,7 +57,6 @@ typedef struct {
   bool FilterOnOff;
 
   bool UseInsert;
-  unsigned int InsertSource;
   bool InsertOnOff;
 
   bool UsePhase;
