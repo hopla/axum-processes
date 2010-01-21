@@ -425,6 +425,7 @@ CREATE TABLE dest_config (
   output2_sub_ch smallint NOT NULL CHECK(output2_sub_ch>=0 AND output2_sub_ch<32),
   level float NOT NULL DEFAULT 0,
   source integer NOT NULL DEFAULT 0,
+  routing smallint NOT NULL DEFAULT 0 CHECK(routing>=0 AND routing<=3),
   mix_minus_source integer NOT NULL DEFAULT 0
 );
 
