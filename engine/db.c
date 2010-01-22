@@ -1328,7 +1328,7 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
   sprintf(str[0], "%hd", first_dest);
   sprintf(str[1], "%hd", last_dest);
 
-  PGresult *qres = sql_exec("SELECT number, label, output1_addr, output1_sub_ch, output2_addr, output2_sub_ch, level, source, mix_minus_source FROM dest_config WHERE number>=$1 AND number<=$2", 1, 2, params);
+  PGresult *qres = sql_exec("SELECT number, label, output1_addr, output1_sub_ch, output2_addr, output2_sub_ch, level, source, routing, mix_minus_source FROM dest_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -1353,6 +1353,7 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
     DestinationData->OutputData[1].SubChannel--;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DestinationData->Level);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->Source);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->Routing);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->MixMinusSource);
 
     if (AxumApplicationAndDSPInitialized)
