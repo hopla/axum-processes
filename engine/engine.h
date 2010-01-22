@@ -141,6 +141,7 @@ typedef struct
   unsigned char Mono;
   unsigned char Phase;
   unsigned char Talkback[16];
+  unsigned char Routing;
 
   unsigned int MixMinusSource;
   unsigned char MixMinusActive;

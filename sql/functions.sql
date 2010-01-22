@@ -867,4 +867,5 @@ INSERT INTO functions VALUES ('(6,,41)', 'Talkback 15', 3, 3);
 INSERT INTO functions VALUES ('(6,,42)', 'Talkback 15 & Monitor talkback 15', 0, 3);
 INSERT INTO functions VALUES ('(6,,43)', 'Talkback 16', 3, 3);
 INSERT INTO functions VALUES ('(6,,44)', 'Talkback 16 & Monitor talkback 16', 0, 3);
+INSERT INTO functions VALUES ('(6,,45)', 'Routing', 2, 4);
 

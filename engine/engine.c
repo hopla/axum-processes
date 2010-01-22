@@ -5296,6 +5296,18 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               }
             }
             break;
+            case DESTINATION_FUNCTION_ROUTING:
+            {
+              if (type == MBN_DATATYPE_SINT)
+              {
+                AxumData.DestinationData[DestinationNr].Routing += data.SInt%3;
+
+                SetAxum_DestinationSource(DestinationNr);
+
+                unsigned int FunctionNrToSent = 0x06000000 | (DestinationNr<<12);
+                CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_ROUTING);
+              }
+            }
           }
         }
         break;
@@ -7000,6 +7012,25 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
     else
     {
       axum_get_mtrx_chs_from_src(AxumData.DestinationData[DestinationNr].Source, &FromChannel1, &FromChannel2);
+    }
+
+    //Check routing of the destination;
+    switch (AxumData.DestinationData[DestinationNr].Routing)
+    {
+      case 0:
+      {//Stereo, do nothing
+      }
+      break;
+      case 1:
+      {//Left
+        FromChannel2 = FromChannel1;
+      }
+      break;
+      case 2:
+      {//Right
+        FromChannel1 = FromChannel2;
+      }
+      break;
     }
 
     if (Output1>-1)
@@ -9425,106 +9456,164 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
       switch (FunctionNr)
       {
-      case DESTINATION_FUNCTION_LABEL:
-      {
-        switch (DataType)
+        case DESTINATION_FUNCTION_LABEL:
         {
-          case MBN_DATATYPE_OCTETS:
-          {
-            data.Octets = (unsigned char *)AxumData.DestinationData[DestinationNr].DestinationName;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
-          }
-          break;
-        }
-      }
-      break;
-      case DESTINATION_FUNCTION_SOURCE:
-      {
-        switch (DataType)
-        {
-          case MBN_DATATYPE_OCTETS:
-          {
-            GetSourceLabel(AxumData.DestinationData[DestinationNr].Source, LCDText, 8);
-
-            data.Octets = (unsigned char *)LCDText;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
-          }
-          break;
-        }
-      }
-      break;
-      case DESTINATION_FUNCTION_MONITOR_SPEAKER_LEVEL:
-      {
-        if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
-        {
-          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
-
           switch (DataType)
           {
-            case MBN_DATATYPE_UINT:
-            {
-              int dB = (AxumData.Monitor[MonitorBussNr].SpeakerLevel*10)+1400;
-              if (dB<0)
-              {
-                dB = 0;
-              }
-              else if (dB>=1500)
-              {
-                dB = 1499;
-              }
-              int Position = dB2Position[dB];
-              Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-              if (Position<DataMinimal)
-              {
-                Position = DataMinimal;
-              }
-              else if (Position>DataMaximal)
-              {
-                Position = DataMaximal;
-              }
-
-              data.UInt = Position;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
-            }
-            break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].SpeakerLevel);
+              data.Octets = (unsigned char *)AxumData.DestinationData[DestinationNr].DestinationName;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case DESTINATION_FUNCTION_SOURCE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+              GetSourceLabel(AxumData.DestinationData[DestinationNr].Source, LCDText, 8);
+
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
-            case MBN_DATATYPE_FLOAT:
-            {
-              float Level = AxumData.Monitor[MonitorBussNr].SpeakerLevel;
-              if (Level<DataMinimal)
-              {
-                Level = DataMinimal;
-              }
-              else if (Level>DataMaximal)
-              {
-                Level = DataMaximal;
-              }
-              data.Float = Level;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
-            }
-            break;
           }
         }
-      }
-      break;
-      case DESTINATION_FUNCTION_MONITOR_PHONES_LEVEL:
-      {
-        if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+        break;
+        case DESTINATION_FUNCTION_MONITOR_SPEAKER_LEVEL:
         {
-          int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
+          if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+          {
+            int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
 
+            switch (DataType)
+            {
+              case MBN_DATATYPE_UINT:
+              {
+                int dB = (AxumData.Monitor[MonitorBussNr].SpeakerLevel*10)+1400;
+                if (dB<0)
+                {
+                  dB = 0;
+                }
+                else if (dB>=1500)
+                {
+                  dB = 1499;
+                }
+                int Position = dB2Position[dB];
+                Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
+                if (Position<DataMinimal)
+                {
+                  Position = DataMinimal;
+                }
+                else if (Position>DataMaximal)
+                {
+                  Position = DataMaximal;
+                }
+
+                data.UInt = Position;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+              }
+              break;
+              case MBN_DATATYPE_OCTETS:
+              {
+                sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].SpeakerLevel);
+                data.Octets = (unsigned char *)LCDText;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              }
+              break;
+              case MBN_DATATYPE_FLOAT:
+              {
+                float Level = AxumData.Monitor[MonitorBussNr].SpeakerLevel;
+                if (Level<DataMinimal)
+                {
+                  Level = DataMinimal;
+                }
+                else if (Level>DataMaximal)
+                {
+                  Level = DataMaximal;
+                }
+                data.Float = Level;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+              }
+              break;
+            }
+          }
+        }
+        break;
+        case DESTINATION_FUNCTION_MONITOR_PHONES_LEVEL:
+        {
+          if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+          {
+            int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
+
+            switch (DataType)
+            {
+              case MBN_DATATYPE_UINT:
+              {
+                int dB = 0;
+                dB = ((AxumData.Monitor[MonitorBussNr].PhonesLevel-20)*10)+1400;
+
+                if (dB<0)
+                {
+                  dB = 0;
+                }
+                else if (dB>=1500)
+                {
+                  dB = 1499;
+                }
+                int Position = dB2Position[dB];
+                Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
+                if (Position<DataMinimal)
+                {
+                  Position = DataMinimal;
+                }
+                else if (Position>DataMaximal)
+                {
+                  Position = DataMaximal;
+                }
+
+                data.UInt = Position;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+              }
+              break;
+              case MBN_DATATYPE_OCTETS:
+              {
+                sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].PhonesLevel);
+                data.Octets = (unsigned char *)LCDText;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              }
+              break;
+              case MBN_DATATYPE_FLOAT:
+              {
+                float Level = AxumData.Monitor[MonitorBussNr].PhonesLevel;
+                if (Level<DataMinimal)
+                {
+                  Level = DataMinimal;
+                }
+                else if (Level>DataMaximal)
+                {
+                  Level = DataMaximal;
+                }
+                data.Float = Level;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+              }
+              break;
+            }
+          }
+        }
+        break;
+        case DESTINATION_FUNCTION_LEVEL:
+        {
           switch (DataType)
           {
             case MBN_DATATYPE_UINT:
             {
               int dB = 0;
-              dB = ((AxumData.Monitor[MonitorBussNr].PhonesLevel-20)*10)+1400;
+              dB = ((AxumData.DestinationData[DestinationNr].Level)*10)+1400;
 
               if (dB<0)
               {
@@ -9551,14 +9640,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].PhonesLevel);
+              sprintf(LCDText, " %4.0f dB", AxumData.DestinationData[DestinationNr].Level);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
             case MBN_DATATYPE_FLOAT:
             {
-              float Level = AxumData.Monitor[MonitorBussNr].PhonesLevel;
+              float Level = AxumData.DestinationData[DestinationNr].Level;
               if (Level<DataMinimal)
               {
                 Level = DataMinimal;
@@ -9573,285 +9662,259 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             break;
           }
         }
-      }
-      break;
-      case DESTINATION_FUNCTION_LEVEL:
-      {
-        switch (DataType)
+        break;
+        case DESTINATION_FUNCTION_MUTE:
         {
-          case MBN_DATATYPE_UINT:
+          switch (DataType)
           {
-            int dB = 0;
-            dB = ((AxumData.DestinationData[DestinationNr].Level)*10)+1400;
-
-            if (dB<0)
+            case MBN_DATATYPE_STATE:
             {
-              dB = 0;
+              data.State = AxumData.DestinationData[DestinationNr].Mute;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
-            else if (dB>=1500)
-            {
-              dB = 1499;
-            }
-            int Position = dB2Position[dB];
-            Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-            if (Position<DataMinimal)
-            {
-              Position = DataMinimal;
-            }
-            else if (Position>DataMaximal)
-            {
-              Position = DataMaximal;
-            }
-
-            data.UInt = Position;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+            break;
           }
-          break;
-          case MBN_DATATYPE_OCTETS:
-          {
-            sprintf(LCDText, " %4.0f dB", AxumData.DestinationData[DestinationNr].Level);
-            data.Octets = (unsigned char *)LCDText;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
-          }
-          break;
-          case MBN_DATATYPE_FLOAT:
-          {
-            float Level = AxumData.DestinationData[DestinationNr].Level;
-            if (Level<DataMinimal)
-            {
-              Level = DataMinimal;
-            }
-            else if (Level>DataMaximal)
-            {
-              Level = DataMaximal;
-            }
-            data.Float = Level;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
-          }
-          break;
         }
-      }
-      break;
-      case DESTINATION_FUNCTION_MUTE:
-      {
-        switch (DataType)
+        break;
+        case DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE:
         {
-          case MBN_DATATYPE_STATE:
+          switch (DataType)
           {
-            data.State = AxumData.DestinationData[DestinationNr].Mute;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-          }
-          break;
-        }
-      }
-      break;
-      case DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE:
-      {
-        switch (DataType)
-        {
-          case MBN_DATATYPE_STATE:
-          {
-            Active = AxumData.DestinationData[DestinationNr].Mute;
-
-            if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+            case MBN_DATATYPE_STATE:
             {
-              int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
-              if (AxumData.Monitor[MonitorBussNr].Mute)
+              Active = AxumData.DestinationData[DestinationNr].Mute;
+
+              if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
               {
-                Active = 1;
+                int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
+                if (AxumData.Monitor[MonitorBussNr].Mute)
+                {
+                  Active = 1;
+                }
               }
+
+              data.State = Active;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
-
-            data.State = Active;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            break;
           }
-          break;
         }
-      }
-      break;
-      case DESTINATION_FUNCTION_DIM:
-      {
-        switch (DataType)
+        break;
+        case DESTINATION_FUNCTION_DIM:
         {
-          case MBN_DATATYPE_STATE:
+          switch (DataType)
           {
-            data.State = AxumData.DestinationData[DestinationNr].Dim;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-          }
-          break;
-        }
-      }
-      break;
-      case DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM:
-      {
-        switch (DataType)
-        {
-          case MBN_DATATYPE_STATE:
-          {
-            Active = AxumData.DestinationData[DestinationNr].Dim;
-
-            if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+            case MBN_DATATYPE_STATE:
             {
-              int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
-              if (AxumData.Monitor[MonitorBussNr].Dim)
-              {
-                Active = 1;
-              }
+              data.State = AxumData.DestinationData[DestinationNr].Dim;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
-
-            data.State = Active;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            break;
           }
-          break;
         }
-      }
-      break;
-      case DESTINATION_FUNCTION_MONO:
-      {
-        switch (DataType)
+        break;
+        case DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM:
         {
-          case MBN_DATATYPE_STATE:
+          switch (DataType)
           {
-            Active = AxumData.DestinationData[DestinationNr].Mono;
-
-            data.State = Active;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-          }
-          break;
-        }
-      }
-      break;
-      case DESTINATION_FUNCTION_MONO_AND_MONITOR_MONO:
-      {
-        switch (DataType)
-        {
-          case MBN_DATATYPE_STATE:
-          {
-            Active = AxumData.DestinationData[DestinationNr].Mono;
-
-            if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+            case MBN_DATATYPE_STATE:
             {
-              int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
-              if (AxumData.Monitor[MonitorBussNr].Mono)
+              Active = AxumData.DestinationData[DestinationNr].Dim;
+
+              if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
               {
-                Active = 1;
+                int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
+                if (AxumData.Monitor[MonitorBussNr].Dim)
+                {
+                  Active = 1;
+                }
               }
+
+              data.State = Active;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
-
-            data.State = Active;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            break;
           }
-          break;
         }
-      }
-      break;
-      case DESTINATION_FUNCTION_PHASE:
-      {
-        switch (DataType)
+        break;
+        case DESTINATION_FUNCTION_MONO:
         {
-          case MBN_DATATYPE_STATE:
+          switch (DataType)
           {
-            data.State = AxumData.DestinationData[DestinationNr].Phase;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-          }
-          break;
-        }
-      }
-      break;
-      case DESTINATION_FUNCTION_PHASE_AND_MONITOR_PHASE:
-      {
-        switch (DataType)
-        {
-          case MBN_DATATYPE_STATE:
-          {
-            Active = AxumData.DestinationData[DestinationNr].Phase;
-
-            if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+            case MBN_DATATYPE_STATE:
             {
-              int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
-              if (AxumData.Monitor[MonitorBussNr].Phase)
-              {
-                Active = 1;
-              }
+              Active = AxumData.DestinationData[DestinationNr].Mono;
+
+              data.State = Active;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
-
-            data.State = Active;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            break;
           }
-          break;
         }
-      }
-      break;
-      case DESTINATION_FUNCTION_TALKBACK_1:
-      case DESTINATION_FUNCTION_TALKBACK_2:
-      case DESTINATION_FUNCTION_TALKBACK_3:
-      case DESTINATION_FUNCTION_TALKBACK_4:
-      case DESTINATION_FUNCTION_TALKBACK_5:
-      case DESTINATION_FUNCTION_TALKBACK_6:
-      case DESTINATION_FUNCTION_TALKBACK_7:
-      case DESTINATION_FUNCTION_TALKBACK_8:
-      case DESTINATION_FUNCTION_TALKBACK_9:
-      case DESTINATION_FUNCTION_TALKBACK_10:
-      case DESTINATION_FUNCTION_TALKBACK_11:
-      case DESTINATION_FUNCTION_TALKBACK_12:
-      case DESTINATION_FUNCTION_TALKBACK_13:
-      case DESTINATION_FUNCTION_TALKBACK_14:
-      case DESTINATION_FUNCTION_TALKBACK_15:
-      case DESTINATION_FUNCTION_TALKBACK_16:
-      {
-        int TalkbackNr = (FunctionNr-DESTINATION_FUNCTION_TALKBACK_1)/(DESTINATION_FUNCTION_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1);
-        switch (DataType)
+        break;
+        case DESTINATION_FUNCTION_MONO_AND_MONITOR_MONO:
         {
-          case MBN_DATATYPE_STATE:
+          switch (DataType)
           {
-            data.State = AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr];
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-          }
-          break;
-        }
-      }
-      break;
-      case DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1:
-      case DESTINATION_FUNCTION_TALKBACK_2_AND_MONITOR_TALKBACK_2:
-      case DESTINATION_FUNCTION_TALKBACK_3_AND_MONITOR_TALKBACK_3:
-      case DESTINATION_FUNCTION_TALKBACK_4_AND_MONITOR_TALKBACK_4:
-      case DESTINATION_FUNCTION_TALKBACK_5_AND_MONITOR_TALKBACK_5:
-      case DESTINATION_FUNCTION_TALKBACK_6_AND_MONITOR_TALKBACK_6:
-      case DESTINATION_FUNCTION_TALKBACK_7_AND_MONITOR_TALKBACK_7:
-      case DESTINATION_FUNCTION_TALKBACK_8_AND_MONITOR_TALKBACK_8:
-      case DESTINATION_FUNCTION_TALKBACK_9_AND_MONITOR_TALKBACK_9:
-      case DESTINATION_FUNCTION_TALKBACK_10_AND_MONITOR_TALKBACK_10:
-      case DESTINATION_FUNCTION_TALKBACK_11_AND_MONITOR_TALKBACK_11:
-      case DESTINATION_FUNCTION_TALKBACK_12_AND_MONITOR_TALKBACK_12:
-      case DESTINATION_FUNCTION_TALKBACK_13_AND_MONITOR_TALKBACK_13:
-      case DESTINATION_FUNCTION_TALKBACK_14_AND_MONITOR_TALKBACK_14:
-      case DESTINATION_FUNCTION_TALKBACK_15_AND_MONITOR_TALKBACK_15:
-      case DESTINATION_FUNCTION_TALKBACK_16_AND_MONITOR_TALKBACK_16:
-      {
-        int TalkbackNr = (FunctionNr-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1)/(DESTINATION_FUNCTION_TALKBACK_2_AND_MONITOR_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1);
-
-        switch (DataType)
-        {
-          case MBN_DATATYPE_STATE:
-          {
-            Active = AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr];
-
-            if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+            case MBN_DATATYPE_STATE:
             {
-              int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
-              if (AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr])
-              {
-                Active = 1;
-              }
-            }
+              Active = AxumData.DestinationData[DestinationNr].Mono;
 
-            data.State = Active;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+              {
+                int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
+                if (AxumData.Monitor[MonitorBussNr].Mono)
+                {
+                  Active = 1;
+                }
+              }
+
+              data.State = Active;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
           }
-          break;
         }
-      }
-      break;
+        break;
+        case DESTINATION_FUNCTION_PHASE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              data.State = AxumData.DestinationData[DestinationNr].Phase;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case DESTINATION_FUNCTION_PHASE_AND_MONITOR_PHASE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              Active = AxumData.DestinationData[DestinationNr].Phase;
+
+              if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+              {
+                int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
+                if (AxumData.Monitor[MonitorBussNr].Phase)
+                {
+                  Active = 1;
+                }
+              }
+
+              data.State = Active;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case DESTINATION_FUNCTION_TALKBACK_1:
+        case DESTINATION_FUNCTION_TALKBACK_2:
+        case DESTINATION_FUNCTION_TALKBACK_3:
+        case DESTINATION_FUNCTION_TALKBACK_4:
+        case DESTINATION_FUNCTION_TALKBACK_5:
+        case DESTINATION_FUNCTION_TALKBACK_6:
+        case DESTINATION_FUNCTION_TALKBACK_7:
+        case DESTINATION_FUNCTION_TALKBACK_8:
+        case DESTINATION_FUNCTION_TALKBACK_9:
+        case DESTINATION_FUNCTION_TALKBACK_10:
+        case DESTINATION_FUNCTION_TALKBACK_11:
+        case DESTINATION_FUNCTION_TALKBACK_12:
+        case DESTINATION_FUNCTION_TALKBACK_13:
+        case DESTINATION_FUNCTION_TALKBACK_14:
+        case DESTINATION_FUNCTION_TALKBACK_15:
+        case DESTINATION_FUNCTION_TALKBACK_16:
+        {
+          int TalkbackNr = (FunctionNr-DESTINATION_FUNCTION_TALKBACK_1)/(DESTINATION_FUNCTION_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1);
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              data.State = AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1:
+        case DESTINATION_FUNCTION_TALKBACK_2_AND_MONITOR_TALKBACK_2:
+        case DESTINATION_FUNCTION_TALKBACK_3_AND_MONITOR_TALKBACK_3:
+        case DESTINATION_FUNCTION_TALKBACK_4_AND_MONITOR_TALKBACK_4:
+        case DESTINATION_FUNCTION_TALKBACK_5_AND_MONITOR_TALKBACK_5:
+        case DESTINATION_FUNCTION_TALKBACK_6_AND_MONITOR_TALKBACK_6:
+        case DESTINATION_FUNCTION_TALKBACK_7_AND_MONITOR_TALKBACK_7:
+        case DESTINATION_FUNCTION_TALKBACK_8_AND_MONITOR_TALKBACK_8:
+        case DESTINATION_FUNCTION_TALKBACK_9_AND_MONITOR_TALKBACK_9:
+        case DESTINATION_FUNCTION_TALKBACK_10_AND_MONITOR_TALKBACK_10:
+        case DESTINATION_FUNCTION_TALKBACK_11_AND_MONITOR_TALKBACK_11:
+        case DESTINATION_FUNCTION_TALKBACK_12_AND_MONITOR_TALKBACK_12:
+        case DESTINATION_FUNCTION_TALKBACK_13_AND_MONITOR_TALKBACK_13:
+        case DESTINATION_FUNCTION_TALKBACK_14_AND_MONITOR_TALKBACK_14:
+        case DESTINATION_FUNCTION_TALKBACK_15_AND_MONITOR_TALKBACK_15:
+        case DESTINATION_FUNCTION_TALKBACK_16_AND_MONITOR_TALKBACK_16:
+        {
+          int TalkbackNr = (FunctionNr-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1)/(DESTINATION_FUNCTION_TALKBACK_2_AND_MONITOR_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1);
+
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              Active = AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr];
+
+              if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.monitor_buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.monitor_buss))
+              {
+                int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
+                if (AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr])
+                {
+                  Active = 1;
+                }
+              }
+
+              data.State = Active;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case DESTINATION_FUNCTION_ROUTING:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+              switch (AxumData.DestinationData[DestinationNr].Routing)
+              {
+                case 0:
+                {
+                  sprintf(LCDText, " Stereo ");
+                }
+                break;
+                case 1:
+                {
+                  sprintf(LCDText, "Left    ");
+                }
+                break;
+                case 2:
+                {
+                  sprintf(LCDText, "   Right");
+                }
+                break;
+              }
+
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+          }
+        }
+        break;
       }
     }
     break;
@@ -13386,6 +13449,7 @@ void initialize_axum_data_struct()
     AxumData.DestinationData[cntDestination].Dim = 0;
     AxumData.DestinationData[cntDestination].Mono = 0;
     AxumData.DestinationData[cntDestination].Phase = 0;
+    AxumData.DestinationData[cntDestination].Routing = 0;
     AxumData.DestinationData[cntDestination].Talkback[0] = 0;
     AxumData.DestinationData[cntDestination].Talkback[1] = 0;
     AxumData.DestinationData[cntDestination].Talkback[2] = 0;
