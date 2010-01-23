@@ -507,6 +507,7 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
 void SetAxum_ModuleSource(unsigned int ModuleNr);
 void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource);
 void SetAxum_ModuleInsertSource(unsigned int ModuleNr);
+void SetAxum_RemoveOutputRouting(unsigned int OutputMambaNetAddress, unsigned char SubChannel);
 void SetAxum_DestinationSource(unsigned int DestinationNr);
 void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr);
 void SetAxum_TalkbackSource(unsigned int TalkbackNr);

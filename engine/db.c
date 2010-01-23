@@ -496,16 +496,22 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     AXUM_SOURCE_DATA_STRUCT *SourceData = &AxumData.SourceData[number-1];
 
     strncpy(SourceData->SourceName, PQgetvalue(qres, cntRow, cntField++), 32);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[0].MambaNetAddress);
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[0].MambaNetAddress) <= 0)
+    {
+      SourceData->InputData[0].MambaNetAddress = 0;
+    }
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->InputData[0].SubChannel);
     SourceData->InputData[0].SubChannel--;
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[1].MambaNetAddress);
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->InputData[1].MambaNetAddress) <= 0)
+    {
+      SourceData->InputData[1].MambaNetAddress = 0;
+    }
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->InputData[1].SubChannel);
     SourceData->InputData[1].SubChannel--;
     SourceData->Phantom = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Pad = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Gain);
-    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->DefaultProcessingPreset) < 0)
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->DefaultProcessingPreset) <= 0)
     {
       SourceData->DefaultProcessingPreset = 0;
     }
@@ -1334,6 +1340,7 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
+
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     short int number;
@@ -1344,11 +1351,21 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
 
     AXUM_DESTINATION_DATA_STRUCT *DestinationData = &AxumData.DestinationData[number-1];
 
+    unsigned int OldOutput1Address = DestinationData->OutputData[0].MambaNetAddress;
+    unsigned char OldOutput1SubChannel = DestinationData->OutputData[0].SubChannel;
+    unsigned int OldOutput2Address = DestinationData->OutputData[1].MambaNetAddress;
+    unsigned char OldOutput2SubChannel = DestinationData->OutputData[1].SubChannel;
     strncpy(DestinationData->DestinationName, PQgetvalue(qres, cntRow, cntField++), 32);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[0].MambaNetAddress);
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[0].MambaNetAddress) <= 0)
+    {
+      DestinationData->OutputData[0].MambaNetAddress = 0;
+    }
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[0].SubChannel);
     DestinationData->OutputData[0].SubChannel--;
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[1].MambaNetAddress);
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->OutputData[1].MambaNetAddress) <= 0)
+    {
+      DestinationData->OutputData[1].MambaNetAddress = 0;
+    }
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->OutputData[1].SubChannel);
     DestinationData->OutputData[1].SubChannel--;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DestinationData->Level);
@@ -1356,6 +1373,14 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DestinationData->Routing);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DestinationData->MixMinusSource);
 
+    if ((DestinationData->OutputData[0].MambaNetAddress == 0) && (OldOutput1Address > 0))
+    {
+      SetAxum_RemoveOutputRouting(OldOutput1Address, OldOutput1SubChannel);
+    }
+    if ((DestinationData->OutputData[1].MambaNetAddress == 0) && (OldOutput2Address > 0))
+    {
+      SetAxum_RemoveOutputRouting(OldOutput2Address, OldOutput2SubChannel);
+    }
     if (AxumApplicationAndDSPInitialized)
     {
       SetAxum_DestinationSource(number-1);

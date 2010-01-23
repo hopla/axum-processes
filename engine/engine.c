@@ -6899,6 +6899,53 @@ void SetAxum_ModuleInsertSource(unsigned int ModuleNr)
   }
 }
 
+void SetAxum_RemoveOutputRouting(unsigned int OutputMambaNetAddress, unsigned char OutputSubChannel)
+{
+  int Output = -1;
+
+  //Get slot number from MambaNet Address
+  for (int cntSlot=0; cntSlot<15; cntSlot++)
+  {
+    if (OutputMambaNetAddress)
+    {
+      if (AxumData.RackOrganization[cntSlot] == OutputMambaNetAddress)
+      {
+        Output = cntSlot*32;
+      }
+    }
+  }
+  for (int cntSlot=15; cntSlot<19; cntSlot++)
+  {
+    if (OutputMambaNetAddress)
+    {
+      if (AxumData.RackOrganization[cntSlot] == OutputMambaNetAddress)
+      {
+        Output = 480+((cntSlot-15)*32*5);
+      }
+    }
+  }
+  for (int cntSlot=21; cntSlot<42; cntSlot++)
+  {
+    if (OutputMambaNetAddress)
+    {
+      if (AxumData.RackOrganization[cntSlot] == OutputMambaNetAddress)
+      {
+        Output = 1120+((cntSlot-21)*32);
+      }
+    }
+  }
+
+  if (Output != -1)
+  {
+    Output += OutputSubChannel;
+  }
+
+  if (Output>-1)
+  {
+    SetBackplane_Source(0, Output);
+  }
+}
+
 void SetAxum_DestinationSource(unsigned int DestinationNr)
 {
   int Output1 = -1;
