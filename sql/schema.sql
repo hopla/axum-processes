@@ -182,6 +182,7 @@ CREATE TABLE module_config (
   source_g_preset smallint,
   source_h smallint NOT NULL DEFAULT 0,
   source_h_preset smallint,
+  overrule_active boolean NOT NULL DEFAULT FALSE,
   use_insert_preset boolean NOT NULL DEFAULT FALSE,
   insert_source smallint NOT NULL DEFAULT 0,
   insert_on_off boolean NOT NULL DEFAULT FALSE,
