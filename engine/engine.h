@@ -560,5 +560,6 @@ unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck);
 
 unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset);
 void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength);
+unsigned int GetFunctionNrFromControlMode(int ControlNr);
 
 #endif
