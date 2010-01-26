@@ -9207,6 +9207,55 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         { //Master control 1-4
           MasterModeControllerSetData(SensorReceiveFunctionNumber, MambaNetAddress, ObjectNr, DataType, DataSize, DataMinimal, DataMaximal);
         }
+
+        switch (FunctionNr)
+        {
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_1:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_2:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_3:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_4:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_5:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_6:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_7:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_8:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_9:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_10:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_11:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_12:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_13:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_14:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_15:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_16:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_17:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_18:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_19:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_20:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_21:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_22:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_23:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_24:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_25:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_26:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_27:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_28:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_29:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_30:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_31:
+          case GLOBAL_FUNCTION_CONSOLE_PRESET_32:
+          {
+            int PresetNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_PRESET_1;
+            int Active = 0;
+
+            if (AxumData.SelectedConsolePreset == PresetNr)
+            {
+              Active = 1;
+            }
+
+            data.State = Active;
+            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          }
+          break;
+        }
       }
     }
     break;
@@ -13754,6 +13803,7 @@ void initialize_axum_data_struct()
   AxumData.LevelReserve = 0;
   AxumData.AutoMomentary = false;
   AxumData.StartupState = false;
+  AxumData.SelectedConsolePreset = -1;
 
   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
   {
@@ -14667,11 +14717,20 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects)
         }
       }
     }
+    int OldSelectedConsolePreset = AxumData.SelectedConsolePreset;
+    AxumData.SelectedConsolePreset = PresetNr;
 
     if ((MixMonitorPresetNr>=0) && (MixMonitorPresetNr<1280))
     {
       LoadBussMasterPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr].Console, SetAllObjects);
       LoadMonitorBussPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr].Console, SetAllObjects);
+    }
+
+    if (OldSelectedConsolePreset != PresetNr)
+    {
+      unsigned int FunctionNrToSent = 0x04000000;
+      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldSelectedConsolePreset));
+      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+PresetNr));
     }
   }
 }
