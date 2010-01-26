@@ -7403,7 +7403,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   if (AxumData.ModuleData[ModuleNr].SourceA != 0)
                   {
-                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceA) &&
+                    if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceA) &&
                         (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceAPreset))
                     {
                       Active = 1;
@@ -7415,7 +7415,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   if (AxumData.ModuleData[ModuleNr].SourceB != 0)
                   {
-                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceB) &&
+                    if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceB) &&
                         (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceBPreset))
                     {
                       Active = 1;
@@ -7427,7 +7427,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   if (AxumData.ModuleData[ModuleNr].SourceC != 0)
                   {
-                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceC) &&
+                    if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceC) &&
                         (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceCPreset))
                     {
                       Active = 1;
@@ -7439,7 +7439,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   if (AxumData.ModuleData[ModuleNr].SourceD != 0)
                   {
-                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceD) &&
+                    if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceD) &&
                         (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceDPreset))
                     {
                       Active = 1;
@@ -7451,7 +7451,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   if (AxumData.ModuleData[ModuleNr].SourceE != 0)
                   {
-                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceE) &&
+                    if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceE) &&
                         (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceEPreset))
                     {
                       Active = 1;
@@ -7463,7 +7463,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   if (AxumData.ModuleData[ModuleNr].SourceF != 0)
                   {
-                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceF) &&
+                    if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceF) &&
                         (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceFPreset))
                     {
                       Active = 1;
@@ -7475,7 +7475,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   if (AxumData.ModuleData[ModuleNr].SourceG != 0)
                   {
-                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceG) &&
+                    if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceG) &&
                         (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceGPreset))
                     {
                       Active = 1;
@@ -7487,7 +7487,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   if (AxumData.ModuleData[ModuleNr].SourceH != 0)
                   {
-                    if ((AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceH) &&
+                    if ((AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceH) &&
                         (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceHPreset))
                     {
                       Active = 1;
