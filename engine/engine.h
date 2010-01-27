@@ -555,7 +555,7 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigne
 void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
 void LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
 void LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
-void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects);
+void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableActiveCheck);
 
 unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck);
 
