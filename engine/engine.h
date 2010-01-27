@@ -353,7 +353,7 @@ typedef struct
   bool AutoMomentary;
   bool StartupState;
 
-  int SelectedConsolePreset;
+  int SelectedConsolePreset[4];
 
   AXUM_MONITOR_OUTPUT_DATA_STRUCT Monitor[16];
   AXUM_EXTERN_SOURCE_DATA_STRUCT ExternSource[4];

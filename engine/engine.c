@@ -381,13 +381,13 @@ int main(int argc, char *argv[])
   db_read_src_config(1, 1280);
 
   //module_configuration
-  db_read_module_config(1, 128);
+  db_read_module_config(1, 128, 0xFF);
 
   //buss_configuration
-  db_read_buss_config(1, 16);
+  db_read_buss_config(1, 16, 0xFF);
 
   //monitor_buss_configuration
-  db_read_monitor_buss_config(1, 16);
+  db_read_monitor_buss_config(1, 16, 0xFF);
 
   //extern_source_configuration
   db_read_extern_src_config(1, 4);
@@ -4009,20 +4009,42 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   MasterModeControllerResetSensorChange(SensorReceiveFunctionNumber, type, data, DataType, DataSize, DataMinimal, DataMaximal);
                 }
                 break;
-                case GLOBAL_FUNCTION_CONSOLE_1_TO_PRESETS:
-                case GLOBAL_FUNCTION_CONSOLE_2_TO_PRESETS:
-                case GLOBAL_FUNCTION_CONSOLE_3_TO_PRESETS:
-                case GLOBAL_FUNCTION_CONSOLE_4_TO_PRESETS:
+                case GLOBAL_FUNCTION_CONSOLE_1_TO_PROGRAMMED_DEFAULTS:
+                case GLOBAL_FUNCTION_CONSOLE_2_TO_PROGRAMMED_DEFAULTS:
+                case GLOBAL_FUNCTION_CONSOLE_3_TO_PROGRAMMED_DEFAULTS:
+                case GLOBAL_FUNCTION_CONSOLE_4_TO_PROGRAMMED_DEFAULTS:
                 {
                   if (data.State)
                   {
-                    unsigned char ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_1_TO_PRESETS;
+                    unsigned char ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_1_TO_PROGRAMMED_DEFAULTS;
+
+                    db_lock(1);
+                    //module_configuration
+                    db_read_module_config(1, 128, ConsoleNr);
+
+                    //buss_configuration
+                    db_read_buss_config(1, 16, ConsoleNr);
+
+                    //monitor_buss_configuration
+                    db_read_monitor_buss_config(1, 16, ConsoleNr);
+                    db_lock(0);
+
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
                       if (AxumData.ModuleData[cntModule].Console == ConsoleNr)
                       {
-                        LoadProcessingPreset(cntModule, AxumData.ModuleData[cntModule].SelectedPreset, false);
+                        AxumData.ModuleData[cntModule].WaitingSource = -1;
+                        AxumData.ModuleData[cntModule].WaitingProcessingPreset = -1;
+                        AxumData.ModuleData[cntModule].WaitingRoutingPreset = -1;
                       }
+                    }
+
+                    int OldConsolePreset = AxumData.SelectedConsolePreset[ConsoleNr];
+                    if (OldConsolePreset != -1)
+                    {
+                      unsigned int FunctionNrToSent = 0x04000000;
+                      AxumData.SelectedConsolePreset[ConsoleNr] = -1;
+                      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldConsolePreset));
                     }
                   }
                 }
@@ -9366,9 +9388,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             int PresetNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_PRESET_1;
             int Active = 0;
 
-            if (AxumData.SelectedConsolePreset == PresetNr)
+            for (int cntConsole=0; cntConsole<4; cntConsole++)
             {
-              Active = 1;
+              if (AxumData.SelectedConsolePreset[cntConsole] == PresetNr)
+              {
+                Active = 1;
+              }
             }
 
             data.State = Active;
@@ -13923,7 +13948,10 @@ void initialize_axum_data_struct()
   AxumData.LevelReserve = 0;
   AxumData.AutoMomentary = false;
   AxumData.StartupState = false;
-  AxumData.SelectedConsolePreset = -1;
+  AxumData.SelectedConsolePreset[0] = -1;
+  AxumData.SelectedConsolePreset[1] = -1;
+  AxumData.SelectedConsolePreset[2] = -1;
+  AxumData.SelectedConsolePreset[3] = -1;
 
   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
   {
@@ -14837,8 +14865,6 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects)
         }
       }
     }
-    int OldSelectedConsolePreset = AxumData.SelectedConsolePreset;
-    AxumData.SelectedConsolePreset = PresetNr;
 
     if ((MixMonitorPresetNr>=0) && (MixMonitorPresetNr<1280))
     {
@@ -14846,12 +14872,22 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects)
       LoadMonitorBussPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr].Console, SetAllObjects);
     }
 
-    if (OldSelectedConsolePreset != PresetNr)
+    for (int cntConsole=0; cntConsole<4; cntConsole++)
     {
-      unsigned int FunctionNrToSent = 0x04000000;
-      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldSelectedConsolePreset));
-      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+PresetNr));
+      if (AxumData.ConsolePresetData[PresetNr].Console[cntConsole])
+      {
+        int OldSelectedConsolePreset = AxumData.SelectedConsolePreset[cntConsole];
+        AxumData.SelectedConsolePreset[cntConsole] = PresetNr;
+
+        if ((OldSelectedConsolePreset != -1) && (OldSelectedConsolePreset != PresetNr))
+        {
+          unsigned int FunctionNrToSent = 0x04000000;
+          CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldSelectedConsolePreset));
+        }
+      }
     }
+    unsigned int FunctionNrToSent = 0x04000000;
+    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+PresetNr));
   }
 }
 

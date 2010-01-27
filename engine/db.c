@@ -571,22 +571,31 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   return 1;
 }
 
-int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
+int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsigned char console)
 {
-  char str[2][32];
-  const char *params[2];
+  char str[4][32];
+  const char *params[4];
   int cntParams;
   int cntRow;
+  char first_console = 1;
+  char last_console = 4;
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  for (cntParams=0; cntParams<2; cntParams++)
+  for (cntParams=0; cntParams<4; cntParams++)
   {
     params[cntParams] = (const char *)str[cntParams];
+  }
+  if (console<4)
+  {
+    first_console = console+1;
+    last_console = console+1;
   }
 
   sprintf(str[0], "%hd", first_mod);
   sprintf(str[1], "%hd", last_mod);
+  sprintf(str[2], "%hd", first_console);
+  sprintf(str[3], "%hd", last_console);
 
   PGresult *qres = sql_exec("SELECT number,               \
                                     console,              \
@@ -763,7 +772,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
                                     buss_31_32_balance,     \
                                     buss_31_32_assignment   \
                                     FROM module_config      \
-                                    WHERE number>=$1 AND number<=$2", 1, 2, params);
+                                    WHERE number>=$1 AND number<=$2 AND console>=$3 AND console<=$4 ", 1, 4, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -964,24 +973,33 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod)
   return 1;
 }
 
-int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
+int db_read_buss_config(unsigned char first_buss, unsigned char last_buss, unsigned char console)
 {
-  char str[2][32];
-  const char *params[2];
+  char str[4][32];
+  const char *params[4];
   int cntParams;
   int cntRow;
+  char first_console = 1;
+  char last_console = 4;
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  for (cntParams=0; cntParams<2; cntParams++)
+  for (cntParams=0; cntParams<4; cntParams++)
   {
     params[cntParams] = (const char *)str[cntParams];
   }
 
+  if (console<4)
+  {
+    first_console = console+1;
+    last_console = console+1;
+  }
   sprintf(str[0], "%hd", first_buss);
   sprintf(str[1], "%hd", last_buss);
+  sprintf(str[2], "%hd", first_console);
+  sprintf(str[3], "%hd", last_console);
 
-  PGresult *qres = sql_exec("SELECT number, label, console, mono, pre_on, pre_balance, level, on_off, interlock, exclusive, global_reset FROM buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
+  PGresult *qres = sql_exec("SELECT number, label, console, mono, pre_on, pre_balance, level, on_off, interlock, exclusive, global_reset FROM buss_config WHERE number>=$1 AND number<=$2 AND console>=$3 AND console<=$4", 1, 4, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -1046,24 +1064,33 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss)
   return 1;
 }
 
-int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last_mon_buss)
+int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last_mon_buss, unsigned char console)
 {
-  char str[2][32];
-  const char *params[2];
+  char str[4][32];
+  const char *params[4];
   int cntParams;
   int cntRow;
+  char first_console = 1;
+  char last_console = 4;
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  for (cntParams=0; cntParams<2; cntParams++)
+  for (cntParams=0; cntParams<4; cntParams++)
   {
     params[cntParams] = (const char *)str[cntParams];
+  }
+  if (console<4)
+  {
+    first_console = console+1;
+    last_console = console+1;
   }
 
   sprintf(str[0], "%hd", first_mon_buss);
   sprintf(str[1], "%hd", last_mon_buss);
+  sprintf(str[2], "%hd", first_console);
+  sprintf(str[3], "%hd", last_console);
 
-  PGresult *qres = sql_exec("SELECT number, label, console, interlock, default_selection, buss_1_2, buss_3_4, buss_5_6, buss_7_8, buss_9_10, buss_11_12, buss_13_14, buss_15_16, buss_17_18, buss_19_20, buss_21_22, buss_23_24, buss_25_26, buss_27_28, buss_29_30, buss_31_32, dim_level FROM monitor_buss_config WHERE number>=$1 AND number<=$2", 1, 2, params);
+  PGresult *qres = sql_exec("SELECT number, label, console, interlock, default_selection, buss_1_2, buss_3_4, buss_5_6, buss_7_8, buss_9_10, buss_11_12, buss_13_14, buss_15_16, buss_17_18, buss_19_20, buss_21_22, buss_23_24, buss_25_26, buss_27_28, buss_29_30, buss_31_32, dim_level FROM monitor_buss_config WHERE number>=$1 AND number<=$2 AND console>=$3 AND console<=$4", 1, 4, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -2110,8 +2137,6 @@ int db_read_routing_preset(unsigned char first_mod, unsigned char last_mod)
         RoutingPresetData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
         RoutingPresetData->PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &RoutingPresetData->Balance);
-
-        log_write("mod:%d, inp:%d, buss:%d, use:%d, on:%d", number-1, preset-'A', cntBuss, RoutingPresetData->Use, RoutingPresetData->On);
       }
     }
   }
@@ -2553,7 +2578,7 @@ void db_event_module_config_changed(char myself, char *arg)
   unsigned char number;
 
   sscanf(arg, "%hhd", &number);
-  db_read_module_config(number, number);
+  db_read_module_config(number, number, 0);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
@@ -2565,7 +2590,7 @@ void db_event_buss_config_changed(char myself, char *arg)
   unsigned char number;
 
   sscanf(arg, "%hhd", &number);
-  db_read_buss_config(number, number);
+  db_read_buss_config(number, number, 0);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
@@ -2577,7 +2602,7 @@ void db_event_monitor_buss_config_changed(char myself, char *arg)
   unsigned char number;
 
   sscanf(arg, "%hhd", &number);
-  db_read_monitor_buss_config(number, number);
+  db_read_monitor_buss_config(number, number, 0);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
