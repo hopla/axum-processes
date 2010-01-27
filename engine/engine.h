@@ -243,6 +243,7 @@ typedef struct
   unsigned int SourceFPreset;
   unsigned int SourceGPreset;
   unsigned int SourceHPreset;
+  bool OverruleActive;
   int WaitingSource;
   int WaitingProcessingPreset;
   int WaitingRoutingPreset;
@@ -550,8 +551,8 @@ void initialize_axum_data_struct();
 
 ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr);
 
-void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigned char SetAllObjects);
-void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char SetAllObjects);
+void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
+void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
 void LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
 void LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
 void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects);

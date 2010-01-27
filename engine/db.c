@@ -615,6 +615,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
                                     source_f_preset,      \
                                     source_g_preset,      \
                                     source_h_preset,      \
+                                    overrule_active,      \
                                     use_insert_preset,    \
                                     insert_source,        \
                                     insert_on_off,        \
@@ -839,6 +840,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       {
         ModuleData->SourceHPreset = 0;
       }
+      ModuleData->OverruleActive = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       DefaultModuleData->InsertUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &DefaultModuleData->InsertSource);
       DefaultModuleData->InsertOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -928,8 +930,8 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       {
         SetNewSource(ModuleNr, ModuleData->SourceA, 1);
         SetAxum_ModuleInsertSource(ModuleNr);
-        LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1);
-        LoadRoutingPreset(ModuleNr, 0, 1);
+        LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1, 1);
+        LoadRoutingPreset(ModuleNr, 0, 1, 1);
 
         //Set fader level and On;
         float NewLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
@@ -1611,14 +1613,13 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
   return 1;
 }
 
-int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj, bool DoNotCheckDefault)
+int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj, bool DoNotCheckCurrentDefault, bool SetFirmwareDefaults)
 {
   char str[3][32];
   const char *params[3];
   int cntParams;
   int cntRow;
   unsigned char *DefaultSet;
-  unsigned char *ConfiguredObject;
 
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -1685,7 +1686,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             unsigned long int DataValue;
             sscanf(PQgetvalue(qres, cntRow, 1), "(%ld,,,)", &DataValue);
 
-            if ((DataValue != obj_info->CurrentActuatorDataDefault) || (DoNotCheckDefault))
+            if ((DataValue != obj_info->CurrentActuatorDataDefault) || (DoNotCheckCurrentDefault))
             {
               data_size = obj_info->ActuatorDataSize;
               if (obj_info->ActuatorDataType == MBN_DATATYPE_UINT)
@@ -1705,7 +1706,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             long int DataValue;
             sscanf(PQgetvalue(qres, cntRow, 1), "(%ld,,,)", &DataValue);
 
-            if ((DataValue != obj_info->CurrentActuatorDataDefault) || (DoNotCheckDefault))
+            if ((DataValue != obj_info->CurrentActuatorDataDefault) || (DoNotCheckCurrentDefault))
             {
               data_size = obj_info->ActuatorDataSize;
               data.SInt = DataValue;
@@ -1734,7 +1735,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
             float DataValue;
             sscanf(PQgetvalue(qres, cntRow, 1), "(,%f,,)", &DataValue);
 
-            if ((DataValue != obj_info->CurrentActuatorDataDefault) || (DoNotCheckDefault))
+            if ((DataValue != obj_info->CurrentActuatorDataDefault) || (DoNotCheckCurrentDefault))
             {
               data_size = obj_info->ActuatorDataSize;
               data.Float = DataValue;
@@ -1786,42 +1787,9 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   }
   PQclear(qres);
 
-  if (DoNotCheckDefault)
+  //not set defaults are set to the firmware defaults
+  if (SetFirmwareDefaults)
   {
-    //next query to determine configured nodes
-    sprintf(str[0], "%d", node_info->MambaNetAddress);
-    sprintf(str[1], "%d", first_obj);
-    sprintf(str[2], "%d", last_obj);
-    qres = sql_exec("SELECT object, data FROM node_config                               \
-                             WHERE addr=$1 AND object>=$2 AND object<=$3)", 1, 3, params);
-    if (qres == NULL)
-    {
-      delete[] DefaultSet;
-      LOG_DEBUG("[%s] leave with error", __func__);
-      return 0;
-    }
-
-    ConfiguredObject = new unsigned char[last_obj-first_obj];
-    if (ConfiguredObject == NULL)
-    {
-      delete[] DefaultSet;
-      log_write("[%s] Error no memory available for array ConfiguredObject", __func__);
-      LOG_DEBUG("[%s] leave with error", __func__);
-      return 0;
-    }
-    for (cntRow=0; cntRow<(last_obj-first_obj); cntRow++)
-    {
-      ConfiguredObject[cntRow] = 0;
-    }
-
-    for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
-    {
-      unsigned short int ObjectNr = -1;
-      sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
-
-      ConfiguredObject[ObjectNr-first_obj] = 1;
-    }
-
     for (cntRow=0; cntRow<(last_obj-first_obj); cntRow++)
     {
       unsigned char send_default_data = 0;
@@ -1829,7 +1797,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
       unsigned char data_size = 0;
 
       mbn_data data;
-      if ((DefaultSet[cntRow] == 0) && (!ConfiguredObject[cntRow]))
+      if (DefaultSet[cntRow] == 0)
       {//need to set template default
         ObjectNr = first_obj+cntRow;
 
@@ -1879,10 +1847,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
         }
       }
     }
-    delete[] ConfiguredObject;
-    PQclear(qres);
   }
-
   delete[] DefaultSet;
   LOG_DEBUG("[%s] leave", __func__);
 
@@ -2319,10 +2284,23 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
     ConsolePresetData->Console[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     ConsolePresetData->Console[2] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     ConsolePresetData->Console[3] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ConsolePresetData->ModulePreset);
-    ConsolePresetData->ModulePreset -= 'A';
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &ConsolePresetData->MixMonitorPreset);
-    ConsolePresetData->MixMonitorPreset--;
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &ConsolePresetData->ModulePreset) <= 0)
+    {
+      ConsolePresetData->ModulePreset = -1;
+    }
+    else
+    {
+      ConsolePresetData->ModulePreset -= 'A';
+    }
+
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &ConsolePresetData->MixMonitorPreset) <= 0)
+    {
+      ConsolePresetData->MixMonitorPreset = -1;
+    }
+    else
+    {
+      ConsolePresetData->MixMonitorPreset--;
+    }
   }
   PQclear(qres);
 
@@ -2693,7 +2671,7 @@ void db_event_defaults_changed(char myself, char *arg)
     LOG_DEBUG("[%s] leave with error", __func__);
     return;
   }
-  db_read_node_defaults(node_info, obj, obj, 1);
+  db_read_node_defaults(node_info, obj, obj, 1, 1);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
