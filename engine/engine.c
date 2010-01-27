@@ -5805,6 +5805,17 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
             PreviousOnlineNodeInformationElement->Next = OnlineNodeInformationElement->Next;
           }
 
+          //Adjust function lists
+          for (int cntObject=0; cntObject<OnlineNodeInformationElement->NumberOfCustomObjects; cntObject++)
+          {
+            int FunctionNr = OnlineNodeInformationElement->SensorReceiveFunction[cntObject].FunctionNr;
+            OnlineNodeInformationElement->SensorReceiveFunction[cntObject].FunctionNr = -1;
+            if (FunctionNr != -1)
+            {
+              MakeObjectListPerFunction(FunctionNr);
+            }
+          }
+
           if (OnlineNodeInformationElement->SensorReceiveFunction != NULL)
           {
             delete[] OnlineNodeInformationElement->SensorReceiveFunction;
@@ -6029,11 +6040,11 @@ void Timer100HzDone(int Value)
         ConsolePresetSwitch[cntConsolePreset].TimerValue += 10;
         if (ConsolePresetSwitch[cntConsolePreset].TimerValue == 2000)
         {
-          LoadConsolePreset(cntConsolePreset, 0, 0);
+          LoadConsolePreset(cntConsolePreset+1, 0, 0);
         }
         else if (ConsolePresetSwitch[cntConsolePreset].TimerValue == 5000)
         {
-          LoadConsolePreset(cntConsolePreset, 0, 1);
+          LoadConsolePreset(cntConsolePreset+1, 0, 1);
         }
       }
     }
@@ -6077,11 +6088,11 @@ void Timer100HzDone(int Value)
           }
 
           int OldConsolePreset = AxumData.SelectedConsolePreset[cntConsole];
-          if (OldConsolePreset != -1)
+          if (OldConsolePreset != 0)
           {
             unsigned int FunctionNrToSent = 0x04000000;
-            AxumData.SelectedConsolePreset[cntConsole] = -1;
-            CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldConsolePreset));
+            AxumData.SelectedConsolePreset[cntConsole] = 0;
+            CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldConsolePreset-1));
           }
         }
       }
@@ -9442,7 +9453,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           case GLOBAL_FUNCTION_CONSOLE_PRESET_31:
           case GLOBAL_FUNCTION_CONSOLE_PRESET_32:
           {
-            int PresetNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_PRESET_1;
+            unsigned int PresetNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_PRESET_1+1;
             int Active = 0;
 
             for (int cntConsole=0; cntConsole<4; cntConsole++)
@@ -9455,6 +9466,18 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
             data.State = Active;
             mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          }
+          break;
+          case GLOBAL_FUNCTION_CONSOLE_1_PRESET:
+          case GLOBAL_FUNCTION_CONSOLE_2_PRESET:
+          case GLOBAL_FUNCTION_CONSOLE_3_PRESET:
+          case GLOBAL_FUNCTION_CONSOLE_4_PRESET:
+          {
+            unsigned int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_1_PRESET;
+            GetConsolePresetLabel(AxumData.SelectedConsolePreset[ConsoleNr], LCDText, 8);
+
+            data.Octets = (unsigned char *)LCDText;
+            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
           }
           break;
         }
@@ -14031,10 +14054,10 @@ void initialize_axum_data_struct()
   AxumData.LevelReserve = 0;
   AxumData.AutoMomentary = false;
   AxumData.StartupState = false;
-  AxumData.SelectedConsolePreset[0] = -1;
-  AxumData.SelectedConsolePreset[1] = -1;
-  AxumData.SelectedConsolePreset[2] = -1;
-  AxumData.SelectedConsolePreset[3] = -1;
+  AxumData.SelectedConsolePreset[0] = 0;
+  AxumData.SelectedConsolePreset[1] = 0;
+  AxumData.SelectedConsolePreset[2] = 0;
+  AxumData.SelectedConsolePreset[3] = 0;
 
   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
   {
@@ -14856,10 +14879,10 @@ void LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool SetAllObj
 
 void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableActiveCheck)
 {
-  if (PresetNr<32)
+  if ((PresetNr>0) && (PresetNr<33))
   {
-    char ModulePreset = AxumData.ConsolePresetData[PresetNr].ModulePreset;
-    int MixMonitorPresetNr = AxumData.ConsolePresetData[PresetNr].MixMonitorPreset;
+    char ModulePreset = AxumData.ConsolePresetData[PresetNr-1].ModulePreset;
+    int MixMonitorPresetNr = AxumData.ConsolePresetData[PresetNr-1].MixMonitorPreset;
     int CurrentSource = 0;
     int CurrentPreset = 0;
     int CurrentRoutingPreset = -1;
@@ -14868,7 +14891,7 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableA
     {
       for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ConsolePresetData[PresetNr].Console[AxumData.ModuleData[cntModule].Console])
+        if (AxumData.ConsolePresetData[PresetNr-1].Console[AxumData.ModuleData[cntModule].Console])
         {
           switch (ModulePreset)
           {
@@ -14951,26 +14974,29 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableA
 
     if ((MixMonitorPresetNr>=0) && (MixMonitorPresetNr<1280))
     {
-      LoadBussMasterPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr].Console, SetAllObjects);
-      LoadMonitorBussPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr].Console, SetAllObjects);
+      LoadBussMasterPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr-1].Console, SetAllObjects);
+      LoadMonitorBussPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr-1].Console, SetAllObjects);
     }
 
     for (int cntConsole=0; cntConsole<4; cntConsole++)
     {
-      if (AxumData.ConsolePresetData[PresetNr].Console[cntConsole])
+      if (AxumData.ConsolePresetData[PresetNr-1].Console[cntConsole])
       {
         int OldSelectedConsolePreset = AxumData.SelectedConsolePreset[cntConsole];
         AxumData.SelectedConsolePreset[cntConsole] = PresetNr;
 
-        if ((OldSelectedConsolePreset != -1) && (OldSelectedConsolePreset != PresetNr))
+        if ((OldSelectedConsolePreset != 0) && (OldSelectedConsolePreset != PresetNr))
         {
           unsigned int FunctionNrToSent = 0x04000000;
-          CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldSelectedConsolePreset));
+          CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldSelectedConsolePreset-1));
         }
+
+        unsigned int FunctionNrToSent = 0x04000000;
+        CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_1_PRESET+cntConsole));
       }
     }
     unsigned int FunctionNrToSent = 0x04000000;
-    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+PresetNr));
+    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+PresetNr-1));
   }
 }
 
@@ -15140,6 +15166,18 @@ void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength)
   else if (PresetNr<MAX_NR_OF_PRESETS)
   {
     strncpy(TextString, AxumData.PresetData[PresetNr-1].PresetName, MaxLength);
+  }
+}
+
+void GetConsolePresetLabel(unsigned int ConsolePresetNr, char *TextString, int MaxLength)
+{
+  if (ConsolePresetNr == 0)
+  {
+    strncpy(TextString, "None", MaxLength);
+  }
+  else if (ConsolePresetNr<32)
+  {
+    strncpy(TextString, AxumData.ConsolePresetData[ConsolePresetNr-1].Label, MaxLength);
   }
 }
 

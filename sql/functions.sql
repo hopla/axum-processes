@@ -806,6 +806,10 @@ INSERT INTO functions VALUES ('(4,,477)', 'Master & control 4 mode buss 25/26', 
 INSERT INTO functions VALUES ('(4,,478)', 'Master & control 4 mode buss 27/28', 3, 3);
 INSERT INTO functions VALUES ('(4,,479)', 'Master & control 4 mode buss 29/30', 3, 3);
 INSERT INTO functions VALUES ('(4,,480)', 'Master & control 4 mode buss 31/32', 3, 3);
+INSERT INTO functions VALUES ('(4,,481)', 'Console 1 preset', 0, 4);
+INSERT INTO functions VALUES ('(4,,482)', 'Console 2 preset', 0, 4);
+INSERT INTO functions VALUES ('(4,,483)', 'Console 3 preset', 0, 4);
+INSERT INTO functions VALUES ('(4,,484)', 'Console 4 preset', 0, 4);
 
 
 
