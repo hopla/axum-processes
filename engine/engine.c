@@ -6038,7 +6038,7 @@ void Timer100HzDone(int Value)
       }
     }
   }
-  for (int cntConsole=0; cntConsole<4; cntConsole++)
+  for (unsigned char cntConsole=0; cntConsole<4; cntConsole++)
   {
     if (ProgrammedDefaultSwitch[cntConsole].PreviousState != ProgrammedDefaultSwitch[cntConsole].State)
     {

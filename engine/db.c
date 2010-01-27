@@ -2556,7 +2556,7 @@ void db_event_module_config_changed(char myself, char *arg)
   unsigned char number;
 
   sscanf(arg, "%hhd", &number);
-  db_read_module_config(number, number, 0);
+  db_read_module_config(number, number, 0xFF);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
@@ -2568,7 +2568,7 @@ void db_event_buss_config_changed(char myself, char *arg)
   unsigned char number;
 
   sscanf(arg, "%hhd", &number);
-  db_read_buss_config(number, number, 0);
+  db_read_buss_config(number, number, 0xFF);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
@@ -2580,7 +2580,7 @@ void db_event_monitor_buss_config_changed(char myself, char *arg)
   unsigned char number;
 
   sscanf(arg, "%hhd", &number);
-  db_read_monitor_buss_config(number, number, 0);
+  db_read_monitor_buss_config(number, number, 0xFF);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
