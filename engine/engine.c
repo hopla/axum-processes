@@ -3875,7 +3875,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             {
               int ControlNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)/(GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_31_32-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
               int BussNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)%(GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_31_32-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
-              //int StartFunctionNr = FunctionNr-BussNr;
 
               if (type == MBN_DATATYPE_STATE)
               {
@@ -3884,6 +3883,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   //First set master control mode
                   char NewMasterControlMode = BussNr;
                   unsigned int OldFunctionNumber = 0x00000000;
+                  unsigned int OldGlobalFunctionNr = 0x00000000;
                   bool TurnOff = false;
                   int NewControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
 
@@ -3897,6 +3897,16 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[ControlNr]+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2);
                   }
 
+                  for (int cntBuss=0; cntBuss<16; cntBuss++)
+                  {
+                    char MasterControlModeToCheck = cntBuss;
+                    int ModuleControlModeToCheck = MODULE_CONTROL_MODE_BUSS_1_2+(cntBuss*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
+
+                    if ((AxumData.ControlMode[ControlNr] == ModuleControlModeToCheck) && (AxumData.MasterControlMode[ControlNr] == MasterControlModeToCheck))
+                    {
+                      OldGlobalFunctionNr  = GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2+(ControlNr*16)+cntBuss;
+                    }
+                  }
 
                   if (TurnOff)
                   {
@@ -4001,6 +4011,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                   unsigned int FunctionNrToSent = 0x04000000;
                   CheckObjectsToSent(FunctionNrToSent | FunctionNr);
+
+                  if (OldGlobalFunctionNr)
+                  {
+                    CheckObjectsToSent(0x04000000 | OldGlobalFunctionNr);
+                  }
                 }
               }
             }
