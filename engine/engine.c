@@ -6050,14 +6050,14 @@ void Timer100HzDone(int Value)
     }
     else if (ConsolePresetSwitch[cntConsolePreset].State)
     {
-      if (ConsolePresetSwitch[cntConsolePreset].TimerValue<5000)
+      if (ConsolePresetSwitch[cntConsolePreset].TimerValue<3000)
       {
         ConsolePresetSwitch[cntConsolePreset].TimerValue += 10;
-        if (ConsolePresetSwitch[cntConsolePreset].TimerValue == 2000)
+        if (ConsolePresetSwitch[cntConsolePreset].TimerValue == 1000)
         {
           LoadConsolePreset(cntConsolePreset+1, 0, 0);
         }
-        else if (ConsolePresetSwitch[cntConsolePreset].TimerValue == 5000)
+        else if (ConsolePresetSwitch[cntConsolePreset].TimerValue == 3000)
         {
           LoadConsolePreset(cntConsolePreset+1, 0, 1);
         }
@@ -6076,14 +6076,14 @@ void Timer100HzDone(int Value)
     }
     else if (ProgrammedDefaultSwitch[cntConsole].State)
     {
-      if (ProgrammedDefaultSwitch[cntConsole].TimerValue<5000)
+      if (ProgrammedDefaultSwitch[cntConsole].TimerValue<3000)
       {
         ProgrammedDefaultSwitch[cntConsole].TimerValue += 10;
-        if (ProgrammedDefaultSwitch[cntConsole].TimerValue == 2000)
+        if (ProgrammedDefaultSwitch[cntConsole].TimerValue == 1000)
         {
           db_lock(1);
           //module_configuration
-          db_read_module_config(1, 128, cntConsole);
+          db_read_module_config(1, 128, cntConsole, 1);
 
           //buss_configuration
           db_read_buss_config(1, 16, cntConsole);
