@@ -621,7 +621,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               printf("Source\n");
               int CurrentSource = AxumData.ModuleData[ModuleNr].TemporySourceLocal;
               int CurrentPreset = 0;
-              int CurrentRoutingPreset = -1;
+              int CurrentRoutingPreset = 0;
 
               if (type == MBN_DATATYPE_SINT)
               {
@@ -650,56 +650,56 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceA;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceAPreset;
-                      CurrentRoutingPreset = 0;
+                      CurrentRoutingPreset = 1;
                     }
                     break;
                     case MODULE_FUNCTION_PRESET_B:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceB;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceBPreset;
-                      CurrentRoutingPreset = 1;
+                      CurrentRoutingPreset = 2;
                     }
                     break;
                     case MODULE_FUNCTION_PRESET_C:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceC;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceCPreset;
-                      CurrentRoutingPreset = 2;
+                      CurrentRoutingPreset = 3;
                     }
                     break;
                     case MODULE_FUNCTION_PRESET_D:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceD;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceDPreset;
-                      CurrentRoutingPreset = 3;
+                      CurrentRoutingPreset = 4;
                     }
                     break;
                     case MODULE_FUNCTION_PRESET_E:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceE;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceEPreset;
-                      CurrentRoutingPreset = 4;
+                      CurrentRoutingPreset = 5;
                     }
                     break;
                     case MODULE_FUNCTION_PRESET_F:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceF;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceFPreset;
-                      CurrentRoutingPreset = 5;
+                      CurrentRoutingPreset = 6;
                     }
                     break;
                     case MODULE_FUNCTION_PRESET_G:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceG;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceGPreset;
-                      CurrentRoutingPreset = 6;
+                      CurrentRoutingPreset = 7;
                     }
                     break;
                     case MODULE_FUNCTION_PRESET_H:
                     {
                       CurrentSource = AxumData.ModuleData[ModuleNr].SourceH;
                       CurrentPreset = AxumData.ModuleData[ModuleNr].SourceHPreset;
-                      CurrentRoutingPreset = 7;
+                      CurrentRoutingPreset = 8;
                     }
                     break;
                   }
@@ -729,9 +729,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     SetNewSource(ModuleNr, CurrentSource, AxumData.ModuleData[ModuleNr].OverruleActive);
                     LoadProcessingPreset(ModuleNr, CurrentPreset, 1, 0);
-                    if (CurrentRoutingPreset>=0) {
-                      LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 1, 0);
-                    }
+                    LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 1, 0);
                   }
                 }
                 else
@@ -11201,14 +11199,18 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         {
           if (SetNewSource(ModuleNr, AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr], 0))
           {
+            int NewProcessingPreset = 0;
             if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
             {
               unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
               if (AxumData.SourceData[SourceNr].DefaultProcessingPreset<=1280)
               {
-                LoadProcessingPreset(ModuleNr, AxumData.SourceData[SourceNr].DefaultProcessingPreset, 0, 0);
+                NewProcessingPreset = AxumData.SourceData[SourceNr].DefaultProcessingPreset;
               }
             }
+            LoadProcessingPreset(ModuleNr, NewProcessingPreset, 1, 0);
+            //Always load module default routing if used...
+            LoadRoutingPreset(ModuleNr, 0, 1, 0);
 
             unsigned int DisplayFunctionNr = (ModuleNr<<12);
             CheckObjectsToSent(DisplayFunctionNr+MODULE_FUNCTION_CONTROL_LABEL);
@@ -14729,6 +14731,8 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
   bool BussChanged = false;
   bool SetModuleControllers = false;
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+  AXUM_ROUTING_PRESET_DATA_STRUCT *SelectedRoutingPreset = NULL;
+
 
   for (cntBuss=0; cntBuss<16; cntBuss++)
   {
@@ -14737,8 +14741,12 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
     signed int Balance = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance;
     bool PreModuleLevel = AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel;
 
-    AXUM_ROUTING_PRESET_DATA_STRUCT *SelectedRoutingPreset = &AxumData.ModuleData[ModuleNr].RoutingPreset[PresetNr][cntBuss];
-    if (SelectedRoutingPreset->Use)
+    if (PresetNr>0)
+    {
+      SelectedRoutingPreset = &AxumData.ModuleData[ModuleNr].RoutingPreset[PresetNr-1][cntBuss];
+    }
+
+    if ((SelectedRoutingPreset != NULL) && (SelectedRoutingPreset->Use))
     {
       Level = SelectedRoutingPreset->Level;
       On = SelectedRoutingPreset->On;
@@ -14958,7 +14966,7 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableA
             }
             break;
           }
-          CurrentRoutingPreset = ModulePreset;
+          CurrentRoutingPreset = ModulePreset+1;
 
           int SourceActive = 0;
           if (AxumData.ModuleData[cntModule].On)
@@ -14973,9 +14981,7 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableA
           {
             SetNewSource(cntModule, CurrentSource, DisableActiveCheck | AxumData.ModuleData[cntModule].OverruleActive);
             LoadProcessingPreset(cntModule, CurrentPreset, 1, 0);
-            if (CurrentRoutingPreset>=0) {
-              LoadRoutingPreset(cntModule, CurrentRoutingPreset, 1, 0);
-            }
+            LoadRoutingPreset(cntModule, CurrentRoutingPreset, 1, 0);
           }
           else
           {
