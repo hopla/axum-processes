@@ -940,12 +940,54 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
         if (take_source_a)
         {
           LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1, 1);
+          LoadRoutingPreset(ModuleNr, 1, 1, 1);
         }
         else
         {
+          int NewRoutingPreset = 0;
           LoadProcessingPreset(ModuleNr, ModuleData->SelectedPreset, 1, 1);
+          if ((ModuleData->SelectedSource == ModuleData->SourceA) &&
+             (ModuleData->SelectedPreset == ModuleData->SourceAPreset))
+          {
+            NewRoutingPreset = 1;
+          }
+          else if ((ModuleData->SelectedSource == ModuleData->SourceB) &&
+             (ModuleData->SelectedPreset == ModuleData->SourceBPreset))
+          {
+            NewRoutingPreset = 2;
+          }
+          else if ((ModuleData->SelectedSource == ModuleData->SourceC) &&
+             (ModuleData->SelectedPreset == ModuleData->SourceCPreset))
+          {
+            NewRoutingPreset = 3;
+          }
+          else if ((ModuleData->SelectedSource == ModuleData->SourceD) &&
+             (ModuleData->SelectedPreset == ModuleData->SourceDPreset))
+          {
+            NewRoutingPreset = 4;
+          }
+          else if ((ModuleData->SelectedSource == ModuleData->SourceE) &&
+             (ModuleData->SelectedPreset == ModuleData->SourceEPreset))
+          {
+            NewRoutingPreset = 5;
+          }
+          else if ((ModuleData->SelectedSource == ModuleData->SourceF) &&
+             (ModuleData->SelectedPreset == ModuleData->SourceFPreset))
+          {
+            NewRoutingPreset = 6;
+          }
+          else if ((ModuleData->SelectedSource == ModuleData->SourceG) &&
+             (ModuleData->SelectedPreset == ModuleData->SourceGPreset))
+          {
+            NewRoutingPreset = 7;
+          }
+          else if ((ModuleData->SelectedSource == ModuleData->SourceH) &&
+             (ModuleData->SelectedPreset == ModuleData->SourceHPreset))
+          {
+            NewRoutingPreset = 8;
+          }
+          LoadRoutingPreset(ModuleNr, NewRoutingPreset, 1, 1);
         }
-        LoadRoutingPreset(ModuleNr, 0, 1, 1);
 
         //Set fader level and On;
         float NewLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
