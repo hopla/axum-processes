@@ -9,7 +9,7 @@ int db_get_matrix_sources();
 int db_read_slot_config();
 int db_read_src_preset(unsigned short int first_preset, unsigned short int last_preset);
 int db_read_src_config(unsigned short int first_src, unsigned short int last_src);
-int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsigned char console);
+int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsigned char console, unsigned char take_source_a);
 int db_read_buss_config(unsigned char first_buss, unsigned char last_buss, unsigned char console);
 int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last_mon_buss, unsigned char console);
 int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_dsp_card);

@@ -571,7 +571,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   return 1;
 }
 
-int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsigned char console)
+int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsigned char console, unsigned char take_source_a)
 {
   char str[4][32];
   const char *params[4];
@@ -928,9 +928,23 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       int ModuleNr = number-1;
       if (AxumApplicationAndDSPInitialized)
       {
-        SetNewSource(ModuleNr, ModuleData->SourceA, 1);
+        if (take_source_a)
+        {
+          SetNewSource(ModuleNr, ModuleData->SourceA, 1);
+        }
+        else
+        {
+          SetNewSource(ModuleNr, ModuleData->SelectedSource, 1);
+        }
         SetAxum_ModuleInsertSource(ModuleNr);
-        LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1, 1);
+        if (take_source_a)
+        {
+          LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1, 1);
+        }
+        else
+        {
+          LoadProcessingPreset(ModuleNr, ModuleData->SelectedPreset, 1, 1);
+        }
         LoadRoutingPreset(ModuleNr, 0, 1, 1);
 
         //Set fader level and On;
@@ -2556,7 +2570,7 @@ void db_event_module_config_changed(char myself, char *arg)
   unsigned char number;
 
   sscanf(arg, "%hhd", &number);
-  db_read_module_config(number, number, 0xFF);
+  db_read_module_config(number, number, 0xFF, 0);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
