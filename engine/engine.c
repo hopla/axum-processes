@@ -725,10 +725,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                 if ((!SourceActive) || (AxumData.ModuleData[ModuleNr].OverruleActive))
                 {
-//                  SetNewSource(ModuleNr, CurrentSource, 0);
                   if (data.State)
                   {
-                    SetNewSource(ModuleNr, CurrentSource, 0);
+                    SetNewSource(ModuleNr, CurrentSource, AxumData.ModuleData[ModuleNr].OverruleActive);
                     LoadProcessingPreset(ModuleNr, CurrentPreset, 1, 0);
                     if (CurrentRoutingPreset>=0) {
                       LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 1, 0);
@@ -14972,7 +14971,7 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableA
 
           if ((!SourceActive) || (AxumData.ModuleData[cntModule].OverruleActive) || (DisableActiveCheck))
           {
-            SetNewSource(cntModule, CurrentSource, DisableActiveCheck);
+            SetNewSource(cntModule, CurrentSource, DisableActiveCheck | AxumData.ModuleData[cntModule].OverruleActive);
             LoadProcessingPreset(cntModule, CurrentPreset, 1, 0);
             if (CurrentRoutingPreset>=0) {
               LoadRoutingPreset(cntModule, CurrentRoutingPreset, 1, 0);
