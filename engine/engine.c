@@ -2505,6 +2505,100 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               }
             }
             break;
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_1:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_2:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_3:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_4:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_5:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_6:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_7:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_8:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_9:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_10:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_11:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_12:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_13:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_14:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_15:
+            case MODULE_FUNCTION_MIXMINUS_TALKBACK_16:
+            {
+              int TalkbackNr = FunctionNr-MODULE_FUNCTION_MIXMINUS_TALKBACK_1;
+              if (type == MBN_DATATYPE_STATE)
+              {
+                int cntDestination=0;
+                unsigned int CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
+                bool MixMinusInUse = false;
+                bool UpdateDestinations = false;
+
+                while (cntDestination<1280)
+                {
+                  if ((CurrentSource != 0) && (AxumData.DestinationData[cntDestination].MixMinusSource == CurrentSource))
+                  {
+                    MixMinusInUse = true;
+                  }
+                  cntDestination++;
+                }
+
+                if (MixMinusInUse)
+                {
+                  if (data.State)
+                  {
+                    AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = !AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr];
+                    UpdateDestinations = true;
+                  }
+                  else
+                  {
+                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                    {
+                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                      {
+                        AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = !AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr];
+                        UpdateDestinations = true;
+                      }
+                    }
+                  }
+                }
+                else if (AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr])
+                {
+                  AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = false;
+                  UpdateDestinations = true;
+                }
+
+                if (UpdateDestinations)
+                {
+                  unsigned int CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
+
+                  cntDestination=0;
+                  while (cntDestination<1280)
+                  {
+                    if ((CurrentSource != 0) && (AxumData.DestinationData[cntDestination].MixMinusSource == CurrentSource))
+                    {
+                      printf("Talkback %d to MixMinus\n", TalkbackNr);
+
+                      AxumData.DestinationData[cntDestination].Talkback[TalkbackNr] = AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr];
+
+                      int TalkbackActive = 0;
+                      for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+                      {
+                        TalkbackActive |= AxumData.DestinationData[cntDestination].Talkback[cntTalkback];
+                      }
+                      AxumData.DestinationData[cntDestination].Dim = TalkbackActive;
+
+                      CheckObjectsToSent(SensorReceiveFunctionNumber);
+
+                      unsigned int FunctionNrToSent = 0x06000000 | (cntDestination<<12);
+                      CheckObjectsToSent(FunctionNrToSent | (DESTINATION_FUNCTION_TALKBACK_1+(TalkbackNr*(DESTINATION_FUNCTION_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1))));
+                      CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_DIM);
+                      CheckObjectsToSent(FunctionNrToSent | (DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1 + ((DESTINATION_FUNCTION_TALKBACK_2_AND_MONITOR_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1)*TalkbackNr)));
+                      CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
+                    }
+                  }
+                  cntDestination++;
+                }
+              }
+            }
+            break;
           }
         }
         break;
@@ -8636,6 +8730,28 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             }
           }
           break;
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_1:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_2:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_3:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_4:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_5:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_6:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_7:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_8:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_9:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_10:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_11:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_12:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_13:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_14:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_15:
+          case MODULE_FUNCTION_MIXMINUS_TALKBACK_16:
+          {
+            int TalkbackNr = FunctionNr-MODULE_FUNCTION_MIXMINUS_TALKBACK_1;
+
+            Active = AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr];
+          }
+          break;
         }
         data.State = Active;
         mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
@@ -13925,6 +14041,11 @@ void initialize_axum_data_struct()
 
     AxumData.ModuleData[cntModule].Signal = 0;
     AxumData.ModuleData[cntModule].Peak = 0;
+
+    for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+    {
+      AxumData.ModuleData[cntModule].TalkbackToMixMinus[cntTalkback] = 0;
+    }
 
     for (int cntBuss=0; cntBuss<16; cntBuss++)
     {
