@@ -361,7 +361,7 @@ INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,21)', '
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,22)', 'Buss 29/30 reset', 3, 3, 345);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,23)', 'Buss 31/32 reset', 3, 3, 346);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,24)', 'Control 1 mode source', 3, 3, 347);
-INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,377)', 'Control 1 mode module preset', 3, 3, 348);
+INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,377)', 'Control 1 mode processing preset', 3, 3, 348);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,25)', 'Control 1 mode source gain', 3, 3, 349);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,358)', 'Control 1 mode source phantom', 3, 3, 350);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,359)', 'Control 1 mode source pad', 3, 3, 351);
@@ -432,7 +432,7 @@ INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,86)', '
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,87)', 'Control 1 mode buss 31/32', 3, 3, 416);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,88)', 'Control 1 mode buss 31/32 balance', 3, 3, 417);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,89)', 'Control 2 mode source', 3, 3, 418);
-INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,378)', 'Control 2 mode module preset', 3, 3, 419);
+INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,378)', 'Control 2 mode processing preset', 3, 3, 419);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,90)', 'Control 2 mode source gain', 3, 3, 420);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,361)', 'Control 2 mode source phantom', 3, 3, 421);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,362)', 'Control 2 mode source pad', 3, 3, 422);
@@ -503,7 +503,7 @@ INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,151)', 
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,152)', 'Control 2 mode buss 31/32', 3, 3, 487);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,153)', 'Control 2 mode buss 31/32 balance', 3, 3, 488);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,154)', 'Control 3 mode source', 3, 3, 489);
-INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,379)', 'Control 3 mode module preset', 3, 3, 490);
+INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,379)', 'Control 3 mode processing preset', 3, 3, 490);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,155)', 'Control 3 mode source gain', 3, 3, 491);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,364)', 'Control 3 mode source phantom', 3, 3, 492);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,365)', 'Control 3 mode source pad', 3, 3, 493);
@@ -574,7 +574,7 @@ INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,216)', 
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,217)', 'Control 3 mode buss 31/32', 3, 3, 558);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,218)', 'Control 3 mode buss 31/32 balance', 3, 3, 559);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,219)', 'Control 4 mode source', 3, 3, 560);
-INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,380)', 'Control 4 mode module preset', 3, 3, 561);
+INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,380)', 'Control 4 mode processing preset', 3, 3, 561);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,220)', 'Control 4 mode source gain', 3, 3, 562);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,367)', 'Control 4 mode source phantom', 3, 3, 563);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,368)', 'Control 4 mode source pad', 3, 3, 564);
