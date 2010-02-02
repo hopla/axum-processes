@@ -2585,16 +2585,16 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       }
                       AxumData.DestinationData[cntDestination].Dim = TalkbackActive;
 
-                      CheckObjectsToSent(SensorReceiveFunctionNumber);
-
                       unsigned int FunctionNrToSent = 0x06000000 | (cntDestination<<12);
                       CheckObjectsToSent(FunctionNrToSent | (DESTINATION_FUNCTION_TALKBACK_1+(TalkbackNr*(DESTINATION_FUNCTION_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1))));
                       CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_DIM);
                       CheckObjectsToSent(FunctionNrToSent | (DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1 + ((DESTINATION_FUNCTION_TALKBACK_2_AND_MONITOR_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1)*TalkbackNr)));
                       CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
                     }
+                    cntDestination++;
                   }
-                  cntDestination++;
+                  unsigned int FunctionNrToSent = ((ModuleNr)<<12);
+                  CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_MIXMINUS_TALKBACK_1+TalkbackNr));
                 }
               }
             }
@@ -8644,7 +8644,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
       }
       if (((FunctionNr>=MODULE_FUNCTION_SOURCE_START) && (FunctionNr<MODULE_FUNCTION_CONTROL_1)) ||
-          ((FunctionNr>=MODULE_FUNCTION_FADER_AND_ON_ACTIVE) && (FunctionNr<=MODULE_FUNCTION_FADER_ON_OFF)))
+          ((FunctionNr>=MODULE_FUNCTION_FADER_AND_ON_ACTIVE) && (FunctionNr<=MODULE_FUNCTION_FADER_ON_OFF)) ||
+          ((FunctionNr>=MODULE_FUNCTION_MIXMINUS_TALKBACK_1) && (FunctionNr<=MODULE_FUNCTION_MIXMINUS_TALKBACK_16)))
       { //all state functions
         bool Active;
 
