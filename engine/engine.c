@@ -5728,7 +5728,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             {
               if (AxumData.ModuleData[cntModule].SelectedSource == (cntSource+matrix_sources.src_offset.min.source))
               {
-                printf("Found module: %d\n", cntModule);
+                printf("Found source @ module %d\n", cntModule);
                 SetAxum_ModuleSource(cntModule);
                 SetAxum_ModuleMixMinus(cntModule, 0);
 
@@ -5744,7 +5744,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
               {
                 if (AxumData.ExternSource[cntDSPCard].Ext[cntExt] == (cntSource+matrix_sources.src_offset.min.source))
                 {
-                  printf("Found extern input @ %d\n", cntDSPCard);
+                  printf("Found source @ extern input %d\n", cntDSPCard);
                   SetAxum_ExternSources(cntDSPCard);
                 }
               }
@@ -5753,8 +5753,16 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             {
               if (AxumData.Talkback[cntTalkback].Source == (cntSource+matrix_sources.src_offset.min.source))
               {
-                printf("Found talkback @ %d\n", cntTalkback);
+                printf("Found source @ talkback %d\n", cntTalkback);
                 SetAxum_TalkbackSource(cntTalkback);
+              }
+            }
+            for (int cntDestination=0; cntDestination<1280; cntDestination++)
+            {
+              if (AxumData.DestinationData[cntDestination].Source == (cntSource+matrix_sources.src_offset.min.source))
+              {
+                printf("Found source @ destination %d\n", cntDestination);
+                SetAxum_DestinationSource(cntDestination);
               }
             }
           }
