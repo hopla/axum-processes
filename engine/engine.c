@@ -11899,7 +11899,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
       }
       else
       {
-        sprintf(LCDText, "  - dB  ");
+        sprintf(LCDText, "Not used");
       }
     }
     break;
