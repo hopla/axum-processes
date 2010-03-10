@@ -14372,7 +14372,7 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
   return FoundOnlineNodeInformationElement;
 }
 
-void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
+void LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewPresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
 {
   bool SetModuleProcessing = false;
   bool SetModuleControllers = false;
@@ -14398,6 +14398,7 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigne
   float FaderLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
   bool ModuleState = AxumData.ModuleData[ModuleNr].On;
   int Panorama = AxumData.ModuleData[ModuleNr].Panorama;
+  unsigned char PresetNr = AxumData.ModuleData[ModuleNr].SelectedPreset;
 
   for (int cntEQ=0; cntEQ<6; cntEQ++)
   {
@@ -14409,9 +14410,9 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigne
     EQBand[cntEQ].Type = AxumData.ModuleData[ModuleNr].EQBand[cntEQ].Type;
   }
 
-  if (PresetNr>0)
+  if (NewPresetNr>0)
   {
-    AXUM_PRESET_DATA_STRUCT *PresetData = &AxumData.PresetData[PresetNr-1];
+    AXUM_PRESET_DATA_STRUCT *PresetData = &AxumData.PresetData[NewPresetNr-1];
 
     if ((PresetData->UseGain) || (AxumData.ModuleData[ModuleNr].Defaults.GainUsePreset))
     {
@@ -14543,6 +14544,8 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigne
         ModuleState = AxumData.ModuleData[ModuleNr].Defaults.On;
       }
     }
+
+    PresetNr = NewPresetNr;
   }
   else if (UseModuleDefaults)
   {
