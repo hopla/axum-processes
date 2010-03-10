@@ -14606,6 +14606,7 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewPresetNr, unsi
       FaderLevel = AxumData.ModuleData[ModuleNr].Defaults.FaderLevel;
       ModuleState = AxumData.ModuleData[ModuleNr].Defaults.On;
     }
+    PresetNr = NewPresetNr;
   }
 
   if (AxumData.ModuleData[ModuleNr].SelectedPreset != PresetNr)
