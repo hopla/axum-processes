@@ -2146,7 +2146,7 @@ int db_read_routing_preset(unsigned char first_mod, unsigned char last_mod)
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%c", &preset);
     if ((number>=1) && (number<=128) &&
-        (preset>='A') && (preset<='D'))
+        (preset>='A') && (preset<='H'))
     {
       //Next are routing presets and assignment of modules to busses.
       for (cntBuss=0; cntBuss<16; cntBuss++)
