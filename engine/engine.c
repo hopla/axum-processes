@@ -573,6 +573,67 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     return 1;
   }
 
+  if (OnlineNodeInformationElement->ManufacturerID == 2)
+  {
+    char TypeString[64] = "";
+    char DataString[64] = "";
+
+    switch (type)
+    {
+      case MBN_DATATYPE_NODATA:
+      {
+        sprintf(TypeString,"NO DATA");
+      }
+      break;
+      case MBN_DATATYPE_UINT:
+      {
+        sprintf(TypeString,"UNSIGNED INTEGER");
+        sprintf(DataString,"%ld", data.UInt);
+      }
+      break;
+      case MBN_DATATYPE_SINT:
+      {
+        sprintf(TypeString,"SIGNED INTEGER");
+        sprintf(DataString,"%ld", data.SInt);
+      }
+      break;
+      case MBN_DATATYPE_STATE:
+      {
+        sprintf(TypeString,"STATE");
+        sprintf(DataString,"%ld", data.State);
+      }
+      break;
+      case MBN_DATATYPE_OCTETS:
+      {
+        sprintf(TypeString,"OCTETS");
+        sprintf(DataString,"%s", data.Octets);
+      }
+      break;
+      case MBN_DATATYPE_FLOAT:
+      {
+        sprintf(TypeString,"FLOAT");
+        sprintf(DataString,"%f", data.Float);
+      }
+      break;
+      case MBN_DATATYPE_BITS:
+      {
+        sprintf(TypeString,"BITS");
+      }
+      break;
+      case MBN_DATATYPE_OBJINFO:
+      {
+        sprintf(TypeString,"OBJINFO");
+      }
+      break;
+      case MBN_DATATYPE_ERROR:
+      {
+      }
+      break;
+    }
+    log_write("[mSensorDataChanged] Object: %d, type:%s, data:%s", object, TypeString, DataString);
+  }
+
+
   if (OnlineNodeInformationElement->SensorReceiveFunction != NULL)
   {
     SENSOR_RECEIVE_FUNCTION_STRUCT *SensorReceiveFunction = &OnlineNodeInformationElement->SensorReceiveFunction[object-1024];
