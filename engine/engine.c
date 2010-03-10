@@ -788,18 +788,24 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   if (data.State)
                   {
-                    SetNewSource(ModuleNr, CurrentSource, AxumData.ModuleData[ModuleNr].OverruleActive);
-                    LoadProcessingPreset(ModuleNr, CurrentPreset, 1, 0);
-                    LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 1, 0);
+                    if (CurrentSource != 0)
+                    { //Source 'none', is no change
+                      SetNewSource(ModuleNr, CurrentSource, AxumData.ModuleData[ModuleNr].OverruleActive);
+                    }
+                    LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0);//Do not use the module defaults
+                    LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 0, 0);//Do not use the module defaults
                   }
                 }
                 else
                 {
                   if (data.State)
                   {
-                    AxumData.ModuleData[ModuleNr].WaitingSource = 0x10000 | CurrentSource;
-                    AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = 0x10000 | CurrentPreset;
-                    AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = 0x10000 | CurrentRoutingPreset;
+                    //AxumData.ModuleData[ModuleNr].WaitingSource = 0x10000 | CurrentSource;
+                    //AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = 0x10000 | CurrentPreset;
+                    //AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = 0x10000 | CurrentRoutingPreset;
+                    AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
+                    AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
+                    AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = CurrentRoutingPreset;
                   }
                 }
               }
@@ -15170,14 +15176,19 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableA
 
           if ((!SourceActive) || (AxumData.ModuleData[cntModule].OverruleActive) || (DisableActiveCheck))
           {
-            SetNewSource(cntModule, CurrentSource, DisableActiveCheck | AxumData.ModuleData[cntModule].OverruleActive);
-            LoadProcessingPreset(cntModule, CurrentPreset, 1, 0);
-            LoadRoutingPreset(cntModule, CurrentRoutingPreset, 1, 0);
+            if (CurrentSource != 0)
+            { //if Source 'none', do nothing
+              SetNewSource(cntModule, CurrentSource, DisableActiveCheck | AxumData.ModuleData[cntModule].OverruleActive);
+            }
+            LoadProcessingPreset(cntModule, CurrentPreset, 0, 0);//Do no use module defaults
+            LoadRoutingPreset(cntModule, CurrentRoutingPreset, 0, 0);//Do no use module defaults
           }
           else
           {
-            AxumData.ModuleData[cntModule].WaitingSource = 0x10000 | CurrentSource;
-            AxumData.ModuleData[cntModule].WaitingProcessingPreset = 0x10000 | CurrentPreset;
+            //AxumData.ModuleData[cntModule].WaitingSource = 0x10000 | CurrentSource;
+            //AxumData.ModuleData[cntModule].WaitingProcessingPreset = 0x10000 | CurrentPreset;
+            AxumData.ModuleData[cntModule].WaitingSource = CurrentSource;
+            AxumData.ModuleData[cntModule].WaitingProcessingPreset = CurrentPreset;
           }
         }
       }
