@@ -1937,6 +1937,66 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               }
             }
             break;
+            case MODULE_FUNCTION_BUSS_1_2_ON:
+            case MODULE_FUNCTION_BUSS_3_4_ON:
+            case MODULE_FUNCTION_BUSS_5_6_ON:
+            case MODULE_FUNCTION_BUSS_7_8_ON:
+            case MODULE_FUNCTION_BUSS_9_10_ON:
+            case MODULE_FUNCTION_BUSS_11_12_ON:
+            case MODULE_FUNCTION_BUSS_13_14_ON:
+            case MODULE_FUNCTION_BUSS_15_16_ON:
+            case MODULE_FUNCTION_BUSS_17_18_ON:
+            case MODULE_FUNCTION_BUSS_19_20_ON:
+            case MODULE_FUNCTION_BUSS_21_22_ON:
+            case MODULE_FUNCTION_BUSS_23_24_ON:
+            case MODULE_FUNCTION_BUSS_25_26_ON:
+            case MODULE_FUNCTION_BUSS_27_28_ON:
+            case MODULE_FUNCTION_BUSS_29_30_ON:
+            case MODULE_FUNCTION_BUSS_31_32_ON:
+            {
+              int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_ON)/(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON);
+
+              printf("Buss %d/%d on\n", (BussNr*2)+1, (BussNr*2)+2);
+              if (type == MBN_DATATYPE_STATE)
+              {
+                if (data.State)
+                {
+                  unsigned char NewState = 1;
+                  SetBussOnOff(ModuleNr, BussNr, NewState, 0);
+                }
+              }
+            }
+            break;
+            case MODULE_FUNCTION_BUSS_1_2_OFF:
+            case MODULE_FUNCTION_BUSS_3_4_OFF:
+            case MODULE_FUNCTION_BUSS_5_6_OFF:
+            case MODULE_FUNCTION_BUSS_7_8_OFF:
+            case MODULE_FUNCTION_BUSS_9_10_OFF:
+            case MODULE_FUNCTION_BUSS_11_12_OFF:
+            case MODULE_FUNCTION_BUSS_13_14_OFF:
+            case MODULE_FUNCTION_BUSS_15_16_OFF:
+            case MODULE_FUNCTION_BUSS_17_18_OFF:
+            case MODULE_FUNCTION_BUSS_19_20_OFF:
+            case MODULE_FUNCTION_BUSS_21_22_OFF:
+            case MODULE_FUNCTION_BUSS_23_24_OFF:
+            case MODULE_FUNCTION_BUSS_25_26_OFF:
+            case MODULE_FUNCTION_BUSS_27_28_OFF:
+            case MODULE_FUNCTION_BUSS_29_30_OFF:
+            case MODULE_FUNCTION_BUSS_31_32_OFF:
+            {
+              int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_ON)/(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON);
+
+              printf("Buss %d/%d off\n", (BussNr*2)+1, (BussNr*2)+2);
+              if (type == MBN_DATATYPE_STATE)
+              {
+                if (data.State)
+                {
+                  unsigned char NewState = 0;
+                  SetBussOnOff(ModuleNr, BussNr, NewState, 0);
+                }
+              }
+            }
+            break;
             case MODULE_FUNCTION_BUSS_1_2_ON_OFF:
             case MODULE_FUNCTION_BUSS_3_4_ON_OFF:
             case MODULE_FUNCTION_BUSS_5_6_ON_OFF:
