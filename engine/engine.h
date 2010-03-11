@@ -565,4 +565,7 @@ void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength);
 void GetConsolePresetLabel(unsigned int ConsolePresetNr, char *TextString, int MaxLength);
 unsigned int GetFunctionNrFromControlMode(int ControlNr);
 
+void UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode);
+
+
 #endif

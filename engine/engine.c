@@ -1703,29 +1703,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               SetAxum_BussLevels(ModuleNr);
               CheckObjectsToSent(SensorReceiveFunctionNumber);
 
-              unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-              CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
-              if (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-              {
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-              }
-              if (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-              {
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-              }
-              if (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-              {
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-              }
-              if (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-              {
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-              }
+              UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_MODULE_LEVEL);
 
               if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
                   ((CurrentLevel>-80) && (NewLevel<=-80)))
               { //fader on changed
                 DoAxum_ModuleStatusChanged(ModuleNr, 1);
+
+                unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
 
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_INACTIVE);
@@ -2527,23 +2512,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
                 CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
 
-                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
-                if (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-                {
-                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-                }
-                if (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-                {
-                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-                }
-                if (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-                {
-                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-                }
-                if (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-                {
-                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-                }
+                UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_MODULE_LEVEL);
 
                 if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
                     ((CurrentLevel>-80) && (NewLevel<=-80)))
@@ -5229,23 +5198,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     unsigned int FunctionNrToSent = (cntModule<<12);
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
 
-                    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
-                    if (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_SOURCE_GAIN)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-                    }
-                    if (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_SOURCE_GAIN)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-                    }
-                    if (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_SOURCE_GAIN)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-                    }
-                    if (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_SOURCE_GAIN)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-                    }
+                    UpdateModuleControlMode(cntModule, MODULE_CONTROL_MODE_SOURCE_GAIN);
                   }
                 }
               }
@@ -11203,23 +11156,8 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
         unsigned int FunctionNrToSent = (ModuleNr<<12);
         CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MODULE_LEVEL);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
-        if (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-        {
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-        }
-        if (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-        {
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-        }
-        if (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-        {
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-        }
-        if (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_MODULE_LEVEL)
-        {
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-        }
+
+        UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_MODULE_LEVEL);
 
         if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
             ((CurrentLevel>-80) && (NewLevel<=-80)))
@@ -13706,20 +13644,9 @@ void SetBussOnOff(int ModuleNr, int BussNr, int LoadPreset)
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
   CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
 
-  if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
-  {
-    int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-    FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-    CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
-    CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
-    CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
-  }
+    int ControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
+    UpdateModuleControlMode(ModuleNr, ControlMode);
 
   //Do interlock
   if ((AxumData.BussMasterData[BussNr].Interlock) && (!LoadPreset))
@@ -13738,12 +13665,8 @@ void SetBussOnOff(int ModuleNr, int BussNr, int LoadPreset)
           unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
           CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
-          FunctionNrToSent = ((cntModule<<12)&0xFFF000);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+            int ControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
+            UpdateModuleControlMode(cntModule, ControlMode);
 
           if ((AxumData.ModuleData[cntModule].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[cntModule].SelectedSource<=matrix_sources.src_offset.max.source))
           {
@@ -15511,4 +15434,42 @@ unsigned int GetFunctionNrFromControlMode(int ControlNr)
     break;
   }
   return FunctionNr;
+}
+
+void UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode)
+{
+  unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+
+  if (AxumData.ControlMode[0] == ControlMode)
+  {
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
+    if(AxumData.ModuleData[ModuleNr].Console == 0)
+    {
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
+    }
+  }
+  if (AxumData.ControlMode[1] == ControlMode)
+  {
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
+    if(AxumData.ModuleData[ModuleNr].Console == 1)
+    {
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
+    }
+  }
+  if (AxumData.ControlMode[2] == ControlMode)
+  {
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
+    if(AxumData.ModuleData[ModuleNr].Console == 2)
+    {
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
+    }
+  }
+  if (AxumData.ControlMode[3] == ControlMode)
+  {
+    CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+    if(AxumData.ModuleData[ModuleNr].Console == 3)
+    {
+      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
+    }
+  }
 }
