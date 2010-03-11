@@ -14930,14 +14930,71 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
   bool SetModuleControllers = false;
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
   AXUM_ROUTING_PRESET_DATA_STRUCT *SelectedRoutingPreset = NULL;
+  unsigned char NewExclusiveActive = 0;
+  unsigned char CurrentExclusiveActive = 0;
 
 
+  //First check if the preset enables an exclusive buss.
+  for (cntBuss=0; cntBuss<16; cntBuss++)
+  {
+    if (AxumData.BussMasterData[cntBuss].Exclusive)
+    {
+      SelectedRoutingPreset = NULL;
+      if (PresetNr>0)
+      {
+        SelectedRoutingPreset = &AxumData.ModuleData[ModuleNr].RoutingPreset[PresetNr-1][cntBuss];
+      }
+
+      if ((SelectedRoutingPreset != NULL) && (SelectedRoutingPreset->Use))
+      {
+        if (SelectedRoutingPreset->On)
+        {
+          NewExclusiveActive = 1;
+        }
+      }
+      else if ((AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].Use) && (UseModuleDefaults))
+      {
+        if (AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].On)
+        {
+          NewExclusiveActive = 1;
+        }
+      }
+      if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].On)
+      {
+        CurrentExclusiveActive = 1;
+      }
+    }
+  }
+
+  //Special case found where an exlusive buss is active in this preset
+  if ((CurrentExclusiveActive==0) && (NewExclusiveActive==1))
+  {
+    for (cntBuss=0; cntBuss<16; cntBuss++)
+    {
+      AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
+    }
+  }
+
+  //Now set the preset as programmes
   for (cntBuss=0; cntBuss<16; cntBuss++)
   {
     float Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
     bool On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
     signed int Balance = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance;
     bool PreModuleLevel = AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel;
+
+    //Special case found where an exlusive buss is active in this preset
+    if ((CurrentExclusiveActive==0) && (NewExclusiveActive==1))
+    {
+      AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
+    }
+    if ((CurrentExclusiveActive==1) && (NewExclusiveActive==0))
+    {
+      if (!AxumData.BussMasterData[cntBuss].Exclusive)
+      {
+        On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn;
+      }
+    }
 
     if (PresetNr>0)
     {
@@ -14957,6 +15014,13 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
       On = AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].On;
       Balance = AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].Balance;
       PreModuleLevel = AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].PreModuleLevel;
+    }
+    else if ((CurrentExclusiveActive==0) && (NewExclusiveActive==1))
+    {
+      if (!AxumData.BussMasterData[cntBuss].Exclusive)
+      {
+        On = 0;
+      }
     }
 
     if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level != Level) || (SetAllObjects))
