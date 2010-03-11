@@ -9661,17 +9661,31 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           case GLOBAL_FUNCTION_CONSOLE_PRESET_32:
           {
             unsigned int PresetNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_PRESET_1+1;
-            int Active = 0;
+            unsigned char ConsoleActiveBits = 0;
+            unsigned char PresetActiveBits = 0;
 
             for (int cntConsole=0; cntConsole<4; cntConsole++)
             {
-              if (AxumData.SelectedConsolePreset[cntConsole] == PresetNr)
+              if (AxumData.ConsolePresetData[PresetNr-1].Console[cntConsole])
               {
-                Active = 1;
+                ConsoleActiveBits |= 0x01<<cntConsole;
+
+                if (AxumData.SelectedConsolePreset[cntConsole] == PresetNr)
+                {
+                  PresetActiveBits |= 0x01<<cntConsole;
+                }
               }
             }
 
-            data.State = Active;
+            if (ConsoleActiveBits == PresetActiveBits)
+            {
+              data.State = 1;
+            }
+            else
+            {
+              data.State = 0;
+            }
+
             mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
           }
           break;
