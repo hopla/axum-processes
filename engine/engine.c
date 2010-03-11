@@ -1955,15 +1955,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_BUSS_31_32_ON_OFF:
             { //Buss on/off
               int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_ON_OFF)/(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF);
-              unsigned char CallSetBussOnOff = 0;
+              unsigned char NewState = AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
 
               printf("Buss %d/%d on/off\n", (BussNr*2)+1, (BussNr*2)+2);
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
                 {
-                  AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
-                  CallSetBussOnOff = 1;
+                  NewState = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
                 }
                 else
                 {
@@ -1972,15 +1971,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
                     {
-                      AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
-                      CallSetBussOnOff = 1;
+                      NewState = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
                     }
                   }
                 }
-                if (CallSetBussOnOff)
-                {
-                  SetBussOnOff(ModuleNr, BussNr, 0);
-                }
+                SetBussOnOff(ModuleNr, BussNr, NewState, 0);
               }
             }
             break;
@@ -4851,13 +4846,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                 for (int cntModule=0; cntModule<128; cntModule++)
                 {
-                  unsigned char CallSetBussOnOff = 0;
+                  unsigned char NewState = AxumData.ModuleData[cntModule].Buss[BussNr].On;
                   if (AxumData.ModuleData[cntModule].SelectedSource == (SourceNr+matrix_sources.src_offset.min.source))
                   {
                     if (data.State)
                     {
-                      AxumData.ModuleData[cntModule].Buss[BussNr].On = !AxumData.ModuleData[cntModule].Buss[BussNr].On;
-                      CallSetBussOnOff = 1;
+                      NewState = !AxumData.ModuleData[cntModule].Buss[BussNr].On;
                     }
                     else
                     {
@@ -4866,16 +4860,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       {
                         if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
                         {
-                          AxumData.ModuleData[cntModule].Buss[BussNr].On = !AxumData.ModuleData[cntModule].Buss[BussNr].On;
-                          CallSetBussOnOff = 1;
+                          NewState = !AxumData.ModuleData[cntModule].Buss[BussNr].On;
                         }
                       }
                     }
 
-                    if (CallSetBussOnOff)
-                    {
-                      SetBussOnOff(cntModule, BussNr, 0);
-                    }
+                    SetBussOnOff(cntModule, BussNr, NewState, 0);
                   }
                   else
                   {
@@ -11700,34 +11690,8 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         case MODULE_CONTROL_MODE_BUSS_31_32:
         {   //Buss
           int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
-          AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
-          SetBussOnOff(ModuleNr, BussNr, 0);
-
-/*        SetAxum_BussLevels(ModuleNr);
-          SetAxum_ModuleMixMinus(ModuleNr, 0);
-
-
-          unsigned int FunctionNrToSent = (ModuleNr<<12);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-
-          FunctionNrToSent = (ModuleNr<<12) | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF)));
-          CheckObjectsToSent(FunctionNrToSent);
-
-          FunctionNrToSent = 0x04000000;
-          CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_BUSS_1_2_RESET+(BussNr*(GLOBAL_FUNCTION_BUSS_3_4_RESET-GLOBAL_FUNCTION_BUSS_1_2_RESET))));
-
-          DoAxum_ModuleStatusChanged(ModuleNr, 0);
--
-          if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-                (AxumData.BussMasterData[BussNr].PreModuleLevel))
-          {
-            printf("Have to check monitor routing and muting\n");
-            DoAxum_ModulePreStatusChanged(BussNr);
-          }*/
+          unsigned char NewState = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
+          SetBussOnOff(ModuleNr, BussNr, NewState, 0);
         }
         break;
         case MODULE_CONTROL_MODE_BUSS_1_2_BALANCE:
@@ -12751,7 +12715,14 @@ void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned 
 
 void DoAxum_BussReset(int BussNr)
 {
-  int BussWasActive = 0;
+  //first set all busses off
+  for (int cntModule=0; cntModule<128; cntModule++)
+  {
+    unsigned char NewState = 0;
+    SetBussOnOff(cntModule, BussNr, NewState, 0);
+  }
+
+/*int BussWasActive = 0;
   for (int cntModule=0; cntModule<128; cntModule++)
   {
     if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
@@ -12880,7 +12851,7 @@ void DoAxum_BussReset(int BussNr)
       unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
       CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+BussNr));
     }
-  }
+  }*/
 }
 
 int SourceActive(unsigned int InputSourceNr)
@@ -13564,217 +13535,246 @@ bool SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
   return ((!OldSourceActive) || (Forced));
 }
 
-void SetBussOnOff(int ModuleNr, int BussNr, int LoadPreset)
+void SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int LoadPreset)
 {
-  unsigned char Active = 0;
+  char CurrentBussActive = 0;
+  char NewBussActive = 0;
+  unsigned char ModuleActive = 0;
 
-  if ((AxumData.BussMasterData[BussNr].Exclusive) && (!LoadPreset))
+  if (AxumData.ModuleData[ModuleNr].Buss[BussNr].On != NewState)
   {
-    if (AxumData.ModuleData[ModuleNr].On)
+    //Check if buss is currently active
+    for (int cntModule=0; cntModule<128; cntModule++)
     {
-      if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
+      if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
       {
-        Active = 1;
+        CurrentBussActive = 1;
       }
     }
-    //TODO: Check if others already or still in exlusive mode...
 
-    if (!Active)
+    AxumData.ModuleData[ModuleNr].Buss[BussNr].On = NewState;
+
+    if ((AxumData.BussMasterData[BussNr].Exclusive) && (!LoadPreset))
     {
-      if (!AxumData.ModuleData[ModuleNr].Buss[BussNr].On)
-      {  //return to normal routing
-        for (int cntBuss=0; cntBuss<16; cntBuss++)
+      if (AxumData.ModuleData[ModuleNr].On)
+      {
+        if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
         {
-          if (cntBuss != BussNr)
+          ModuleActive = 1;
+        }
+      }
+      //TODO: Check if others already or still in exlusive mode...
+
+      if (!ModuleActive)
+      {
+        if (!AxumData.ModuleData[ModuleNr].Buss[BussNr].On)
+        {  //return to normal routing
+          for (int cntBuss=0; cntBuss<16; cntBuss++)
           {
-            if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].On != AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn)
+            if (cntBuss != BussNr)
             {
-              AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn;
-
-              unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-              CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
-
-              if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
+              if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].On != AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn)
               {
-                int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-1;
-                FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
-                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
-                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
+                AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn;
+
+                unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
+
+                if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
+                {
+                  int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-1;
+                  FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+                  CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
+                  CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
+                  CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
+                }
+              }
+            }
+          }
+        }
+        else
+        {  //turn off other routing
+          for (int cntBuss=0; cntBuss<16; cntBuss++)
+          {
+            if (cntBuss != BussNr)
+            {
+              AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
+              if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].On != 0)
+              {
+                AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = 0;
+
+                unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
+
+                if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
+                {
+                  int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-1;
+                  FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+                  CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
+                  CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
+                  CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
+                }
               }
             }
           }
         }
       }
       else
-      {  //turn off other routing
-        for (int cntBuss=0; cntBuss<16; cntBuss++)
-        {
-          if (cntBuss != BussNr)
-          {
-            AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
-            if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].On != 0)
-            {
-              AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = 0;
-
-              unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-              CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
-
-              if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
-              {
-                int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-1;
-                FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
-                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
-                CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(cntBuss*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
-              }
-            }
-          }
-        }
+      {
+        AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
       }
     }
-    else
-    {
-      AxumData.ModuleData[ModuleNr].Buss[BussNr].On = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
-    }
-  }
-  SetAxum_BussLevels(ModuleNr);
-  SetAxum_ModuleMixMinus(ModuleNr, 0);
+    SetAxum_BussLevels(ModuleNr);
+    SetAxum_ModuleMixMinus(ModuleNr, 0);
 
-  unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-  CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
+    unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
 
     int ControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
     UpdateModuleControlMode(ModuleNr, ControlMode);
 
-  //Do interlock
-  if ((AxumData.BussMasterData[BussNr].Interlock) && (!LoadPreset))
-  {
-    for (int cntModule=0; cntModule<128; cntModule++)
+    if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
     {
-      if (ModuleNr != cntModule)
+      int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+      FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+      CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
+      CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
+      CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
+    }
+
+    //Do interlock
+    if ((AxumData.BussMasterData[BussNr].Interlock) && (!LoadPreset))
+    {
+      for (int cntModule=0; cntModule<128; cntModule++)
       {
-        if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
+        if (ModuleNr != cntModule)
         {
-          AxumData.ModuleData[cntModule].Buss[BussNr].On = 0;
+          if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
+          {
+            AxumData.ModuleData[cntModule].Buss[BussNr].On = 0;
 
-          SetAxum_BussLevels(cntModule);
-          SetAxum_ModuleMixMinus(cntModule, 0);
+            SetAxum_BussLevels(cntModule);
+            SetAxum_ModuleMixMinus(cntModule, 0);
 
-          unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
-          CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
+            unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
+            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
             int ControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
             UpdateModuleControlMode(cntModule, ControlMode);
 
-          if ((AxumData.ModuleData[cntModule].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[cntModule].SelectedSource<=matrix_sources.src_offset.max.source))
-          {
-            int SourceNr = AxumData.ModuleData[cntModule].SelectedSource-matrix_sources.src_offset.min.source;
-            FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-            CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
-            CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
-            CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
+            if ((AxumData.ModuleData[cntModule].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[cntModule].SelectedSource<=matrix_sources.src_offset.max.source))
+            {
+              int SourceNr = AxumData.ModuleData[cntModule].SelectedSource-matrix_sources.src_offset.min.source;
+              FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+              CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON))));
+              CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF))));
+              CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF+(BussNr*(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF))));
+            }
           }
         }
       }
     }
-  }
 
-  //Check buss reset
-  FunctionNrToSent = 0x04000000;
-  CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_BUSS_1_2_RESET+(BussNr*(GLOBAL_FUNCTION_BUSS_3_4_RESET-GLOBAL_FUNCTION_BUSS_1_2_RESET))));
-
-  //Check active buss auto switching
-  char BussActive = 0;
-  for (int cntModule=0; cntModule<128; cntModule++)
-  {
-    if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
+    //Check active buss auto switching
+    for (int cntModule=0; cntModule<128; cntModule++)
     {
-      BussActive = 1;
-    }
-  }
-
-  //Set data, make functional after eventual monitor mute is set
-  for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
-  {
-    if (AxumData.Monitor[cntMonitorBuss].AutoSwitchingBuss[BussNr])
-    {
-      AxumData.Monitor[cntMonitorBuss].Buss[BussNr] = BussActive;
-    }
-  }
-
-  for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
-  {
-    unsigned int MonitorBussActive = 0;
-    int cntBuss;
-    for (cntBuss=0; cntBuss<16; cntBuss++)
-    {
-      if (AxumData.Monitor[cntMonitorBuss].Buss[cntBuss])
+      if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
       {
-        MonitorBussActive = 1;
-      }
-    }
-    int cntExt;
-    for (cntExt=0; cntExt<8; cntExt++)
-    {
-      if (AxumData.Monitor[cntMonitorBuss].Ext[cntExt])
-      {
-        MonitorBussActive = 1;
+        NewBussActive = 1;
       }
     }
 
-    if (!MonitorBussActive)
+    if (CurrentBussActive != NewBussActive)
     {
-      int DefaultSelection = AxumData.Monitor[cntMonitorBuss].DefaultSelection;
-      if (DefaultSelection<16)
+      //Check buss reset
+      FunctionNrToSent = 0x04000000;
+      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_BUSS_1_2_RESET+(BussNr*(GLOBAL_FUNCTION_BUSS_3_4_RESET-GLOBAL_FUNCTION_BUSS_1_2_RESET))));
+
+
+      //Set buss default if not active
+      for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
       {
-        int BussNr = DefaultSelection;
-        AxumData.Monitor[cntMonitorBuss].Buss[BussNr] = 1;
+        if (AxumData.Monitor[cntMonitorBuss].AutoSwitchingBuss[BussNr])
+        {
+          AxumData.Monitor[cntMonitorBuss].Buss[BussNr] = NewBussActive;
+        }
+      }
+
+      for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
+      {
+        unsigned int MonitorBussActive = 0;
+        int cntBuss;
+        for (cntBuss=0; cntBuss<16; cntBuss++)
+        {
+          if (AxumData.Monitor[cntMonitorBuss].Buss[cntBuss])
+          {
+            MonitorBussActive = 1;
+          }
+        }
+        int cntExt;
+        for (cntExt=0; cntExt<8; cntExt++)
+        {
+          if (AxumData.Monitor[cntMonitorBuss].Ext[cntExt])
+          {
+            MonitorBussActive = 1;
+          }
+        }
+
+        if (!MonitorBussActive)
+        {
+          int DefaultSelection = AxumData.Monitor[cntMonitorBuss].DefaultSelection;
+          if (DefaultSelection<16)
+          {
+            int BussNr = DefaultSelection;
+            AxumData.Monitor[cntMonitorBuss].Buss[BussNr] = 1;
+
+            unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
+            CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+BussNr));
+          }
+          else if (DefaultSelection<24)
+          {
+            int ExtNr = DefaultSelection-16;
+            AxumData.Monitor[cntMonitorBuss].Ext[ExtNr] = 1;
+
+            unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
+            CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
+          }
+        }
+      }
+    }
+
+    //Not sure what to do below...
+    DoAxum_ModuleStatusChanged(ModuleNr, 0);
+
+    bool BussPre = 0;
+    for (int cntModule=0; cntModule<128; cntModule++)
+    {
+      if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
+      {
+        if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
+        {
+          BussPre = 1;
+        }
+      }
+    }
+    if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
+          (BussPre))
+    {
+      printf("Have to check monitor routing and muting\n");
+      DoAxum_ModulePreStatusChanged(BussNr);
+    }
+
+    //make functional because the eventual monitor mute is already set
+    for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
+    {
+      if (AxumData.Monitor[cntMonitorBuss].AutoSwitchingBuss[BussNr])
+      {
+        SetAxum_MonitorBuss(cntMonitorBuss);
 
         unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
         CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+BussNr));
       }
-      else if (DefaultSelection<24)
-      {
-        int ExtNr = DefaultSelection-16;
-        AxumData.Monitor[cntMonitorBuss].Ext[ExtNr] = 1;
-
-        unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
-        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
-      }
-    }
-  }
-
-  DoAxum_ModuleStatusChanged(ModuleNr, 0);
-
-  bool BussPre = 0;
-  for (int cntModule=0; cntModule<128; cntModule++)
-  {
-    if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
-    {
-      if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
-      {
-        BussPre = 1;
-      }
-    }
-  }
-  if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-        (BussPre))
-  {
-    printf("Have to check monitor routing and muting\n");
-    DoAxum_ModulePreStatusChanged(BussNr);
-  }
-
-  //make functional because the eventual monitor mute is already set
-  for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
-  {
-    if (AxumData.Monitor[cntMonitorBuss].AutoSwitchingBuss[BussNr])
-    {
-      SetAxum_MonitorBuss(cntMonitorBuss);
-
-      unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
-      CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+BussNr));
     }
   }
 }
@@ -14894,8 +14894,7 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
     }
     if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].On != On) || (SetAllObjects))
     {
-      AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = On;
-      SetBussOnOff(ModuleNr, cntBuss, 1);
+      SetBussOnOff(ModuleNr, cntBuss, On, 1);
       SetModuleControllers = true;
     }
     if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance != Balance) || (SetAllObjects))
