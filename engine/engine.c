@@ -12831,17 +12831,6 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
       int SourceNr = AxumData.ModuleData[ModuleNr].WaitingSource&0xFFFF;
       DoAxum_SetNewSource(ModuleNr, SourceNr, 0);
       AxumData.ModuleData[ModuleNr].WaitingSource = -1;
-
-      //tempory solution
-      unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_C);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_D);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_E);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_F);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_G);
-      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_H);
     }
     if (AxumData.ModuleData[ModuleNr].WaitingProcessingPreset != -1)
     {
