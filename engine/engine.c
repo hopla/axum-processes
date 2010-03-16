@@ -7757,144 +7757,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_STATE:
             {
-              int Active = 0;
-              unsigned char SourceEqual = 0;
-              unsigned char PresetEqual = 0;
-
-              switch (FunctionNr)
+              unsigned char PresetNr = GetPresetNrFromFunctionNr(FunctionNr);
+              if (PresetNr>0)
               {
-                case MODULE_FUNCTION_PRESET_A: //Preset A
-                {
-                  if ((AxumData.ModuleData[ModuleNr].SourceA == 0) || (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceA))
-                  {
-                    SourceEqual = 1;
-                  }
-                  if ((AxumData.ModuleData[ModuleNr].SourceAPreset == 0) || (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceAPreset))
-                  {
-                    PresetEqual = 1;
-                  }
-                  if ((SourceEqual) && (PresetEqual))
-                  {
-                    Active = 1;
-                  }
-                }
-                break;
-                case MODULE_FUNCTION_PRESET_B: //Preset B
-                {
-                  if ((AxumData.ModuleData[ModuleNr].SourceB == 0) || (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceB))
-                  {
-                    SourceEqual = 1;
-                  }
-                  if ((AxumData.ModuleData[ModuleNr].SourceBPreset == 0) || (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceBPreset))
-                  {
-                    PresetEqual = 1;
-                  }
-                  if ((SourceEqual) && (PresetEqual))
-                  {
-                    Active = 1;
-                  }
-                }
-                break;
-                case MODULE_FUNCTION_PRESET_C: //Preset C
-                {
-                  if ((AxumData.ModuleData[ModuleNr].SourceC == 0) || (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceC))
-                  {
-                    SourceEqual = 1;
-                  }
-                  if ((AxumData.ModuleData[ModuleNr].SourceCPreset == 0) || (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceCPreset))
-                  {
-                    PresetEqual = 1;
-                  }
-                  if ((SourceEqual) && (PresetEqual))
-                  {
-                    Active = 1;
-                  }
-                }
-                break;
-                case MODULE_FUNCTION_PRESET_D: //Preset D
-                {
-                  if ((AxumData.ModuleData[ModuleNr].SourceD == 0) || (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceD))
-                  {
-                    SourceEqual = 1;
-                  }
-                  if ((AxumData.ModuleData[ModuleNr].SourceDPreset == 0) || (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceDPreset))
-                  {
-                    PresetEqual = 1;
-                  }
-                  if ((SourceEqual) && (PresetEqual))
-                  {
-                    Active = 1;
-                  }
-                }
-                break;
-                case MODULE_FUNCTION_PRESET_E: //Preset E
-                {
-                  if ((AxumData.ModuleData[ModuleNr].SourceE == 0) || (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceE))
-                  {
-                    SourceEqual = 1;
-                  }
-                  if ((AxumData.ModuleData[ModuleNr].SourceEPreset == 0) || (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceEPreset))
-                  {
-                    PresetEqual = 1;
-                  }
-                  if ((SourceEqual) && (PresetEqual))
-                  {
-                    Active = 1;
-                  }
-                }
-                break;
-                case MODULE_FUNCTION_PRESET_F: //Preset F
-                {
-                  if ((AxumData.ModuleData[ModuleNr].SourceF == 0) || (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceF))
-                  {
-                    SourceEqual = 1;
-                  }
-                  if ((AxumData.ModuleData[ModuleNr].SourceFPreset == 0) || (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceFPreset))
-                  {
-                    PresetEqual = 1;
-                  }
-                  if ((SourceEqual) && (PresetEqual))
-                  {
-                    Active = 1;
-                  }
-                }
-                break;
-                case MODULE_FUNCTION_PRESET_G: //Preset G
-                {
-                  if ((AxumData.ModuleData[ModuleNr].SourceG == 0) || (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceG))
-                  {
-                    SourceEqual = 1;
-                  }
-                  if ((AxumData.ModuleData[ModuleNr].SourceGPreset == 0) || (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceGPreset))
-                  {
-                    PresetEqual = 1;
-                  }
-                  if ((SourceEqual) && (PresetEqual))
-                  {
-                    Active = 1;
-                  }
-                }
-                break;
-                case MODULE_FUNCTION_PRESET_H: //Preset H
-                {
-                  if ((AxumData.ModuleData[ModuleNr].SourceH == 0) || (AxumData.ModuleData[ModuleNr].SelectedSource == AxumData.ModuleData[ModuleNr].SourceH))
-                  {
-                    SourceEqual = 1;
-                  }
-                  if ((AxumData.ModuleData[ModuleNr].SourceHPreset == 0) || (AxumData.ModuleData[ModuleNr].SelectedPreset == AxumData.ModuleData[ModuleNr].SourceHPreset))
-                  {
-                    PresetEqual = 1;
-                  }
-                  if ((SourceEqual) && (PresetEqual))
-                  {
-                    Active = 1;
-                  }
-                }
-                break;
+                data.State = ModulePresetActive(ModuleNr, PresetNr);
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
-
-              data.State = Active;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9804,11 +9672,11 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
           if (FunctionNr == SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE)
           {
-          data.State = !Active;
+            data.State = !Active;
           }
           else
           {
-          data.State = Active;
+            data.State = Active;
           }
           mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
@@ -13244,6 +13112,13 @@ bool DoAxum_SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
 {
   unsigned int OldSource = AxumData.ModuleData[ModuleNr].SelectedSource;
   int OldSourceActive = 0;
+  unsigned char CurrentPresetState[8];
+  unsigned char cntPreset;
+
+  for (cntPreset=0; cntPreset<8; cntPreset++)
+  {
+    CurrentPresetState[cntPreset] = ModulePresetActive(ModuleNr, cntPreset+1);
+  }
 
   if (AxumData.ModuleData[ModuleNr].On)
   {
@@ -13437,6 +13312,16 @@ bool DoAxum_SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
           CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_ALERT);
         }
       }
+    }
+  }
+
+  for (cntPreset=0; cntPreset<8; cntPreset++)
+  {
+    if (CurrentPresetState[cntPreset] != ModulePresetActive(ModuleNr, cntPreset+1))
+    {
+      unsigned int FunctionNrToSent = (ModuleNr<<12);
+      log_write("Source");
+      CheckObjectsToSent(FunctionNrToSent | GetModuleFunctionNrFromPresetNr(cntPreset+1));
     }
   }
 
@@ -14230,6 +14115,13 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewPresetN
   bool ModuleState = AxumData.ModuleData[ModuleNr].On;
   int Panorama = AxumData.ModuleData[ModuleNr].Panorama;
   unsigned char PresetNr = AxumData.ModuleData[ModuleNr].SelectedPreset;
+  unsigned char CurrentPresetState[8];
+  unsigned char cntPreset;
+
+  for (cntPreset=0; cntPreset<8; cntPreset++)
+  {
+    CurrentPresetState[cntPreset] = ModulePresetActive(ModuleNr, cntPreset+1);
+  }
 
   for (int cntEQ=0; cntEQ<6; cntEQ++)
   {
@@ -14745,16 +14637,14 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewPresetN
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
   }
 
-  unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_C);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_D);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_E);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_F);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_G);
-  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_H);
+  for (cntPreset=0; cntPreset<8; cntPreset++)
+  {
+    if (CurrentPresetState[cntPreset] != ModulePresetActive(ModuleNr, cntPreset+1))
+    {
+      unsigned int FunctionNrToSent = (ModuleNr<<12);
+      CheckObjectsToSent(FunctionNrToSent | GetModuleFunctionNrFromPresetNr(cntPreset+1));
+    }
+  }
 }
 
 void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
@@ -14766,7 +14656,13 @@ void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, un
   AXUM_ROUTING_PRESET_DATA_STRUCT *SelectedRoutingPreset = NULL;
   unsigned char NewExclusiveActive = 0;
   unsigned char CurrentExclusiveActive = 0;
+  unsigned char CurrentPresetState[8];
+  unsigned char cntPreset;
 
+  for (cntPreset=0; cntPreset<8; cntPreset++)
+  {
+    CurrentPresetState[cntPreset] = ModulePresetActive(ModuleNr, cntPreset+1);
+  }
 
   //First check if the preset enables an exclusive buss.
   for (cntBuss=0; cntBuss<16; cntBuss++)
@@ -14896,6 +14792,15 @@ void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, un
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
+  }
+
+  for (cntPreset=0; cntPreset<8; cntPreset++)
+  {
+    if (CurrentPresetState[cntPreset] != ModulePresetActive(ModuleNr, cntPreset+1))
+    {
+      unsigned int FunctionNrToSent = (ModuleNr<<12);
+      CheckObjectsToSent(FunctionNrToSent | GetModuleFunctionNrFromPresetNr(cntPreset+1));
+    }
   }
 }
 

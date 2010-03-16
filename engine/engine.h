@@ -491,6 +491,7 @@ void initialize_axum_data_struct();
 int delay_ms(double sleep_time);
 int delay_us(double sleep_time);
 void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned int *r_ch);
+void debug_mambanet_data(unsigned int object, unsigned char type, union mbn_data data);
 
 //MambaNet object vs Engine function utilities
 void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress=0x00000000);
@@ -526,6 +527,10 @@ unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset);
 void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength);
 void GetConsolePresetLabel(unsigned int ConsolePresetNr, char *TextString, int MaxLength);
 unsigned int GetFunctionNrFromControlMode(int ControlNr);
+int SourceActive(unsigned int InputSourceNr);
+unsigned char ModulePresetActive(int ModuleNr, unsigned char PresetNr);
+unsigned char GetPresetNrFromFunctionNr(unsigned int FunctionNr);
+unsigned int GetModuleFunctionNrFromPresetNr(unsigned char PresetNr);
 
 //Mode controller implementation functions
 void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
