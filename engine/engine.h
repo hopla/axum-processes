@@ -473,20 +473,7 @@ struct ONLINE_NODE_INFORMATION_STRUCT
 
 float CalculateEQ(float *Coefficients, float Gain, int Frequency, float Bandwidth, float Slope, FilterType Type);
 
-//required function for the MambaNet stack.
-//void MambaNetMessageReceived(unsigned long int ToAddress, unsigned long int FromAddress, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress=NULL);
-
-//debug function
-//void dump_block(const unsigned char *block, unsigned int length);
-
-//int SetupNetwork(char *NetworkInterface, unsigned char *LocalMACAddress);
-//void CloseNetwork(int NetworkFileDescriptor);
-
-//void EthernetMambaNetMessageTransmitCallback(unsigned char *buffer, unsigned char buffersize, unsigned char hardware_address[16]);
-//void EthernetMambaNetMessageReceiveCallback(unsigned long int ToAddress, unsigned long int FromAddress, unsigned char Ack, unsigned long int MessageID, unsigned int MessageType, unsigned char *Data, unsigned char DataLength, unsigned char *FromHardwareAddress);
-//void EthernetMambaNetAddressTableChangeCallback(MAMBANET_ADDRESS_STRUCT *AddressTable, MambaNetAddressTableStatus Status, int Index);
-
-//mbn callbacks
+//mbn-lib callbacks
 void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_info, struct mbn_address_node *new_info);
 int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data);
 int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data);
@@ -494,20 +481,34 @@ void mError(struct mbn_handler *m, int code, char *str);
 void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg);
 void mAcknowledgeReply(struct mbn_handler *m, struct mbn_message *request, struct mbn_message *reply, int retries);
 
+//thread function, used for timing related functionality
 void Timer100HzDone(int Value);
 
+//function to initialize AxumData struct
+void initialize_axum_data_struct();
+
+//misc utility functions
 int delay_ms(double sleep_time);
 int delay_us(double sleep_time);
+void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned int *r_ch);
 
-void SetBackplane_Source(unsigned int FormInputNr, unsigned int ChannelNr);
-void SetBackplane_Clock();
+//MambaNet object vs Engine function utilities
+void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress=0x00000000);
+void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void InitalizeAllObjectListPerFunction();
+void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber);
+void DeleteAllObjectListPerFunction();
+ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr);
+unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck);
 
+//Backplane functions, sending MambaNet to the backplane
+void SetBackplaneRouting(unsigned int FormInputNr, unsigned int ChannelNr);
+void SetBackplaneClock();
+
+//Axum functions, only effictive internally (no MambaNet)
 void SetAxum_EQ(unsigned char ModuleNr, unsigned char BandNr);
 void SetAxum_ModuleProcessing(unsigned int ModuleNr);
 void SetAxum_BussLevels(unsigned int ModuleNr);
-
-void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned int *r_ch);
-
 void SetAxum_ModuleSource(unsigned int ModuleNr);
 void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource);
 void SetAxum_ModuleInsertSource(unsigned int ModuleNr);
@@ -515,57 +516,40 @@ void SetAxum_RemoveOutputRouting(unsigned int OutputMambaNetAddress, unsigned ch
 void SetAxum_DestinationSource(unsigned int DestinationNr);
 void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr);
 void SetAxum_TalkbackSource(unsigned int TalkbackNr);
-
 void SetAxum_BussMasterLevels();
 void SetAxum_MonitorBuss(unsigned int MonitorBussNr);
-
-void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress=0x00000000);
-void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-
-void InitalizeAllObjectListPerFunction();
-void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber);
-void DeleteAllObjectListPerFunction();
-
-void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-
-void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-
-void DoAxum_BussReset(int BussNr);
-void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule);
-void DoAxum_ModulePreStatusChanged(int BussNr);
-
-int Axum_MixMinusSourceUsed(unsigned int CurrentSource);
-
-//functions to set all objects connected to 'these' functions
+int MixMinusSourceUsed(unsigned int CurrentSource);
 void GetSourceLabel(unsigned int SourceNr, char *TextString, int MaxLength);
 #define AdjustDestinationSource AdjustModuleSource
 unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset);
-bool SetNewSource(int ModuleNr, unsigned int NewSource, int Forced);
-void SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int UseInterlock);
-
-void initialize_axum_data_struct();
-
-ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr);
-
-void LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
-void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
-void LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
-void LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
-void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableActiveCheck);
-
-unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck);
-
 unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset);
 void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength);
 void GetConsolePresetLabel(unsigned int ConsolePresetNr, char *TextString, int MaxLength);
 unsigned int GetFunctionNrFromControlMode(int ControlNr);
 
-void UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode);
+//Mode controller implementation functions
+void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+//Master mode controller implementtion functions
+void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
 
+//The DoAxum functions also may sent MambaNet data
+void DoAxum_BussReset(int BussNr);
+void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule);
+void DoAxum_ModulePreStatusChanged(int BussNr);
+bool DoAxum_SetNewSource(int ModuleNr, unsigned int NewSource, int Forced);
+void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int UseInterlock);
+void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
+void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
+void DoAxum_LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
+void DoAxum_LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
+void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableActiveCheck);
+void DoAxum_UpdateModuleControlModeLabel(unsigned char ModuleNr, int ControlMode);
+void DoAxum_UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode);
+void DoAxum_UpdateMasterControlMode(int ControlMode);
 
 #endif

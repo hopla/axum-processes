@@ -765,7 +765,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     break;
                   }
 
-                  if (Axum_MixMinusSourceUsed(CurrentSource-1) != -1)
+                  if (MixMinusSourceUsed(CurrentSource-1) != -1)
                   {
                     CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
                     CurrentPreset = AxumData.ModuleData[ModuleNr].SelectedPreset;
@@ -790,10 +790,10 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     if (CurrentSource != 0)
                     { //Source 'none', is no change
-                      SetNewSource(ModuleNr, CurrentSource, AxumData.ModuleData[ModuleNr].OverruleActive);
+                      DoAxum_SetNewSource(ModuleNr, CurrentSource, AxumData.ModuleData[ModuleNr].OverruleActive);
                     }
-                    LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0);//Do not use the module defaults
-                    LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 0, 0);//Do not use the module defaults
+                    DoAxum_LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0);//Do not use the module defaults
+                    DoAxum_LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 0, 0);//Do not use the module defaults
                   }
                 }
                 else
@@ -821,7 +821,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   if (data.State)
                   {
-                    LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0);
+                    DoAxum_LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0);
                   }
                 }
                 break;
@@ -1867,7 +1867,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 if (data.State)
                 {
                   unsigned char NewState = 1;
-                  SetBussOnOff(ModuleNr, BussNr, NewState, 0);
+                  DoAxum_SetBussOnOff(ModuleNr, BussNr, NewState, 0);
                 }
               }
             }
@@ -1897,7 +1897,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 if (data.State)
                 {
                   unsigned char NewState = 0;
-                  SetBussOnOff(ModuleNr, BussNr, NewState, 0);
+                  DoAxum_SetBussOnOff(ModuleNr, BussNr, NewState, 0);
                 }
               }
             }
@@ -1940,7 +1940,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     }
                   }
                 }
-                SetBussOnOff(ModuleNr, BussNr, NewState, 0);
+                DoAxum_SetBussOnOff(ModuleNr, BussNr, NewState, 0);
               }
             }
             break;
@@ -4894,7 +4894,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       }
                     }
 
-                    SetBussOnOff(cntModule, BussNr, NewState, 0);
+                    DoAxum_SetBussOnOff(cntModule, BussNr, NewState, 0);
                   }
                   else
                   {
@@ -5721,7 +5721,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             { //Initialize all routing
               BackplaneMambaNetAddress = OnlineNodeInformationElement->MambaNetAddress;
 
-              SetBackplane_Clock();
+              SetBackplaneClock();
 
               for (int cntModule=0; cntModule<128; cntModule++)
               {
@@ -6265,11 +6265,11 @@ void Timer100HzDone(int Value)
         ConsolePresetSwitch[cntConsolePreset].TimerValue += 10;
         if (ConsolePresetSwitch[cntConsolePreset].TimerValue == 1000)
         {
-          LoadConsolePreset(cntConsolePreset+1, 0, 0);
+          DoAxum_LoadConsolePreset(cntConsolePreset+1, 0, 0);
         }
         else if (ConsolePresetSwitch[cntConsolePreset].TimerValue == 3000)
         {
-          LoadConsolePreset(cntConsolePreset+1, 0, 1);
+          DoAxum_LoadConsolePreset(cntConsolePreset+1, 0, 1);
         }
       }
     }
@@ -6706,23 +6706,20 @@ float CalculateEQ(float *Coefficients, float Gain, int Frequency, float Bandwidt
   return a0/b0;
 }
 
-void SetBackplane_Source(unsigned int FormInputNr, unsigned int ChannelNr)
+void SetBackplaneRouting(unsigned int FormInputNr, unsigned int ChannelNr)
 {
-//  printf("[SetBackplane_Source(%d,%d)]\n", FormInputNr, ChannelNr);
-
   int ObjectNr = 1032+ChannelNr;
 
   if (BackplaneMambaNetAddress != 0x00000000)
   {
     mbn_data data;
-//    printf("SendMambaNetMessage(0x%08X, 0x%08X, ...\n", BackplaneMambaNetAddress, this_node.MambaNetAddr);
 
     data.UInt = FormInputNr;
     mbnSetActuatorData(mbn, BackplaneMambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
   }
 }
 
-void SetBackplane_Clock()
+void SetBackplaneClock()
 {
   mbn_data data;
   int ObjectNr = 1030;
@@ -7195,8 +7192,8 @@ void SetAxum_ModuleSource(unsigned int ModuleNr)
 
     axum_get_mtrx_chs_from_src(AxumData.ModuleData[ModuleNr].SelectedSource, &Input1, &Input2);
 
-    SetBackplane_Source(Input1, ToChannelNr+0);
-    SetBackplane_Source(Input2, ToChannelNr+1);
+    SetBackplaneRouting(Input1, ToChannelNr+0);
+    SetBackplaneRouting(Input2, ToChannelNr+1);
   }
 }
 
@@ -7215,8 +7212,8 @@ void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
 
       axum_get_mtrx_chs_from_src(AxumData.ExternSource[MonitorBussPerFourNr].Ext[cntExt], &Input1, &Input2);
 
-      SetBackplane_Source(Input1, ToChannelNr+0);
-      SetBackplane_Source(Input2, ToChannelNr+1);
+      SetBackplaneRouting(Input1, ToChannelNr+0);
+      SetBackplaneRouting(Input2, ToChannelNr+1);
     }
   }
 }
@@ -7314,8 +7311,8 @@ void SetAxum_ModuleInsertSource(unsigned int ModuleNr)
 
     axum_get_mtrx_chs_from_src(AxumData.ModuleData[ModuleNr].InsertSource, &Input1, &Input2);
 
-    SetBackplane_Source(Input1, ToChannelNr+0);
-    SetBackplane_Source(Input2, ToChannelNr+1);
+    SetBackplaneRouting(Input1, ToChannelNr+0);
+    SetBackplaneRouting(Input2, ToChannelNr+1);
   }
 }
 
@@ -7362,7 +7359,7 @@ void SetAxum_RemoveOutputRouting(unsigned int OutputMambaNetAddress, unsigned ch
 
   if (Output>-1)
   {
-    SetBackplane_Source(0, Output);
+    SetBackplaneRouting(0, Output);
   }
 }
 
@@ -7502,11 +7499,11 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
 
     if (Output1>-1)
     {
-      SetBackplane_Source(FromChannel1, Output1);
+      SetBackplaneRouting(FromChannel1, Output1);
     }
     if (Output2>-1)
     {
-      SetBackplane_Source(FromChannel2, Output2);
+      SetBackplaneRouting(FromChannel2, Output2);
     }
   }
 }
@@ -7522,11 +7519,11 @@ void SetAxum_TalkbackSource(unsigned int TalkbackNr)
 
   if (Output1>-1)
   {
-    SetBackplane_Source(FromChannel1, Output1);
+    SetBackplaneRouting(FromChannel1, Output1);
   }
   if (Output2>-1)
   {
-    SetBackplane_Source(FromChannel2, Output2);
+    SetBackplaneRouting(FromChannel2, Output2);
   }
 }
 
@@ -11499,9 +11496,9 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
                 NewProcessingPreset = AxumData.SourceData[SourceNr].DefaultProcessingPreset;
               }
             }
-            LoadProcessingPreset(ModuleNr, NewProcessingPreset, 1, 0);
+            DoAxum_LoadProcessingPreset(ModuleNr, NewProcessingPreset, 1, 0);
             //Always load module default routing if used...
-            LoadRoutingPreset(ModuleNr, 0, 1, 0);
+            DoAxum_LoadRoutingPreset(ModuleNr, 0, 1, 0);
 
             DoAxum_UpdateModuleControlModeLabel(ModuleNr, ControlMode);
           }
@@ -11524,7 +11521,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
 
           if (!ModuleActive)
           {
-            LoadProcessingPreset(ModuleNr, AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr], 0, 0);
+            DoAxum_LoadProcessingPreset(ModuleNr, AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr], 0, 0);
           }
           else
           {
@@ -11814,7 +11811,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         {   //Buss
           int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
           unsigned char NewState = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
-          SetBussOnOff(ModuleNr, BussNr, NewState, 0);
+          DoAxum_SetBussOnOff(ModuleNr, BussNr, NewState, 0);
         }
         break;
         case MODULE_CONTROL_MODE_BUSS_1_2_BALANCE:
@@ -13020,7 +13017,7 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
     if (AxumData.ModuleData[ModuleNr].WaitingSource != -1)
     {
       int SourceNr = AxumData.ModuleData[ModuleNr].WaitingSource&0xFFFF;
-      SetNewSource(ModuleNr, SourceNr, 0);
+      DoAxum_SetNewSource(ModuleNr, SourceNr, 0);
       AxumData.ModuleData[ModuleNr].WaitingSource = -1;
 
       //tempory solution
@@ -13038,14 +13035,14 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
     {
       int PresetNr = AxumData.ModuleData[ModuleNr].WaitingProcessingPreset&0xFFFF;
       bool UseModuleDefaults = (bool)(AxumData.ModuleData[ModuleNr].WaitingProcessingPreset&0x10000);
-      LoadProcessingPreset(ModuleNr, PresetNr, UseModuleDefaults, 0);
+      DoAxum_LoadProcessingPreset(ModuleNr, PresetNr, UseModuleDefaults, 0);
       AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = -1;
     }
     if (AxumData.ModuleData[ModuleNr].WaitingRoutingPreset != -1)
     {
       int PresetNr = AxumData.ModuleData[ModuleNr].WaitingRoutingPreset&0xFFFF;
       bool UseModuleDefaults = (bool)(AxumData.ModuleData[ModuleNr].WaitingRoutingPreset&0x10000);
-      LoadRoutingPreset(ModuleNr, PresetNr, UseModuleDefaults, 0);
+      DoAxum_LoadRoutingPreset(ModuleNr, PresetNr, UseModuleDefaults, 0);
       AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = -1;
     }
   }
@@ -13106,7 +13103,7 @@ void DoAxum_ModulePreStatusChanged(int BussNr)
   }
 }
 
-int Axum_MixMinusSourceUsed(unsigned int CurrentSource)
+int MixMinusSourceUsed(unsigned int CurrentSource)
 {
   int ModuleNr = -1;
   int cntModule = 0;
@@ -13247,7 +13244,7 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
           //check if hybrid is used
           if (CurrentSource != 0)
           {
-            if (Axum_MixMinusSourceUsed(CurrentSource) != -1)
+            if (MixMinusSourceUsed(CurrentSource) != -1)
             {
               check_for_next_pos = 1;
             }
@@ -13279,7 +13276,7 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
           //check if hybrid is used
           if (CurrentSource != 0)
           {
-            if (Axum_MixMinusSourceUsed(CurrentSource) != -1)
+            if (MixMinusSourceUsed(CurrentSource) != -1)
             {
               check_for_next_pos = 1;
             }
@@ -13299,7 +13296,7 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
   return CurrentSource;
 }
 
-bool SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
+bool DoAxum_SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
 {
   unsigned int OldSource = AxumData.ModuleData[ModuleNr].SelectedSource;
   int OldSourceActive = 0;
@@ -13502,7 +13499,7 @@ bool SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
   return ((!OldSourceActive) || (Forced));
 }
 
-void SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int LoadPreset)
+void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int LoadPreset)
 {
   char CurrentBussActive = 0;
   char NewBussActive = 0;
@@ -14262,7 +14259,7 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
   return FoundOnlineNodeInformationElement;
 }
 
-void LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewPresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
+void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewPresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
 {
   bool SetModuleProcessing = false;
   bool SetModuleControllers = false;
@@ -14816,7 +14813,7 @@ void LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewPresetNr, unsi
   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_H);
 }
 
-void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
+void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
 {
   unsigned char cntBuss;
   bool BussChanged = false;
@@ -14925,7 +14922,7 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
     }
     if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].On != On) || (SetAllObjects))
     {
-      SetBussOnOff(ModuleNr, cntBuss, On, 1);
+      DoAxum_SetBussOnOff(ModuleNr, cntBuss, On, 1);
       SetModuleControllers = true;
     }
     if((AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance != Balance) || (SetAllObjects))
@@ -14958,7 +14955,7 @@ void LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned 
   }
 }
 
-void LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool SetAllObjects)
+void DoAxum_LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool SetAllObjects)
 {
   int cntBuss;
 
@@ -14999,7 +14996,7 @@ void LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool SetAllObje
   }
 }
 
-void LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool SetAllObjects)
+void DoAxum_LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool SetAllObjects)
 {
   int cntMonitorBuss;
   int cntBuss;
@@ -15053,7 +15050,7 @@ void LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool SetAllObj
   }
 }
 
-void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableActiveCheck)
+void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableActiveCheck)
 {
   if ((PresetNr>0) && (PresetNr<33))
   {
@@ -15135,10 +15132,10 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableA
           {
             if (CurrentSource != 0)
             { //if Source 'none', do nothing
-              SetNewSource(cntModule, CurrentSource, DisableActiveCheck | AxumData.ModuleData[cntModule].OverruleActive);
+              DoAxum_SetNewSource(cntModule, CurrentSource, DisableActiveCheck | AxumData.ModuleData[cntModule].OverruleActive);
             }
-            LoadProcessingPreset(cntModule, CurrentPreset, 0, 0);//Do no use module defaults
-            LoadRoutingPreset(cntModule, CurrentRoutingPreset, 0, 0);//Do no use module defaults
+            DoAxum_LoadProcessingPreset(cntModule, CurrentPreset, 0, 0);//Do no use module defaults
+            DoAxum_LoadRoutingPreset(cntModule, CurrentRoutingPreset, 0, 0);//Do no use module defaults
           }
           else
           {
@@ -15153,8 +15150,8 @@ void LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableA
 
     if ((MixMonitorPresetNr>=0) && (MixMonitorPresetNr<1280))
     {
-      LoadBussMasterPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr-1].Console, SetAllObjects);
-      LoadMonitorBussPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr-1].Console, SetAllObjects);
+      DoAxum_LoadBussMasterPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr-1].Console, SetAllObjects);
+      DoAxum_LoadMonitorBussPreset(MixMonitorPresetNr, AxumData.ConsolePresetData[PresetNr-1].Console, SetAllObjects);
     }
 
     for (int cntConsole=0; cntConsole<4; cntConsole++)

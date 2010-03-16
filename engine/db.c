@@ -930,22 +930,22 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       {
         if (take_source_a)
         {
-          SetNewSource(ModuleNr, ModuleData->SourceA, 1);
+          DoAxum_SetNewSource(ModuleNr, ModuleData->SourceA, 1);
         }
         else
         {
-          SetNewSource(ModuleNr, ModuleData->SelectedSource, 1);
+          DoAxum_SetNewSource(ModuleNr, ModuleData->SelectedSource, 1);
         }
         SetAxum_ModuleInsertSource(ModuleNr);
         if (take_source_a)
         {
-          LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1, 1);
-          LoadRoutingPreset(ModuleNr, 1, 1, 1);
+          DoAxum_LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1, 1);
+          DoAxum_LoadRoutingPreset(ModuleNr, 1, 1, 1);
         }
         else
         {
           int NewRoutingPreset = 0;
-          LoadProcessingPreset(ModuleNr, ModuleData->SelectedPreset, 1, 1);
+          DoAxum_LoadProcessingPreset(ModuleNr, ModuleData->SelectedPreset, 1, 1);
           if ((ModuleData->SelectedSource == ModuleData->SourceA) &&
              (ModuleData->SelectedPreset == ModuleData->SourceAPreset))
           {
@@ -986,7 +986,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
           {
             NewRoutingPreset = 8;
           }
-          LoadRoutingPreset(ModuleNr, NewRoutingPreset, 1, 1);
+          DoAxum_LoadRoutingPreset(ModuleNr, NewRoutingPreset, 1, 1);
         }
 
         //Set fader level and On;
@@ -1328,7 +1328,7 @@ int db_read_global_config()
     {
       dsp_set_interpolation(dsp_handler, AxumData.Samplerate);
     }
-    SetBackplane_Clock();
+    SetBackplaneClock();
 
     int cntModule;
     for (cntModule=0; cntModule<128; cntModule++)
