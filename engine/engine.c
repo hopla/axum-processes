@@ -575,64 +575,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
   if (OnlineNodeInformationElement->ManufacturerID == 2)
   {
-    char TypeString[64] = "";
-    char DataString[64] = "";
-
-    switch (type)
-    {
-      case MBN_DATATYPE_NODATA:
-      {
-        sprintf(TypeString,"NO DATA");
-      }
-      break;
-      case MBN_DATATYPE_UINT:
-      {
-        sprintf(TypeString,"UNSIGNED INTEGER");
-        sprintf(DataString,"%ld", data.UInt);
-      }
-      break;
-      case MBN_DATATYPE_SINT:
-      {
-        sprintf(TypeString,"SIGNED INTEGER");
-        sprintf(DataString,"%ld", data.SInt);
-      }
-      break;
-      case MBN_DATATYPE_STATE:
-      {
-        sprintf(TypeString,"STATE");
-        sprintf(DataString,"%ld", data.State);
-      }
-      break;
-      case MBN_DATATYPE_OCTETS:
-      {
-        sprintf(TypeString,"OCTETS");
-        sprintf(DataString,"%s", data.Octets);
-      }
-      break;
-      case MBN_DATATYPE_FLOAT:
-      {
-        sprintf(TypeString,"FLOAT");
-        sprintf(DataString,"%f", data.Float);
-      }
-      break;
-      case MBN_DATATYPE_BITS:
-      {
-        sprintf(TypeString,"BITS");
-      }
-      break;
-      case MBN_DATATYPE_OBJINFO:
-      {
-        sprintf(TypeString,"OBJINFO");
-      }
-      break;
-      case MBN_DATATYPE_ERROR:
-      {
-      }
-      break;
-    }
-    log_write("[mSensorDataChanged] Object: %d, type:%s, data:%s", object, TypeString, DataString);
+    debug_mambanet_data(object, type, data);
   }
-
 
   if (OnlineNodeInformationElement->SensorReceiveFunction != NULL)
   {
@@ -15563,3 +15507,269 @@ void DoAxum_UpdateMasterControlMode(int ControlMode)
     CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
   }
 }
+
+unsigned char ModulePresetActive(int ModuleNr, unsigned char PresetNr)
+{
+  unsigned int ModulePresetSource = 0;
+  unsigned int ModulePresetPreset = 0;
+  unsigned char cntBuss;
+  unsigned char SourceEqual = 0;
+  unsigned char PresetEqual = 0;
+  unsigned char RoutingEqual = 1;
+  unsigned char Active = 0;
+  unsigned char RoutingPreset = 0;
+  AXUM_ROUTING_PRESET_DATA_STRUCT *SelectedRoutingPreset = NULL;
+
+  if (PresetNr>0)
+  {
+    switch (PresetNr-1)
+    {
+      case 0:
+      {
+        ModulePresetSource = AxumData.ModuleData[ModuleNr].SourceA;
+        ModulePresetPreset = AxumData.ModuleData[ModuleNr].SourceAPreset;
+      }
+      break;
+      case 1:
+      {
+        ModulePresetSource = AxumData.ModuleData[ModuleNr].SourceB;
+        ModulePresetPreset = AxumData.ModuleData[ModuleNr].SourceBPreset;
+      }
+      break;
+      case 2:
+      {
+        ModulePresetSource = AxumData.ModuleData[ModuleNr].SourceC;
+        ModulePresetPreset = AxumData.ModuleData[ModuleNr].SourceCPreset;
+      }
+      break;
+      case 3:
+      {
+        ModulePresetSource = AxumData.ModuleData[ModuleNr].SourceD;
+        ModulePresetPreset = AxumData.ModuleData[ModuleNr].SourceDPreset;
+      }
+      break;
+      case 4:
+      {
+        ModulePresetSource = AxumData.ModuleData[ModuleNr].SourceE;
+        ModulePresetPreset = AxumData.ModuleData[ModuleNr].SourceEPreset;
+      }
+      break;
+      case 5:
+      {
+        ModulePresetSource = AxumData.ModuleData[ModuleNr].SourceF;
+        ModulePresetPreset = AxumData.ModuleData[ModuleNr].SourceFPreset;
+      }
+      break;
+      case 6:
+      {
+        ModulePresetSource = AxumData.ModuleData[ModuleNr].SourceG;
+        ModulePresetPreset = AxumData.ModuleData[ModuleNr].SourceGPreset;
+      }
+      break;
+      case 7:
+      {
+        ModulePresetSource = AxumData.ModuleData[ModuleNr].SourceH;
+        ModulePresetPreset = AxumData.ModuleData[ModuleNr].SourceHPreset;
+      }
+      break;
+    }
+
+    for (cntBuss=0; cntBuss<16; cntBuss++)
+    {
+      SelectedRoutingPreset = &AxumData.ModuleData[ModuleNr].RoutingPreset[PresetNr-1][cntBuss];
+
+      if ((SelectedRoutingPreset != NULL) && (SelectedRoutingPreset->Use))
+      {
+        RoutingPreset = 1;
+        if (!((SelectedRoutingPreset->On             == AxumData.ModuleData[ModuleNr].Buss[cntBuss].On) &&
+             (SelectedRoutingPreset->Level          == AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level) &&
+             (SelectedRoutingPreset->On             == AxumData.ModuleData[ModuleNr].Buss[cntBuss].On) &&
+             (SelectedRoutingPreset->Balance        == AxumData.ModuleData[ModuleNr].Buss[cntBuss].Balance) &&
+             (SelectedRoutingPreset->PreModuleLevel == AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel)))
+        { //if routing not equal
+          RoutingEqual = 0;
+        }
+      }
+    }
+
+    if ((ModulePresetSource == 0) || (AxumData.ModuleData[ModuleNr].SelectedSource == ModulePresetSource))
+    {
+      SourceEqual = 1;
+    }
+    if ((ModulePresetPreset == 0) || (AxumData.ModuleData[ModuleNr].SelectedPreset == ModulePresetPreset))
+    {
+      PresetEqual = 1;
+    }
+    if ((SourceEqual) && (PresetEqual) && (RoutingEqual))
+    {
+      Active = 1;
+    }
+    if ((ModulePresetSource == 0) && (ModulePresetPreset == 0) && (RoutingPreset == 0))
+    {
+      Active = 0;
+    }
+  }
+
+  return Active;
+}
+
+unsigned char GetPresetNrFromFunctionNr(unsigned int FunctionNr)
+{
+  int PresetNr = 0;
+  switch (FunctionNr)
+  {
+    case MODULE_FUNCTION_PRESET_A:
+    {
+      PresetNr = 1;
+    }
+    break;
+    case MODULE_FUNCTION_PRESET_B:
+    {
+      PresetNr = 2;
+    }
+    break;
+    case MODULE_FUNCTION_PRESET_C:
+    {
+      PresetNr = 3;
+    }
+    break;
+    case MODULE_FUNCTION_PRESET_D:
+    {
+      PresetNr = 4;
+    }
+    break;
+    case MODULE_FUNCTION_PRESET_E:
+    {
+      PresetNr = 5;
+    }
+    break;
+    case MODULE_FUNCTION_PRESET_F:
+    {
+      PresetNr = 6;
+    }
+    break;
+    case MODULE_FUNCTION_PRESET_G:
+    {
+      PresetNr = 7;
+    }
+    break;
+    case MODULE_FUNCTION_PRESET_H:
+    {
+      PresetNr = 8;
+    }
+    break;
+  }
+
+  return PresetNr;
+}
+
+unsigned int GetModuleFunctionNrFromPresetNr(unsigned char PresetNr)
+{
+  int FunctionNr = 0xFFFFFFFF;
+  switch (PresetNr)
+  {
+    case 1:
+    {
+      FunctionNr = MODULE_FUNCTION_PRESET_A;
+    }
+    break;
+    case 2:
+    {
+      FunctionNr = MODULE_FUNCTION_PRESET_B;
+    }
+    break;
+    case 3:
+    {
+      FunctionNr = MODULE_FUNCTION_PRESET_C;
+    }
+    break;
+    case 4:
+    {
+      FunctionNr = MODULE_FUNCTION_PRESET_D;
+    }
+    break;
+    case 5:
+    {
+      FunctionNr = MODULE_FUNCTION_PRESET_E;
+    }
+    break;
+    case 6:
+    {
+      FunctionNr = MODULE_FUNCTION_PRESET_F;
+    }
+    break;
+    case 7:
+    {
+      FunctionNr = MODULE_FUNCTION_PRESET_G;
+    }
+    break;
+    case 8:
+    {
+      FunctionNr = MODULE_FUNCTION_PRESET_H;
+    }
+    break;
+  }
+
+  return FunctionNr;
+}
+
+void debug_mambanet_data(unsigned int object, unsigned char type, union mbn_data data)
+{
+  char TypeString[64] = "";
+  char DataString[64] = "";
+
+  switch (type)
+  {
+    case MBN_DATATYPE_NODATA:
+    {
+      sprintf(TypeString,"NO DATA");
+    }
+    break;
+    case MBN_DATATYPE_UINT:
+    {
+      sprintf(TypeString,"UNSIGNED INTEGER");
+      sprintf(DataString,"%ld", data.UInt);
+    }
+    break;
+    case MBN_DATATYPE_SINT:
+    {
+      sprintf(TypeString,"SIGNED INTEGER");
+      sprintf(DataString,"%ld", data.SInt);
+    }
+    break;
+    case MBN_DATATYPE_STATE:
+    {
+      sprintf(TypeString,"STATE");
+      sprintf(DataString,"%ld", data.State);
+    }
+    break;
+    case MBN_DATATYPE_OCTETS:
+    {
+      sprintf(TypeString,"OCTETS");
+      sprintf(DataString,"%s", data.Octets);
+    }
+    break;
+    case MBN_DATATYPE_FLOAT:
+    {
+      sprintf(TypeString,"FLOAT");
+      sprintf(DataString,"%f", data.Float);
+    }
+    break;
+    case MBN_DATATYPE_BITS:
+    {
+      sprintf(TypeString,"BITS");
+    }
+    break;
+    case MBN_DATATYPE_OBJINFO:
+    {
+      sprintf(TypeString,"OBJINFO");
+    }
+    break;
+    case MBN_DATATYPE_ERROR:
+    {
+    }
+    break;
+  }
+  log_write("[mSensorDataChanged] Object: %d, type:%s, data:%s", object, TypeString, DataString);
+}
+
