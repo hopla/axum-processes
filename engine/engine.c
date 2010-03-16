@@ -15060,6 +15060,9 @@ void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool D
     int CurrentPreset = 0;
     int CurrentRoutingPreset = -1;
 
+    PreviousCount_LevelMeter = cntMillisecondTimer+500;
+    PreviousCount_SignalDetect = cntMillisecondTimer+500;
+
     if ((ModulePreset>-1) && (ModulePreset<8))
     {
       for (int cntModule=0; cntModule<128; cntModule++)
