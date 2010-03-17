@@ -1177,22 +1177,49 @@ int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last
     }
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &MonitorData->SwitchingDimLevel);
 
+    //turn on default selection
+    int MonitorBussNr = number-1;
+    for (int cntBuss=0; cntBuss<24; cntBuss++)
+    {
+      int DefaultSelection = AxumData.Monitor[MonitorBussNr].DefaultSelection;
+      unsigned int FunctionNrToSent = 0x02000000 | ((MonitorBussNr<<12)&0xFFF000);
+      if (cntBuss<16)
+      {
+        if (cntBuss == DefaultSelection)
+        {
+          AxumData.Monitor[MonitorBussNr].Buss[cntBuss] = 1;
+        }
+        else
+        {
+          AxumData.Monitor[MonitorBussNr].Buss[cntBuss] = 0;
+        }
+        if (AxumApplicationAndDSPInitialized)
+        {
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+cntBuss));
+        }
+      }
+      else if (cntBuss<24)
+      {
+        if (cntBuss == DefaultSelection)
+        {
+          AxumData.Monitor[MonitorBussNr].Ext[cntBuss-16] = 1;
+        }
+        else
+        {
+          AxumData.Monitor[MonitorBussNr].Ext[cntBuss-16] = 0;
+        }
+        if (AxumApplicationAndDSPInitialized)
+        {
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+(cntBuss-16)));
+        }
+      }
+    }
+
     if (AxumApplicationAndDSPInitialized)
     {
-      int MonitorBussNr = number-1;
       SetAxum_MonitorBuss(MonitorBussNr);
 
       unsigned int FunctionNrToSent = 0x02000000 | ((MonitorBussNr<<12)&0xFFF000);
-      if (AxumData.Monitor[MonitorBussNr].DefaultSelection<16)
-      {
-        int MixingBussNr = AxumData.Monitor[MonitorBussNr].DefaultSelection;
-        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+MixingBussNr));
-      }
-      else if (AxumData.Monitor[MonitorBussNr].DefaultSelection<24)
-      {
-        int ExtNr = AxumData.Monitor[MonitorBussNr].DefaultSelection-16;
-        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
-      }
       CheckObjectsToSent(FunctionNrToSent | MONITOR_BUSS_FUNCTION_LABEL);
     }
   }
