@@ -551,7 +551,6 @@ int main(int argc, char *argv[])
 //normally response on GetSensorData
 int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data)
 {
-  printf("mSensorDataChanged addr: %08lx, obj: %d\n", message->AddressFrom, object);
   node_info_lock(1);
   ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = GetOnlineNodeInformation(message->AddressFrom);
   if (OnlineNodeInformationElement == NULL)
@@ -593,8 +592,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     float DataMinimal = OnlineNodeInformationElement->ObjectInformation[object-1024].SensorDataMinimal;
     float DataMaximal = OnlineNodeInformationElement->ObjectInformation[object-1024].SensorDataMaximal;
 
-    printf("func %08x", SensorReceiveFunctionNumber);
-
     if (SensorReceiveFunctionNumber != -1)
     {
       unsigned char SensorReceiveFunctionType = (SensorReceiveFunctionNumber>>24)&0xFF;
@@ -606,7 +603,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
           unsigned int ModuleNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
           unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
-          printf(" > ModuleNr %d ", ModuleNr);
           switch (FunctionNr)
           {
             case MODULE_FUNCTION_LABEL:
@@ -623,7 +619,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_PRESET_G:
             case MODULE_FUNCTION_PRESET_H:
             {   //Source
-              printf("Source\n");
               int CurrentSource = AxumData.ModuleData[ModuleNr].TemporySourceLocal;
               int CurrentPreset = 0;
               int CurrentRoutingPreset = 0;
@@ -757,7 +752,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_PRESET:
             {
-              printf("preset\n");
               int CurrentPreset = AxumData.ModuleData[ModuleNr].TemporyPresetLocal;
               switch (type)
               {
@@ -779,7 +773,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_SOURCE_PHANTOM:
             {
-              printf("Source phantom\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
@@ -822,7 +815,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_SOURCE_PAD:
             {
-              printf("Source pad\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
@@ -865,7 +857,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_SOURCE_GAIN_LEVEL:
             {
-              printf("Source gain\n");
               if (type == MBN_DATATYPE_SINT)
               {
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
@@ -902,7 +893,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_SOURCE_GAIN_LEVEL_RESET:
             {
-              printf("Source gain level reset\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
@@ -936,7 +926,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_INSERT_ON_OFF:
             { //Insert on/off
-              printf("Insert on/off\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -964,7 +953,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_PHASE_ON_OFF:
             {   //Phase
-              printf("Phase on/off\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -994,7 +982,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_GAIN_LEVEL:
             {   //Gain
-              printf("Gain\n");
               if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].Gain += (float)data.SInt/10;
@@ -1014,8 +1001,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               }
               else if (type == MBN_DATATYPE_UINT)
               {
-                printf("Min:%f, Max:%f, Temp:%ld\n", DataMinimal, DataMaximal, data.UInt);
-
                 AxumData.ModuleData[ModuleNr].Gain = (((float)40*(data.UInt-DataMinimal))/(DataMaximal-DataMinimal))-20;
 
                 SetAxum_ModuleProcessing(ModuleNr);
@@ -1027,7 +1012,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_GAIN_LEVEL_RESET:
             { //Gain reset
-              printf("Gain reset\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1048,7 +1032,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_LOW_CUT_FREQUENCY:
             { //Low cut frequency
-              printf("Low cut frequency\n");
               if (type == MBN_DATATYPE_SINT)
               {
                 if (data.SInt>=0)
@@ -1078,7 +1061,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_LOW_CUT_ON_OFF:
             { //Low cut on/off
-              printf("Low cut on/off\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1113,7 +1095,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_LEVEL:
             { //EQ Level
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_LEVEL)/(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL);
-              printf("EQ%d level\n", BandNr+1);
               if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level += (float)data.SInt/10;
@@ -1141,7 +1122,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_FREQUENCY:
             { //EQ Frequency
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY)/(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY);
-              printf("EQ%d frequency\n", BandNr+1);
               if (type == MBN_DATATYPE_SINT)
               {
                 if (data.SInt>=0)
@@ -1177,7 +1157,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_BANDWIDTH:
             { //EQ Bandwidth
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH)/(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH);
-              printf("EQ%d bandwidth\n", BandNr+1);
               if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth += (float)data.SInt/10;
@@ -1207,7 +1186,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_LEVEL_RESET:
             { //EQ Level reset
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_LEVEL_RESET)/(MODULE_FUNCTION_EQ_BAND_2_LEVEL_RESET-MODULE_FUNCTION_EQ_BAND_1_LEVEL_RESET);
-              printf("EQ%d level reset\n", BandNr+1);
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1235,7 +1213,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_FREQUENCY_RESET:
             { //EQ Frequency reset
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY_RESET)/(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY_RESET-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY_RESET);
-              printf("EQ%d frequency reset\n", BandNr+1);
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1264,7 +1241,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_BANDWIDTH_RESET:
             { //EQ Bandwidth reset
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH_RESET)/(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH_RESET-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH_RESET);
-              printf("EQ%d bandwidth reset\n", BandNr+1);
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1292,7 +1268,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_TYPE:
             { //EQ Type
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_TYPE)/(MODULE_FUNCTION_EQ_BAND_2_TYPE-MODULE_FUNCTION_EQ_BAND_1_TYPE);
-              printf("EQ%d type\n", BandNr+1);
               if (type == MBN_DATATYPE_SINT)
               {
                 int Type = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type;
@@ -1317,7 +1292,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_EQ_ON_OFF:
             { //EQ on/off
-              printf("EQ on/off\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1355,7 +1329,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     //                              break;
             case MODULE_FUNCTION_AGC_THRESHOLD:
             { //Dynamics amount
-              printf("AGC threshold\n");
               if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].AGCThreshold += ((float)data.SInt/2);
@@ -1376,7 +1349,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_AGC_AMOUNT:
             { //Dynamics amount
-              printf("AGC Amount\n");
               if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].AGCAmount += data.SInt;
@@ -1397,7 +1369,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_DYNAMICS_ON_OFF:
             { //Dynamics on/off
-              printf("Dynamics on/off\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1425,7 +1396,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_EXPANDER_THRESHOLD:
             { //Dynamics amount
-              printf("Downward expander threshold\n");
               if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold += ((float)data.SInt/2);
@@ -1446,7 +1416,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_MONO_ON_OFF:
             { //Mono
-              printf("Mono on/off\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1476,7 +1445,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_PAN:
             { //Pan
-              printf("Pan\n");
               if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].Panorama += data.SInt;
@@ -1497,7 +1465,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_PAN_RESET:
             { //Pan reset
-              printf("Pan reset\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1518,8 +1485,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_MODULE_LEVEL:
             {   //Module level
-              printf("Module level\n");
-
               float CurrentLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
 
               if (type == MBN_DATATYPE_UINT)
@@ -1600,8 +1565,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             {   //Module on
               //Module off
               //Module on/off
-              printf("Module on/off\n");
-
               if (type == MBN_DATATYPE_STATE)
               {
                 int CurrentOn = AxumData.ModuleData[ModuleNr].On;
@@ -1700,7 +1663,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 CurrentPresetState[cntPreset] = ModulePresetActive(ModuleNr, cntPreset+1);
               }
-              printf("Buss %d/%d level\n", (BussNr*2)+1, (BussNr*2)+2);
               if (type == MBN_DATATYPE_UINT)
               {
                 int Position = ((data.UInt-DataMinimal)*1023)/(DataMaximal-DataMinimal);
@@ -1788,7 +1750,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 CurrentPresetState[cntPreset] = ModulePresetActive(ModuleNr, cntPreset+1);
               }
-              printf("Buss %d/%d level reset\n", (BussNr*2)+1, (BussNr*2)+2);
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1835,7 +1796,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             {
               int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_ON)/(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON);
 
-              printf("Buss %d/%d on\n", (BussNr*2)+1, (BussNr*2)+2);
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1864,7 +1824,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_BUSS_31_32_OFF:
             {
               int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_OFF)/(MODULE_FUNCTION_BUSS_3_4_OFF-MODULE_FUNCTION_BUSS_1_2_OFF);
-              printf("Buss %d/%d off\n", (BussNr*2)+1, (BussNr*2)+2);
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1895,7 +1854,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_ON_OFF)/(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF);
               unsigned char NewState = AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
 
-              printf("Buss %d/%d on/off\n", (BussNr*2)+1, (BussNr*2)+2);
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1942,7 +1900,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 CurrentPresetState[cntPreset] = ModulePresetActive(ModuleNr, cntPreset+1);
               }
-              printf("Buss %d/%d pre\n", (BussNr*2)+1, (BussNr*2)+2);
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -1992,7 +1949,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_BUSS_31_32_BALANCE:
             { //Buss balance
               int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_BALANCE)/(MODULE_FUNCTION_BUSS_3_4_BALANCE-MODULE_FUNCTION_BUSS_1_2_BALANCE);
-              printf("Buss %d/%d balance\n", (BussNr*2)+1, (BussNr*2)+2);
 
               if (type == MBN_DATATYPE_SINT)
               {
@@ -2031,7 +1987,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_BUSS_31_32_BALANCE_RESET:
             { //Buss pre
               int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_BALANCE_RESET)/(MODULE_FUNCTION_BUSS_3_4_BALANCE_RESET-MODULE_FUNCTION_BUSS_1_2_BALANCE_RESET);
-              printf("Buss %d/%d balance reset\n", (BussNr*2)+1, (BussNr*2)+2);
 
               if (type == MBN_DATATYPE_STATE)
               {
@@ -2052,7 +2007,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_SOURCE_STOP:
             case MODULE_FUNCTION_SOURCE_START_STOP:
             {   //Start
-              printf("Source start/stop\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
@@ -2127,7 +2081,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_COUGH_ON_OFF:
             { //Cough on/off
-              printf("Cough on/off\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (AxumData.ModuleData[ModuleNr].Cough != data.State)
@@ -2148,7 +2101,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_SOURCE_ALERT:
             { //Alert
-              printf("Source alert\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
@@ -2299,8 +2251,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_FADER_AND_ON_ACTIVE_INACTIVE:
             {   //fader on and on active
               //fader on and on inactive
-              printf("Fader on and on\n");
-
               if (type == MBN_DATATYPE_STATE)
               {
                 float CurrentLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
@@ -2401,8 +2351,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             {   //Module on
               //Module off
               //Module on/off
-              printf("Fader on/off\n");
-
               float CurrentLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
 
               if (type == MBN_DATATYPE_STATE)
@@ -2474,7 +2422,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   if (((CurrentLevel<=-80) && (NewLevel>-80)) ||
                       ((CurrentLevel>-80) && (NewLevel<=-80)))
                   { //fader on changed
-                    printf("Fader changed...\n");
                     DoAxum_ModuleStatusChanged(ModuleNr, 1);
 
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_FADER_AND_ON_ACTIVE);
@@ -2568,8 +2515,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     if ((CurrentSource != 0) && (AxumData.DestinationData[cntDestination].MixMinusSource == CurrentSource))
                     {
-                      printf("Talkback %d to MixMinus\n", TalkbackNr);
-
                       AxumData.DestinationData[cntDestination].Talkback[TalkbackNr] = AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr];
 
                       int TalkbackActive = 0;
@@ -2601,7 +2546,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
           unsigned int BussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
           unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
-          printf(" > BussNr %d ", BussNr);
           switch (FunctionNr)
           {
             case BUSS_FUNCTION_MASTER_LEVEL:
@@ -2762,7 +2706,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
                         (NewBussPre))
                   {
-                    printf("Have to check monitor routing and muting\n");
+                    //Have to check monitor routing and muting
                     DoAxum_ModulePreStatusChanged(BussNr);
                   }
                 }
@@ -2775,7 +2719,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             default:
             { //not implemented function
-              printf("FunctionNr %d\n", FunctionNr);
             }
             break;
           }
@@ -2786,10 +2729,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
           unsigned int MonitorBussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
           int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
-          printf(" > MonitorBussNr %d ", MonitorBussNr);
           if ((FunctionNr>=MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF) && (FunctionNr<MONITOR_BUSS_FUNCTION_MUTE))
           {
-            printf("Monitor source %d on/off\n", FunctionNr);
             if (type == MBN_DATATYPE_STATE)
             {
               bool *MonitorSwitchState;
@@ -3026,7 +2967,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
                         (BussPre))
                   {
-                    printf("Have to check monitor routing and muting\n");
+                    //Have to check monitor routing and muting
                     DoAxum_ModulePreStatusChanged(BussNr);
                   }
                 }
@@ -3043,7 +2984,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             {
               case MONITOR_BUSS_FUNCTION_MUTE:
               {
-                printf("Mute\n");
                 if (type == MBN_DATATYPE_STATE)
                 {
                   bool OldMute = AxumData.Monitor[MonitorBussNr].Mute;
@@ -3081,7 +3021,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               case MONITOR_BUSS_FUNCTION_DIM:
               {
-                printf("Dim\n");
                 if (type == MBN_DATATYPE_STATE)
                 {
                   bool OldDim = AxumData.Monitor[MonitorBussNr].Dim;
@@ -3120,7 +3059,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               case MONITOR_BUSS_FUNCTION_PHONES_LEVEL:
               {
-                printf("Phones level\n");
                 float OldLevel = AxumData.Monitor[MonitorBussNr].PhonesLevel;
 
                 if (type == MBN_DATATYPE_UINT)
@@ -3164,7 +3102,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               case MONITOR_BUSS_FUNCTION_MONO:
               {
-                printf("Mono\n");
                 if (type == MBN_DATATYPE_STATE)
                 {
                   bool OldMono = AxumData.Monitor[MonitorBussNr].Mono;
@@ -3203,7 +3140,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               case MONITOR_BUSS_FUNCTION_PHASE:
               {
-                printf("Phase\n");
                 if (type == MBN_DATATYPE_STATE)
                 {
                   bool OldPhase = AxumData.Monitor[MonitorBussNr].Phase;
@@ -3242,7 +3178,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               case MONITOR_BUSS_FUNCTION_SPEAKER_LEVEL:
               {
-                printf("Speaker level\n");
                 float OldLevel = AxumData.Monitor[MonitorBussNr].SpeakerLevel;
 
                 if (type == MBN_DATATYPE_UINT)
@@ -3302,7 +3237,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               case MONITOR_BUSS_FUNCTION_TALKBACK_16:
               {
                 int TalkbackNr = FunctionNr-MONITOR_BUSS_FUNCTION_TALKBACK_1;
-                printf("Talkback %d\n", TalkbackNr);
                 if (type == MBN_DATATYPE_STATE)
                 {
                   bool OldTalkbackActive = 0;
@@ -3362,7 +3296,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               default:
               { //not implemented function
-                printf("FunctionNr %d\n", FunctionNr);
               }
               break;
             }
@@ -3373,8 +3306,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
         {   //Global
           unsigned int GlobalNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
           unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
-
-          printf(" > Global ");
 
           if (GlobalNr == 0)
           {
@@ -3393,7 +3324,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   case GLOBAL_FUNCTION_REDLIGHT_7:
                   case GLOBAL_FUNCTION_REDLIGHT_8:
                   {
-                    printf("Redlight %d\n", FunctionNr-GLOBAL_FUNCTION_REDLIGHT_1);
                     int RedlightNr = FunctionNr-GLOBAL_FUNCTION_REDLIGHT_1;
                     bool OldState = AxumData.Redlight[RedlightNr];
 
@@ -3437,7 +3367,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   case GLOBAL_FUNCTION_BUSS_31_32_RESET:
                   { //Do buss reset
                     int BussNr = FunctionNr-GLOBAL_FUNCTION_BUSS_1_2_RESET;
-                    printf("Buss %d/%d reset\n", (BussNr*2)+1, (BussNr*2)+2);
 
                     if (data.State)
                     {
@@ -3454,7 +3383,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET))
             { //Control 1 modes
-              printf("Control 1 modes\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 int ReceivedControlMode = -2;
@@ -3554,7 +3482,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET))
             { //Control 2 modes
-              printf("Control 2 modes\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 int ReceivedControlMode = -2;
@@ -3654,7 +3581,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET))
             { //Control 3 modes
-              printf("Control 3 modes\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 int ReceivedControlMode = -2;
@@ -3752,7 +3678,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET))
             { //control 4 modes
-              printf("Control 4 modes\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 int ReceivedControlMode = -2;
@@ -3845,7 +3770,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2))
             { //Master control 1 mode
-              printf("Master control 1 mode\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -3883,7 +3807,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2))
             { //Master control 2 mode
-              printf("Master control 2 mode\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -3921,7 +3844,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2))
             { //Master control 3 mode
-              printf("Master control 3 mode\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -3959,7 +3881,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1))
             { //Master control 4 mode
-              printf("Master control 4 mode\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 if (data.State)
@@ -4212,7 +4133,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 break;
                 default:
                 { //not implemented function
-                  printf("FunctionNr %d\n", FunctionNr);
                 }
                 break;
               }
@@ -4225,7 +4145,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
           unsigned int SourceNr = ((SensorReceiveFunctionNumber>>12)&0xFFF);
           unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
-          printf(" > SourceNr %d ", SourceNr);
           switch (FunctionNr)
           {
             case SOURCE_FUNCTION_MODULE_ON:
@@ -4234,8 +4153,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             {   //Module on
               //Module off
               //Module on/off
-              printf("Source module on/off\n");
-
               if (type == MBN_DATATYPE_STATE)
               {
                 for (int cntModule=0; cntModule<128; cntModule++)
@@ -4319,8 +4236,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             { //fader on
               //fader off
               //fader on/off
-              printf("Source fader on/off\n");
-
               if (type == MBN_DATATYPE_STATE)
               {
                 for (int cntModule=0; cntModule<128; cntModule++)
@@ -4420,8 +4335,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE:
             {   //fader on and on active
               //fader on and on inactive
-              printf("Source fader on and on\n");
-
               if (type == MBN_DATATYPE_STATE)
               {
                 for (int cntModule=0; cntModule<128; cntModule++)
@@ -4597,8 +4510,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case SOURCE_FUNCTION_MODULE_BUSS_31_32_ON_OFF:
             {  //Buss 1/2 on/off
               int BussNr = (FunctionNr-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF)/(SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF-SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
-              printf("Source buss %d/%d on/off\n", (BussNr*2)+1, (BussNr*2)+2);
-
               if (type == MBN_DATATYPE_STATE)
               {
                 for (int cntModule=0; cntModule<128; cntModule++)
@@ -4629,8 +4540,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case SOURCE_FUNCTION_MODULE_COUGH_ON_OFF:
             {  //Cough
-              printf("Module cough on/off\n");
-
               if (type == MBN_DATATYPE_STATE)
               {
                 for (int cntModule=0; cntModule<128; cntModule++)
@@ -4660,7 +4569,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case SOURCE_FUNCTION_STOP:
             case SOURCE_FUNCTION_START_STOP:
             {
-              printf("start/stop\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 bool OldState = AxumData.SourceData[SourceNr].Start;
@@ -4729,7 +4637,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case SOURCE_FUNCTION_PHANTOM:
             {
-              printf("phantom\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
@@ -4773,7 +4680,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case SOURCE_FUNCTION_PAD:
             {
-              printf("Pad\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
@@ -4818,7 +4724,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case SOURCE_FUNCTION_GAIN:
             {
-              printf("Source gain");
               unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
               if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM))
@@ -4859,7 +4764,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case SOURCE_FUNCTION_ALERT:
             {
-              printf("Alert\n");
               if (type == MBN_DATATYPE_STATE)
               {
                 bool OldState = AxumData.SourceData[SourceNr].Alert;
@@ -4905,7 +4809,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
           unsigned int DestinationNr = ((SensorReceiveFunctionNumber>>12)&0xFFF);
           unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
-          printf(" > DestinationNr %d ", DestinationNr);
           switch (FunctionNr)
           {
             case DESTINATION_FUNCTION_LABEL:
@@ -4914,7 +4817,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case DESTINATION_FUNCTION_SOURCE:
             {
-              printf("Source\n");
               if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.DestinationData[DestinationNr].Source = (int)AdjustDestinationSource(AxumData.DestinationData[DestinationNr].Source, data.SInt);
@@ -4959,7 +4861,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case DESTINATION_FUNCTION_LEVEL:
             {
-              printf("Level\n");
               float OldLevel = AxumData.DestinationData[DestinationNr].Level;
               if (type == MBN_DATATYPE_UINT)
               {
@@ -5005,8 +4906,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case DESTINATION_FUNCTION_MUTE:
             {
-              printf("Mute\n");
-
               if (type == MBN_DATATYPE_STATE)
               {
                 bool OldState = AxumData.DestinationData[DestinationNr].Mute;
@@ -5042,8 +4941,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case DESTINATION_FUNCTION_DIM:
             {
-              printf("Dim\n");
-
               if (type == MBN_DATATYPE_STATE)
               {
                 bool OldState = AxumData.DestinationData[DestinationNr].Dim;
@@ -5079,8 +4976,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case DESTINATION_FUNCTION_MONO:
             {
-              printf("Mono\n");
-
               if (type == MBN_DATATYPE_STATE)
               {
                 bool OldState = AxumData.DestinationData[DestinationNr].Mono;
@@ -5116,8 +5011,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case DESTINATION_FUNCTION_PHASE:
             {
-              printf("Phase\n");
-
               if (type == MBN_DATATYPE_STATE)
               {
                 bool OldState = AxumData.DestinationData[DestinationNr].Phase;
@@ -5169,7 +5062,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case DESTINATION_FUNCTION_TALKBACK_16:
             {
               int TalkbackNr = (FunctionNr-DESTINATION_FUNCTION_TALKBACK_1)/(DESTINATION_FUNCTION_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1);
-              printf("Talkback %d\n", TalkbackNr);
 
               if (type == MBN_DATATYPE_STATE)
               {
@@ -5241,45 +5133,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
         break;
       }
     }
-
-    switch (type)
-    {
-      case MBN_DATATYPE_NODATA:
-      {
-        printf(" - No data\n");
-      }
-      break;
-      case MBN_DATATYPE_UINT:
-      {
-        printf(" - unsigned int: %ld\n", data.UInt);
-      }
-      break;
-      case MBN_DATATYPE_SINT:
-      {
-        printf(" - signed int: %ld\n", data.SInt);
-      }
-      break;
-      case MBN_DATATYPE_STATE:
-      {
-        printf(" - State: %ld\n", data.State);
-      }
-      break;
-      case MBN_DATATYPE_OCTETS:
-      {
-        printf("- Octet string: %s\n", data.Octets);
-      }
-      break;
-      case MBN_DATATYPE_FLOAT:
-      {
-        printf("- float: %f\n", data.Float);
-      }
-      break;
-      case MBN_DATATYPE_BITS:
-      {
-        printf("- Bit string:\n");
-      }
-      break;
-    }
     SensorReceiveFunction->PreviousLastChangedTime = SensorReceiveFunction->LastChangedTime;
   }
   node_info_lock(0);
@@ -5312,8 +5165,6 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
   {
     case MBN_DATATYPE_UINT:
     {
-      printf(" - unsigned int: %ld\n", data.UInt);
-
       if (object == 7)
       {   //Major firmware id
         if ((OnlineNodeInformationElement->ManufacturerID == 0x0001) &&
@@ -5324,8 +5175,6 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
               (OnlineNodeInformationElement->ProductID == this_node.HardwareParent[1]) &&
               (OnlineNodeInformationElement->UniqueIDPerProduct == this_node.HardwareParent[2]))
           {
-            printf("2 - Backplane %08x\n", OnlineNodeInformationElement->MambaNetAddress);
-
             if (BackplaneMambaNetAddress != OnlineNodeInformationElement->MambaNetAddress)
             { //Initialize all routing
               BackplaneMambaNetAddress = OnlineNodeInformationElement->MambaNetAddress;
@@ -5415,12 +5264,10 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
         //if a slot number exists, check the number of input/output channels.
         if (OnlineNodeInformationElement->InputChannelCountObjectNr != -1)
         {
-          printf("Get Input channel count @ ObjectNr: %d\n", OnlineNodeInformationElement->InputChannelCountObjectNr);
           mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, OnlineNodeInformationElement->InputChannelCountObjectNr, 1);
         }
         if (OnlineNodeInformationElement->OutputChannelCountObjectNr != -1)
         {
-          printf("Get Output channel count @ ObjectNr: %d\n", OnlineNodeInformationElement->OutputChannelCountObjectNr);
           mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, OnlineNodeInformationElement->OutputChannelCountObjectNr, 1);
         }
 
@@ -5430,7 +5277,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
           if (  (AxumData.SourceData[cntSource].InputData[0].MambaNetAddress == message->AddressFrom) ||
                 (AxumData.SourceData[cntSource].InputData[1].MambaNetAddress == message->AddressFrom))
           { //this source is changed, update modules!
-            printf("Found source: %d\n", cntSource);
+            //Found source 'cntSource'
 
             //Set Phantom, Pad and Gain
             unsigned int FunctionNrToSend = 0x05000000 | (cntSource<<12);
@@ -5442,7 +5289,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             {
               if (AxumData.ModuleData[cntModule].SelectedSource == (cntSource+matrix_sources.src_offset.min.source))
               {
-                printf("Found source @ module %d\n", cntModule);
+                //Found source @ module 'cntModule'
                 SetAxum_ModuleSource(cntModule);
                 SetAxum_ModuleMixMinus(cntModule, 0);
 
@@ -5458,7 +5305,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
               {
                 if (AxumData.ExternSource[cntDSPCard].Ext[cntExt] == (cntSource+matrix_sources.src_offset.min.source))
                 {
-                  printf("Found source @ extern input %d\n", cntDSPCard);
+                  //Found source @ extern input 'cntDSPCard'
                   SetAxum_ExternSources(cntDSPCard);
                 }
               }
@@ -5467,7 +5314,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             {
               if (AxumData.Talkback[cntTalkback].Source == (cntSource+matrix_sources.src_offset.min.source))
               {
-                printf("Found source @ talkback %d\n", cntTalkback);
+                //Found source @ talkback 'cntTalkback'
                 SetAxum_TalkbackSource(cntTalkback);
               }
             }
@@ -5475,7 +5322,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             {
               if (AxumData.DestinationData[cntDestination].Source == (cntSource+matrix_sources.src_offset.min.source))
               {
-                printf("Found source @ destination %d\n", cntDestination);
+                //Found source @ destination 'cntDestination';
                 SetAxum_DestinationSource(cntDestination);
               }
             }
@@ -5488,7 +5335,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
           if (  (AxumData.DestinationData[cntDestination].OutputData[0].MambaNetAddress == message->AddressFrom) ||
                 (AxumData.DestinationData[cntDestination].OutputData[1].MambaNetAddress == message->AddressFrom))
           { //this source is changed, update modules!
-            printf("Found destination: %d\n", cntDestination);
+            //Found destination 'cntDestination';
             SetAxum_DestinationSource(cntDestination);
 
             unsigned int FunctionNrToSend = 0x06000000 | (cntDestination<<12);
@@ -5498,7 +5345,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
       }
       else if (OnlineNodeInformationElement->SlotNumberObjectNr != -1)
       {
-        printf("Check for Channel Counts: %d, %d\n", OnlineNodeInformationElement->InputChannelCountObjectNr, OnlineNodeInformationElement->OutputChannelCountObjectNr);
+        //Check for Channel Counts
         if (((signed int)object) == OnlineNodeInformationElement->InputChannelCountObjectNr)
         {
           db_lock(1);
@@ -6685,7 +6532,7 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
     }
     else
     {
-      printf("src: Module insert out %d muted, no DSP Card\n", ModuleNr+1);
+      log_write("[axum_get_mtrx_chs_from_src] Module insert out %d muted, no DSP Card\n", ModuleNr+1);
     }
   }
   else if ((src>=matrix_sources.src_offset.min.monitor_buss) && (src<=matrix_sources.src_offset.max.monitor_buss))
@@ -6705,7 +6552,7 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
     }
     else
     {
-      printf("src: Monitor buss %d muted, no DSP Card\n", BussNr+1);
+      log_write("[axum_get_mtrx_chs_from_src] Monitor buss %d muted, no DSP Card\n", BussNr+1);
     }
   }
   else if ((src>=matrix_sources.src_offset.min.mixminus) && (src<=matrix_sources.src_offset.max.mixminus))
@@ -6725,7 +6572,7 @@ void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned i
     }
     else
     {
-      printf("src: Module N-1 %d muted, no DSP Card\n", ModuleNr+1);
+      log_write("[axum_get_mtrx_chs_from_src] Module N-1 %d muted, no DSP Card\n", ModuleNr+1);
     }
   }
   else if ((src>=matrix_sources.src_offset.min.source) && (src<=matrix_sources.src_offset.max.source))
@@ -6841,7 +6688,7 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource)
 
       if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
       {
-        printf("MixMinus@%s need to be removed, use default src.\n", AxumData.DestinationData[DestinationNr].DestinationName);
+        //MixMinus need to be removed, use default source
         AxumData.DestinationData[DestinationNr].MixMinusActive = 0;
         SetAxum_DestinationSource(DestinationNr);
       }
@@ -6851,8 +6698,7 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource)
     {
       DestinationNr = cntDestination;
 
-      printf ("MixMinus@%s\n", AxumData.DestinationData[DestinationNr].DestinationName);
-
+      //MixMinus
       int BussToUse = -1;
       int ModuleToUse = -1;
       for (int cntModule=0; cntModule<128; cntModule++)
@@ -6881,7 +6727,7 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource)
 
         DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
-        printf("Use buss %d, for MixMinus at module %d\n", BussToUse, ModuleToUse);
+        //Use buss 'BussToUse', for MixMinus at module 'ModuleToUse'
 
         dspcard->data.MixMinusData[DSPCardChannelNr+0].Buss = (BussToUse<<1)+0;
         dspcard->data.MixMinusData[DSPCardChannelNr+1].Buss = (BussToUse<<1)+1;
@@ -6896,7 +6742,7 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource)
       }
       else
       {
-        printf("No buss routed, use default src\n");
+        //No buss routed, use default source
 
         AxumData.DestinationData[DestinationNr].MixMinusActive = 0;
         SetAxum_DestinationSource(DestinationNr);
@@ -7062,8 +6908,6 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
         }
         cntModule++;
       }
-      printf("src: MixMinus %d\n", (MixMinusNr+1));
-
       unsigned char DSPCardNr = (MixMinusNr/32);
 
       if (dsp_card_available(dsp_handler, DSPCardNr))
@@ -7077,7 +6921,7 @@ void SetAxum_DestinationSource(unsigned int DestinationNr)
       }
       else
       {
-        printf("src: MixMinus %d muted, no DSP card\n", (MixMinusNr+1));
+        log_write("[SetAxum_DestinationSource] MixMinus %d muted, no DSP card\n", (MixMinusNr+1));
         FromChannel1 = 0;
         FromChannel2 = 0;
       }
@@ -7372,7 +7216,6 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.Octets = (unsigned char *)LCDText;
-              printf("Set label: %s\n", LCDText);
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
@@ -11014,8 +10857,6 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
   char ControlMode = -1;
   unsigned char ControlNr;
 
-  printf("ModeControllerResetSensorChange\n");
-
   if (FunctionNr == MODULE_FUNCTION_CONTROL_RESET)
   {
     ControlNr = AxumData.ModuleData[ModuleNr].Console;
@@ -12604,16 +12445,13 @@ void DoAxum_ModulePreStatusChanged(int BussNr)
         {
           if (AxumData.SourceData[SourceNr].MonitorMute[cntMonitorBuss])
           {
-            printf("Check routing of buss %d to monitor buss %d\n", BussNr, cntMonitorBuss);
+            //Check routing of buss 'BussNr' to monitor buss 'cntMonitorBuss'
             if (AxumData.Monitor[cntMonitorBuss].Buss[BussNr])
             {
-              printf("must be dim!\n");
-
               NewMonitorBussDim[cntMonitorBuss] = 1;
             }
             else
             {
-              printf("must NOT be dim!\n");
               NewMonitorBussDim[cntMonitorBuss] = 0;
             }
           }
@@ -13362,7 +13200,7 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
     if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
         (BussPre))
     {
-      printf("Have to check monitor routing and muting\n");
+      //Have to check monitor routing and muting
       DoAxum_ModulePreStatusChanged(BussNr);
     }
 

@@ -1271,7 +1271,6 @@ int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_d
     for (cntExternSource=0; cntExternSource<8; cntExternSource++)
     {
       ExternSource->InterlockSafe[cntExternSource] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-      printf("InterlocckSafe[%d] = %d\n", cntExternSource, ExternSource->InterlockSafe[cntExternSource]);
     }
 
     if (AxumApplicationAndDSPInitialized)
