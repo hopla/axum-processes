@@ -8058,6 +8058,64 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         { //Aux Level reset
         }
         break;
+        case MODULE_FUNCTION_BUSS_1_2_ON:
+        case MODULE_FUNCTION_BUSS_3_4_ON:
+        case MODULE_FUNCTION_BUSS_5_6_ON:
+        case MODULE_FUNCTION_BUSS_7_8_ON:
+        case MODULE_FUNCTION_BUSS_9_10_ON:
+        case MODULE_FUNCTION_BUSS_11_12_ON:
+        case MODULE_FUNCTION_BUSS_13_14_ON:
+        case MODULE_FUNCTION_BUSS_15_16_ON:
+        case MODULE_FUNCTION_BUSS_17_18_ON:
+        case MODULE_FUNCTION_BUSS_19_20_ON:
+        case MODULE_FUNCTION_BUSS_21_22_ON:
+        case MODULE_FUNCTION_BUSS_23_24_ON:
+        case MODULE_FUNCTION_BUSS_25_26_ON:
+        case MODULE_FUNCTION_BUSS_27_28_ON:
+        case MODULE_FUNCTION_BUSS_29_30_ON:
+        case MODULE_FUNCTION_BUSS_31_32_ON:
+        { //Buss on/off
+          int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_ON)/(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON);
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              data.State = AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case MODULE_FUNCTION_BUSS_1_2_OFF:
+        case MODULE_FUNCTION_BUSS_3_4_OFF:
+        case MODULE_FUNCTION_BUSS_5_6_OFF:
+        case MODULE_FUNCTION_BUSS_7_8_OFF:
+        case MODULE_FUNCTION_BUSS_9_10_OFF:
+        case MODULE_FUNCTION_BUSS_11_12_OFF:
+        case MODULE_FUNCTION_BUSS_13_14_OFF:
+        case MODULE_FUNCTION_BUSS_15_16_OFF:
+        case MODULE_FUNCTION_BUSS_17_18_OFF:
+        case MODULE_FUNCTION_BUSS_19_20_OFF:
+        case MODULE_FUNCTION_BUSS_21_22_OFF:
+        case MODULE_FUNCTION_BUSS_23_24_OFF:
+        case MODULE_FUNCTION_BUSS_25_26_OFF:
+        case MODULE_FUNCTION_BUSS_27_28_OFF:
+        case MODULE_FUNCTION_BUSS_29_30_OFF:
+        case MODULE_FUNCTION_BUSS_31_32_OFF:
+        { //Buss on/off
+          int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_OFF)/(MODULE_FUNCTION_BUSS_3_4_OFF-MODULE_FUNCTION_BUSS_1_2_OFF);
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              data.State = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
         case MODULE_FUNCTION_BUSS_1_2_ON_OFF:
         case MODULE_FUNCTION_BUSS_3_4_ON_OFF:
         case MODULE_FUNCTION_BUSS_5_6_ON_OFF:
@@ -13062,6 +13120,8 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
                 AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreviousOn;
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON))));
+                CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_OFF-MODULE_FUNCTION_BUSS_1_2_OFF))));
                 CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
                 if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
@@ -13088,6 +13148,8 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
                 AxumData.ModuleData[ModuleNr].Buss[cntBuss].On = 0;
 
                 unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+                CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON))));
+                CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_OFF-MODULE_FUNCTION_BUSS_1_2_OFF))));
                 CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
                 if (AxumData.ModuleData[ModuleNr].SelectedSource != 0)
@@ -13112,6 +13174,8 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
     SetAxum_ModuleMixMinus(ModuleNr, 0);
 
     unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
+    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON))));
+    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_OFF-MODULE_FUNCTION_BUSS_1_2_OFF))));
     CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
 
@@ -13156,6 +13220,8 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
                     AxumData.ModuleData[cntModule].Buss[cntBuss].On = AxumData.ModuleData[cntModule].Buss[cntBuss].PreviousOn;
 
                     unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
+                    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON))));
+                    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_OFF-MODULE_FUNCTION_BUSS_1_2_OFF))));
                     CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(cntBuss*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
                     if (AxumData.ModuleData[cntModule].SelectedSource != 0)
@@ -13175,6 +13241,8 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
             SetAxum_ModuleMixMinus(cntModule, 0);
 
             unsigned int FunctionNrToSent = ((cntModule<<12)&0xFFF000);
+            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON))));
+            CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_OFF-MODULE_FUNCTION_BUSS_1_2_OFF))));
             CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
 
             int ControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
