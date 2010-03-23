@@ -6661,7 +6661,7 @@ void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
     DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
     //four stereo busses
-    for (int cntExt=0; cntExt<4; cntExt++)
+    for (int cntExt=0; cntExt<8; cntExt++)
     {
       unsigned int ToChannelNr = 480+(dspcard->slot*5*32)+128+(cntExt*2);
       unsigned int Input1, Input2;
