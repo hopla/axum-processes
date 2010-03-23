@@ -1863,7 +1863,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_BUSS_29_30_OFF:
             case MODULE_FUNCTION_BUSS_31_32_OFF:
             {
-              int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_ON)/(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON);
+              int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_OFF)/(MODULE_FUNCTION_BUSS_3_4_OFF-MODULE_FUNCTION_BUSS_1_2_OFF);
               printf("Buss %d/%d off\n", (BussNr*2)+1, (BussNr*2)+2);
               if (type == MBN_DATATYPE_STATE)
               {
