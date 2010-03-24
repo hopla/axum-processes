@@ -1555,6 +1555,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
                   CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
                   CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+                  CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
                 }
               }
             }
@@ -1633,6 +1634,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_ON_OFF);
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+                    CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
                   }
                 }
               }
@@ -2340,6 +2342,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
                     CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+                    CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
                   }
                 }
               }
@@ -2440,6 +2443,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+                      CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
                     }
                   }
                 }
@@ -4127,6 +4131,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_ON_OFF);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
                       CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+                      CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
                     }
                   }
                 }
@@ -4227,6 +4232,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
                         CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
                         CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+                        CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
                       }
                     }
                   }
@@ -4236,6 +4242,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE:
             case SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE:
+            case SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE:
             {   //fader on and on active
               //fader on and on inactive
               if (type == MBN_DATATYPE_STATE)
@@ -4260,6 +4267,20 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         {
                           AxumData.ModuleData[cntModule].FaderLevel = -140;
                           AxumData.ModuleData[cntModule].On = 0;
+                        }
+                        break;
+                        case SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE:
+                        {
+                          if ((AxumData.ModuleData[cntModule].FaderLevel >= -80) && (AxumData.ModuleData[cntModule].On))
+                          {
+                            AxumData.ModuleData[cntModule].FaderLevel = -140;
+                            AxumData.ModuleData[cntModule].On = 0;
+                          }
+                          else
+                          {
+                            AxumData.ModuleData[cntModule].FaderLevel = 0;
+                            AxumData.ModuleData[cntModule].On = 1;
+                          }
                         }
                         break;
                       }
@@ -4328,6 +4349,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         }
                         CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
                         CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+                        CheckObjectsToSent(SensorReceiveFunctionNumber+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
                       }
                     }
                   }
@@ -9166,6 +9188,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE:
         case SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE:
+        case SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE:
         {
           Active = 0;
           for (int cntModule=0; cntModule<128; cntModule++)
@@ -10660,6 +10683,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
             CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+            CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
           }
         }
       }
@@ -11124,6 +11148,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
                 CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
                 CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
                 CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+                CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
               }
             }
           }
@@ -12707,6 +12732,7 @@ bool DoAxum_SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
@@ -12770,6 +12796,7 @@ bool DoAxum_SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF);
         CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
@@ -14187,6 +14214,7 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewPresetN
         CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
         CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
         CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+        CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
       }
     }
     SetBussProcessing = true;
@@ -14221,6 +14249,7 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewPresetN
         CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_ON_OFF);
         CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
         CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+        CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
       }
     }
     SetBussProcessing = true;
