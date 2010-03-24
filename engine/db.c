@@ -1434,6 +1434,7 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
   const char *params[2];
   int cntParams;
   int cntRow;
+  unsigned char *DestinationFound;
 
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -1444,6 +1445,27 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
 
   sprintf(str[0], "%hd", first_dest);
   sprintf(str[1], "%hd", last_dest);
+
+  if (first_dest>last_dest)
+  {
+    unsigned short int dummy = first_dest;
+    first_dest = last_dest;
+    last_dest = dummy;
+  }
+  //to make sure we can do 'if <'
+  last_dest++;
+
+  DestinationFound = new unsigned char[last_dest-first_dest];
+  if (DestinationFound == NULL)
+  {
+    log_write("[%s] Error no memory available for array DestinationNotFound", __func__);
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  for (cntRow=0; cntRow<(last_dest-first_dest); cntRow++)
+  {
+    DestinationFound[cntRow] = 0;
+  }
 
   PGresult *qres = sql_exec("SELECT number, label, output1_addr, output1_sub_ch, output2_addr, output2_sub_ch, level, source, routing, mix_minus_source FROM dest_config WHERE number>=$1 AND number<=$2", 1, 2, params);
   if (qres == NULL)
@@ -1459,6 +1481,8 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+
+    DestinationFound[number-first_dest] = 1;
 
     AXUM_DESTINATION_DATA_STRUCT *DestinationData = &AxumData.DestinationData[number-1];
 
@@ -1502,6 +1526,28 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
     CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_LABEL);
     CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_LEVEL);
     CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_SOURCE);
+  }
+
+  //Check if destination is deleted
+  for (cntRow=0; cntRow<(last_dest-first_dest); cntRow++)
+  {
+    AXUM_DESTINATION_DATA_STRUCT *DestinationData = &AxumData.DestinationData[first_dest+cntRow-1];
+
+    if (!DestinationFound[cntRow])
+    {
+      SetAxum_RemoveOutputRouting(DestinationData->OutputData[0].MambaNetAddress, DestinationData->OutputData[0].SubChannel);
+      SetAxum_RemoveOutputRouting(DestinationData->OutputData[1].MambaNetAddress, DestinationData->OutputData[1].SubChannel);
+      if (AxumApplicationAndDSPInitialized)
+      {
+        SetAxum_DestinationSource(first_dest+cntRow-1);
+      }
+
+      //Check destinations
+      unsigned int DisplayFunctionNr = 0x06000000 | ((first_dest+cntRow-1)<<12);
+      CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_LABEL);
+      CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_LEVEL);
+      CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_SOURCE);
+    }
   }
 
   PQclear(qres);
