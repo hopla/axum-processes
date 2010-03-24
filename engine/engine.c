@@ -12200,10 +12200,23 @@ void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned 
     break;
     case MBN_DATATYPE_BITS:
     {
-      int NrOfLEDs = (MasterLevel+140)/(140/DataMaximal);
+      int dB = ((MasterLevel+AxumData.LevelReserve)*10)+1400;
+      if (dB<0)
+      {
+        dB = 0;
+      }
+      else if (dB>=1500)
+      {
+        dB = 1499;
+      }
+      int NrOfLEDs = ((dB2Position[dB]*DataMaximal)/1023)+1;
       for (char cntBit=0; cntBit<NrOfLEDs; cntBit++)
       {
         Mask |= 0x01<<cntBit;
+      }
+      if (MasterLevel<-80)
+      {
+        Mask = 0x00;
       }
 
       data.Bits[0] = Mask;
