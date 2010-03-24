@@ -2729,12 +2729,15 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
           unsigned int MonitorBussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
           int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
-          if ((FunctionNr>=MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF) && (FunctionNr<MONITOR_BUSS_FUNCTION_MUTE))
+          if (type == MBN_DATATYPE_STATE)
           {
-            if (type == MBN_DATATYPE_STATE)
+            if (((FunctionNr>=MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF) && (FunctionNr<=MONITOR_BUSS_FUNCTION_EXT_8_ON_OFF)) ||
+                ((FunctionNr>=MONITOR_BUSS_FUNCTION_BUSS_1_2_ON) && (FunctionNr<=MONITOR_BUSS_FUNCTION_EXT_8_ON)) ||
+                ((FunctionNr>=MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF) && (FunctionNr<=MONITOR_BUSS_FUNCTION_EXT_8_OFF)))
             {
-              bool *MonitorSwitchState;
+              bool NewMonitorSwitchState = false;
               bool PreventDoingInterlock = false;
+              int BussNr = 0;
 
               switch (FunctionNr)
               {
@@ -2755,8 +2758,27 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 case MONITOR_BUSS_FUNCTION_BUSS_29_30_ON_OFF:
                 case MONITOR_BUSS_FUNCTION_BUSS_31_32_ON_OFF:
                 {
-                  int BussNr = FunctionNr - MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF;
-                  MonitorSwitchState = &AxumData.Monitor[MonitorBussNr].Buss[BussNr];
+                  BussNr = FunctionNr - MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF;
+
+                  NewMonitorSwitchState = AxumData.Monitor[MonitorBussNr].Buss[BussNr];
+
+                  if (data.State)
+                  {
+                    NewMonitorSwitchState = !AxumData.Monitor[MonitorBussNr].Buss[BussNr];
+                  }
+                  else
+                  {
+                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                    PreventDoingInterlock = true;
+                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                    {
+                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                      {
+                        NewMonitorSwitchState = !AxumData.Monitor[MonitorBussNr].Buss[BussNr];
+                        PreventDoingInterlock = false;
+                      }
+                    }
+                  }
                 }
                 break;
                 case MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF:
@@ -2769,213 +2791,94 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 case MONITOR_BUSS_FUNCTION_EXT_8_ON_OFF:
                 {
                   int ExtNr = FunctionNr - MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF;
-                  MonitorSwitchState = &AxumData.Monitor[MonitorBussNr].Ext[ExtNr];
                   if (AxumData.ExternSource[MonitorBussNr/4].InterlockSafe[ExtNr])
                   {
                     PreventDoingInterlock = true;
                   }
+                  BussNr = ExtNr+16;
+
+                  NewMonitorSwitchState = AxumData.Monitor[MonitorBussNr].Ext[ExtNr];
+
+                  if (data.State)
+                  {
+                    NewMonitorSwitchState = !AxumData.Monitor[MonitorBussNr].Ext[ExtNr];
+                  }
+                  else
+                  {
+                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                    PreventDoingInterlock = true;
+                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                    {
+                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                      {
+                        NewMonitorSwitchState = !AxumData.Monitor[MonitorBussNr].Ext[ExtNr];
+                        PreventDoingInterlock = false;
+                      }
+                    }
+                  }
+                }
+                break;
+                case MONITOR_BUSS_FUNCTION_BUSS_1_2_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_3_4_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_5_6_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_7_8_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_9_10_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_11_12_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_13_14_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_15_16_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_17_18_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_19_20_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_21_22_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_23_24_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_25_26_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_27_28_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_29_30_ON:
+                case MONITOR_BUSS_FUNCTION_BUSS_31_32_ON:
+                case MONITOR_BUSS_FUNCTION_EXT_1_ON:
+                case MONITOR_BUSS_FUNCTION_EXT_2_ON:
+                case MONITOR_BUSS_FUNCTION_EXT_3_ON:
+                case MONITOR_BUSS_FUNCTION_EXT_4_ON:
+                case MONITOR_BUSS_FUNCTION_EXT_5_ON:
+                case MONITOR_BUSS_FUNCTION_EXT_6_ON:
+                case MONITOR_BUSS_FUNCTION_EXT_7_ON:
+                case MONITOR_BUSS_FUNCTION_EXT_8_ON:
+                {
+                  BussNr = FunctionNr-MONITOR_BUSS_FUNCTION_BUSS_1_2_ON;
+                  NewMonitorSwitchState = true;
+                }
+                break;
+                case MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_3_4_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_5_6_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_7_8_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_9_10_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_11_12_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_13_14_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_15_16_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_17_18_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_19_20_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_21_22_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_23_24_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_25_26_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_27_28_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_29_30_OFF:
+                case MONITOR_BUSS_FUNCTION_BUSS_31_32_OFF:
+                case MONITOR_BUSS_FUNCTION_EXT_1_OFF:
+                case MONITOR_BUSS_FUNCTION_EXT_2_OFF:
+                case MONITOR_BUSS_FUNCTION_EXT_3_OFF:
+                case MONITOR_BUSS_FUNCTION_EXT_4_OFF:
+                case MONITOR_BUSS_FUNCTION_EXT_5_OFF:
+                case MONITOR_BUSS_FUNCTION_EXT_6_OFF:
+                case MONITOR_BUSS_FUNCTION_EXT_7_OFF:
+                case MONITOR_BUSS_FUNCTION_EXT_8_OFF:
+                {
+                  BussNr = FunctionNr-MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF;
+                  NewMonitorSwitchState = false;
                 }
                 break;
               }
 
-              if (MonitorSwitchState != NULL)
-              {
-                if (data.State)
-                {
-                  *MonitorSwitchState = !*MonitorSwitchState;
-                }
-                else
-                {
-                  int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                  PreventDoingInterlock = true;
-                  if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                  {
-                    if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                    {
-                      *MonitorSwitchState = !*MonitorSwitchState;
-                      PreventDoingInterlock = false;
-                    }
-                  }
-                }
-              }
-
-              if ((AxumData.Monitor[MonitorBussNr].Interlock) && (!PreventDoingInterlock))
-              {
-                switch (FunctionNr)
-                {
-                  case MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_3_4_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_5_6_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_7_8_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_9_10_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_11_12_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_13_14_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_15_16_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_17_18_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_19_20_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_21_22_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_23_24_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_25_26_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_27_28_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_29_30_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_BUSS_31_32_ON_OFF:
-                  {
-                    int BussNr = FunctionNr - MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF;
-
-                    for (int cntBuss=0; cntBuss<16; cntBuss++)
-                    {
-                      if (cntBuss != BussNr)
-                      {
-                        if (AxumData.Monitor[MonitorBussNr].Buss[cntBuss])
-                        {
-                          AxumData.Monitor[MonitorBussNr].Buss[cntBuss] = 0;
-
-                          unsigned int FunctionNrToSent = 0x02000000 | (MonitorBussNr<<12);
-                          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+cntBuss));
-                        }
-                      }
-                    }
-                    for (int cntExt=0; cntExt<8; cntExt++)
-                    {
-                      if ((AxumData.Monitor[MonitorBussNr].Ext[cntExt]) &&
-                          (!AxumData.ExternSource[MonitorBussNr/4].InterlockSafe[cntExt]))
-                      {
-                        AxumData.Monitor[MonitorBussNr].Ext[cntExt] = 0;
-
-                        unsigned int FunctionNrToSent = 0x02000000 | (MonitorBussNr<<12);
-                        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+cntExt));
-                      }
-                    }
-                  }
-                  break;
-                  case MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_EXT_2_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_EXT_3_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_EXT_4_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_EXT_5_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_EXT_6_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_EXT_7_ON_OFF:
-                  case MONITOR_BUSS_FUNCTION_EXT_8_ON_OFF:
-                  {
-                    int ExtNr = FunctionNr - MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF;
-
-                    for (int cntBuss=0; cntBuss<16; cntBuss++)
-                    {
-                      if (AxumData.Monitor[MonitorBussNr].Buss[cntBuss])
-                      {
-                        AxumData.Monitor[MonitorBussNr].Buss[cntBuss] = 0;
-
-                        unsigned int FunctionNrToSent = 0x02000000 | (MonitorBussNr<<12);
-                        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+cntBuss));
-                      }
-                    }
-                    for (int cntExt=0; cntExt<8; cntExt++)
-                    {
-                      if (ExtNr != cntExt)
-                      {
-                        if ((AxumData.Monitor[MonitorBussNr].Ext[cntExt]) &&
-                           (!AxumData.ExternSource[MonitorBussNr/4].InterlockSafe[cntExt]))
-                        {
-                          AxumData.Monitor[MonitorBussNr].Ext[cntExt] = 0;
-
-                          unsigned int FunctionNrToSent = 0x02000000 | (MonitorBussNr<<12);
-                          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+cntExt));
-                        }
-                      }
-                    }
-                  }
-                  break;
-                  case MONITOR_BUSS_FUNCTION_LABEL:
-                  {   //No sensor change available
-                  }
-                  break;
-                }
-              }
-
-              unsigned int MonitorBussActive = 0;
-              int cntBuss;
-              for (cntBuss=0; cntBuss<16; cntBuss++)
-              {
-                if (AxumData.Monitor[MonitorBussNr].Buss[cntBuss])
-                {
-                  MonitorBussActive = 1;
-                }
-              }
-              int cntExt;
-              for (cntExt=0; cntExt<8; cntExt++)
-              {
-                if (AxumData.Monitor[MonitorBussNr].Ext[cntExt])
-                {
-                  MonitorBussActive = 1;
-                }
-              }
-
-              if (!MonitorBussActive)
-              {
-                int DefaultSelection = AxumData.Monitor[MonitorBussNr].DefaultSelection;
-                if (DefaultSelection<16)
-                {
-                  int BussNr = DefaultSelection;
-                  AxumData.Monitor[MonitorBussNr].Buss[BussNr] = 1;
-
-                  unsigned int FunctionNrToSent = 0x02000000 | (MonitorBussNr<<12);
-                  CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+BussNr));
-                }
-                else if (DefaultSelection<24)
-                {
-                  int ExtNr = DefaultSelection-16;
-                  AxumData.Monitor[MonitorBussNr].Ext[ExtNr] = 1;
-
-                  unsigned int FunctionNrToSent = 0x02000000 | (MonitorBussNr<<12);
-                  CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
-                }
-              }
-
-              switch (FunctionNr)
-              {
-                case MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_3_4_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_5_6_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_7_8_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_9_10_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_11_12_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_13_14_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_15_16_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_17_18_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_19_20_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_21_22_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_23_24_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_25_26_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_27_28_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_29_30_ON_OFF:
-                case MONITOR_BUSS_FUNCTION_BUSS_31_32_ON_OFF:
-                {
-                  int BussNr = FunctionNr - MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF;
-                  bool BussPre = 0;
-
-                  for (int cntModule=0; cntModule<128; cntModule++)
-                  {
-                    if ((AxumData.ModuleData[cntModule].Buss[BussNr].Assigned) && (AxumData.ModuleData[cntModule].Console == AxumData.BussMasterData[BussNr].Console))
-                    {
-                      if (AxumData.ModuleData[cntModule].Buss[BussNr].PreModuleLevel)
-                      {
-                        BussPre = 1;
-                      }
-                    }
-                  }
-
-                  if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-                        (BussPre))
-                  {
-                    //Have to check monitor routing and muting
-                    DoAxum_ModulePreStatusChanged(BussNr);
-                  }
-                }
-                break;
-              }
-
-              SetAxum_MonitorBuss(MonitorBussNr);
-              CheckObjectsToSent(SensorReceiveFunctionNumber);
+              DoAxum_SetCRMBussOnOff(MonitorBussNr, BussNr, NewMonitorSwitchState, PreventDoingInterlock);
             }
           }
           else
@@ -8493,74 +8396,117 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
     case MONITOR_BUSS_FUNCTIONS:
     {   //Monitor Busses
       unsigned int MonitorBussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
-      unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+      int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
       unsigned int Active = 0;
 
-      if (FunctionNr<24)
+      if (((FunctionNr>=MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF) && (FunctionNr<=MONITOR_BUSS_FUNCTION_EXT_8_ON_OFF)) ||
+          ((FunctionNr>=MONITOR_BUSS_FUNCTION_BUSS_1_2_ON) && (FunctionNr<=MONITOR_BUSS_FUNCTION_EXT_8_ON)) ||
+          ((FunctionNr>=MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF) && (FunctionNr<=MONITOR_BUSS_FUNCTION_EXT_8_OFF)))
       {
         switch (FunctionNr)
         {
-        case MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_3_4_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_5_6_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_7_8_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_9_10_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_11_12_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_13_14_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_15_16_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_17_18_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_19_20_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_21_22_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_23_24_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_25_26_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_27_28_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_29_30_ON_OFF:
-        case MONITOR_BUSS_FUNCTION_BUSS_31_32_ON_OFF:
-        { //Prog
-          int BussNr = FunctionNr-MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF;
-          Active = AxumData.Monitor[MonitorBussNr].Buss[BussNr];
-        }
-        break;
-        case MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF:
-        { //Ext 1
-          Active = AxumData.Monitor[MonitorBussNr].Ext[0];
-        }
-        break;
-        case MONITOR_BUSS_FUNCTION_EXT_2_ON_OFF:
-        { //Ext 2
-          Active = AxumData.Monitor[MonitorBussNr].Ext[1];
-        }
-        break;
-        case MONITOR_BUSS_FUNCTION_EXT_3_ON_OFF:
-        { //Ext 3
-          Active = AxumData.Monitor[MonitorBussNr].Ext[2];
-        }
-        break;
-        case MONITOR_BUSS_FUNCTION_EXT_4_ON_OFF:
-        { //Ext 4
-          Active = AxumData.Monitor[MonitorBussNr].Ext[3];
-        }
-        break;
-        case MONITOR_BUSS_FUNCTION_EXT_5_ON_OFF:
-        { //Ext 5
-          Active = AxumData.Monitor[MonitorBussNr].Ext[4];
-        }
-        break;
-        case MONITOR_BUSS_FUNCTION_EXT_6_ON_OFF:
-        { //Ext 6
-          Active = AxumData.Monitor[MonitorBussNr].Ext[5];
-        }
-        break;
-        case MONITOR_BUSS_FUNCTION_EXT_7_ON_OFF:
-        { //Ext 7
-          Active = AxumData.Monitor[MonitorBussNr].Ext[6];
-        }
-        break;
-        case MONITOR_BUSS_FUNCTION_EXT_8_ON_OFF:
-        { //Ext 8
-          Active = AxumData.Monitor[MonitorBussNr].Ext[7];
-        }
-        break;
+          case MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_3_4_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_5_6_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_7_8_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_9_10_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_11_12_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_13_14_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_15_16_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_17_18_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_19_20_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_21_22_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_23_24_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_25_26_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_27_28_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_29_30_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_31_32_ON_OFF:
+          { //Prog
+            int BussNr = FunctionNr-MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF;
+            Active = AxumData.Monitor[MonitorBussNr].Buss[BussNr];
+          }
+          break;
+          case MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_2_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_3_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_4_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_5_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_6_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_7_ON_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_8_ON_OFF:
+          { //Ext 1
+            int ExtNr = FunctionNr-MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF;
+            Active = AxumData.Monitor[MonitorBussNr].Ext[ExtNr];
+          }
+          break;
+          case MONITOR_BUSS_FUNCTION_BUSS_1_2_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_3_4_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_5_6_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_7_8_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_9_10_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_11_12_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_13_14_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_15_16_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_17_18_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_19_20_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_21_22_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_23_24_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_25_26_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_27_28_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_29_30_ON:
+          case MONITOR_BUSS_FUNCTION_BUSS_31_32_ON:
+          { //Prog
+            int BussNr = FunctionNr-MONITOR_BUSS_FUNCTION_BUSS_1_2_ON;
+            Active = AxumData.Monitor[MonitorBussNr].Buss[BussNr];
+          }
+          break;
+          case MONITOR_BUSS_FUNCTION_EXT_1_ON:
+          case MONITOR_BUSS_FUNCTION_EXT_2_ON:
+          case MONITOR_BUSS_FUNCTION_EXT_3_ON:
+          case MONITOR_BUSS_FUNCTION_EXT_4_ON:
+          case MONITOR_BUSS_FUNCTION_EXT_5_ON:
+          case MONITOR_BUSS_FUNCTION_EXT_6_ON:
+          case MONITOR_BUSS_FUNCTION_EXT_7_ON:
+          case MONITOR_BUSS_FUNCTION_EXT_8_ON:
+          { //Ext 1
+            int ExtNr = FunctionNr-MONITOR_BUSS_FUNCTION_EXT_1_ON;
+            Active = AxumData.Monitor[MonitorBussNr].Ext[ExtNr];
+          }
+          break;
+          case MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_3_4_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_5_6_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_7_8_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_9_10_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_11_12_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_13_14_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_15_16_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_17_18_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_19_20_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_21_22_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_23_24_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_25_26_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_27_28_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_29_30_OFF:
+          case MONITOR_BUSS_FUNCTION_BUSS_31_32_OFF:
+          { //Prog
+            int BussNr = FunctionNr-MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF;
+            Active = !AxumData.Monitor[MonitorBussNr].Buss[BussNr];
+          }
+          break;
+          case MONITOR_BUSS_FUNCTION_EXT_1_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_2_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_3_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_4_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_5_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_6_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_7_OFF:
+          case MONITOR_BUSS_FUNCTION_EXT_8_OFF:
+          { //Ext 1
+            int ExtNr = FunctionNr-MONITOR_BUSS_FUNCTION_EXT_1_OFF;
+            Active = !AxumData.Monitor[MonitorBussNr].Ext[ExtNr];
+          }
+          break;
         }
 
         data.State = Active;
@@ -13182,6 +13128,8 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
           AxumData.Monitor[cntMonitorBuss].Buss[DefaultSelection] = 1;
 
           unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON+BussNr));
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF+BussNr));
           CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+BussNr));
         }
         else if (DefaultSelection<24)
@@ -13190,6 +13138,8 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
           AxumData.Monitor[cntMonitorBuss].Ext[ExtNr] = 1;
 
           unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON+ExtNr));
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_OFF+ExtNr));
           CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
         }
       }
@@ -13239,6 +13189,8 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
           SetAxum_MonitorBuss(cntMonitorBuss);
 
           unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON+cntBuss));
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF+cntBuss));
           CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+cntBuss));
         }
       }
@@ -14565,10 +14517,14 @@ void DoAxum_LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool Se
           unsigned int FunctionNrToSent = 0x02000000 | ((cntMonitorBuss<<12)&0xFFF000);
           if (cntBuss<16)
           {
+            CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON+cntBuss));
+            CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF+cntBuss));
             CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+cntBuss));
           }
           else if (cntBuss<24)
           {
+            CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON+(cntBuss-16)));
+            CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_OFF+(cntBuss-16)));
             CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+(cntBuss-16)));
           }
         }
@@ -15361,3 +15317,144 @@ void debug_mambanet_data(unsigned int object, unsigned char type, union mbn_data
   log_write("[mSensorDataChanged] Object: %d, type:%s, data:%s", object, TypeString, DataString);
 }
 
+void DoAxum_SetCRMBussOnOff(int MonitorBussNr, int BussNr, unsigned char NewState, int PreventDoingInterlock)
+{
+  unsigned char CurrentMonitorBussState[24];
+  unsigned char BussActive[16];
+  unsigned char MonitorBussAutoSwitchingActive[16];
+
+  //store current Monitor on/off states
+  for (int cntBuss=0; cntBuss<24; cntBuss++)
+  {
+    if (cntBuss<16)
+    {
+      CurrentMonitorBussState[cntBuss] = AxumData.Monitor[MonitorBussNr].Buss[cntBuss];
+    }
+    else
+    {
+      CurrentMonitorBussState[cntBuss] = AxumData.Monitor[MonitorBussNr].Ext[cntBuss-16];
+    }
+  }
+
+  //store current active auto switching busses
+  for (int cntBuss=0; cntBuss<16; cntBuss++)
+  {
+    BussActive[cntBuss] = 0;
+    for (int cntModule=0; cntModule<128; cntModule++)
+    {
+      if (AxumData.ModuleData[cntModule].Buss[cntBuss].On)
+      {
+        BussActive[cntBuss] = 1;
+      }
+    }
+  }
+  //Store routing set by Automatic switching
+  for (int cntBuss=0; cntBuss<16; cntBuss++)
+  {
+    MonitorBussAutoSwitchingActive[cntBuss] = 0;
+    if ((AxumData.Monitor[MonitorBussNr].AutoSwitchingBuss[cntBuss]) &&
+        (AxumData.Monitor[MonitorBussNr].Buss[cntBuss]) &&
+        (BussActive[cntBuss]))
+    {
+      MonitorBussAutoSwitchingActive[cntBuss] = 1;
+    }
+  }
+
+  if (BussNr<16)
+  {
+    AxumData.Monitor[MonitorBussNr].Buss[BussNr] = NewState;
+  }
+  else
+  {
+    AxumData.Monitor[MonitorBussNr].Ext[BussNr-16] = NewState;
+  }
+
+  //Check interlock and turn off all others.
+  if ((AxumData.Monitor[MonitorBussNr].Interlock) && (!PreventDoingInterlock))
+  {
+    for (int cntBuss=0; cntBuss<16; cntBuss++)
+    {
+      if (cntBuss != BussNr)
+      {
+        if (AxumData.Monitor[MonitorBussNr].Buss[cntBuss])
+        {
+          if (!MonitorBussAutoSwitchingActive[cntBuss])
+          {
+            AxumData.Monitor[MonitorBussNr].Buss[cntBuss] = 0;
+          }
+        }
+      }
+    }
+    for (int cntExt=0; cntExt<8; cntExt++)
+    {
+      if ((cntExt+16) != BussNr)
+      {
+        if ((AxumData.Monitor[MonitorBussNr].Ext[cntExt]) &&
+            (!AxumData.ExternSource[MonitorBussNr/4].InterlockSafe[cntExt]))
+        {
+          AxumData.Monitor[MonitorBussNr].Ext[cntExt] = 0;
+        }
+      }
+    }
+  }
+
+  //if no active routing, use default routing
+  unsigned int MonitorBussActive = 0;
+  int cntBuss;
+  for (cntBuss=0; cntBuss<16; cntBuss++)
+  {
+    if (AxumData.Monitor[MonitorBussNr].Buss[cntBuss])
+    {
+      MonitorBussActive = 1;
+    }
+  }
+  int cntExt;
+  for (cntExt=0; cntExt<8; cntExt++)
+  {
+    if (AxumData.Monitor[MonitorBussNr].Ext[cntExt])
+    {
+      MonitorBussActive = 1;
+    }
+  }
+
+  if (!MonitorBussActive)
+  {
+    int DefaultSelection = AxumData.Monitor[MonitorBussNr].DefaultSelection;
+    if (DefaultSelection<16)
+    {
+      int BussNr = DefaultSelection;
+      AxumData.Monitor[MonitorBussNr].Buss[BussNr] = 1;
+    }
+    else if (DefaultSelection<24)
+    {
+      int ExtNr = DefaultSelection-16;
+      AxumData.Monitor[MonitorBussNr].Ext[ExtNr] = 1;
+    }
+  }
+
+  SetAxum_MonitorBuss(MonitorBussNr);
+
+  for (int cntBuss=0; cntBuss<24; cntBuss++)
+  {
+    unsigned int FunctionNrToSent = 0x02000000 | (MonitorBussNr<<12);
+    if (cntBuss<16)
+    {
+      if (CurrentMonitorBussState[cntBuss] != AxumData.Monitor[MonitorBussNr].Buss[cntBuss])
+      {
+        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON+cntBuss));
+        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF+cntBuss));
+        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+cntBuss));
+      }
+    }
+    else
+    {
+      int ExtNr = cntBuss-16;
+      if (CurrentMonitorBussState[cntBuss] != AxumData.Monitor[MonitorBussNr].Ext[ExtNr])
+      {
+        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON+ExtNr));
+        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_OFF+ExtNr));
+        CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
+      }
+    }
+  }
+}

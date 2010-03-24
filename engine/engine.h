@@ -548,6 +548,7 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule);
 void DoAxum_ModulePreStatusChanged(int BussNr);
 bool DoAxum_SetNewSource(int ModuleNr, unsigned int NewSource, int Forced);
 void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int UseInterlock);
+void DoAxum_SetCRMBussOnOff(int MonitorBussNr, int BussNr, unsigned char NewState, int PreventDoingInterlock);
 void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
 void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
 void DoAxum_LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
