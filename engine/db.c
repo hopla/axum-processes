@@ -785,8 +785,8 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
     unsigned int cntField;
     unsigned char cntEQ;
     unsigned char cntBuss;
-    float OldLevel;
-    unsigned char OldOn;
+//    float OldLevel;
+//    unsigned char OldOn;
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
@@ -889,8 +889,18 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
         //for now initialize with first settings
       }
 
-      //Use defaults in current settings
-      OldLevel = ModuleData->FaderLevel;
+      //Take source A
+      if (take_source_a)
+      {
+        int ModuleNr = number-1;
+        DoAxum_SetNewSource(ModuleNr, ModuleData->SourceA, 1);
+        DoAxum_LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 0, 1, 1);
+        DoAxum_LoadRoutingPreset(ModuleNr, 1, 0, 1, 1);
+      }
+
+
+
+/*    OldLevel = ModuleData->FaderLevel;
       OldOn = ModuleData->On;
 
       //Place data in module data, but may be overide by a preset later on...
@@ -1023,7 +1033,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
         { //fader on changed
           DoAxum_ModuleStatusChanged(ModuleNr, 1);
         }
-      }
+      }*/
     }
   }
   PQclear(qres);
