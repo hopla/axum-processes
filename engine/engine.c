@@ -572,10 +572,10 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     return 1;
   }
 
-  if (OnlineNodeInformationElement->ManufacturerID == 2)
-  {
-    debug_mambanet_data(object, type, data);
-  }
+//  if (OnlineNodeInformationElement->ManufacturerID == 2)
+//  {
+//    debug_mambanet_data(object, type, data);
+//  }
 
   if (OnlineNodeInformationElement->SensorReceiveFunction != NULL)
   {
