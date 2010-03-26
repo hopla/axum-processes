@@ -742,7 +742,10 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     //AxumData.ModuleData[ModuleNr].WaitingSource = 0x10000 | CurrentSource;
                     //AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = 0x10000 | CurrentPreset;
                     //AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = 0x10000 | CurrentRoutingPreset;
-                    AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
+                    if (CurrentSource != 0)
+                    { //Source 'none', is no change
+                      AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
+                    }
                     AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
                     AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = CurrentRoutingPreset;
                   }
@@ -14661,7 +14664,10 @@ void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool D
           {
             //AxumData.ModuleData[cntModule].WaitingSource = 0x10000 | CurrentSource;
             //AxumData.ModuleData[cntModule].WaitingProcessingPreset = 0x10000 | CurrentPreset;
-            AxumData.ModuleData[cntModule].WaitingSource = CurrentSource;
+            if (CurrentSource != 0)
+            {
+              AxumData.ModuleData[cntModule].WaitingSource = CurrentSource;
+            }
             AxumData.ModuleData[cntModule].WaitingProcessingPreset = CurrentPreset;
           }
         }
