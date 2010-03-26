@@ -52,6 +52,8 @@ unsigned int ModuleDSPSmoothFactor              = 0x00000000;
 unsigned int ModuleDSPPPMReleaseFactor          = 0x00000000;
 unsigned int ModuleDSPVUReleaseFactor           = 0x00000000;
 unsigned int ModuleDSPRMSReleaseFactor          = 0x00000000;
+unsigned int ModuleDSPUpdate_MonoInputAFactor   = 0x00000000;
+unsigned int ModuleDSPUpdate_MonoInputBFactor   = 0x00000000;
 
 unsigned int SummingDSPEntryPoint               = 0x00000000;
 unsigned int SummingDSPUpdate_MatrixFactor      = 0x00000000;
@@ -310,6 +312,14 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
             else if (strcmp(MappingVariableName, "_RoutingFrom") == 0)
             {
               ModuleDSPRoutingFrom = MappingAddress;
+            }
+            else if (strcmp(MappingVariableName, "_Update_MonoInputAFactor") == 0)
+            {
+              ModuleDSPUpdate_MonoInputAFactor = MappingAddress;
+            }
+            else if (strcmp(MappingVariableName, "_Update_MonoInputBFactor") == 0)
+            {
+              ModuleDSPUpdate_MonoInputBFactor = MappingAddress;
             }
             else if (strcmp(MappingVariableName, "_Update_InputGainFactor") == 0)
             {
@@ -1176,10 +1186,12 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
   if (dspcard->dsp_regs[DSPNr].HPIA != NULL)
   {
-    //Routing from (0: Gain input is default '0'->McASPA)
+    //Routing from (0: Gain input is default '3'->MonoOutput)
 
-    //Routing from (1: EQ input is '2'->Gain output or '1'->McASPB)
-    *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPRoutingFrom+((1*32*4)+(DSPChannelNr*4));
+    //Routing from (1: Mono input is default '0'->McASPA)
+
+    //Routing from (2: EQ input is '2'->Gain output or '1'->McASPB)
+    *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPRoutingFrom+((2*32*4)+(DSPChannelNr*4));
     if (dspcard->data.ChannelData[DSPCardChannelNr].Insert)
     {
       *((int *)dspcard->dsp_regs[DSPNr].HPID) = 1;
@@ -1189,16 +1201,16 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
       *((int *)dspcard->dsp_regs[DSPNr].HPID) = 2;
     }
 
-    //Routing from (3: McASPA input (insert out) is '5'->Level output)
-    *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPRoutingFrom+((3*32*4)+(DSPChannelNr*4));
+    //Routing from (4: McASPA input (insert out) is '6'->Level output)
+    *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPRoutingFrom+((4*32*4)+(DSPChannelNr*4));
     *((int *)dspcard->dsp_regs[DSPNr].HPID) = 2;
 
-    //Routing from (3: McASPA input (insert out) is '2'->Gain output)
-//      *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPRoutingFrom+((3*32*4)+(DSPChannelNr*4));
+    //Routing from (4: McASPA input (insert out) is '2'->Gain output)
+//      *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPRoutingFrom+((4*32*4)+(DSPChannelNr*4));
 //      *((int *)dspcard->dsp_regs[DSPNr].HPID) = 2;
 
-    //Routing from (5: level meter input is '0'->McASPA  or '1'->McASPB)
-    *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPRoutingFrom+((5*32*4)+(DSPChannelNr*4));
+    //Routing from (6: level meter input is '0'->McASPA  or '1'->McASPB)
+    *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPRoutingFrom+((6*32*4)+(DSPChannelNr*4));
     if (dspcard->data.ChannelData[DSPCardChannelNr].Insert)
     {
       *((int *)dspcard->dsp_regs[DSPNr].HPID) = 1;
@@ -1208,12 +1220,21 @@ void dsp_set_ch(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelNr)
       *((int *)dspcard->dsp_regs[DSPNr].HPID) = 0;
     }
 
-    //Routing from (6: level input is '1'->McASPB (insert input)
-    *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPRoutingFrom+((6*32*4)+(DSPChannelNr*4));
+    //Routing from (7: level input is '1'->McASPB (insert input)
+    *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPRoutingFrom+((7*32*4)+(DSPChannelNr*4));
     *((int *)dspcard->dsp_regs[DSPNr].HPID) = 1;
 
+    //Mono section
+    float factor = pow10(dspcard->data.ChannelData[DSPCardChannelNr].MonoInputALevel/20);
+    *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPUpdate_MonoInputAFactor+(DSPChannelNr*4);
+    *((float *)dspcard->dsp_regs[DSPNr].HPID) = factor;
+
+    factor = pow10(dspcard->data.ChannelData[DSPCardChannelNr].MonoInputBLevel/20);
+    *dspcard->dsp_regs[DSPNr].HPIA = ModuleDSPUpdate_MonoInputBFactor+(DSPChannelNr*4);
+    *((float *)dspcard->dsp_regs[DSPNr].HPID) = factor;
+
     //Gain section
-    float factor = pow10(dspcard->data.ChannelData[DSPCardChannelNr].Gain/20);
+    factor = pow10(dspcard->data.ChannelData[DSPCardChannelNr].Gain/20);
     if (dspcard->data.ChannelData[DSPCardChannelNr].PhaseReverse)
     {
       factor *= -1;
@@ -1518,4 +1539,3 @@ float dsp_read_float(DSP_HANDLER_STRUCT *dsp_handler, unsigned char CardNr, unsi
 
   return ReturnValue;
 }
-

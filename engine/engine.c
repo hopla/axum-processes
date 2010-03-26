@@ -1437,7 +1437,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   }
                 }
 
-                SetAxum_BussLevels(ModuleNr);
+                SetAxum_ModuleProcessing(ModuleNr);
 
                 unsigned int FunctionNrToSent = (ModuleNr<<12) | MODULE_FUNCTION_MONO_ON_OFF;
                 CheckObjectsToSent(FunctionNrToSent);
@@ -2241,7 +2241,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                 if (AxumData.ModuleData[ModuleNr].Mono != OldMono)
                 {
-                  SetAxum_BussLevels(ModuleNr);
+                  SetAxum_ModuleProcessing(ModuleNr);
 
                   unsigned int FunctionNrToSent = 0x00000000 | (ModuleNr<<12);
                   CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MONO);
@@ -6172,6 +6172,49 @@ void SetAxum_ModuleProcessing(unsigned int ModuleNr)
 
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
+  //A = Own channel
+  dspcard->data.ChannelData[DSPCardChannelNr+0].MonoInputALevel = 0;
+  dspcard->data.ChannelData[DSPCardChannelNr+0].MonoInputBLevel = -140;
+  //A = Paired channel
+  dspcard->data.ChannelData[DSPCardChannelNr+1].MonoInputALevel = 0;
+  dspcard->data.ChannelData[DSPCardChannelNr+1].MonoInputBLevel = -140;
+  if (AxumData.ModuleData[ModuleNr].MonoOnOff)
+  {
+    switch (AxumData.ModuleData[ModuleNr].Mono)
+    {
+      case 1:
+      {
+        //A = Own channel
+        dspcard->data.ChannelData[DSPCardChannelNr+0].MonoInputALevel = 0;
+        dspcard->data.ChannelData[DSPCardChannelNr+0].MonoInputBLevel = -140;
+        //A = Paired channel
+        dspcard->data.ChannelData[DSPCardChannelNr+1].MonoInputALevel = -140;
+        dspcard->data.ChannelData[DSPCardChannelNr+1].MonoInputBLevel = 0;
+      }
+      break;
+      case 2:
+      {
+        //A = Own channel
+        dspcard->data.ChannelData[DSPCardChannelNr+0].MonoInputALevel = -140;
+        dspcard->data.ChannelData[DSPCardChannelNr+0].MonoInputBLevel = 0;
+        //A = Paired channel
+        dspcard->data.ChannelData[DSPCardChannelNr+1].MonoInputALevel = 0;
+        dspcard->data.ChannelData[DSPCardChannelNr+1].MonoInputBLevel = -140;
+      }
+      break;
+      case 3:
+      {
+        //A = Own channel
+        dspcard->data.ChannelData[DSPCardChannelNr+0].MonoInputALevel = -6;
+        dspcard->data.ChannelData[DSPCardChannelNr+0].MonoInputBLevel = -6;
+        //A = Paired channel
+        dspcard->data.ChannelData[DSPCardChannelNr+1].MonoInputALevel = -6;
+        dspcard->data.ChannelData[DSPCardChannelNr+1].MonoInputBLevel = -6;
+      }
+      break;
+    }
+  }
+
   for (int cntChannel=0; cntChannel<2; cntChannel++)
   {
     if (AxumData.ModuleData[ModuleNr].InsertSource>0)
@@ -6288,116 +6331,34 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
 
       if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].Assigned)
       {
-        if (((AxumData.ModuleData[ModuleNr].Mono) && (AxumData.ModuleData[ModuleNr].MonoOnOff)) || (AxumData.BussMasterData[cntBuss].Mono))
+        if (AxumData.BussMasterData[cntBuss].Mono)
         {
-          unsigned char Mono = 0;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += BussBalancedB[0];
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += BussBalancedB[1];
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += -6;
+          dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += -6;
 
-          if (AxumData.BussMasterData[cntBuss].Mono)
-          { //Make mono out of L+R
-            Mono = 3;
-          }
-          if (AxumData.ModuleData[ModuleNr].MonoOnOff)
-          { //If mono is active, use mono state
-            Mono = AxumData.ModuleData[ModuleNr].Mono;
-          }
-
-          switch (Mono)
+          if (!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel)
           {
-            case 0x01:
-            { //L Mono
-              if (cntChannel == 0)
-              {
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += BussBalancedB[0];
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += BussBalancedB[1];
-
-                if (!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel)
-                {
-                  dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
-                  dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
-                }
-                if (!AxumData.BussMasterData[cntBuss].PreModuleBalance)
-                {
-                  dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += PanoramadB[0];
-                  dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += PanoramadB[1];
-                }
-                if (!AxumData.BussMasterData[cntBuss].PreModuleOn)
-                {
-                  if ((!AxumData.ModuleData[ModuleNr].On) || (AxumData.ModuleData[ModuleNr].Cough))
-                  {
-                    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
-                    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
-                  }
-                }
-              }
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
+          }
+          if (!AxumData.BussMasterData[cntBuss].PreModuleBalance)
+          {
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += PanoramadB[0];
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += PanoramadB[1];
+          }
+          if (!AxumData.BussMasterData[cntBuss].PreModuleOn)
+          {
+            if ((!AxumData.ModuleData[ModuleNr].On) || (AxumData.ModuleData[ModuleNr].Cough))
+            {
+              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
+              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
             }
-            break;
-            case 0x02:
-            { //R Mono
-              if (cntChannel == 1)
-              {
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += BussBalancedB[0];
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += BussBalancedB[1];
-
-                if (!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel)
-                {
-                  dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
-                  dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
-                }
-                if (!AxumData.BussMasterData[cntBuss].PreModuleBalance)
-                {
-                  dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += PanoramadB[0];
-                  dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += PanoramadB[1];
-                }
-                if (!AxumData.BussMasterData[cntBuss].PreModuleOn)
-                {
-                  if ((!AxumData.ModuleData[ModuleNr].On) || (AxumData.ModuleData[ModuleNr].Cough))
-                  {
-                    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
-                    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
-                  }
-                }
-              }
-            }
-            break;
-            case 0x03:
-            { //L+R Mono
-              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
-              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = AxumData.ModuleData[ModuleNr].Buss[cntBuss].On;
-              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
-              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level = AxumData.ModuleData[ModuleNr].Buss[cntBuss].Level;
-              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += BussBalancedB[0];
-              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += BussBalancedB[1];
-              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += -6;
-              dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += -6;
-
-              if (!AxumData.ModuleData[ModuleNr].Buss[cntBuss].PreModuleLevel)
-              {
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += AxumData.ModuleData[ModuleNr].FaderLevel;
-              }
-              if (!AxumData.BussMasterData[cntBuss].PreModuleBalance)
-              {
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].Level += PanoramadB[0];
-                dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].Level += PanoramadB[1];
-              }
-              if (!AxumData.BussMasterData[cntBuss].PreModuleOn)
-              {
-                if ((!AxumData.ModuleData[ModuleNr].On) || (AxumData.ModuleData[ModuleNr].Cough))
-                {
-                  dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
-                  dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
-                }
-              }
-            }
-            break;
           }
         }
         else
@@ -10601,7 +10562,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
         if (AxumData.ModuleData[ModuleNr].Mono != OldMono)
         {
-          SetAxum_BussLevels(ModuleNr);
+          SetAxum_ModuleProcessing(ModuleNr);
 
           DoAxum_UpdateModuleControlMode(ModuleNr, ControlMode);
 
@@ -11091,7 +11052,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         case MODULE_CONTROL_MODE_MONO:
         {   //Mono
           AxumData.ModuleData[ModuleNr].MonoOnOff = !AxumData.ModuleData[ModuleNr].MonoOnOff;
-          SetAxum_BussLevels(ModuleNr);
+          SetAxum_ModuleProcessing(ModuleNr);
 
           DoAxum_UpdateModuleControlMode(ModuleNr, ControlMode);
 
@@ -14082,7 +14043,7 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewPresetN
     AxumData.ModuleData[ModuleNr].Mono = Mono;
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_MONO);
 
-    SetBussProcessing = true;
+    SetModuleProcessing = true;
     SetModuleControllers = true;
   }
   if ((AxumData.ModuleData[ModuleNr].MonoOnOff != MonoOnOff) || (SetAllObjects))

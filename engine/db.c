@@ -937,6 +937,8 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
           DoAxum_SetNewSource(ModuleNr, ModuleData->SelectedSource, 1);
         }
         SetAxum_ModuleInsertSource(ModuleNr);
+        SetAxum_ModuleProcessing(ModuleNr);
+
         if (take_source_a)
         {
           DoAxum_LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 1, 1);

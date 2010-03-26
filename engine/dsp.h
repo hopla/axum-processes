@@ -43,6 +43,8 @@ typedef struct
 {
   int Source;
   float Gain;
+  float MonoInputALevel;
+  float MonoInputBLevel;
   bool PhaseReverse;
   bool Insert;
   DSPCARD_EQ_BAND_DATA_STRUCT Filter;
