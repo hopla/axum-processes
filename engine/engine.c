@@ -2888,114 +2888,31 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               DoAxum_SetCRMBussOnOff(MonitorBussNr, BussNr, NewMonitorSwitchState, PreventDoingInterlock);
             }
           }
-          else
+
+          switch (FunctionNr)
           {
-            switch (FunctionNr)
+            case MONITOR_BUSS_FUNCTION_MUTE:
             {
-              case MONITOR_BUSS_FUNCTION_MUTE:
+              if (type == MBN_DATATYPE_STATE)
               {
-                if (type == MBN_DATATYPE_STATE)
+                bool OldMute = AxumData.Monitor[MonitorBussNr].Mute;
+                if (data.State)
                 {
-                  bool OldMute = AxumData.Monitor[MonitorBussNr].Mute;
-                  if (data.State)
-                  {
-                    AxumData.Monitor[MonitorBussNr].Mute = !AxumData.Monitor[MonitorBussNr].Mute;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                    {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                      {
-                        AxumData.Monitor[MonitorBussNr].Mute = !AxumData.Monitor[MonitorBussNr].Mute;
-                      }
-                    }
-                  }
-
-                  if (AxumData.Monitor[MonitorBussNr].Mute != OldMute)
-                  {
-                    CheckObjectsToSent(SensorReceiveFunctionNumber);
-
-                    for (int cntDestination=0; cntDestination<1280; cntDestination++)
-                    {
-                      if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
-                      {
-                        unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
-                        CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE);
-                      }
-                    }
-                  }
+                  AxumData.Monitor[MonitorBussNr].Mute = !AxumData.Monitor[MonitorBussNr].Mute;
                 }
-              }
-              break;
-              case MONITOR_BUSS_FUNCTION_DIM:
-              {
-                if (type == MBN_DATATYPE_STATE)
+                else
                 {
-                  bool OldDim = AxumData.Monitor[MonitorBussNr].Dim;
-
-                  if (data.State)
+                  int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                  if (SensorReceiveFunction->TimeBeforeMomentary>=0)
                   {
-                    AxumData.Monitor[MonitorBussNr].Dim = !AxumData.Monitor[MonitorBussNr].Dim;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                    if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
                     {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                      {
-                        AxumData.Monitor[MonitorBussNr].Dim = !AxumData.Monitor[MonitorBussNr].Dim;
-                      }
-                    }
-                  }
-
-                  if (AxumData.Monitor[MonitorBussNr].Dim != OldDim)
-                  {
-                    CheckObjectsToSent(SensorReceiveFunctionNumber);
-
-                    for (int cntDestination=0; cntDestination<1280; cntDestination++)
-                    {
-                      if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
-                      {
-                        unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
-                        CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
-                      }
-                    }
-                  }
-                }
-              }
-              break;
-              case MONITOR_BUSS_FUNCTION_PHONES_LEVEL:
-              {
-                float OldLevel = AxumData.Monitor[MonitorBussNr].PhonesLevel;
-
-                if (type == MBN_DATATYPE_UINT)
-                {
-                  int Position = (data.UInt*1023)/(DataMaximal-DataMinimal);
-                  float dB = Position2dB[Position];
-                  dB +=10; //20dB reserve
-
-                  AxumData.Monitor[MonitorBussNr].PhonesLevel = dB;
-                }
-                else if (type == MBN_DATATYPE_SINT)
-                {
-                  AxumData.Monitor[MonitorBussNr].PhonesLevel += (float)data.SInt/10;
-                  if (AxumData.Monitor[MonitorBussNr].PhonesLevel<-140)
-                  {
-                    AxumData.Monitor[MonitorBussNr].PhonesLevel = -140;
-                  }
-                  else
-                  {
-                    if (AxumData.Monitor[MonitorBussNr].PhonesLevel > 20)
-                    {
-                      AxumData.Monitor[MonitorBussNr].PhonesLevel = 20;
+                      AxumData.Monitor[MonitorBussNr].Mute = !AxumData.Monitor[MonitorBussNr].Mute;
                     }
                   }
                 }
 
-                if (AxumData.Monitor[MonitorBussNr].PhonesLevel != OldLevel)
+                if (AxumData.Monitor[MonitorBussNr].Mute != OldMute)
                 {
                   CheckObjectsToSent(SensorReceiveFunctionNumber);
 
@@ -3004,117 +2921,36 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                     {
                       unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
-                      CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_PHONES_LEVEL);
+                      CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE);
                     }
                   }
                 }
               }
-              break;
-              case MONITOR_BUSS_FUNCTION_MONO:
+            }
+            break;
+            case MONITOR_BUSS_FUNCTION_DIM:
+            {
+              if (type == MBN_DATATYPE_STATE)
               {
-                if (type == MBN_DATATYPE_STATE)
+                bool OldDim = AxumData.Monitor[MonitorBussNr].Dim;
+
+                if (data.State)
                 {
-                  bool OldMono = AxumData.Monitor[MonitorBussNr].Mono;
-
-                  if (data.State)
-                  {
-                    AxumData.Monitor[MonitorBussNr].Mono = !AxumData.Monitor[MonitorBussNr].Mono;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                    {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                      {
-                        AxumData.Monitor[MonitorBussNr].Mono = !AxumData.Monitor[MonitorBussNr].Mono;
-                      }
-                    }
-                  }
-
-                  if (AxumData.Monitor[MonitorBussNr].Mono != OldMono)
-                  {
-                    CheckObjectsToSent(SensorReceiveFunctionNumber);
-
-                    for (int cntDestination=0; cntDestination<1280; cntDestination++)
-                    {
-                      if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
-                      {
-                        unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
-                        CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONO_AND_MONITOR_MONO);
-                      }
-                    }
-                  }
+                  AxumData.Monitor[MonitorBussNr].Dim = !AxumData.Monitor[MonitorBussNr].Dim;
                 }
-              }
-              break;
-              case MONITOR_BUSS_FUNCTION_PHASE:
-              {
-                if (type == MBN_DATATYPE_STATE)
+                else
                 {
-                  bool OldPhase = AxumData.Monitor[MonitorBussNr].Phase;
-
-                  if (data.State)
+                  int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                  if (SensorReceiveFunction->TimeBeforeMomentary>=0)
                   {
-                    AxumData.Monitor[MonitorBussNr].Phase = !AxumData.Monitor[MonitorBussNr].Phase;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                    if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
                     {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                      {
-                        AxumData.Monitor[MonitorBussNr].Phase = !AxumData.Monitor[MonitorBussNr].Phase;
-                      }
-                    }
-                  }
-
-                  if (AxumData.Monitor[MonitorBussNr].Phase != OldPhase)
-                  {
-                    CheckObjectsToSent(SensorReceiveFunctionNumber);
-
-                    for (int cntDestination=0; cntDestination<1280; cntDestination++)
-                    {
-                      if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
-                      {
-                        unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
-                        CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_PHASE_AND_MONITOR_PHASE);
-                      }
-                    }
-                  }
-                }
-              }
-              break;
-              case MONITOR_BUSS_FUNCTION_SPEAKER_LEVEL:
-              {
-                float OldLevel = AxumData.Monitor[MonitorBussNr].SpeakerLevel;
-
-                if (type == MBN_DATATYPE_UINT)
-                {
-                  int Position = (data.UInt*1023)/(DataMaximal-DataMinimal);
-                  float dB = Position2dB[Position];
-                  dB += 10;
-
-                  AxumData.Monitor[MonitorBussNr].SpeakerLevel = dB;
-                }
-                else if (type == MBN_DATATYPE_SINT)
-                {
-                  AxumData.Monitor[MonitorBussNr].SpeakerLevel += (float)data.SInt/10;
-                  if (AxumData.Monitor[MonitorBussNr].SpeakerLevel<-140)
-                  {
-                    AxumData.Monitor[MonitorBussNr].SpeakerLevel = -140;
-                  }
-                  else
-                  {
-                    if (AxumData.Monitor[MonitorBussNr].SpeakerLevel > 20)
-                    {
-                      AxumData.Monitor[MonitorBussNr].SpeakerLevel = 20;
+                      AxumData.Monitor[MonitorBussNr].Dim = !AxumData.Monitor[MonitorBussNr].Dim;
                     }
                   }
                 }
 
-                if (AxumData.Monitor[MonitorBussNr].SpeakerLevel != OldLevel)
+                if (AxumData.Monitor[MonitorBussNr].Dim != OldDim)
                 {
                   CheckObjectsToSent(SensorReceiveFunctionNumber);
 
@@ -3123,92 +2959,254 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                     {
                       unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
-                      CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_SPEAKER_LEVEL);
+                      CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
                     }
                   }
                 }
               }
-              break;
-              case MONITOR_BUSS_FUNCTION_TALKBACK_1:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_2:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_3:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_4:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_5:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_6:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_7:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_8:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_9:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_10:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_11:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_12:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_13:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_14:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_15:
-              case MONITOR_BUSS_FUNCTION_TALKBACK_16:
+            }
+            break;
+            case MONITOR_BUSS_FUNCTION_PHONES_LEVEL:
+            {
+              float OldLevel = AxumData.Monitor[MonitorBussNr].PhonesLevel;
+
+              if (type == MBN_DATATYPE_UINT)
               {
-                int TalkbackNr = FunctionNr-MONITOR_BUSS_FUNCTION_TALKBACK_1;
-                if (type == MBN_DATATYPE_STATE)
+                int Position = (data.UInt*1023)/(DataMaximal-DataMinimal);
+                float dB = Position2dB[Position];
+                dB +=10; //20dB reserve
+
+                AxumData.Monitor[MonitorBussNr].PhonesLevel = dB;
+              }
+              else if (type == MBN_DATATYPE_SINT)
+              {
+                AxumData.Monitor[MonitorBussNr].PhonesLevel += (float)data.SInt/10;
+                if (AxumData.Monitor[MonitorBussNr].PhonesLevel<-140)
                 {
-                  bool OldTalkbackActive = 0;
-                  bool OldTalkback = AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr];
+                  AxumData.Monitor[MonitorBussNr].PhonesLevel = -140;
+                }
+                else
+                {
+                  if (AxumData.Monitor[MonitorBussNr].PhonesLevel > 20)
+                  {
+                    AxumData.Monitor[MonitorBussNr].PhonesLevel = 20;
+                  }
+                }
+              }
+
+              if (AxumData.Monitor[MonitorBussNr].PhonesLevel != OldLevel)
+              {
+                CheckObjectsToSent(SensorReceiveFunctionNumber);
+
+                for (int cntDestination=0; cntDestination<1280; cntDestination++)
+                {
+                  if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
+                  {
+                    unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
+                    CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_PHONES_LEVEL);
+                  }
+                }
+              }
+            }
+            break;
+            case MONITOR_BUSS_FUNCTION_MONO:
+            {
+              if (type == MBN_DATATYPE_STATE)
+              {
+                bool OldMono = AxumData.Monitor[MonitorBussNr].Mono;
+
+                if (data.State)
+                {
+                  AxumData.Monitor[MonitorBussNr].Mono = !AxumData.Monitor[MonitorBussNr].Mono;
+                }
+                else
+                {
+                  int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                  if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                  {
+                    if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                    {
+                      AxumData.Monitor[MonitorBussNr].Mono = !AxumData.Monitor[MonitorBussNr].Mono;
+                    }
+                  }
+                }
+
+                if (AxumData.Monitor[MonitorBussNr].Mono != OldMono)
+                {
+                  CheckObjectsToSent(SensorReceiveFunctionNumber);
+
+                  for (int cntDestination=0; cntDestination<1280; cntDestination++)
+                  {
+                    if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
+                    {
+                      unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
+                      CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONO_AND_MONITOR_MONO);
+                    }
+                  }
+                }
+              }
+            }
+            break;
+            case MONITOR_BUSS_FUNCTION_PHASE:
+            {
+              if (type == MBN_DATATYPE_STATE)
+              {
+                bool OldPhase = AxumData.Monitor[MonitorBussNr].Phase;
+
+                if (data.State)
+                {
+                  AxumData.Monitor[MonitorBussNr].Phase = !AxumData.Monitor[MonitorBussNr].Phase;
+                }
+                else
+                {
+                  int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                  if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                  {
+                    if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                    {
+                      AxumData.Monitor[MonitorBussNr].Phase = !AxumData.Monitor[MonitorBussNr].Phase;
+                    }
+                  }
+                }
+
+                if (AxumData.Monitor[MonitorBussNr].Phase != OldPhase)
+                {
+                  CheckObjectsToSent(SensorReceiveFunctionNumber);
+
+                  for (int cntDestination=0; cntDestination<1280; cntDestination++)
+                  {
+                    if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
+                    {
+                      unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
+                      CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_PHASE_AND_MONITOR_PHASE);
+                    }
+                  }
+                }
+              }
+            }
+            break;
+            case MONITOR_BUSS_FUNCTION_SPEAKER_LEVEL:
+            {
+              float OldLevel = AxumData.Monitor[MonitorBussNr].SpeakerLevel;
+
+              if (type == MBN_DATATYPE_UINT)
+              {
+                int Position = (data.UInt*1023)/(DataMaximal-DataMinimal);
+                float dB = Position2dB[Position];
+                dB += 10;
+
+                AxumData.Monitor[MonitorBussNr].SpeakerLevel = dB;
+              }
+              else if (type == MBN_DATATYPE_SINT)
+              {
+                AxumData.Monitor[MonitorBussNr].SpeakerLevel += (float)data.SInt/10;
+                if (AxumData.Monitor[MonitorBussNr].SpeakerLevel<-140)
+                {
+                  AxumData.Monitor[MonitorBussNr].SpeakerLevel = -140;
+                }
+                else
+                {
+                  if (AxumData.Monitor[MonitorBussNr].SpeakerLevel > 20)
+                  {
+                    AxumData.Monitor[MonitorBussNr].SpeakerLevel = 20;
+                  }
+                }
+              }
+
+              if (AxumData.Monitor[MonitorBussNr].SpeakerLevel != OldLevel)
+              {
+                CheckObjectsToSent(SensorReceiveFunctionNumber);
+
+                for (int cntDestination=0; cntDestination<1280; cntDestination++)
+                {
+                  if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
+                  {
+                    unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
+                    CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MONITOR_SPEAKER_LEVEL);
+                  }
+                }
+              }
+            }
+            break;
+            case MONITOR_BUSS_FUNCTION_TALKBACK_1:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_2:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_3:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_4:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_5:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_6:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_7:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_8:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_9:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_10:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_11:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_12:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_13:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_14:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_15:
+            case MONITOR_BUSS_FUNCTION_TALKBACK_16:
+            {
+              int TalkbackNr = FunctionNr-MONITOR_BUSS_FUNCTION_TALKBACK_1;
+              if (type == MBN_DATATYPE_STATE)
+              {
+                bool OldTalkbackActive = 0;
+                bool OldTalkback = AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr];
+                for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+                {
+                  OldTalkbackActive |= AxumData.Monitor[MonitorBussNr].Talkback[cntTalkback];
+                }
+
+                if (data.State)
+                {
+                  AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr] = !AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr];
+                }
+                else
+                {
+                  int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                  if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                  {
+                    if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                    {
+                      AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr] = !AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr];
+                    }
+                  }
+                }
+
+                if (AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr] != OldTalkback)
+                {
+                  //Check talkbacks, if dim is required
+                  int NewTalkbackActive = 0;
                   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
                   {
-                    OldTalkbackActive |= AxumData.Monitor[MonitorBussNr].Talkback[cntTalkback];
+                    NewTalkbackActive |= AxumData.Monitor[MonitorBussNr].Talkback[cntTalkback];
                   }
 
-                  if (data.State)
+                  CheckObjectsToSent(SensorReceiveFunctionNumber);
+
+                  if (NewTalkbackActive != OldTalkbackActive)
                   {
-                    AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr] = !AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr];
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                    {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                      {
-                        AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr] = !AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr];
-                      }
-                    }
+                    AxumData.Monitor[MonitorBussNr].Dim = NewTalkbackActive;
+                    unsigned int FunctionNrToSent = 0x02000000 | (MonitorBussNr<<12);
+                    CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_DIM));
                   }
 
-                  if (AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr] != OldTalkback)
+                  for (int cntDestination=0; cntDestination<1280; cntDestination++)
                   {
-                    //Check talkbacks, if dim is required
-                    int NewTalkbackActive = 0;
-                    for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+                    if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
                     {
-                      NewTalkbackActive |= AxumData.Monitor[MonitorBussNr].Talkback[cntTalkback];
-                    }
+                      unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
 
-                    CheckObjectsToSent(SensorReceiveFunctionNumber);
-
-                    if (NewTalkbackActive != OldTalkbackActive)
-                    {
-                      AxumData.Monitor[MonitorBussNr].Dim = NewTalkbackActive;
-                      unsigned int FunctionNrToSent = 0x02000000 | (MonitorBussNr<<12);
-                      CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_DIM));
-                    }
-
-                    for (int cntDestination=0; cntDestination<1280; cntDestination++)
-                    {
-                      if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
-                      {
-                        unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
-
-                        CheckObjectsToSent(DisplayFunctionNr | (DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1 + ((DESTINATION_FUNCTION_TALKBACK_2_AND_MONITOR_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1)*TalkbackNr)));
-                        CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
-                      }
+                      CheckObjectsToSent(DisplayFunctionNr | (DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1 + ((DESTINATION_FUNCTION_TALKBACK_2_AND_MONITOR_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1)*TalkbackNr)));
+                      CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
                     }
                   }
                 }
               }
-              break;
-              default:
-              { //not implemented function
-              }
-              break;
             }
+            break;
+            default:
+            { //not implemented function
+            }
+            break;
           }
         }
         break;
