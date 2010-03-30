@@ -10386,8 +10386,6 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL)/(MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL-MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL);
         float OldLevel = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level;
 
-        log_write("Mod:%d, BandNr: %d, Range:%f, Level:%f, SInt:%d", ModuleNr, BandNr, AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range, AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level, data.SInt);
-
         AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level += (float)data.SInt/10;
         if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level<-AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range)
         {
@@ -13879,7 +13877,6 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewProcess
         EQOnOff = PresetData->EQOnOff;
         for (cntEQ=0; cntEQ<6; cntEQ++)
         {
-          log_write("Mod:%d, Band:%d, Range: %f", ModuleNr, cntEQ, PresetData->EQBand[cntEQ].Range);
           EQBand[cntEQ].Range = PresetData->EQBand[cntEQ].Range;
           EQBand[cntEQ].Level = PresetData->EQBand[cntEQ].Level;
           EQBand[cntEQ].Frequency = PresetData->EQBand[cntEQ].Frequency;
