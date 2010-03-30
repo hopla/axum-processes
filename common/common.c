@@ -1,4 +1,3 @@
-
 #include "common.h"
 
 #include <stdarg.h>
@@ -7,6 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <execinfo.h>
 
 #include <unistd.h>
 #include <signal.h>
@@ -15,6 +15,8 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#define __USE_GNU
+#include <dlfcn.h>
 
 #include <mbn.h>
 #include <pthread.h>
@@ -74,6 +76,41 @@ void log_write(const char *fmt, ...) {
 }
 
 
+void log_backtrace()
+{
+  void *array[10];
+  size_t size;
+  FILE *fd = logfd == NULL ? stderr : logfd;
+  int fdno;
+  char commandline[256];
+  char tmp_log[1024];
+  Dl_info segvinfo;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  dladdr(array[3], &segvinfo);
+
+  // print out all the frames to stderr
+  fdno = fileno(fd);
+  backtrace_symbols_fd(array, size, fdno);
+  fflush(fd);
+
+  fprintf(fd, "Analyzing backtrace:\n");
+  sprintf(commandline, "addr2line -e %s 0x%08x > addr2line.log\n", segvinfo.dli_fname, (unsigned int)array[3]);
+  fprintf(fd, commandline);
+  fflush(fd);
+  system(commandline);
+
+  FILE *fdtmp = fopen("addr2line.log","r");
+  fread(tmp_log, 1024, 1, fdtmp);
+
+  fprintf(fd, tmp_log);
+
+  exit(1);
+}
+
+
 void trapsig(int sig) {
   switch(sig) {
     case SIGALRM:
@@ -83,6 +120,10 @@ void trapsig(int sig) {
       exit(0);
     case SIGHUP:
       log_reopen();
+      break;
+    case SIGSEGV:
+      log_write("Segmentation fault, backtrace:");
+      log_backtrace();
       break;
     default:
       main_quit = 1;
@@ -100,6 +141,7 @@ void daemonize() {
   sigaction(SIGCHLD, &act, NULL);
   sigaction(SIGUSR1, &act, NULL);
   sigaction(SIGALRM, &act, NULL);
+  sigaction(SIGSEGV, &act, NULL);
 
   /* fork */
   if((pid = fork()) < 0) {
