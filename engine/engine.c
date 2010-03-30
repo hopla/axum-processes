@@ -3971,9 +3971,13 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   //Set control mode
                   if (TurnOff)
                   {
-                    unsigned int OldFunctionNr = GetFunctionNrFromControlMode(ControlNr);
-                    AxumData.ControlMode[ControlNr] = -1;
-                    CheckObjectsToSent(OldFunctionNr);
+                    int ModuleControlModeToCheck = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
+                    if (AxumData.ControlMode[ControlNr] == ModuleControlModeToCheck)
+                    {
+                      unsigned int OldFunctionNr = GetFunctionNrFromControlMode(ControlNr);
+                      AxumData.ControlMode[ControlNr] = -1;
+                      CheckObjectsToSent(OldFunctionNr);
+                    }
                   }
                   else
                   {
