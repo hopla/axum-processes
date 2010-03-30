@@ -345,6 +345,7 @@ typedef struct
   AXUM_CONSOLE_PRESET_DATA_STRUCT ConsolePresetData[32];
 
   int ControlMode[4];
+  unsigned int ControlModeTimerValue[4];
   int MasterControlMode[4];
 
   bool Redlight[8];

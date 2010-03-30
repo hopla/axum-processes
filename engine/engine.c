@@ -3296,6 +3296,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 int ReceivedControlMode = -2;
                 int NewControl1Mode = -2;
 
+                AxumData.ControlModeTimerValue[0] = 0;
+
                 //Convert GLOBAL_FUNCTION_CONTROL_MODE to CONTROL_MODE number
                 if (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE)
                 {
@@ -3394,6 +3396,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 int ReceivedControlMode = -2;
                 int NewControl2Mode = -2;
+
+                AxumData.ControlModeTimerValue[1] = 0;
 
                 //Convert GLOBAL_FUNCTION_CONTROL_MODE to CONTROL_MODE number
                 if (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE)
@@ -3494,6 +3498,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 int ReceivedControlMode = -2;
                 int NewControl3Mode = -2;
 
+                AxumData.ControlModeTimerValue[2] = 0;
+
                 //Convert GLOBAL_FUNCTION_CONTROL_MODE to CONTROL_MODE number
                 if (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE)
                 {
@@ -3590,6 +3596,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 int ReceivedControlMode = -2;
                 int NewControl4Mode = -2;
+
+                AxumData.ControlModeTimerValue[3] = 0;
 
                 if (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2)
                 {
@@ -3839,6 +3847,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   unsigned int OldGlobalFunctionNr = 0x00000000;
                   bool TurnOff = false;
                   int NewControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
+
+                  AxumData.ControlModeTimerValue[ControlNr] = 0;
 
                   if ((AxumData.ControlMode[ControlNr] == NewControlMode) && (AxumData.MasterControlMode[ControlNr] == NewMasterControlMode))
                   {
@@ -5705,6 +5715,30 @@ void Timer100HzDone(int Value)
       }
     }
   }
+
+  for (unsigned char cntConsole=0; cntConsole<4; cntConsole++)
+  {
+    if (AxumData.ControlModeTimerValue[cntConsole]<10000)
+    {
+      AxumData.ControlModeTimerValue[cntConsole] += 10;
+      if (AxumData.ControlModeTimerValue[cntConsole] == 10000)
+      { //set control mode to none
+        unsigned int OldFunctionNumber = GetFunctionNrFromControlMode(0);
+        AxumData.ControlMode[cntConsole] = -1;
+        CheckObjectsToSent(OldFunctionNumber);
+
+        for (int cntModule=0; cntModule<128; cntModule++)
+        {
+          if (AxumData.ModuleData[cntModule].Console == cntConsole)
+          {
+            DoAxum_UpdateModuleControlMode(cntModule, MODULE_CONTROL_MODE_NONE);
+            DoAxum_UpdateModuleControlModeLabel(cntModule, MODULE_CONTROL_MODE_NONE);
+          }
+        }
+      }
+    }
+  }
+
   Value = 0;
 }
 
@@ -10186,6 +10220,8 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1)/(MODULE_FUNCTION_CONTROL_2-MODULE_FUNCTION_CONTROL_1);
   }
 
+  AxumData.ControlModeTimerValue[ControlNr] = 0;
+
   ControlMode = AxumData.ControlMode[ControlNr];
 
   if (type == MBN_DATATYPE_SINT)
@@ -10799,6 +10835,8 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
   {
     ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1_RESET)/(MODULE_FUNCTION_CONTROL_2_RESET-MODULE_FUNCTION_CONTROL_1_RESET);
   }
+
+  AxumData.ControlModeTimerValue[ControlNr] = 0;
 
   ControlMode = AxumData.ControlMode[ControlNr];
 
@@ -13575,6 +13613,10 @@ void initialize_axum_data_struct()
   AxumData.MasterControlMode[1] = MASTER_CONTROL_MODE_NONE;
   AxumData.MasterControlMode[2] = MASTER_CONTROL_MODE_NONE;
   AxumData.MasterControlMode[3] = MASTER_CONTROL_MODE_NONE;
+  AxumData.ControlModeTimerValue[0] = 10000;
+  AxumData.ControlModeTimerValue[1] = 10000;
+  AxumData.ControlModeTimerValue[2] = 10000;
+  AxumData.ControlModeTimerValue[3] = 10000;
 
   for (int cntBuss=0; cntBuss<16; cntBuss++)
   {
