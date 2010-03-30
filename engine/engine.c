@@ -2709,13 +2709,6 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   }
 
                   CheckObjectsToSent(SensorReceiveFunctionNumber);
-
-                  if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-                        (NewBussPre))
-                  {
-                    //Have to check monitor routing and muting
-                    DoAxum_ModulePreStatusChanged(BussNr);
-                  }
                 }
               }
             }
@@ -12475,58 +12468,6 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
   }
 }
 
-void DoAxum_ModulePreStatusChanged(int BussNr)
-{
-  unsigned char NewMonitorBussDim[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
-  for (int cntModule=0; cntModule<128; cntModule++)
-  {
-    if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
-    {
-      if ((AxumData.ModuleData[cntModule].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[cntModule].SelectedSource<=matrix_sources.src_offset.max.source))
-      {
-        int SourceNr = AxumData.ModuleData[cntModule].SelectedSource-matrix_sources.src_offset.min.source;
-
-        for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
-        {
-          if (AxumData.SourceData[SourceNr].MonitorMute[cntMonitorBuss])
-          {
-            //Check routing of buss 'BussNr' to monitor buss 'cntMonitorBuss'
-            if (AxumData.Monitor[cntMonitorBuss].Buss[BussNr])
-            {
-              NewMonitorBussDim[cntMonitorBuss] = 1;
-            }
-            else
-            {
-              NewMonitorBussDim[cntMonitorBuss] = 0;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
-  {
-    if (NewMonitorBussDim[cntMonitorBuss] != AxumData.Monitor[cntMonitorBuss].Dim)
-    {
-      AxumData.Monitor[cntMonitorBuss].Dim = NewMonitorBussDim[cntMonitorBuss];
-
-      unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
-      CheckObjectsToSent(FunctionNrToSent | MONITOR_BUSS_FUNCTION_DIM);
-
-      for (int cntDestination=0; cntDestination<1280; cntDestination++)
-      {
-        if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+cntMonitorBuss))
-        {
-          FunctionNrToSent = 0x06000000 | (cntDestination<<12);
-          CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
-        }
-      }
-    }
-  }
-}
-
 int MixMinusSourceUsed(unsigned int CurrentSource)
 {
   int ModuleNr = -1;
@@ -13247,13 +13188,6 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
           BussPre = 1;
         }
       }
-    }
-
-    if (  (AxumData.BussMasterData[BussNr].PreModuleOn) &&
-        (BussPre))
-    {
-      //Have to check monitor routing and muting
-      DoAxum_ModulePreStatusChanged(BussNr);
     }
 
     //make functional because the eventual monitor mute is already set

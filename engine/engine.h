@@ -546,7 +546,6 @@ void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned 
 //The DoAxum functions also may sent MambaNet data
 void DoAxum_BussReset(int BussNr);
 void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule);
-void DoAxum_ModulePreStatusChanged(int BussNr);
 bool DoAxum_SetNewSource(int ModuleNr, unsigned int NewSource, int Forced);
 void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int UseInterlock);
 void DoAxum_SetCRMBussOnOff(int MonitorBussNr, int BussNr, unsigned char NewState, int PreventDoingInterlock);
