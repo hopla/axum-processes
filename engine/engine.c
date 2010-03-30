@@ -3692,10 +3692,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   char NewMasterControl1Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
                   unsigned int OldFunctionNumber = 0x00000000;
+                  int OldBussNr = -1;
+                  int NewBussNr = -1;
+
+                  if (NewMasterControl1Mode<16)
+                  {
+                    NewBussNr = NewMasterControl1Mode;
+                  }
 
                   if (AxumData.MasterControlMode[0] != MASTER_CONTROL_MODE_NONE)
                   {
                     OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[0]+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2);
+                    if (AxumData.MasterControlMode[0] < 16)
+                    {
+                      OldBussNr = AxumData.MasterControlMode[0];
+                    }
                   }
 
                   if (AxumData.MasterControlMode[0] != NewMasterControl1Mode)
@@ -3711,12 +3722,16 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     CheckObjectsToSent(OldFunctionNumber);
                   }
                   CheckObjectsToSent(SensorReceiveFunctionNumber);
-                  CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_1);
 
                   unsigned int FunctionNrToSent = 0x04000000;
-                  for (int cntBuss=0; cntBuss<16; cntBuss++)
+                  CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
+                  if (OldBussNr != -1)
                   {
-                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2+cntBuss));
+                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2+OldBussNr));
+                  }
+                  if (NewBussNr != -1)
+                  {
+                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2+NewBussNr));
                   }
                 }
               }
@@ -3729,10 +3744,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   char NewMasterControl2Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2;
                   unsigned int OldFunctionNumber = 0x00000000;
+                  int OldBussNr = -1;
+                  int NewBussNr = -1;
+
+                  if (NewMasterControl2Mode<16)
+                  {
+                    NewBussNr = NewMasterControl2Mode;
+                  }
 
                   if (AxumData.MasterControlMode[1] != MASTER_CONTROL_MODE_NONE)
                   {
                     OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[1]+GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2);
+                    if (AxumData.MasterControlMode[1] < 16)
+                    {
+                      OldBussNr = AxumData.MasterControlMode[1];
+                    }
                   }
 
                   if (AxumData.MasterControlMode[1] != NewMasterControl2Mode)
@@ -3748,12 +3774,16 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     CheckObjectsToSent(OldFunctionNumber);
                   }
                   CheckObjectsToSent(SensorReceiveFunctionNumber);
-                  CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_2);
 
                   unsigned int FunctionNrToSent = 0x04000000;
-                  for (int cntBuss=0; cntBuss<16; cntBuss++)
+                  CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
+                  if (OldBussNr != -1)
                   {
-                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2+cntBuss));
+                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2+OldBussNr));
+                  }
+                  if (NewBussNr != -1)
+                  {
+                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2+NewBussNr));
                   }
                 }
               }
@@ -3766,10 +3796,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   char NewMasterControl3Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2;
                   unsigned int OldFunctionNumber = 0x00000000;
+                  int OldBussNr = -1;
+                  int NewBussNr = -1;
+
+                  if (NewMasterControl3Mode<16)
+                  {
+                    NewBussNr = NewMasterControl3Mode;
+                  }
 
                   if (AxumData.MasterControlMode[2] != MASTER_CONTROL_MODE_NONE)
                   {
                     OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[2]+GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2);
+                    if (AxumData.MasterControlMode[2] < 16)
+                    {
+                      OldBussNr = AxumData.MasterControlMode[2];
+                    }
                   }
 
                   if (AxumData.MasterControlMode[2] != NewMasterControl3Mode)
@@ -3785,12 +3826,16 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     CheckObjectsToSent(OldFunctionNumber);
                   }
                   CheckObjectsToSent(SensorReceiveFunctionNumber);
-                  CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_3);
 
                   unsigned int FunctionNrToSent = 0x04000000;
-                  for (int cntBuss=0; cntBuss<16; cntBuss++)
+                  CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
+                  if (OldBussNr != -1)
                   {
-                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_3_MODES_BUSS_1_2+cntBuss));
+                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_3_MODES_BUSS_1_2+OldBussNr));
+                  }
+                  if (NewBussNr != -1)
+                  {
+                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_3_MODES_BUSS_1_2+NewBussNr));
                   }
                 }
               }
@@ -3803,10 +3848,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   char NewMasterControl4Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2;
                   unsigned int OldFunctionNumber = 0x00000000;
+                  int OldBussNr = -1;
+                  int NewBussNr = -1;
+
+                  if (NewMasterControl4Mode<16)
+                  {
+                    NewBussNr = NewMasterControl4Mode;
+                  }
 
                   if (AxumData.MasterControlMode[3] != MASTER_CONTROL_MODE_NONE)
                   {
                     OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[3]+GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2);
+                    if (AxumData.MasterControlMode[3] < 16)
+                    {
+                      OldBussNr = AxumData.MasterControlMode[3];
+                    }
                   }
 
                   if (AxumData.MasterControlMode[3] != NewMasterControl4Mode)
@@ -3822,12 +3878,16 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     CheckObjectsToSent(OldFunctionNumber);
                   }
                   CheckObjectsToSent(SensorReceiveFunctionNumber);
-                  CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_4);
 
                   unsigned int FunctionNrToSent = 0x04000000;
-                  for (int cntBuss=0; cntBuss<16; cntBuss++)
+                  CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
+                  if (OldBussNr != -1)
                   {
-                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_1_2+cntBuss));
+                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_1_2+OldBussNr));
+                  }
+                  if (NewBussNr != -1)
+                  {
+                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_1_2+NewBussNr));
                   }
                 }
               }
@@ -3850,7 +3910,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                   AxumData.ControlModeTimerValue[ControlNr] = 0;
 
-                  if ((AxumData.ControlMode[ControlNr] == NewControlMode) && (AxumData.MasterControlMode[ControlNr] == NewMasterControlMode))
+                  if (AxumData.MasterControlMode[ControlNr] == NewMasterControlMode)
                   {
                     TurnOff = true;
                   }
@@ -3863,9 +3923,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   for (int cntBuss=0; cntBuss<16; cntBuss++)
                   {
                     char MasterControlModeToCheck = cntBuss;
-                    int ModuleControlModeToCheck = MODULE_CONTROL_MODE_BUSS_1_2+(cntBuss*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
 
-                    if ((AxumData.ControlMode[ControlNr] == ModuleControlModeToCheck) && (AxumData.MasterControlMode[ControlNr] == MasterControlModeToCheck))
+                    if (AxumData.MasterControlMode[ControlNr] == MasterControlModeToCheck)
                     {
                       OldGlobalFunctionNr  = GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2+(ControlNr*16)+cntBuss;
                     }
@@ -9029,10 +9088,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           int ControlNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)/(GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_31_32-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
           int BussNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)%(GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_31_32-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
           char NewMasterControlMode = BussNr;
-          int NewControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
           bool Active = false;
 
-          if ((AxumData.ControlMode[ControlNr] == NewControlMode) && (AxumData.MasterControlMode[ControlNr] == NewMasterControlMode))
+          if (AxumData.MasterControlMode[ControlNr] == NewMasterControlMode)
           {
              Active = true;
           }
