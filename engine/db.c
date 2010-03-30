@@ -1549,10 +1549,8 @@ int db_read_dest_config(unsigned short int first_dest, unsigned short int last_d
     {
       SetAxum_RemoveOutputRouting(DestinationData->OutputData[0].MambaNetAddress, DestinationData->OutputData[0].SubChannel);
       SetAxum_RemoveOutputRouting(DestinationData->OutputData[1].MambaNetAddress, DestinationData->OutputData[1].SubChannel);
-      if (AxumApplicationAndDSPInitialized)
-      {
-        SetAxum_DestinationSource(first_dest+cntRow-1);
-      }
+      DestinationData->OutputData[0].MambaNetAddress = 0;
+      DestinationData->OutputData[1].MambaNetAddress = 0;
 
       //Check destinations
       unsigned int DisplayFunctionNr = 0x06000000 | ((first_dest+cntRow-1)<<12);
