@@ -11256,7 +11256,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         case MODULE_CONTROL_MODE_BUSS_29_30_BALANCE:
         case MODULE_CONTROL_MODE_BUSS_31_32_BALANCE:
         {   //Buss
-          int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2)/(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2);
+          int BussNr = (ControlMode-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE)/(MODULE_CONTROL_MODE_BUSS_3_4_BALANCE-MODULE_CONTROL_MODE_BUSS_1_2_BALANCE);
 
           if (AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance != 512)
           {
