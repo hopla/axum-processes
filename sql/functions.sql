@@ -874,6 +874,15 @@ INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,482)', 
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,483)', 'Console 3 preset', 0, 4, 809);
 INSERT INTO functions (func, name, rcv_type, xmt_type, pos) VALUES ('(4,,484)', 'Console 4 preset', 0, 4, 810);
 
+INSERT INTO functions (func, name, rcv_type, xmt_type) VALUES ('(4,,485)', 'Control 1 mode Insert on/off', 3, 3);
+INSERT INTO functions (func, name, rcv_type, xmt_type) VALUES ('(4,,486)', 'Control 2 mode Insert on/off', 3, 3);
+INSERT INTO functions (func, name, rcv_type, xmt_type) VALUES ('(4,,487)', 'Control 3 mode Insert on/off', 3, 3);
+INSERT INTO functions (func, name, rcv_type, xmt_type) VALUES ('(4,,488)', 'Control 4 mode Insert on/off', 3, 3);
+INSERT INTO functions (func, name, rcv_type, xmt_type) VALUES ('(4,,489)', 'Control 1 mode Dynamics on/off', 3, 3);
+INSERT INTO functions (func, name, rcv_type, xmt_type) VALUES ('(4,,490)', 'Control 2 mode Dynamics on/off', 3, 3);
+INSERT INTO functions (func, name, rcv_type, xmt_type) VALUES ('(4,,491)', 'Control 3 mode Dynamics on/off', 3, 3);
+INSERT INTO functions (func, name, rcv_type, xmt_type) VALUES ('(4,,492)', 'Control 4 mode Dynamics on/off', 3, 3);
+
 
 -- source functions
 

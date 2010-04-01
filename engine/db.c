@@ -800,45 +800,45 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
 
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &Console);
       ModuleData->Console = Console-1;
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceA);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceB);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceC);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceD);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceE);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceF);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceG);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceH);
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceAPreset) < 0)
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Source1A);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Source1B);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Source2A);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Source2B);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Source3A);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Source3B);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Source4A);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->Source4B);
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->ProcessingPreset1A) < 0)
       {
-        ModuleData->SourceAPreset = 0;
+        ModuleData->ProcessingPreset1A = 0;
       }
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceBPreset) < 0)
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->ProcessingPreset1B) < 0)
       {
-        ModuleData->SourceBPreset = 0;
+        ModuleData->ProcessingPreset1B = 0;
       }
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceCPreset) < 0)
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->ProcessingPreset2A) < 0)
       {
-        ModuleData->SourceCPreset = 0;
+        ModuleData->ProcessingPreset2A = 0;
       }
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceDPreset) < 0)
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->ProcessingPreset2B) < 0)
       {
-        ModuleData->SourceDPreset = 0;
+        ModuleData->ProcessingPreset2B = 0;
       }
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceEPreset) < 0)
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->ProcessingPreset3A) < 0)
       {
-        ModuleData->SourceEPreset = 0;
+        ModuleData->ProcessingPreset3A = 0;
       }
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceFPreset) < 0)
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->ProcessingPreset3B) < 0)
       {
-        ModuleData->SourceFPreset = 0;
+        ModuleData->ProcessingPreset3B = 0;
       }
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceGPreset) < 0)
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->ProcessingPreset4A) < 0)
       {
-        ModuleData->SourceGPreset = 0;
+        ModuleData->ProcessingPreset4A = 0;
       }
-      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->SourceHPreset) < 0)
+      if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &ModuleData->ProcessingPreset4B) < 0)
       {
-        ModuleData->SourceHPreset = 0;
+        ModuleData->ProcessingPreset4B = 0;
       }
       ModuleData->OverruleActive = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       DefaultModuleData->InsertUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -893,8 +893,8 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       if (take_source_a)
       {
         int ModuleNr = number-1;
-        DoAxum_SetNewSource(ModuleNr, ModuleData->SourceA, 1);
-        DoAxum_LoadProcessingPreset(ModuleNr, ModuleData->SourceAPreset, 0, 1, 1);
+        DoAxum_SetNewSource(ModuleNr, ModuleData->Source1A, 1);
+        DoAxum_LoadProcessingPreset(ModuleNr, ModuleData->ProcessingPreset1A, 0, 1, 1);
         DoAxum_LoadRoutingPreset(ModuleNr, 1, 0, 1, 1);
       }
 
