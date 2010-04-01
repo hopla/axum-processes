@@ -3282,7 +3282,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                      ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF)) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD) ||
-                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET))
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_INSERT_ON_OFF) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_DYNAMICS_ON_OFF))
             { //Control 1 modes
               if (type == MBN_DATATYPE_STATE)
               {
@@ -3311,6 +3313,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET)
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_INSERT_ON_OFF)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_DYNAMICS_ON_OFF)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
                 }
 
                 //Set the new control mode number depending on the state
@@ -3383,7 +3393,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                      ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF)) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD) ||
-                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET))
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_INSERT_ON_OFF) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF))
             { //Control 2 modes
               if (type == MBN_DATATYPE_STATE)
               {
@@ -3412,6 +3424,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET)
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_INSERT_ON_OFF)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
                 }
 
                 if (data.State)
@@ -3484,7 +3504,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                      ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF)) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD) ||
-                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET))
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_INSERT_ON_OFF) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF))
             { //Control 3 modes
               if (type == MBN_DATATYPE_STATE)
               {
@@ -3513,6 +3535,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET)
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_INSERT_ON_OFF)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
                 }
 
                 if (data.State)
@@ -3583,7 +3613,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                      ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_PAD_ON_OFF)) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD) ||
                       (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD) ||
-                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET))
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_INSERT_ON_OFF) ||
+                      (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF))
             { //control 4 modes
               if (type == MBN_DATATYPE_STATE)
               {
@@ -3611,6 +3643,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET)
                 {
                   ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_INSERT_ON_OFF)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
+                }
+                else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF)
+                {
+                  ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
                 }
 
                 if (data.State)
@@ -8889,7 +8929,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                  ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF)) ||
                   (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD) ||
                   (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET))
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_INSERT_ON_OFF) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_DYNAMICS_ON_OFF))
         { //Control 1 mode
           unsigned char CorrespondingControlMode;
           if (FunctionNr < GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE)
@@ -8912,6 +8954,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
           }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_INSERT_ON_OFF)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
+          }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_DYNAMICS_ON_OFF)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
+          }
 
           if (AxumData.ControlMode[0] == CorrespondingControlMode)
           {
@@ -8925,7 +8975,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                  ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF)) ||
                   (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD) ||
                   (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET))
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_INSERT_ON_OFF) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF))
         { //Control 2 mode
           unsigned char CorrespondingControlMode;
           if (FunctionNr < GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE)
@@ -8948,6 +9000,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
           }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_INSERT_ON_OFF)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
+          }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
+          }
 
           if (AxumData.ControlMode[1] == CorrespondingControlMode)
           {
@@ -8961,7 +9021,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                  ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF)) ||
                   (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD) ||
                   (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET))
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_INSERT_ON_OFF) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF))
         { //Control 3 mode
           unsigned char CorrespondingControlMode;
           if (FunctionNr < GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE)
@@ -8984,6 +9046,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
           }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_INSERT_ON_OFF)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
+          }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
+          }
 
           if (AxumData.ControlMode[2] == CorrespondingControlMode)
           {
@@ -8997,7 +9067,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                  ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_PAD_ON_OFF)) ||
                   (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD) ||
                   (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET))
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_INSERT_ON_OFF) ||
+                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF))
         { //Control 4 mode
           unsigned char CorrespondingControlMode;
           if (FunctionNr < GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2)
@@ -9019,6 +9091,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET)
           {
             CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
+          }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_INSERT_ON_OFF)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
+          }
+          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF)
+          {
+            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
           }
 
           if (AxumData.ControlMode[3] == CorrespondingControlMode)
@@ -10861,6 +10941,14 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       {
       }
       break;
+      case MODULE_CONTROL_MODE_INSERT_ON_OFF:
+      {
+      }
+      break;
+      case MODULE_CONTROL_MODE_DYNAMICS_ON_OFF:
+      {
+      }
+      break;
     }
   }
 
@@ -11333,6 +11421,30 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           }
         }
         break;
+        case MODULE_CONTROL_MODE_INSERT_ON_OFF:
+        {
+          AxumData.ModuleData[ModuleNr].InsertOnOff = !AxumData.ModuleData[ModuleNr].InsertOnOff;
+
+          SetAxum_ModuleProcessing(ModuleNr);
+
+          DoAxum_UpdateModuleControlMode(ModuleNr, ControlMode);
+
+          unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_INSERT_ON_OFF);
+        }
+        break;
+        case MODULE_CONTROL_MODE_DYNAMICS_ON_OFF:
+        {
+          AxumData.ModuleData[ModuleNr].DynamicsOnOff = !AxumData.ModuleData[ModuleNr].DynamicsOnOff;
+
+          SetAxum_ModuleProcessing(ModuleNr);
+
+          DoAxum_UpdateModuleControlMode(ModuleNr, ControlMode);
+
+          unsigned int FunctionNrToSent = (ModuleNr<<12);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_DYNAMICS_ON_OFF);
+        }
+        break;
       }
     }
   }
@@ -11766,6 +11878,30 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
       }
     }
     break;
+    case MODULE_CONTROL_MODE_INSERT_ON_OFF:
+    {
+      if (AxumData.ModuleData[ModuleNr].InsertOnOff)
+      {
+        sprintf(LCDText, "   On   ");
+      }
+      else
+      {
+        sprintf(LCDText, "   Off  ");
+      }
+    }
+    break;
+    case MODULE_CONTROL_MODE_DYNAMICS_ON_OFF:
+    {
+      if (AxumData.ModuleData[ModuleNr].DynamicsOnOff)
+      {
+        sprintf(LCDText, "   On   ");
+      }
+      else
+      {
+        sprintf(LCDText, "   Off  ");
+      }
+    }
+    break;
   }
 
   data.Octets = (unsigned char *)LCDText;
@@ -11991,6 +12127,16 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
     case MODULE_CONTROL_MODE_PAD_ON_OFF:
     {
       sprintf(LCDText,"  Pad   ");
+    }
+    break;
+    case MODULE_CONTROL_MODE_INSERT_ON_OFF:
+    {
+      sprintf(LCDText," Insert ");
+    }
+    break;
+    case MODULE_CONTROL_MODE_DYNAMICS_ON_OFF:
+    {
+      sprintf(LCDText,"  Dyn   ");
     }
     break;
   }
@@ -14918,9 +15064,17 @@ unsigned int GetFunctionNrFromControlMode(int ControlNr)
       {
         FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD);
       }
-      else
+      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_INSERT_ON_OFF)
       {
         FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET);
+      }
+      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)
+      {
+        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_INSERT_ON_OFF)+GLOBAL_FUNCTION_CONTROL_1_MODE_INSERT_ON_OFF);
+      }
+      else
+      {
+        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)+GLOBAL_FUNCTION_CONTROL_1_MODE_DYNAMICS_ON_OFF);
       }
     }
     break;
@@ -14942,9 +15096,17 @@ unsigned int GetFunctionNrFromControlMode(int ControlNr)
       {
         FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD);
       }
-      else
+      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_INSERT_ON_OFF)
       {
         FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET);
+      }
+      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)
+      {
+        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_INSERT_ON_OFF)+GLOBAL_FUNCTION_CONTROL_2_MODE_INSERT_ON_OFF);
+      }
+      else
+      {
+        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)+GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF);
       }
     }
     break;
@@ -14966,9 +15128,17 @@ unsigned int GetFunctionNrFromControlMode(int ControlNr)
       {
         FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD);
       }
-      else
+      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_INSERT_ON_OFF)
       {
         FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET);
+      }
+      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)
+      {
+        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_INSERT_ON_OFF)+GLOBAL_FUNCTION_CONTROL_3_MODE_INSERT_ON_OFF);
+      }
+      else
+      {
+        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)+GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF);
       }
     }
     break;
@@ -14990,9 +15160,17 @@ unsigned int GetFunctionNrFromControlMode(int ControlNr)
       {
         FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD);
       }
-      else
+      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_INSERT_ON_OFF)
       {
         FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET);
+      }
+      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)
+      {
+        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_INSERT_ON_OFF)+GLOBAL_FUNCTION_CONTROL_4_MODE_INSERT_ON_OFF);
+      }
+      else
+      {
+        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)+GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF);
       }
     }
     break;
