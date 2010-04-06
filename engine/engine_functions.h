@@ -335,8 +335,11 @@
 #define MODULE_FUNCTION_BUSS_27_28_OFF        256
 #define MODULE_FUNCTION_BUSS_29_30_OFF        257
 #define MODULE_FUNCTION_BUSS_31_32_OFF        258
+#define MODULE_FUNCTION_PRESET_A              259
+#define MODULE_FUNCTION_PRESET_B              260
+#define MODULE_FUNCTION_PRESET_A_B            261
 
-#define NUMBER_OF_MODULE_FUNCTIONS            259
+#define NUMBER_OF_MODULE_FUNCTIONS            262
 #define  NUMBER_OF_MODULES                    128
 
 #define BUSS_FUNCTION_MASTER_LEVEL              0

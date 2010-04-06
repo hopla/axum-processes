@@ -227,6 +227,7 @@ typedef struct
   unsigned int TemporyPresetLocal;
   unsigned int TemporyPresetControlMode[4];
   unsigned int SelectedProcessingPreset;
+  unsigned int ModulePreset;
   unsigned int Source1A;
   unsigned int Source1B;
   unsigned int Source2A;
