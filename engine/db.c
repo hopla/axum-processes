@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>
 
 //#define LOG_DEBUG_ENABLED
 
@@ -156,7 +157,7 @@ int db_get_matrix_sources()
 
   for (cntRow=0; cntRow<MAX_POS_LIST_SIZE; cntRow++)
   {
-    matrix_sources.pos[cntRow].src = -1;
+    matrix_sources.pos[cntRow].src = INT_MIN;
     matrix_sources.pos[cntRow].active = 0;
     matrix_sources.pos[cntRow].type = none;
     matrix_sources.pos[cntRow].pool[0] = 0;
@@ -178,7 +179,7 @@ int db_get_matrix_sources()
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &pos);
     if ((pos>=1) && (pos<=MAX_POS_LIST_SIZE))
     {
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &matrix_sources.pos[pos-1].src);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &matrix_sources.pos[pos-1].src);
       matrix_sources.pos[pos-1].active = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
       strcpy(src_type, PQgetvalue(qres, cntRow, cntField++));
@@ -486,7 +487,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   }
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
-    unsigned int number;
+    int number;
     unsigned char cntModule;
     int cntField;
 

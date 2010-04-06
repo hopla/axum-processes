@@ -19,6 +19,7 @@
 #include "dsp.h"
 #include "mbn.h"
 #include "backup.h"
+#include "limits.h"
 
 #include <stdio.h>
 #include <stdlib.h>         //for atoi
@@ -729,6 +730,10 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     if (CurrentSource != 0)
                     { //Source 'none', is no change
+                      if (CurrentSource == -1)
+                      { //Source 'mute', will be 'none'
+                        CurrentSource = 0;
+                      }
                       DoAxum_SetNewSource(ModuleNr, CurrentSource, AxumData.ModuleData[ModuleNr].OverruleActive);
                     }
                     DoAxum_LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0, 0);
@@ -739,11 +744,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   if (data.State)
                   {
-                    //AxumData.ModuleData[ModuleNr].WaitingSource = 0x10000 | CurrentSource;
-                    //AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = 0x10000 | CurrentPreset;
-                    //AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = 0x10000 | CurrentRoutingPreset;
                     if (CurrentSource != 0)
                     { //Source 'none', is no change
+                      if (CurrentSource == -1)
+                      { //Source 'mute', will be 'none'
+                        CurrentSource = 0;
+                      }
                       AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
                     }
                     AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
@@ -860,6 +866,10 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       if (CurrentSource != 0)
                       { //Source 'none', is no change
+                        if (CurrentSource == -1)
+                        { //Source 'mute', will be 'none'
+                          CurrentSource = 0;
+                        }
                         DoAxum_SetNewSource(ModuleNr, CurrentSource, AxumData.ModuleData[ModuleNr].OverruleActive);
                       }
                       DoAxum_LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0, 0);
@@ -869,6 +879,10 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       if (CurrentSource != 0)
                       { //Source 'none', is no change
+                        if (CurrentSource == -1)
+                        { //Source 'mute', will be 'none'
+                          CurrentSource = 0;
+                        }
                         AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
                       }
                       AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
@@ -2182,7 +2196,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
                 {
-                  unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+                  int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
                   char UpdateObjects = 0;
 
                   if (data.State)
@@ -2276,7 +2290,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
                 {
-                  unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+                  int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
                   int OldState = AxumData.SourceData[SourceNr].Alert;
 
                   if (data.State)
@@ -2640,7 +2654,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               if (type == MBN_DATATYPE_STATE)
               {
                 int cntDestination=0;
-                unsigned int CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
+                int CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
                 bool MixMinusInUse = false;
                 bool UpdateDestinations = false;
 
@@ -2681,7 +2695,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                 if (UpdateDestinations)
                 {
-                  unsigned int CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
+                  int CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
 
                   cntDestination=0;
                   while (cntDestination<1280)
@@ -2892,7 +2906,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
         break;
         case MONITOR_BUSS_FUNCTIONS:
         {   //Monitor Busses
-          unsigned int MonitorBussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
+          int MonitorBussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
           int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
           if (type == MBN_DATATYPE_STATE)
@@ -3077,7 +3091,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                   for (int cntDestination=0; cntDestination<1280; cntDestination++)
                   {
-                    if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
+                    if (AxumData.DestinationData[cntDestination].Source == ((int)(matrix_sources.src_offset.min.monitor_buss+MonitorBussNr)))
                     {
                       unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                       CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE);
@@ -3115,7 +3129,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                   for (int cntDestination=0; cntDestination<1280; cntDestination++)
                   {
-                    if (AxumData.DestinationData[cntDestination].Source == (matrix_sources.src_offset.min.monitor_buss+MonitorBussNr))
+                    if (AxumData.DestinationData[cntDestination].Source == ((int)(matrix_sources.src_offset.min.monitor_buss+MonitorBussNr)))
                     {
                       unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
                       CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
@@ -4322,7 +4336,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
         break;
         case SOURCE_FUNCTIONS:
         { //Source
-          unsigned int SourceNr = ((SensorReceiveFunctionNumber>>12)&0xFFF);
+          int SourceNr = ((SensorReceiveFunctionNumber>>12)&0xFFF);
           unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
           switch (FunctionNr)
@@ -5470,7 +5484,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
         }
 
         //Check for source if I/O card changed.
-        for (unsigned int cntSource=0; cntSource<1280; cntSource++)
+        for (int cntSource=0; cntSource<1280; cntSource++)
         {
           if (  (AxumData.SourceData[cntSource].InputData[0].MambaNetAddress == message->AddressFrom) ||
                 (AxumData.SourceData[cntSource].InputData[1].MambaNetAddress == message->AddressFrom))
@@ -6689,7 +6703,7 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
   }
 }
 
-void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned int *r_ch)
+void axum_get_mtrx_chs_from_src(int src, unsigned int *l_ch, unsigned int *r_ch)
 {
   *l_ch = 0;
   *r_ch = 0;
@@ -6857,7 +6871,7 @@ void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr)
   }
 }
 
-void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource)
+void SetAxum_ModuleMixMinus(unsigned int ModuleNr, int OldSource)
 {
   int cntDestination=0;
   int DestinationNr = -1;
@@ -9447,7 +9461,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
     break;
     case SOURCE_FUNCTIONS:
     {   //Source
-      unsigned int SourceNr = ((SensorReceiveFunctionNumber>>12)&0xFFF);
+      int SourceNr = ((SensorReceiveFunctionNumber>>12)&0xFFF);
       unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
       unsigned char Active = 0;
 
@@ -10555,7 +10569,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     {
       case MODULE_CONTROL_MODE_SOURCE:
       {   //Source
-        unsigned int CurrentSource = AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr];
+        int CurrentSource = AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr];
 
         AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr] = AdjustModuleSource(CurrentSource, data.SInt);
 
@@ -11240,7 +11254,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         {   //Source gain
           if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
           {
-            unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+            int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
             unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
             if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
@@ -12612,7 +12626,7 @@ void DoAxum_BussReset(int BussNr)
   }
 }
 
-int SourceActive(unsigned int InputSourceNr)
+int SourceActive(int InputSourceNr)
 {
   unsigned int cntModule;
   unsigned int cntBuss;
@@ -12692,7 +12706,7 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
 
   if ((AxumData.ModuleData[ModuleNr].SelectedSource>=matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource<=matrix_sources.src_offset.max.source))
   {
-    unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+    int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
     unsigned int CurrentSourceActive = AxumData.SourceData[SourceNr].Active;
     unsigned int NewSourceActive = 0;
 
@@ -12754,7 +12768,7 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
           CheckObjectsToSent(FunctionNrToSent | MONITOR_BUSS_FUNCTION_MUTE);
           for (int cntDestination=0; cntDestination<1280; cntDestination++)
           {
-            if (AxumData.DestinationData[cntDestination].Source == (unsigned int)(17+cntMonitorBuss))
+            if (AxumData.DestinationData[cntDestination].Source == (17+cntMonitorBuss))
             {
               FunctionNrToSent = 0x06000000 | (cntDestination<<12);
               CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE);
@@ -12817,7 +12831,7 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
   }
 }
 
-int MixMinusSourceUsed(unsigned int CurrentSource)
+int MixMinusSourceUsed(int CurrentSource)
 {
   int ModuleNr = -1;
   int cntModule = 0;
@@ -12843,8 +12857,12 @@ int MixMinusSourceUsed(unsigned int CurrentSource)
   return ModuleNr;
 }
 
-void GetSourceLabel(unsigned int SourceNr, char *TextString, int MaxLength)
+void GetSourceLabel(int SourceNr, char *TextString, int MaxLength)
 {
+  if (SourceNr == -1)
+  {
+    strncpy(TextString, "Mute", MaxLength);
+  }
   if (SourceNr == 0)
   {
     strncpy(TextString, "None", MaxLength);
@@ -12886,7 +12904,7 @@ void GetSourceLabel(unsigned int SourceNr, char *TextString, int MaxLength)
   }
 }
 
-unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
+int AdjustModuleSource(int CurrentSource, int Offset)
 {
   char check_for_next_pos;
   int cntPos;
@@ -12900,20 +12918,20 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
   PosAfter = MAX_POS_LIST_SIZE;
   for (cntPos=0; cntPos<MAX_POS_LIST_SIZE; cntPos++)
   {
-    if (matrix_sources.pos[cntPos].src != -1)
+    if (matrix_sources.pos[cntPos].src != INT_MIN)
     {
-      if (matrix_sources.pos[cntPos].src == (signed short int)CurrentSource)
+      if (matrix_sources.pos[cntPos].src == CurrentSource)
       {
         CurrentPos = cntPos;
       }
-      else if (matrix_sources.pos[cntPos].src < (signed short int)CurrentSource)
+      else if (matrix_sources.pos[cntPos].src < CurrentSource)
       {
         if (cntPos>PosBefore)
         {
           PosBefore = cntPos;
         }
       }
-      else if (matrix_sources.pos[cntPos].src > (signed short int)CurrentSource)
+      else if (matrix_sources.pos[cntPos].src > CurrentSource)
       {
         if (cntPos<PosAfter)
         {
@@ -12956,7 +12974,7 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
           CurrentSource = matrix_sources.pos[CurrentPos].src;
 
           //check if hybrid is used
-          if (CurrentSource != 0)
+          if (CurrentSource > 0)
           {
             if (MixMinusSourceUsed(CurrentSource) != -1)
             {
@@ -12966,6 +12984,12 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
 
           //not active, go further.
           if (!matrix_sources.pos[CurrentPos].active)
+          {
+            check_for_next_pos = 1;
+          }
+
+          //'mute' not available in adjust function -> 'none' used if muted
+          if (CurrentSource == -1)
           {
             check_for_next_pos = 1;
           }
@@ -12988,7 +13012,7 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
           CurrentSource = matrix_sources.pos[CurrentPos].src;
 
           //check if hybrid is used
-          if (CurrentSource != 0)
+          if (CurrentSource > 0)
           {
             if (MixMinusSourceUsed(CurrentSource) != -1)
             {
@@ -13001,6 +13025,12 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
           {
             check_for_next_pos = 1;
           }
+
+          //'mute' not available in adjust function -> 'none' used if muted
+          if (CurrentSource == -1)
+          {
+            check_for_next_pos = 1;
+          }
         }
         Offset++;
       }
@@ -13010,237 +13040,239 @@ unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset)
   return CurrentSource;
 }
 
-bool DoAxum_SetNewSource(int ModuleNr, unsigned int NewSource, int Forced)
+bool DoAxum_SetNewSource(int ModuleNr, int NewSource, int Forced)
 {
-  unsigned int OldSource = AxumData.ModuleData[ModuleNr].SelectedSource;
+  int OldSource = AxumData.ModuleData[ModuleNr].SelectedSource;
   int OldSourceActive = 0;
   unsigned char CurrentPresetState[8];
   unsigned char cntPreset;
 
-  for (cntPreset=0; cntPreset<8; cntPreset++)
+  if (NewSource != -1)
   {
-    CurrentPresetState[cntPreset] = ModulePresetActive(ModuleNr, cntPreset+1);
-  }
-
-  if (AxumData.ModuleData[ModuleNr].On)
-  {
-    if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
+    for (cntPreset=0; cntPreset<8; cntPreset++)
     {
-      OldSourceActive = 1;
+      CurrentPresetState[cntPreset] = ModulePresetActive(ModuleNr, cntPreset+1);
     }
-  }
 
-  if (OldSource != NewSource)
-  {
-    if ((!OldSourceActive) || (Forced))
+    if (AxumData.ModuleData[ModuleNr].On)
     {
-      AxumData.ModuleData[ModuleNr].SelectedSource = NewSource;
-      AxumData.ModuleData[ModuleNr].Cough = 0;
-
-      SetAxum_ModuleSource(ModuleNr);
-      SetAxum_ModuleMixMinus(ModuleNr, OldSource);
-
-      unsigned int FunctionNrToSent = (ModuleNr<<12);
-      if ((AxumData.ControlMode[0] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_NONE))
+      if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
       {
-        if (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_SOURCE)
-        {
-          AxumData.ModuleData[ModuleNr].TemporySourceControlMode[0] = AxumData.ModuleData[ModuleNr].SelectedSource;
-        }
-      }
-      if ((AxumData.ControlMode[1] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_NONE))
-      {
-        if (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_SOURCE)
-        {
-          AxumData.ModuleData[ModuleNr].TemporySourceControlMode[1] = AxumData.ModuleData[ModuleNr].SelectedSource;
-        }
-      }
-      if ((AxumData.ControlMode[2] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_NONE))
-      {
-        if (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_SOURCE)
-        {
-          AxumData.ModuleData[ModuleNr].TemporySourceControlMode[2] = AxumData.ModuleData[ModuleNr].SelectedSource;
-        }
-      }
-      if ((AxumData.ControlMode[3] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_NONE))
-      {
-        if (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_SOURCE)
-        {
-          AxumData.ModuleData[ModuleNr].TemporySourceControlMode[3] = AxumData.ModuleData[ModuleNr].SelectedSource;
-        }
-      }
-      DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_SOURCE);
-      DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_NONE);
-
-      if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
-      {
-        unsigned int SourceNr = OldSource-matrix_sources.src_offset.min.source;
-        FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
-      }
-
-      if ((NewSource>=matrix_sources.src_offset.min.source) && (NewSource<=matrix_sources.src_offset.max.source))
-      {
-        unsigned int SourceNr = NewSource-matrix_sources.src_offset.min.source;
-        FunctionNrToSent = 0x05000000 | (SourceNr<<12);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON_OFF);
-        CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
-      }
-
-      for (int cntModule=0; cntModule<128; cntModule++)
-      {
-        if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
-        {
-          FunctionNrToSent = (cntModule<<12);
-          CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE);
-          CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_PHANTOM);
-          CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_PAD);
-          CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
-          CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_GAIN_LEVEL_RESET);
-          CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_START);
-          CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_STOP);
-          CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_START_STOP);
-          CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_ALERT);
-        }
+        OldSourceActive = 1;
       }
     }
-  }
 
-  for (cntPreset=0; cntPreset<8; cntPreset++)
-  {
-    if (CurrentPresetState[cntPreset] != ModulePresetActive(ModuleNr, cntPreset+1))
+    if (OldSource != NewSource)
     {
-      unsigned int FunctionNrToSent = (ModuleNr<<12);
-      CheckObjectsToSent(FunctionNrToSent | GetModuleFunctionNrFromPresetNr(cntPreset+1));
+      if ((!OldSourceActive) || (Forced))
+      {
+        AxumData.ModuleData[ModuleNr].SelectedSource = NewSource;
+        AxumData.ModuleData[ModuleNr].Cough = 0;
 
-      //if A or B
-      unsigned char PresetNr = AxumData.ModuleData[ModuleNr].ModulePreset<<1;
-      if (cntPreset == PresetNr)
-      {
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        SetAxum_ModuleSource(ModuleNr);
+        SetAxum_ModuleMixMinus(ModuleNr, OldSource);
+
+        unsigned int FunctionNrToSent = (ModuleNr<<12);
+        if ((AxumData.ControlMode[0] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_NONE))
+        {
+          if (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_SOURCE)
+          {
+            AxumData.ModuleData[ModuleNr].TemporySourceControlMode[0] = AxumData.ModuleData[ModuleNr].SelectedSource;
+          }
+        }
+        if ((AxumData.ControlMode[1] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_NONE))
+        {
+          if (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_SOURCE)
+          {
+            AxumData.ModuleData[ModuleNr].TemporySourceControlMode[1] = AxumData.ModuleData[ModuleNr].SelectedSource;
+          }
+        }
+        if ((AxumData.ControlMode[2] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_NONE))
+        {
+          if (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_SOURCE)
+          {
+            AxumData.ModuleData[ModuleNr].TemporySourceControlMode[2] = AxumData.ModuleData[ModuleNr].SelectedSource;
+          }
+        }
+        if ((AxumData.ControlMode[3] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_NONE))
+        {
+          if (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_SOURCE)
+          {
+            AxumData.ModuleData[ModuleNr].TemporySourceControlMode[3] = AxumData.ModuleData[ModuleNr].SelectedSource;
+          }
+        }
+        DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_SOURCE);
+        DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_NONE);
+
+        if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
+        {
+          unsigned int SourceNr = OldSource-matrix_sources.src_offset.min.source;
+          FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
+        }
+
+        if ((NewSource>=matrix_sources.src_offset.min.source) && (NewSource<=matrix_sources.src_offset.max.source))
+        {
+          unsigned int SourceNr = NewSource-matrix_sources.src_offset.min.source;
+          FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_INACTIVE);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_3_4_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_5_6_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_7_8_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_9_10_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_11_12_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_13_14_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_15_16_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_17_18_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_19_20_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_21_22_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_23_24_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_25_26_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_27_28_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_29_30_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_BUSS_31_32_ON_OFF);
+          CheckObjectsToSent(FunctionNrToSent+SOURCE_FUNCTION_MODULE_COUGH_ON_OFF);
+        }
+
+        for (int cntModule=0; cntModule<128; cntModule++)
+        {
+          if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
+          {
+            FunctionNrToSent = (cntModule<<12);
+            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE);
+            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_PHANTOM);
+            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_PAD);
+            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
+            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_GAIN_LEVEL_RESET);
+            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_START);
+            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_STOP);
+            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_START_STOP);
+            CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE_ALERT);
+          }
+        }
       }
-      else if (cntPreset == (PresetNr+1))
+    }
+
+    for (cntPreset=0; cntPreset<8; cntPreset++)
+    {
+      if (CurrentPresetState[cntPreset] != ModulePresetActive(ModuleNr, cntPreset+1))
       {
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
-        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        unsigned int FunctionNrToSent = (ModuleNr<<12);
+        CheckObjectsToSent(FunctionNrToSent | GetModuleFunctionNrFromPresetNr(cntPreset+1));
+
+        //if A or B
+        unsigned char PresetNr = AxumData.ModuleData[ModuleNr].ModulePreset<<1;
+        if (cntPreset == PresetNr)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        }
+        else if (cntPreset == (PresetNr+1))
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        }
       }
     }
   }
-
   return ((!OldSourceActive) || (Forced));
 }
 
@@ -15091,6 +15123,10 @@ void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool D
           {
             if (CurrentSource != 0)
             { //if Source 'none', do nothing
+              if (CurrentSource == -1)
+              { //Source 'mute', will be 'none'
+                CurrentSource = 0;
+              }
               DoAxum_SetNewSource(cntModule, CurrentSource, DisableActiveCheck | AxumData.ModuleData[cntModule].OverruleActive);
             }
             DoAxum_LoadProcessingPreset(cntModule, CurrentPreset, 0, 0, 0);
@@ -15098,10 +15134,12 @@ void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool D
           }
           else
           {
-            //AxumData.ModuleData[cntModule].WaitingSource = 0x10000 | CurrentSource;
-            //AxumData.ModuleData[cntModule].WaitingProcessingPreset = 0x10000 | CurrentPreset;
             if (CurrentSource != 0)
-            {
+            { //if Source 'none', do nothing
+              if (CurrentSource == -1)
+              { //Source 'mute', will be 'none'
+                CurrentSource = 0;
+              }
               AxumData.ModuleData[cntModule].WaitingSource = CurrentSource;
             }
             AxumData.ModuleData[cntModule].WaitingProcessingPreset = CurrentPreset;
@@ -15566,7 +15604,7 @@ void DoAxum_UpdateMasterControlMode(int ControlMode)
 
 unsigned char ModulePresetActive(int ModuleNr, unsigned char PresetNr)
 {
-  unsigned int ModulePresetSource = 0;
+  int ModulePresetSource = 0;
   unsigned int ModulePresetPreset = 0;
   unsigned char cntBuss;
   unsigned char SourceEqual = 0;

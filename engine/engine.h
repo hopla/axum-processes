@@ -134,7 +134,7 @@ typedef struct
   char DestinationName[32];
   AXUM_OUTPUT_DATA_STRUCT OutputData[8];
 
-  unsigned int Source;
+  int Source;
   float Level;
   unsigned char Mute;
   unsigned char Dim;
@@ -143,7 +143,7 @@ typedef struct
   unsigned char Talkback[16];
   unsigned char Routing;
 
-  unsigned int MixMinusSource;
+  int MixMinusSource;
   unsigned char MixMinusActive;
 
 } AXUM_DESTINATION_DATA_STRUCT;
@@ -221,21 +221,21 @@ typedef struct
 typedef struct
 {
   unsigned int Console;
-  unsigned int TemporySourceLocal;
-  unsigned int TemporySourceControlMode[4];
-  unsigned int SelectedSource;
+  int TemporySourceLocal;
+  int TemporySourceControlMode[4];
+  int SelectedSource;
   unsigned int TemporyPresetLocal;
   unsigned int TemporyPresetControlMode[4];
   unsigned int SelectedProcessingPreset;
   unsigned int ModulePreset;
-  unsigned int Source1A;
-  unsigned int Source1B;
-  unsigned int Source2A;
-  unsigned int Source2B;
-  unsigned int Source3A;
-  unsigned int Source3B;
-  unsigned int Source4A;
-  unsigned int Source4B;
+  int Source1A;
+  int Source1B;
+  int Source2A;
+  int Source2B;
+  int Source3A;
+  int Source3B;
+  int Source4A;
+  int Source4B;
   unsigned int ProcessingPreset1A;
   unsigned int ProcessingPreset1B;
   unsigned int ProcessingPreset2A;
@@ -307,8 +307,8 @@ typedef struct
 
 typedef struct
 {
-  unsigned int Ext[8];
-  unsigned int InterlockSafe[8];
+  int Ext[8];
+  unsigned char InterlockSafe[8];
 } AXUM_EXTERN_SOURCE_DATA_STRUCT;
 
 typedef struct
@@ -330,7 +330,7 @@ typedef struct
 
 typedef struct
 {
-  unsigned int Source;
+  int Source;
 } AXUM_TALKBACK_STRUCT;
 
 typedef struct
@@ -370,11 +370,11 @@ typedef struct
 typedef struct
 {
   struct {
-    unsigned int buss;
-    unsigned int insert_out;
-    unsigned int monitor_buss;
-    unsigned int mixminus;
-    unsigned int source;
+    int buss;
+    int insert_out;
+    int monitor_buss;
+    int mixminus;
+    int source;
   } min, max;
 } src_offset_struct;
 
@@ -383,7 +383,7 @@ enum src_type {none=0, buss=1, insert_out=2, monitor_buss=3, mixminus=4, source=
 
 typedef struct
 {
-  short int src;
+  int src;
   unsigned char active;
   src_type type;
   unsigned char pool[8];
@@ -492,7 +492,7 @@ void initialize_axum_data_struct();
 //misc utility functions
 int delay_ms(double sleep_time);
 int delay_us(double sleep_time);
-void axum_get_mtrx_chs_from_src(unsigned int src, unsigned int *l_ch, unsigned int *r_ch);
+void axum_get_mtrx_chs_from_src(int src, unsigned int *l_ch, unsigned int *r_ch);
 void debug_mambanet_data(unsigned int object, unsigned char type, union mbn_data data);
 
 //MambaNet object vs Engine function utilities
@@ -513,7 +513,7 @@ void SetAxum_EQ(unsigned char ModuleNr, unsigned char BandNr);
 void SetAxum_ModuleProcessing(unsigned int ModuleNr);
 void SetAxum_BussLevels(unsigned int ModuleNr);
 void SetAxum_ModuleSource(unsigned int ModuleNr);
-void SetAxum_ModuleMixMinus(unsigned int ModuleNr, unsigned int OldSource);
+void SetAxum_ModuleMixMinus(unsigned int ModuleNr, int OldSource);
 void SetAxum_ModuleInsertSource(unsigned int ModuleNr);
 void SetAxum_RemoveOutputRouting(unsigned int OutputMambaNetAddress, unsigned char SubChannel);
 void SetAxum_DestinationSource(unsigned int DestinationNr);
@@ -521,10 +521,10 @@ void SetAxum_ExternSources(unsigned int MonitorBussPerFourNr);
 void SetAxum_TalkbackSource(unsigned int TalkbackNr);
 void SetAxum_BussMasterLevels();
 void SetAxum_MonitorBuss(unsigned int MonitorBussNr);
-int MixMinusSourceUsed(unsigned int CurrentSource);
-void GetSourceLabel(unsigned int SourceNr, char *TextString, int MaxLength);
+int MixMinusSourceUsed(int CurrentSource);
+void GetSourceLabel(int SourceNr, char *TextString, int MaxLength);
 #define AdjustDestinationSource AdjustModuleSource
-unsigned int AdjustModuleSource(unsigned int CurrentSource, int Offset);
+int AdjustModuleSource(int CurrentSource, int Offset);
 unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset);
 void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength);
 void GetConsolePresetLabel(unsigned int ConsolePresetNr, char *TextString, int MaxLength);
@@ -547,7 +547,7 @@ void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned 
 //The DoAxum functions also may sent MambaNet data
 void DoAxum_BussReset(int BussNr);
 void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule);
-bool DoAxum_SetNewSource(int ModuleNr, unsigned int NewSource, int Forced);
+bool DoAxum_SetNewSource(int ModuleNr, int NewSource, int Forced);
 void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int UseInterlock);
 void DoAxum_SetCRMBussOnOff(int MonitorBussNr, int BussNr, unsigned char NewState, int PreventDoingInterlock);
 void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int ProcessingPresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
