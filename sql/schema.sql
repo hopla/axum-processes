@@ -445,6 +445,16 @@ CREATE TABLE predefined_node_config (
   PRIMARY KEY(man_id, prod_id, firm_major, cfg_name, object)
 );
 
+CREATE TABLE predefined_node_defaults (
+  man_id smallint NOT NULL,
+  prod_id smallint NOT NULL,
+  firm_major smallint NOT NULL,
+  cfg_name varchar(32) NOT NULL,
+  object integer NOT NULL,
+  data mambanet_data NOT NULL,
+  PRIMARY KEY(man_id, prod_id, firm_major, cfg_name, object)
+);
+
 CREATE TABLE src_preset (
   pos smallint NOT NULL DEFAULT 9999,
   number smallint NOT NULL CHECK (number>=1 AND number<=1280) PRIMARY KEY,
