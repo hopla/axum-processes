@@ -795,9 +795,12 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
     if (number>0)
     {
       int Console = 0;
+      int ModuleNr = number-1;
 
-      AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[number-1];
+      AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[ModuleNr];
       AXUM_DEFAULT_MODULE_DATA_STRUCT *DefaultModuleData = &ModuleData->Defaults;
+
+      AXUM_MODULE_DATA_STRUCT CurrentModuleData = *ModuleData;
 
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &Console);
       ModuleData->Console = Console-1;
@@ -890,16 +893,96 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
         //for now initialize with first settings
       }
 
+      //Check if module preset source/preset/routing changeda
+      unsigned int FunctionNrToSent = ModuleNr<<12;
+      if ((CurrentModuleData.Source1A != ModuleData->Source1A) ||
+          (CurrentModuleData.ProcessingPreset1A != ModuleData->ProcessingPreset1A))
+      {
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_1A);
+        if (ModuleData->ModulePreset == 0)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        }
+      }
+      if ((CurrentModuleData.Source1B != ModuleData->Source1B) ||
+          (CurrentModuleData.ProcessingPreset1B != ModuleData->ProcessingPreset1B))
+      {
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_1B);
+        if (ModuleData->ModulePreset == 0)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        }
+      }
+      if ((CurrentModuleData.Source2A != ModuleData->Source2A) ||
+          (CurrentModuleData.ProcessingPreset2A != ModuleData->ProcessingPreset2A))
+      {
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_2A);
+        if (ModuleData->ModulePreset == 1)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        }
+      }
+      if ((CurrentModuleData.Source2B != ModuleData->Source2B) ||
+          (CurrentModuleData.ProcessingPreset2B != ModuleData->ProcessingPreset2B))
+      {
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_2B);
+        if (ModuleData->ModulePreset == 1)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        }
+      }
+      if ((CurrentModuleData.Source3A != ModuleData->Source3A) ||
+          (CurrentModuleData.ProcessingPreset3A != ModuleData->ProcessingPreset3A))
+      {
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_3A);
+        if (ModuleData->ModulePreset == 2)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        }
+      }
+      if ((CurrentModuleData.Source3B != ModuleData->Source3B) ||
+          (CurrentModuleData.ProcessingPreset3B != ModuleData->ProcessingPreset3B))
+      {
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_3B);
+        if (ModuleData->ModulePreset == 2)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        }
+      }
+      if ((CurrentModuleData.Source4A != ModuleData->Source4A) ||
+          (CurrentModuleData.ProcessingPreset4A != ModuleData->ProcessingPreset4A))
+      {
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_4A);
+        if (ModuleData->ModulePreset == 3)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        }
+      }
+      if ((CurrentModuleData.Source4B != ModuleData->Source4B) ||
+          (CurrentModuleData.ProcessingPreset4B != ModuleData->ProcessingPreset4B))
+      {
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_4B);
+        if (ModuleData->ModulePreset == 3)
+        {
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+        }
+      }
+
       //Take source A
       if (take_source_a)
       {
-        int ModuleNr = number-1;
         DoAxum_SetNewSource(ModuleNr, ModuleData->Source1A, 1);
         DoAxum_LoadProcessingPreset(ModuleNr, ModuleData->ProcessingPreset1A, 0, 1, 1);
         DoAxum_LoadRoutingPreset(ModuleNr, 1, 0, 1, 1);
       }
-
-
 
 /*    OldLevel = ModuleData->FaderLevel;
       OldOn = ModuleData->On;
@@ -2231,16 +2314,125 @@ int db_read_routing_preset(unsigned char first_mod, unsigned char last_mod)
     if ((number>=1) && (number<=128) &&
         (preset>='A') && (preset<='H'))
     {
+      int ModuleNr = number-1;
+      unsigned char PresetNr = preset-'A';
+
       //Next are routing presets and assignment of modules to busses.
       for (cntBuss=0; cntBuss<16; cntBuss++)
       {
-        AXUM_ROUTING_PRESET_DATA_STRUCT *RoutingPresetData = &AxumData.ModuleData[number-1].RoutingPreset[preset-'A'][cntBuss];
+        AXUM_ROUTING_PRESET_DATA_STRUCT CurrentRoutingPresetData = AxumData.ModuleData[ModuleNr].RoutingPreset[PresetNr][cntBuss];
+        AXUM_ROUTING_PRESET_DATA_STRUCT *RoutingPresetData = &AxumData.ModuleData[ModuleNr].RoutingPreset[PresetNr][cntBuss];
+        unsigned char RoutingPresetChanged = 0;
 
         RoutingPresetData->Use = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &RoutingPresetData->Level);
         RoutingPresetData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
         RoutingPresetData->PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
         sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &RoutingPresetData->Balance);
+
+        if (AxumData.BussMasterData[cntBuss].Console == AxumData.ModuleData[ModuleNr].Console)
+        {
+          if (RoutingPresetData->Use)
+          {
+            if ((RoutingPresetData->Use != CurrentRoutingPresetData.Use) ||
+                (RoutingPresetData->On != CurrentRoutingPresetData.On))
+            {
+              RoutingPresetChanged = 1;
+            }
+          }
+          else if (RoutingPresetData->Use != CurrentRoutingPresetData.Use)
+          {
+            RoutingPresetChanged = 1;
+          }
+
+          if (RoutingPresetChanged)
+          {
+            unsigned int FunctionNrToSent = ModuleNr<<12;
+            switch (PresetNr)
+            {
+              case 0:
+              {
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_1A);
+                if (AxumData.ModuleData[ModuleNr].ModulePreset == 0)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+                }
+              }
+              break;
+              case 1:
+              {
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_1B);
+                if (AxumData.ModuleData[ModuleNr].ModulePreset == 0)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+                }
+              }
+              break;
+              case 2:
+              {
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_2A);
+                if (AxumData.ModuleData[ModuleNr].ModulePreset == 1)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+                }
+              }
+              break;
+              case 3:
+              {
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_2B);
+                if (AxumData.ModuleData[ModuleNr].ModulePreset == 1)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+                }
+              }
+              break;
+              case 4:
+              {
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_3A);
+                if (AxumData.ModuleData[ModuleNr].ModulePreset == 2)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+                }
+              }
+              break;
+              case 5:
+              {
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_3B);
+                if (AxumData.ModuleData[ModuleNr].ModulePreset == 2)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+                }
+              }
+              break;
+              case 6:
+              {
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_4A);
+                if (AxumData.ModuleData[ModuleNr].ModulePreset == 3)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+                }
+              }
+              break;
+              case 7:
+              {
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_4B);
+                if (AxumData.ModuleData[ModuleNr].ModulePreset == 3)
+                {
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_B);
+                  CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_PRESET_A_B);
+                }
+              }
+              break;
+            }
+          }
+        }
       }
     }
   }

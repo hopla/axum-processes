@@ -14412,7 +14412,18 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewProcess
       FaderLevel = AxumData.ModuleData[ModuleNr].Defaults.FaderLevel;
       ModuleState = AxumData.ModuleData[ModuleNr].Defaults.On;
     }
-    PresetNr = NewProcessingPresetNr;
+
+    if ((AxumData.ModuleData[ModuleNr].Defaults.GainUsePreset) ||
+        (AxumData.ModuleData[ModuleNr].Defaults.FilterUsePreset) ||
+        (AxumData.ModuleData[ModuleNr].Defaults.InsertUsePreset) ||
+        (AxumData.ModuleData[ModuleNr].Defaults.PhaseUsePreset) ||
+        (AxumData.ModuleData[ModuleNr].Defaults.MonoUsePreset) ||
+        (AxumData.ModuleData[ModuleNr].Defaults.EQUsePreset) ||
+        (AxumData.ModuleData[ModuleNr].Defaults.DynamicsUsePreset) ||
+        (AxumData.ModuleData[ModuleNr].Defaults.ModuleUsePreset) || (UseModuleDefaults))
+    {
+      PresetNr = NewProcessingPresetNr;
+    }
   }
 
   if (AxumData.ModuleData[ModuleNr].SelectedProcessingPreset != PresetNr)
@@ -15687,6 +15698,10 @@ unsigned char ModulePresetActive(int ModuleNr, unsigned char PresetNr)
     }
 
     if ((ModulePresetSource == 0) || (AxumData.ModuleData[ModuleNr].SelectedSource == ModulePresetSource))
+    {
+      SourceEqual = 1;
+    }
+    else if ((ModulePresetSource == -1) && (AxumData.ModuleData[ModuleNr].SelectedSource == 0))
     {
       SourceEqual = 1;
     }
