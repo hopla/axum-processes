@@ -5986,6 +5986,8 @@ void Timer100HzDone(int Value)
             unsigned int FunctionNrToSent = 0x04000000;
             AxumData.SelectedConsolePreset[cntConsole] = 0;
             CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldConsolePreset-1));
+
+            CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_1_PRESET+cntConsole));
           }
         }
       }
