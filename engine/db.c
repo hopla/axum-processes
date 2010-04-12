@@ -9,6 +9,7 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
+#include <sys/time.h>
 
 //#define LOG_DEBUG_ENABLED
 
@@ -1421,13 +1422,13 @@ int db_read_talkback_config(unsigned char first_tb, unsigned char last_tb)
   return 1;
 }
 
-int db_read_global_config()
+int db_read_global_config(unsigned char startup)
 {
   int cntRow;
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve, auto_momentary, startup_state FROM global_config", 1, 0, NULL);
+  PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve, auto_momentary, startup_state, date_time FROM global_config", 1, 0, NULL);
 
   if (qres == NULL)
   {
@@ -1437,6 +1438,9 @@ int db_read_global_config()
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     unsigned int cntField;
+    struct tm timeinfo;
+    struct timeval tv;
+    unsigned int DateTimeField;
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &AxumData.Samplerate);
@@ -1445,6 +1449,24 @@ int db_read_global_config()
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.LevelReserve);
     AxumData.AutoMomentary = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     AxumData.StartupState = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+
+    DateTimeField = cntField;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%4d-%2d-%2d %2d:%2d:%2d", &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday, &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec);
+
+    if ((timeinfo.tm_year > 1900) && (startup))
+    {
+      timeinfo.tm_year -= 1900;
+      timeinfo.tm_mon -= 1;
+      tv.tv_sec = mktime(&timeinfo);
+      tv.tv_usec = 0;
+
+      settimeofday(&tv, NULL);
+
+      sql_exec("UPDATE global_config SET date_time = '0000-00-00 00:00:00'", 0, 0, NULL);
+      sql_exec("TRUNCATE recent_changes;", 0, 0, NULL);
+
+      log_write("System time changed to %s", PQgetvalue(qres, cntRow, DateTimeField));
+    }
 
     if (AxumApplicationAndDSPInitialized)
     {
@@ -2944,7 +2966,7 @@ void db_event_talkback_config_changed(char myself, char *arg)
 void db_event_global_config_changed(char myself, char *arg)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  db_read_global_config();
+  db_read_global_config(0);
 
   arg = NULL;
   myself=0;

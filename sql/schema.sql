@@ -414,6 +414,7 @@ CREATE TABLE global_config (
   level_reserve float NOT NULL DEFAULT 0.0,
   auto_momentary boolean NOT NULL DEFAULT TRUE,
   startup_state boolean NOT NULL DEFAULT FALSE,
+  date_time varchar(19) NOT NULL DEFAULT '0000-00-00 00:00:00'
 );
 
 CREATE TABLE dest_config (

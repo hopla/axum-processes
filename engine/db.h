@@ -14,7 +14,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss, unsig
 int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last_mon_buss, unsigned char console);
 int db_read_extern_src_config(unsigned char first_dsp_card, unsigned char last_dsp_card);
 int db_read_talkback_config(unsigned char first_tb, unsigned char last_tb);
-int db_read_global_config();
+int db_read_global_config(unsigned char startup);
 int db_read_dest_config(unsigned short int first_dest, unsigned short int last_dest);
 int db_read_db_to_position();
 int db_read_routing_preset(unsigned char first_mod, unsigned char last_mod);

@@ -411,7 +411,7 @@ int main(int argc, char *argv[])
   db_read_talkback_config(1, 16);
 
   //global_configuration
-  db_read_global_config();
+  db_read_global_config(1);
 
   //destination_configuration
   db_read_dest_config(1, 1280);
