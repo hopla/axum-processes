@@ -32,6 +32,7 @@ volatile int main_quit = 0;
 struct sql_notify *sql_events;
 int sql_notifylen = 0;
 char sql_lastnotify[50];
+char sql_lastnotify_changed_in_callback = 0;
 pthread_mutex_t sql_mutex = PTHREAD_MUTEX_INITIALIZER;
 PGconn *sql_conn;
 
@@ -301,11 +302,23 @@ void sql_processnotifies() {
   /* update lastnotify variable */
   if ((i>0) && (i<=PQntuples(qs)))
   {
-    strcpy(sql_lastnotify, PQgetvalue(qs, i-1, 2));
+    if (sql_lastnotify_changed_in_callback) {
+      sql_lastnotify_changed_in_callback = 0;
+      //do nothing else.
+    } else {
+      //if not changed in callback use time from change (which is normal)
+      strcpy(sql_lastnotify, PQgetvalue(qs, i-1, 2));
+    }
   }
   PQclear(qs);
 }
 
+/* Changes the last notify time, required in case of system time change */
+void sql_setlastnotify(char *new_lastnotify)
+{
+  strcpy(sql_lastnotify, new_lastnotify);
+  sql_lastnotify_changed_in_callback = 1;
+}
 
 void sql_lock(int l) {
   PGresult *qs;

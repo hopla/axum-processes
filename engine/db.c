@@ -1453,7 +1453,7 @@ int db_read_global_config(unsigned char startup)
     DateTimeField = cntField;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%4d-%2d-%2d %2d:%2d:%2d", &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday, &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec);
 
-    if ((timeinfo.tm_year > 1900) && (startup))
+    if ((timeinfo.tm_year > 1900) && (!startup))
     {
       timeinfo.tm_year -= 1900;
       timeinfo.tm_mon -= 1;
@@ -1464,6 +1464,8 @@ int db_read_global_config(unsigned char startup)
 
       sql_exec("UPDATE global_config SET date_time = '0000-00-00 00:00:00'", 0, 0, NULL);
       sql_exec("TRUNCATE recent_changes;", 0, 0, NULL);
+
+      sql_setlastnotify(PQgetvalue(qres, cntRow, DateTimeField));
 
       log_write("System time changed to %s", PQgetvalue(qres, cntRow, DateTimeField));
     }

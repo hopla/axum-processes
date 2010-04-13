@@ -51,6 +51,9 @@ void sql_open(const char *, int, struct sql_notify *);
 /* closes the connection */
 void sql_close();
 
+/* Changes the last notify time, required in case of system time change */
+void sql_setlastnotify(char *new_lastnotify);
+
 /* lock access to the database internally, and begin/commit a transaction */
 void sql_lock(int l);
 
