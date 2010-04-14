@@ -2293,21 +2293,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
                   int OldState = AxumData.SourceData[SourceNr].Alert;
 
-                  if (data.State)
-                  {
-                    AxumData.SourceData[SourceNr].Alert = !AxumData.SourceData[SourceNr].Alert;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                    {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                      {
-                        AxumData.SourceData[SourceNr].Alert = !AxumData.SourceData[SourceNr].Alert;
-                      }
-                    }
-                  }
+                  AxumData.SourceData[SourceNr].Alert = data.State;
 
                   if (OldState != AxumData.SourceData[SourceNr].Alert)
                   {
