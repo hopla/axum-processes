@@ -51,6 +51,7 @@ struct sql_notify notifies[] = {
   { (char *)"buss_preset_rows_changed",               db_event_buss_preset_rows_changed},
   { (char *)"monitor_buss_preset_rows_changed",       db_event_monitor_buss_preset_rows_changed},
   { (char *)"console_preset_changed",                 db_event_console_preset_changed},
+  { (char *)"set_module_to_startup_state",            db_event_set_module_to_startup_state},
 };
 
 double read_minmax(char *mambanet_minmax)
@@ -72,7 +73,7 @@ double read_minmax(char *mambanet_minmax)
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 19, notifies);
+  sql_open(dbstr, 20, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -3099,6 +3100,33 @@ void db_event_console_preset_changed(char myself, char *arg)
 
   sscanf(arg, "%hd", &number);
   db_read_console_preset(number, number);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_set_module_to_startup_state(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned short int number;
+  unsigned int ModuleNr;
+
+  sscanf(arg, "%hd", &number);
+
+  db_read_module_config(number, number, 0xFF, 1);
+
+  if (number>1)
+  {
+    ModuleNr = number-1;
+    for (int cntEQBand=0; cntEQBand<6; cntEQBand++)
+    {
+      AxumData.ModuleData[ModuleNr].EQBand[cntEQBand].Level = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQBand].Level;
+      AxumData.ModuleData[ModuleNr].EQBand[cntEQBand].Frequency = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQBand].Frequency;
+      AxumData.ModuleData[ModuleNr].EQBand[cntEQBand].Bandwidth = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQBand].Bandwidth;
+      AxumData.ModuleData[ModuleNr].EQBand[cntEQBand].Slope = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQBand].Slope;
+      AxumData.ModuleData[ModuleNr].EQBand[cntEQBand].Type = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQBand].Type;
+    }
+  }
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
