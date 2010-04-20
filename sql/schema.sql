@@ -635,12 +635,14 @@ CREATE TABLE console_preset (
   pos smallint NOT NULL DEFAULT 9999,
   number smallint NOT NULL CHECK(number>=1 AND number<=32) PRIMARY KEY,
   label varchar(32) NOT NULL DEFAULT 'Preset',
-  console1 boolean NOT NULL DEFAULT FALSE;
-  console2 boolean NOT NULL DEFAULT FALSE;
-  console3 boolean NOT NULL DEFAULT FALSE;
-  console4 boolean NOT NULL DEFAULT FALSE;
+  console1 boolean NOT NULL DEFAULT FALSE,
+  console2 boolean NOT NULL DEFAULT FALSE,
+  console3 boolean NOT NULL DEFAULT FALSE,
+  console4 boolean NOT NULL DEFAULT FALSE,
   mod_preset varchar(1) DEFAULT 'A' CHECK(mod_preset>='A' AND mod_preset<='H'),
-  buss_preset smallint CHECK(number>=1 AND number<=1280)
+  buss_preset smallint CHECK(buss_preset>=1 AND buss_preset<=1280),
+  safe_recall_time float NOT NULL DEFAULT 1 CHECK(safe_recall_time>=0 AND safe_recall_time<=force_recall_time),
+  forced_recall_time float NOT NULL DEFAULT 3 CHECK(forced_recall_time>=safe_recall_time AND forced_recall_time<=10)
 );
 
 

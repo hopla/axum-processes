@@ -2617,7 +2617,9 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
                                     console3,             \
                                     console4,             \
                                     mod_preset,           \
-                                    buss_preset           \
+                                    buss_preset,          \
+                                    safe_recall_time,     \
+                                    forced_recall_time    \
                                     FROM console_preset   \
                                     WHERE number>=$1 AND number<=$2 \
                                     ORDER BY number", 1, 2, params);
@@ -2630,6 +2632,7 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
   {
     short int number;
     unsigned int cntField;
+    float FloatData;
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
@@ -2657,6 +2660,10 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
     {
       ConsolePresetData->MixMonitorPreset--;
     }
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &FloatData);
+    ConsolePresetData->SafeRecallTime = FloatData*1000;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &FloatData);
+    ConsolePresetData->ForcedRecallTime = FloatData*1000;
   }
   PQclear(qres);
 

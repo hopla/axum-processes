@@ -102,6 +102,8 @@ typedef struct
   char Console[4];
   char ModulePreset;
   short int MixMonitorPreset;
+  unsigned int SafeRecallTime;
+  unsigned int ForcedRecallTime;
 } AXUM_CONSOLE_PRESET_DATA_STRUCT;
 
 typedef struct

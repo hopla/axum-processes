@@ -165,7 +165,7 @@ int LinuxIfIndex;
 struct CONSOLE_PRESET_SWITCH_STRUCT {
   bool PreviousState;
   bool State;
-  int TimerValue;
+  unsigned int TimerValue;
 } ConsolePresetSwitch[32] = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
                              {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
                              {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
@@ -174,7 +174,7 @@ struct CONSOLE_PRESET_SWITCH_STRUCT {
 struct PROGRAMMED_DEFAULT_SWITCH_STRUCT {
   bool PreviousState;
   bool State;
-  int TimerValue;
+  unsigned int TimerValue;
 } ProgrammedDefaultSwitch[4] = {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}};
 
 void *thread(void *vargp);
@@ -5914,14 +5914,16 @@ void Timer100HzDone(int Value)
     }
     else if (ConsolePresetSwitch[cntConsolePreset].State)
     {
-      if (ConsolePresetSwitch[cntConsolePreset].TimerValue<3000)
+      if (ConsolePresetSwitch[cntConsolePreset].TimerValue<AxumData.ConsolePresetData[cntConsolePreset].ForcedRecallTime)
       {
         ConsolePresetSwitch[cntConsolePreset].TimerValue += 10;
-        if (ConsolePresetSwitch[cntConsolePreset].TimerValue == 1000)
+        int Safe = ConsolePresetSwitch[cntConsolePreset].TimerValue-AxumData.ConsolePresetData[cntConsolePreset].SafeRecallTime;
+        int Forced = ConsolePresetSwitch[cntConsolePreset].TimerValue-AxumData.ConsolePresetData[cntConsolePreset].ForcedRecallTime; 
+        if (((Safe>=0) && (Safe<10)) && (Safe<Forced))
         {
           DoAxum_LoadConsolePreset(cntConsolePreset+1, 0, 0);
         }
-        else if (ConsolePresetSwitch[cntConsolePreset].TimerValue == 3000)
+        else if ((Forced>=0) && (Forced<10))
         {
           DoAxum_LoadConsolePreset(cntConsolePreset+1, 0, 1);
         }
@@ -13768,6 +13770,8 @@ void initialize_axum_data_struct()
     AxumData.ConsolePresetData[cntPreset].Console[3] = 0;
     AxumData.ConsolePresetData[cntPreset].ModulePreset = -1;
     AxumData.ConsolePresetData[cntPreset].MixMonitorPreset = -1;
+    AxumData.ConsolePresetData[cntPreset].SafeRecallTime = 1;
+    AxumData.ConsolePresetData[cntPreset].ForcedRecallTime = 3;
   }
 
   for (int cntDestination=0; cntDestination<1280; cntDestination++)
