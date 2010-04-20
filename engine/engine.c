@@ -2844,6 +2844,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 }
                 if ((NrOfBussPre*2) > NrOfModules)
                 {
+                  NewBussPre = 1;
                   OldBussPre = 1;
                 }
 
