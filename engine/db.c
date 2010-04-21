@@ -2206,6 +2206,10 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
           MakeObjectListPerFunction(OldFunctions[cntObject-first_obj]);
         }
+        if (sensor_rcv_func->FunctionNr == (unsigned int)-1)
+        { //Configuration turned off
+          db_read_node_defaults(node_info, cntObject, cntObject, 1, 1);
+        }
       }
     }
   }
