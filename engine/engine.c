@@ -13556,9 +13556,9 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
           AxumData.Monitor[cntMonitorBuss].Buss[DefaultSelection] = 1;
 
           unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON+BussNr));
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF+BussNr));
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+BussNr));
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON+DefaultSelection));
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF+DefaultSelection));
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+DefaultSelection));
         }
         else if (DefaultSelection<24)
         {
