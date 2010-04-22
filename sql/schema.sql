@@ -138,6 +138,8 @@ CREATE TABLE src_config (
   input_pad boolean NOT NULL DEFAULT FALSE,
   input_gain float NOT NULL DEFAULT 30 CHECK(input_gain >= 20::double precision AND input_gain <= 75::double precision),
   default_src_preset smallint DEFAULT NULL CHECK(default_src_preset>=1 AND default_src_preset<=1280),
+  start_trigger smallint DEFAULT 0 NOT NULL CHECK(start_trigger>=0 AND start_trigger <=3),
+  stop_trigger smallint DEFAULT 0 NOT NULL CHECK(stop_trigger>=0 AND stop_trigger <=3);
   redlight1 boolean NOT NULL DEFAULT FALSE,
   redlight2 boolean NOT NULL DEFAULT FALSE,
   redlight3 boolean NOT NULL DEFAULT FALSE,

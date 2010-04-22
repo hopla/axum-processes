@@ -456,6 +456,8 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
                                     input_pad,            \
                                     input_gain,           \
                                     default_src_preset,   \
+                                    start_trigger,        \
+                                    stop_trigger,         \
                                     redlight1,            \
                                     redlight2,            \
                                     redlight3,            \
@@ -517,6 +519,14 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->DefaultProcessingPreset) <= 0)
     {
       SourceData->DefaultProcessingPreset = 0;
+    }
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->StartTrigger) <= 0)
+    {
+      SourceData->StartTrigger = 0;
+    }
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &SourceData->StopTrigger) <= 0)
+    {
+      SourceData->StopTrigger = 0;
     }
 
     SourceData->Redlight[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");

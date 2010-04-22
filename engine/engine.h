@@ -113,6 +113,9 @@ typedef struct
 
   unsigned int DefaultProcessingPreset;
 
+  unsigned char StartTrigger;
+  unsigned char StopTrigger;
+
   bool Redlight[8];
   bool MonitorMute[16];
   char Active;
@@ -560,5 +563,6 @@ void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool D
 void DoAxum_UpdateModuleControlModeLabel(unsigned char ModuleNr, int ControlMode);
 void DoAxum_UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode);
 void DoAxum_UpdateMasterControlMode(int ControlMode);
+void DoAxum_StartStopTrigger(unsigned int ModuleNr, float CurrentLevel, float NewLevel, unsigned char CurrentOn, unsigned char NewOn);
 
 #endif
