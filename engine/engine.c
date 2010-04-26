@@ -6807,7 +6807,7 @@ void axum_get_mtrx_chs_from_src(int src, unsigned int *l_ch, unsigned int *r_ch)
         *l_ch = 1120+((cntSlot-21)*32);
         SourceFound=1;
       }
-      if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[SourceNr].InputData[0].MambaNetAddress)
+      if (AxumData.RackOrganization[cntSlot] == AxumData.SourceData[SourceNr].InputData[1].MambaNetAddress)
       {
         *r_ch = 1120+((cntSlot-21)*32);
         SourceFound=1;
