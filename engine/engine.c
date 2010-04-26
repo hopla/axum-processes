@@ -13294,8 +13294,10 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
   unsigned char cntPreset;
   unsigned char BussActive[16];
   unsigned char NewBussActive[16];
-  unsigned char MonitorBussAutoSwitchingActive[16][16];
-  unsigned char NewMonitorBussAutoSwitchingActive[16][16];
+  unsigned char BussToMonitorBussActive[16][16];
+  unsigned char NewBussToMonitorBussActive[16][16];
+  unsigned char ExtToMonitorBussActive[16][8];
+  unsigned char NewExtToMonitorBussActive[16][8];
 
   if (AxumData.ModuleData[ModuleNr].Buss[BussNr].On != NewState)
   {
@@ -13318,11 +13320,18 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
     {
       for (int cntBuss=0; cntBuss<16; cntBuss++)
       {
-        MonitorBussAutoSwitchingActive[cntMonitorBuss][cntBuss] = 0;
-        if ((AxumData.Monitor[cntMonitorBuss].AutoSwitchingBuss[cntBuss]) &&
-            (AxumData.Monitor[cntMonitorBuss].Buss[cntBuss]))
+        BussToMonitorBussActive[cntMonitorBuss][cntBuss] = 0;
+        if (AxumData.Monitor[cntMonitorBuss].Buss[cntBuss])
         {
-          MonitorBussAutoSwitchingActive[cntMonitorBuss][cntBuss] = 1;
+          BussToMonitorBussActive[cntMonitorBuss][cntBuss] = 1;
+        }
+      }
+      for (int cntExt=0; cntExt<8; cntExt++)
+      {
+        ExtToMonitorBussActive[cntMonitorBuss][cntExt] = 0;
+        if (AxumData.Monitor[cntMonitorBuss].Ext[cntExt])
+        {
+          ExtToMonitorBussActive[cntMonitorBuss][cntExt] = 1;
         }
       }
     }
@@ -13528,6 +13537,7 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
       }
     }
 
+    unsigned char AutoSwitchingExclusiveActive = 0;
     for (int cntBuss=0; cntBuss<16; cntBuss++)
     {
       if (NewBussActive[cntBuss] != BussActive[cntBuss])
@@ -13540,9 +13550,34 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
         //Set buss default if not active
         for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
         {
+          AutoSwitchingExclusiveActive = 0;
           if (AxumData.Monitor[cntMonitorBuss].AutoSwitchingBuss[cntBuss])
           {
             AxumData.Monitor[cntMonitorBuss].Buss[cntBuss] = NewBussActive[cntBuss];
+
+            if ((NewBussActive[cntBuss]) && (AxumData.BussMasterData[cntBuss].Exclusive))
+            {
+              AutoSwitchingExclusiveActive = 1;
+            }
+          }
+
+          if (AutoSwitchingExclusiveActive)
+          {
+            for (int cntBuss2=0; cntBuss2<16; cntBuss2++)
+            {
+              if ((NewBussActive[cntBuss2]) && (AxumData.BussMasterData[cntBuss2].Exclusive))
+              {
+                AxumData.Monitor[cntMonitorBuss].Buss[cntBuss2] = 1;
+              }
+              else
+              {
+                AxumData.Monitor[cntMonitorBuss].Buss[cntBuss2] = 0;
+              }
+            }
+            for (int cntExt=0; cntExt<8; cntExt++)
+            {
+              AxumData.Monitor[cntMonitorBuss].Ext[cntExt] = 0;
+            }
           }
         }
       }
@@ -13574,21 +13609,11 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
         if (DefaultSelection<16)
         {
           AxumData.Monitor[cntMonitorBuss].Buss[DefaultSelection] = 1;
-
-          unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON+DefaultSelection));
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF+DefaultSelection));
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+DefaultSelection));
         }
         else if (DefaultSelection<24)
         {
           int ExtNr = DefaultSelection-16;
           AxumData.Monitor[cntMonitorBuss].Ext[ExtNr] = 1;
-
-          unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON+ExtNr));
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_OFF+ExtNr));
-          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+ExtNr));
         }
       }
     }
@@ -13613,11 +13638,18 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
     {
       for (int cntBuss=0; cntBuss<16; cntBuss++)
       {
-        NewMonitorBussAutoSwitchingActive[cntMonitorBuss][cntBuss] = 0;
-        if ((AxumData.Monitor[cntMonitorBuss].AutoSwitchingBuss[cntBuss]) &&
-            (AxumData.Monitor[cntMonitorBuss].Buss[cntBuss]))
+        NewBussToMonitorBussActive[cntMonitorBuss][cntBuss] = 0;
+        if (AxumData.Monitor[cntMonitorBuss].Buss[cntBuss])
         {
-          NewMonitorBussAutoSwitchingActive[cntMonitorBuss][cntBuss] = 1;
+          NewBussToMonitorBussActive[cntMonitorBuss][cntBuss] = 1;
+        }
+      }
+      for (int cntExt=0; cntExt<8; cntExt++)
+      {
+        NewExtToMonitorBussActive[cntMonitorBuss][cntExt] = 0;
+        if (AxumData.Monitor[cntMonitorBuss].Ext[cntExt])
+        {
+          NewExtToMonitorBussActive[cntMonitorBuss][cntExt] = 1;
         }
       }
     }
@@ -13625,7 +13657,7 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
     {
       for (int cntBuss=0; cntBuss<16; cntBuss++)
       {
-        if (NewMonitorBussAutoSwitchingActive[cntMonitorBuss][cntBuss] != MonitorBussAutoSwitchingActive[cntMonitorBuss][cntBuss])
+        if (NewBussToMonitorBussActive[cntMonitorBuss][cntBuss] != BussToMonitorBussActive[cntMonitorBuss][cntBuss])
         {
           SetAxum_MonitorBuss(cntMonitorBuss);
 
@@ -13633,6 +13665,18 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
           CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON+cntBuss));
           CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_OFF+cntBuss));
           CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF+cntBuss));
+        }
+      }
+      for (int cntExt=0; cntExt<8; cntExt++)
+      {
+        if (NewExtToMonitorBussActive[cntMonitorBuss][cntExt] != ExtToMonitorBussActive[cntMonitorBuss][cntExt])
+        {
+          SetAxum_MonitorBuss(cntMonitorBuss);
+
+          unsigned int FunctionNrToSent = 0x02000000 | (cntMonitorBuss<<12);
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON+cntExt));
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_OFF+cntExt));
+          CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_EXT_1_ON_OFF+cntExt));
         }
       }
     }
