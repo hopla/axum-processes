@@ -5920,9 +5920,8 @@ void Timer100HzDone(int Value)
     }
     else if (ConsolePresetSwitch[cntConsolePreset].State)
     {
-      if (ConsolePresetSwitch[cntConsolePreset].TimerValue<AxumData.ConsolePresetData[cntConsolePreset].ForcedRecallTime)
+      if (ConsolePresetSwitch[cntConsolePreset].TimerValue<(AxumData.ConsolePresetData[cntConsolePreset].ForcedRecallTime+10))
       {
-        ConsolePresetSwitch[cntConsolePreset].TimerValue += 10;
         int Safe = ConsolePresetSwitch[cntConsolePreset].TimerValue-AxumData.ConsolePresetData[cntConsolePreset].SafeRecallTime;
         int Forced = ConsolePresetSwitch[cntConsolePreset].TimerValue-AxumData.ConsolePresetData[cntConsolePreset].ForcedRecallTime;
         if ((Safe>=0) && (Safe<10))
@@ -5933,6 +5932,7 @@ void Timer100HzDone(int Value)
         {
           DoAxum_LoadConsolePreset(cntConsolePreset+1, 0, 1);
         }
+        ConsolePresetSwitch[cntConsolePreset].TimerValue += 10;
       }
     }
   }
