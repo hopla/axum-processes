@@ -6823,6 +6823,16 @@ void axum_get_mtrx_chs_from_src(int src, unsigned int *l_ch, unsigned int *r_ch)
       *l_ch += 1;
       *r_ch += 1;
     }
+
+    //MambaNet address == 0, force mute!
+    if (AxumData.SourceData[SourceNr].InputData[0].MambaNetAddress == 0)
+    {
+      *l_ch = 0;
+    }
+    if (AxumData.SourceData[SourceNr].InputData[1].MambaNetAddress == 0)
+    {
+      *r_ch = 0;
+    }
   }
 }
 
