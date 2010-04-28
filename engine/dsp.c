@@ -22,7 +22,7 @@
 #include <math.h>
 #include <pthread.h>
 
-#define EEPROM_DELAY_TIME   100
+#define EEPROM_DELAY_TIME   200
 
 //#define LOG_DEBUG_ENABLED
 
@@ -735,6 +735,8 @@ bool dsp_program_eeprom(int fd)
   //Clock High & Data High
   reg.DataVal = 0x03;
 
+  printf("EEPROM delay time: %d uS\n", EEPROM_DELAY_TIME);
+
   pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
   pci2040_ioctl_message.BufferLength = sizeof(PCI2040_WRITE_REG);
   pci2040_ioctl_message.Buffer = (unsigned char *)&reg;
@@ -746,7 +748,7 @@ bool dsp_program_eeprom(int fd)
   //ByteWrite to EEPROM
   for (unsigned char cntByte=0; cntByte<32; cntByte++)
   {
-    //printf("Write byte %d: 0x%02X\n", cntByte, ((unsigned char *)&EEpromRegisters.SubClass)[cntByte]);
+    printf("Write byte %d: 0x%02X\n", cntByte, ((unsigned char *)&EEpromRegisters.SubClass)[cntByte]);
     //StartCondition (Data goes Low (bit 1) & Clock stays high (bit 0))
     reg.DataVal &= 0xFD;
     pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_WRITE_PCI_REG;
