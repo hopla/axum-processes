@@ -5719,6 +5719,86 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
           OnlineNodeInformationElement = OnlineNodeInformationElement->Next;
         }
       }
+
+      //remove audio routing if set..
+      for (unsigned char cntSlot=0; cntSlot<42; cntSlot++)
+      {
+        if (AxumData.RackOrganization[cntSlot] == old_info->MambaNetAddr)
+        {
+          AxumData.RackOrganization[cntSlot] = 0;
+        }
+      }
+
+      for (int cntSource=0; cntSource<1280; cntSource++)
+      {
+        unsigned char RemoveSource = 0;
+
+        for (int cntInput=0; cntInput<8; cntInput++)
+        {
+          if (AxumData.SourceData[cntSource].InputData[cntInput].MambaNetAddress == old_info->MambaNetAddr)
+          {
+            RemoveSource = 1;
+          }
+        }
+        if (RemoveSource)
+        {
+          //Found source 'cntSource'
+          for (int cntModule=0; cntModule<128; cntModule++)
+          {
+            if (AxumData.ModuleData[cntModule].SelectedSource == (cntSource+matrix_sources.src_offset.min.source))
+            {
+              //Found source @ module 'cntModule'
+              SetAxum_ModuleSource(cntModule);
+              SetAxum_ModuleMixMinus(cntModule, 0);
+            }
+          }
+          for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
+          {
+            for (int cntExt=0; cntExt<8; cntExt++)
+            {
+              if (AxumData.ExternSource[cntDSPCard].Ext[cntExt] == (cntSource+matrix_sources.src_offset.min.source))
+              {
+                //Found source @ extern input 'cntDSPCard'
+                SetAxum_ExternSources(cntDSPCard);
+              }
+            }
+          }
+          for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+          {
+            if (AxumData.Talkback[cntTalkback].Source == (cntSource+matrix_sources.src_offset.min.source))
+            {
+              //Found source @ talkback 'cntTalkback'
+              SetAxum_TalkbackSource(cntTalkback);
+            }
+          }
+          for (int cntDestination=0; cntDestination<1280; cntDestination++)
+          {
+            if (AxumData.DestinationData[cntDestination].Source == (cntSource+matrix_sources.src_offset.min.source))
+            {
+              //Found source @ destination 'cntDestination';
+              SetAxum_DestinationSource(cntDestination);
+            }
+          }
+        }
+      }
+
+      //Check for destination if I/O card changed.
+      for (int cntDestination=0; cntDestination<1280; cntDestination++)
+      {
+        unsigned char RemoveDestination = 0;
+        for (int cntOutput=0; cntOutput<8; cntOutput++)
+        {
+          if (AxumData.DestinationData[cntDestination].OutputData[cntOutput].MambaNetAddress == old_info->MambaNetAddr)
+          {
+            RemoveDestination = 1;
+          }
+        }
+        if (RemoveDestination)
+        {
+          //Found destination 'cntDestination';
+          SetAxum_DestinationSource(cntDestination);
+        }
+      }
     }
     log_write("Removed node with MambaNet address: %08lX", old_info->MambaNetAddr);
   }
