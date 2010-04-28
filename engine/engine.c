@@ -14856,6 +14856,11 @@ void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, un
   {
     if (AxumData.BussMasterData[cntBuss].Exclusive)
     {
+      if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].On)
+      {
+        CurrentExclusiveActive = 1;
+      }
+
       SelectedRoutingPreset = NULL;
       if (PresetNr>0)
       {
@@ -14876,9 +14881,9 @@ void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, un
           NewExclusiveActive = 1;
         }
       }
-      if (AxumData.ModuleData[ModuleNr].Buss[cntBuss].On)
+      else
       {
-        CurrentExclusiveActive = 1;
+        NewExclusiveActive = CurrentExclusiveActive;
       }
     }
   }
