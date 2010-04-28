@@ -2704,6 +2704,7 @@ int db_insert_slot_config(unsigned char slot_nr, unsigned long int addr, unsigne
   sprintf(str[2], "%d", input_ch_cnt);
   sprintf(str[3], "%d", output_ch_cnt);
 
+  sql_exec("DELETE FROM slot_config WHERE slot_nr = $1", 0, 1, params);
   PGresult *qres = sql_exec("INSERT INTO slot_config (slot_nr, addr, input_ch_cnt, output_ch_cnt) VALUES ($1, $2, $3, $4)", 0, 4, params);
   if (qres == NULL)
   {
