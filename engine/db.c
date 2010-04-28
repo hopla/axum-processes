@@ -2179,28 +2179,11 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
       if (node_info->SensorReceiveFunction != NULL)
       {
         SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[ObjectNr-1024];
-
         sensor_rcv_func->FunctionNr = TotalFunctionNr;
-        if (OldFunctions[ObjectNr-first_obj] != sensor_rcv_func->FunctionNr)
-        {
-          sensor_rcv_func->LastChangedTime = 0;
-          sensor_rcv_func->PreviousLastChangedTime = 0;
-          sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
-          MakeObjectListPerFunction(sensor_rcv_func->FunctionNr);
-          CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
-
-          if (((sensor_rcv_func->FunctionNr&0xFF000FFF) == (0x02000000 | MONITOR_BUSS_FUNCTION_SPEAKER_LEVEL)) ||
-              ((sensor_rcv_func->FunctionNr&0xFF000FFF) == (0x02000000 | MONITOR_BUSS_FUNCTION_PHONES_LEVEL)))
-          {
-            if (node_info->ObjectInformation[ObjectNr-1024].SensorDataType != MBN_DATATYPE_NODATA)
-            {
-              mbnGetSensorData(mbn, node_info->MambaNetAddress, ObjectNr, 1);
-            }
-          }
-        }
       }
     }
   }
+
   for (cntObject=first_obj; cntObject<last_obj; cntObject++)
   {
     if (node_info->SensorReceiveFunction != NULL)
@@ -2216,7 +2199,24 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
           MakeObjectListPerFunction(OldFunctions[cntObject-first_obj]);
         }
-        if (sensor_rcv_func->FunctionNr == (unsigned int)-1)
+        if (sensor_rcv_func->FunctionNr != (unsigned int)-1)
+        {
+          sensor_rcv_func->LastChangedTime = 0;
+          sensor_rcv_func->PreviousLastChangedTime = 0;
+          sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
+          MakeObjectListPerFunction(sensor_rcv_func->FunctionNr);
+          CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
+
+          if (((sensor_rcv_func->FunctionNr&0xFF000FFF) == (0x02000000 | MONITOR_BUSS_FUNCTION_SPEAKER_LEVEL)) ||
+              ((sensor_rcv_func->FunctionNr&0xFF000FFF) == (0x02000000 | MONITOR_BUSS_FUNCTION_PHONES_LEVEL)))
+          {
+            if (node_info->ObjectInformation[cntObject-1024].SensorDataType != MBN_DATATYPE_NODATA)
+            {
+              mbnGetSensorData(mbn, node_info->MambaNetAddress, cntObject, 1);
+            }
+          }
+        }
+        else
         { //Configuration turned off
           db_read_node_defaults(node_info, cntObject, cntObject, 1, 1);
         }
