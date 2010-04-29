@@ -1872,15 +1872,15 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
 
 int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj, bool DoNotCheckCurrentDefault, bool SetFirmwareDefaults)
 {
-  char str[3][32];
-  const char *params[3];
+  char str[4][32];
+  const char *params[4];
   int cntParams;
   int cntRow;
   unsigned char *DefaultSet;
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  for (cntParams=0; cntParams<3; cntParams++)
+  for (cntParams=0; cntParams<4; cntParams++)
   {
     params[cntParams] = (const char *)str[cntParams];
   }
@@ -1915,10 +1915,11 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   sprintf(str[0], "%d", node_info->MambaNetAddress);
   sprintf(str[1], "%d", first_obj);
   sprintf(str[2], "%d", last_obj);
+  sprintf(str[3], "%d", node_info->FirmwareMajorRevision);
 
-  PGresult *qres = sql_exec("SELECT d.object, d.data FROM defaults d                            \
-                             WHERE d.addr=$1 AND d.object>=$2 AND d.object<=$3 AND NOT EXISTS   \
-                             (SELECT c.object FROM node_config c WHERE c.object=d.object AND c.addr=d.addr)", 1, 3, params);
+  PGresult *qres = sql_exec("SELECT d.object, d.data FROM defaults d                                \
+                             WHERE d.addr=$1 AND d.object>=$2 AND d.object<=$3 AND d.firm_major=$4  \
+                             AND NOT EXISTS (SELECT c.object FROM node_config c WHERE c.object=d.object AND c.addr=d.addr AND c.firm_major=d.firm_major)", 1, 4, params);
   if (qres == NULL)
   {
     delete[] DefaultSet;
@@ -2119,8 +2120,8 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
 
 int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj)
 {
-  char str[3][32];
-  const char *params[3];
+  char str[4][32];
+  const char *params[4];
   int cntParams;
   int cntRow;
   unsigned int cntObject;
@@ -2151,7 +2152,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
     return 0;
   }
 
-  for (cntParams=0; cntParams<3; cntParams++)
+  for (cntParams=0; cntParams<4; cntParams++)
   {
     params[cntParams] = (const char *)str[cntParams];
   }
@@ -2159,8 +2160,9 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   sprintf(str[0], "%d", node_info->MambaNetAddress);
   sprintf(str[1], "%hd", first_obj);
   sprintf(str[2], "%hd", last_obj);
+  sprintf(str[3], "%d", node_info->FirmwareMajorRevision);
 
-  PGresult *qres = sql_exec("SELECT object, func FROM node_config WHERE addr=$1 AND object>=$2 AND object<=$3", 1, 3, params);
+  PGresult *qres = sql_exec("SELECT object, func FROM node_config WHERE addr=$1 AND object>=$2 AND object<=$3 AND firm_major=$4", 1, 4, params);
   if (qres == NULL)
   {
     delete[] OldFunctions;

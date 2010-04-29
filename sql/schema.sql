@@ -56,15 +56,17 @@ CREATE TYPE mambanet_unique_id AS (
 CREATE TABLE node_config (
   addr integer NOT NULL,
   object integer NOT NULL,
+  firm_major integer NOT NULL,
   func function_number NOT NULL,
-  PRIMARY KEY(addr, object)
+  PRIMARY KEY(addr, object, firm_major)
 );
 
 CREATE TABLE defaults (
   addr integer NOT NULL,
   object integer NOT NULL,
+  firm_major integer NOT NULL,
   data mambanet_data NOT NULL,
-  PRIMARY KEY(addr, object)
+  PRIMARY KEY(addr, object, firm_major)
 );
 
 CREATE TABLE templates (
