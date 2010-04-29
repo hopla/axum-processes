@@ -1774,20 +1774,20 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
     return 0;
   }
 
-  node_info->NumberOfCustomObjects = 0;
+  node_info->UsedNumberOfCustomObjects = 0;
   if (PQntuples(qres))
   {
     if (sscanf(PQgetvalue(qres, 0, 0), "%d", &maxobjnr) == 1)
     {
-      node_info->NumberOfCustomObjects = maxobjnr-1023;
+      node_info->UsedNumberOfCustomObjects = maxobjnr-1023;
     }
   }
 
-  if (node_info->NumberOfCustomObjects>0)
+  if (node_info->UsedNumberOfCustomObjects>0)
   {
-    node_info->SensorReceiveFunction = new SENSOR_RECEIVE_FUNCTION_STRUCT[node_info->NumberOfCustomObjects];
-    node_info->ObjectInformation = new OBJECT_INFORMATION_STRUCT[node_info->NumberOfCustomObjects];
-    for (int cntObject=0; cntObject<node_info->NumberOfCustomObjects; cntObject++)
+    node_info->SensorReceiveFunction = new SENSOR_RECEIVE_FUNCTION_STRUCT[node_info->UsedNumberOfCustomObjects];
+    node_info->ObjectInformation = new OBJECT_INFORMATION_STRUCT[node_info->UsedNumberOfCustomObjects];
+    for (int cntObject=0; cntObject<node_info->UsedNumberOfCustomObjects; cntObject++)
     {
       node_info->SensorReceiveFunction[cntObject].FunctionNr = -1;
       node_info->SensorReceiveFunction[cntObject].LastChangedTime = 0;
@@ -1812,7 +1812,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
     cntField=0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &ObjectNr);
 
-    if ((ObjectNr >= 1024) && (ObjectNr < (1024+node_info->NumberOfCustomObjects)))
+    if ((ObjectNr >= 1024) && (ObjectNr < (1024+node_info->UsedNumberOfCustomObjects)))
     {
       OBJECT_INFORMATION_STRUCT *obj_info = &node_info->ObjectInformation[ObjectNr-1024];
 
@@ -1856,7 +1856,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
     }
     else
     {
-      if (ObjectNr >= (1024+node_info->NumberOfCustomObjects))
+      if (ObjectNr >= (1024+node_info->UsedNumberOfCustomObjects))
       {
         log_write("[template error] ObjectNr %d to high for 'row count' (man_id:%04X, prod_id:%04X)", ObjectNr, node_info->ManufacturerID, node_info->ProductID);
       }
@@ -1930,7 +1930,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
     mbn_data data;
     sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
 
-    if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->NumberOfCustomObjects))
+    if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->UsedNumberOfCustomObjects))
     {
       OBJECT_INFORMATION_STRUCT *obj_info = &node_info->ObjectInformation[ObjectNr-1024];
       if (obj_info->ActuatorDataType != MBN_DATATYPE_NODATA)
@@ -2058,7 +2058,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
       {//need to set template default
         ObjectNr = first_obj+cntRow;
 
-        if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->NumberOfCustomObjects))
+        if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->UsedNumberOfCustomObjects))
         {
           OBJECT_INFORMATION_STRUCT *obj_info = &node_info->ObjectInformation[ObjectNr-1024];
           if (obj_info->ActuatorDataType != MBN_DATATYPE_NODATA)
@@ -2174,7 +2174,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
     sscanf(PQgetvalue(qres, cntRow, 1), "(%hhd,%hd,%hd)", &type, &seq_nr, &func_nr);
     TotalFunctionNr = (((unsigned int)type)<<24)|(((unsigned int)seq_nr)<<12)|func_nr;
 
-    if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->NumberOfCustomObjects))
+    if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->UsedNumberOfCustomObjects))
     {
       if (node_info->SensorReceiveFunction != NULL)
       {
@@ -3024,7 +3024,7 @@ void db_event_node_config_changed(char myself, char *arg)
     LOG_DEBUG("[%s] leave with error", __func__);
     return;
   }
-  db_read_node_config(node_info, 1024, node_info->NumberOfCustomObjects+1023);
+  db_read_node_config(node_info, 1024, node_info->UsedNumberOfCustomObjects+1023);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
@@ -3152,6 +3152,40 @@ void db_event_set_module_to_startup_state(char myself, char *arg)
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
+}
+
+int db_read_template_count(unsigned short int man_id, unsigned short int prod_id, unsigned char firm_major)
+{
+  char str[3][32];
+  const char *params[3];
+  int cntParams;
+  int template_count = 0;
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<3; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%d", man_id);
+  sprintf(str[1], "%d", prod_id);
+  sprintf(str[2], "%d", firm_major);
+
+  PGresult *qres = sql_exec("SELECT COUNT(*) FROM templates WHERE man_id=$1 AND prod_id=$2 AND firm_major=$3", 1, 3, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+
+  sscanf(PQgetvalue(qres, 0, 0), "%d", &template_count);
+
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return template_count;
 }
 
 void db_lock(int lock)

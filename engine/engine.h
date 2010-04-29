@@ -470,7 +470,9 @@ struct ONLINE_NODE_INFORMATION_STRUCT
     unsigned int UniqueIDPerProduct;
   } Parent;
 
-  int NumberOfCustomObjects;
+  int UsedNumberOfCustomObjects;
+  int OnlineNumberOfCustomObjects;
+  int TemplateNumberOfCustomObjects;
 
   SENSOR_RECEIVE_FUNCTION_STRUCT *SensorReceiveFunction;
   OBJECT_INFORMATION_STRUCT *ObjectInformation;

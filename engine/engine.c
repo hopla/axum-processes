@@ -560,9 +560,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     node_info_lock(0);
     return 1;
   }
-  if (object>=(OnlineNodeInformationElement->NumberOfCustomObjects+1024))
+  if (object>=(OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024))
   {
-    log_write("[mSensorDataChanged] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->NumberOfCustomObjects);
+    log_write("[mSensorDataChanged] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->UsedNumberOfCustomObjects);
     node_info_lock(0);
     return 1;
   }
@@ -5358,12 +5358,14 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
     node_info_lock(0);
     return 1;
   }
-  if (object>=(OnlineNodeInformationElement->NumberOfCustomObjects+1024))
+  if (object>=(OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024))
   {
-    log_write("[mSensorDataResponse] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->NumberOfCustomObjects);
+    log_write("[mSensorDataResponse] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->UsedNumberOfCustomObjects);
     node_info_lock(0);
     return 1;
   }
+
+  unsigned char CheckDBTemplateCount = 0;
 
   switch (type)
   {
@@ -5424,20 +5426,43 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
         if (OnlineNodeInformationElement->FirmwareMajorRevision == -1)
         {
           OnlineNodeInformationElement->FirmwareMajorRevision = data.UInt;
+          log_write("Firmware major revision received: %d", data.UInt);
+          CheckDBTemplateCount = 1;
+        }
+      }
+      if (object == 13)
+      {
+        if (OnlineNodeInformationElement->OnlineNumberOfCustomObjects == -1)
+        {
+          OnlineNodeInformationElement->OnlineNumberOfCustomObjects = data.UInt;
+          log_write("Number of custom objects received: %d", data.UInt);
+          CheckDBTemplateCount = 1;
+        }
+      }
+
+      if (CheckDBTemplateCount)
+      {
+        if ((OnlineNodeInformationElement->FirmwareMajorRevision != -1) &&
+            (OnlineNodeInformationElement->OnlineNumberOfCustomObjects > 0))
+        {
+          log_write("Start reading template_info");
 
           db_lock(1);
-          db_read_template_info(OnlineNodeInformationElement, 1);
+          OnlineNodeInformationElement->TemplateNumberOfCustomObjects = db_read_template_count(OnlineNodeInformationElement->ManufacturerID, OnlineNodeInformationElement->ProductID, OnlineNodeInformationElement->FirmwareMajorRevision);
 
-          if (OnlineNodeInformationElement->SlotNumberObjectNr != -1)
+          if (OnlineNodeInformationElement->OnlineNumberOfCustomObjects == OnlineNodeInformationElement->TemplateNumberOfCustomObjects)
           {
-            mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, OnlineNodeInformationElement->SlotNumberObjectNr, 1);
+            db_read_template_info(OnlineNodeInformationElement, 1);
+
+            if (OnlineNodeInformationElement->SlotNumberObjectNr != -1)
+            {
+              mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, OnlineNodeInformationElement->SlotNumberObjectNr, 1);
+            }
+
+            db_read_node_defaults(OnlineNodeInformationElement, 1024, OnlineNodeInformationElement->UsedNumberOfCustomObjects+1023, 0, 0);
+            db_read_node_config(OnlineNodeInformationElement, 1024, OnlineNodeInformationElement->UsedNumberOfCustomObjects+1023);
           }
 
-          if (OnlineNodeInformationElement->NumberOfCustomObjects>0)
-          {
-            db_read_node_defaults(OnlineNodeInformationElement, 1024, OnlineNodeInformationElement->NumberOfCustomObjects+1023, 0, 0);
-            db_read_node_config(OnlineNodeInformationElement, 1024, OnlineNodeInformationElement->NumberOfCustomObjects+1023);
-          }
           db_lock(0);
         }
       }
@@ -5640,7 +5665,9 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     NewOnlineNodeInformationElement->Parent.ManufacturerID = 0;
     NewOnlineNodeInformationElement->Parent.ProductID = 0;
     NewOnlineNodeInformationElement->Parent.UniqueIDPerProduct = 0;
-    NewOnlineNodeInformationElement->NumberOfCustomObjects = 0;
+    NewOnlineNodeInformationElement->UsedNumberOfCustomObjects = 0;
+    NewOnlineNodeInformationElement->OnlineNumberOfCustomObjects = -1;
+    NewOnlineNodeInformationElement->TemplateNumberOfCustomObjects = -1;
     NewOnlineNodeInformationElement->SensorReceiveFunction = NULL;
     NewOnlineNodeInformationElement->ObjectInformation = NULL;
 
@@ -5691,7 +5718,7 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
           }
 
           //Adjust function lists
-          for (int cntObject=0; cntObject<OnlineNodeInformationElement->NumberOfCustomObjects; cntObject++)
+          for (int cntObject=0; cntObject<OnlineNodeInformationElement->UsedNumberOfCustomObjects; cntObject++)
           {
             int FunctionNr = OnlineNodeInformationElement->SensorReceiveFunction[cntObject].FunctionNr;
             OnlineNodeInformationElement->SensorReceiveFunction[cntObject].FunctionNr = -1;
@@ -5961,9 +5988,52 @@ void Timer100HzDone(int Value)
           log_write("timer: Get firmware 0x%08X", GetFirmwareOnlineNodeInformationElement->MambaNetAddress);
           mbnGetSensorData(mbn, GetFirmwareOnlineNodeInformationElement->MambaNetAddress, ObjectNr, 0);
         }
+        if ((GetFirmwareOnlineNodeInformationElement->MambaNetAddress != 0x00000000) &&
+            (GetFirmwareOnlineNodeInformationElement->OnlineNumberOfCustomObjects == -1))
+        {
+          unsigned int ObjectNr = 13; //Number of custom objects
+          log_write("timer: Get number of custom objects 0x%08X", GetFirmwareOnlineNodeInformationElement->MambaNetAddress);
+          mbnGetSensorData(mbn, GetFirmwareOnlineNodeInformationElement->MambaNetAddress, ObjectNr, 0);
+        }
+        log_write("check %08X, maj: %d, Online: %d, Temp: %d", GetFirmwareOnlineNodeInformationElement->MambaNetAddress,
+                                                               GetFirmwareOnlineNodeInformationElement->FirmwareMajorRevision,
+                                                               GetFirmwareOnlineNodeInformationElement->OnlineNumberOfCustomObjects,
+                                                               GetFirmwareOnlineNodeInformationElement->TemplateNumberOfCustomObjects);
+        if ((GetFirmwareOnlineNodeInformationElement->FirmwareMajorRevision != -1) &&
+            (GetFirmwareOnlineNodeInformationElement->OnlineNumberOfCustomObjects > 0) &&
+            (GetFirmwareOnlineNodeInformationElement->OnlineNumberOfCustomObjects != GetFirmwareOnlineNodeInformationElement->TemplateNumberOfCustomObjects))
+        {
+          log_write("timer: Get template number of custom objects 0x%08X", GetFirmwareOnlineNodeInformationElement->MambaNetAddress);
+          db_lock(1);
+          GetFirmwareOnlineNodeInformationElement->TemplateNumberOfCustomObjects =
+            db_read_template_count(GetFirmwareOnlineNodeInformationElement->ManufacturerID,
+            GetFirmwareOnlineNodeInformationElement->ProductID,
+            GetFirmwareOnlineNodeInformationElement->FirmwareMajorRevision);
+
+          if (GetFirmwareOnlineNodeInformationElement->OnlineNumberOfCustomObjects == GetFirmwareOnlineNodeInformationElement->TemplateNumberOfCustomObjects)
+          {
+            log_write("database filled with the template");
+
+            db_read_template_info(GetFirmwareOnlineNodeInformationElement, 1);
+
+            if (GetFirmwareOnlineNodeInformationElement->SlotNumberObjectNr != -1)
+            {
+              mbnGetSensorData(mbn, GetFirmwareOnlineNodeInformationElement->MambaNetAddress, GetFirmwareOnlineNodeInformationElement->SlotNumberObjectNr, 1);
+            }
+
+            db_read_node_defaults(GetFirmwareOnlineNodeInformationElement, 1024, GetFirmwareOnlineNodeInformationElement->UsedNumberOfCustomObjects+1023, 0, 0);
+            db_read_node_config(GetFirmwareOnlineNodeInformationElement, 1024, GetFirmwareOnlineNodeInformationElement->UsedNumberOfCustomObjects+1023);
+          }
+          db_lock(0);
+        }
+
 
         WalkOnlineNodeInformationElement = GetFirmwareOnlineNodeInformationElement->Next;
-        while ((WalkOnlineNodeInformationElement != NULL) && (WalkOnlineNodeInformationElement->FirmwareMajorRevision != -1))
+        while ((WalkOnlineNodeInformationElement != NULL) &&
+               (WalkOnlineNodeInformationElement->FirmwareMajorRevision != -1) &&
+               (WalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects != -1) &&
+               ((WalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects == WalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects) ||
+                (WalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects == 0)))
         {
           WalkOnlineNodeInformationElement = WalkOnlineNodeInformationElement->Next;
         }
@@ -10426,7 +10496,7 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
     {
       if (OnlineNodeInformationElement->SensorReceiveFunction != NULL)
       {
-        for (int cntObject=0; cntObject<OnlineNodeInformationElement->NumberOfCustomObjects; cntObject++)
+        for (int cntObject=0; cntObject<OnlineNodeInformationElement->UsedNumberOfCustomObjects; cntObject++)
         {
           if (OnlineNodeInformationElement->SensorReceiveFunction[cntObject].FunctionNr == SensorReceiveFunctionNumber)
           {
