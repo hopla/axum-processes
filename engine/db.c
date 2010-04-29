@@ -1894,6 +1894,12 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
   //to make sure we can do 'if <'
   last_obj++;
 
+  if (last_obj > (1024+node_info->UsedNumberOfCustomObjects))
+  {
+    log_write("[%s] Error obj: %d exceeds the reserved obj memory (last_obj: %d)", __func__, last_obj, 1024+node_info->UsedNumberOfCustomObjects);
+    return 0;
+  }
+
   DefaultSet = new unsigned char[last_obj-first_obj];
   if (DefaultSet == NULL)
   {
@@ -2130,6 +2136,12 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   }
   //to make sure we can do 'if <'
   last_obj++;
+
+  if (last_obj > (1024+node_info->UsedNumberOfCustomObjects))
+  {
+    log_write("[%s] Error obj: %d exceeds the reserved obj memory (last_obj: %d)", __func__, last_obj, 1024+node_info->UsedNumberOfCustomObjects);
+    return 0;
+  }
 
   OldFunctions = new unsigned int[last_obj-first_obj];
   if (OldFunctions == NULL)
