@@ -108,18 +108,23 @@ void process_queue() {
       active++;
       continue;
     }
-    sent++;
-    if(a->act == 0)
-      mbnGetSensorData(mbn, a->addr, a->object, 1);
-    else
-      mbnGetObjectInformation(mbn, a->addr, a->object, 1);
-    if(DEBUG)
-      log_write("GET: %08lX[%5d] %s", a->addr, a->object, a->act ? "object information" : "sensor data");
-    a->active = 1;
+    if (this_node.Services&0x80) {
+      sent++;
+      if(a->act == 0)
+        mbnGetSensorData(mbn, a->addr, a->object, 1);
+      else
+        mbnGetObjectInformation(mbn, a->addr, a->object, 1);
+      if(DEBUG)
+        log_write("GET: %08lX[%5d] %s", a->addr, a->object, a->act ? "object information" : "sensor data");
+      a->active = 1;
+    }
   }
   pthread_mutex_unlock(&get_queue_mutex);
-  if(DEBUG)
-    log_write("active = %d, sent = %d", active, sent);
+  if(DEBUG) {
+    if (active != 0) {
+      log_write("active = %d, sent = %d", active, sent);
+    }
+  }
 }
 
 
@@ -178,6 +183,19 @@ int add_node(unsigned long addr) {
   return i;
 }
 
+void mOnlineStatus(struct mbn_handler *m, unsigned long addr, char valid) {
+  log_write("Online status changed: %08X, valid: %d", addr, valid);
+
+  this_node.MambaNetAddr = addr;
+  if (valid) {
+    this_node.Services |= 0x80;
+  } else {
+    this_node.Services &= 0x7F;
+  }
+
+  return;
+  m = NULL;
+}
 
 void mAddressTableChange(struct mbn_handler *m, struct mbn_address_node *old, struct mbn_address_node *new) {
   struct get_action *n, *a;
@@ -459,6 +477,7 @@ void init(int argc, char *argv[]) {
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
   mbnSetObjectInformationResponseCallback(mbn, mObjectInformationResponse);
   mbnSetObjectErrorCallback(mbn, mObjectError);
+  mbnSetOnlineStatusCallback(mbn, mOnlineStatus);
 
   //start interface for the mbn-handler
   mbnStartInterface(itf, err);
