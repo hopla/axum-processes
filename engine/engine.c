@@ -7629,7 +7629,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               int PresetNr = (FunctionNr-MODULE_FUNCTION_PRESET_A)+1;
               if (FunctionNr == MODULE_FUNCTION_PRESET_A_B)
               {
-                PresetNr = 1;
+                PresetNr = 2;
               }
               PresetNr += AxumData.ModuleData[ModuleNr].ModulePreset<<1;
               if (PresetNr>0)
