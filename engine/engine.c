@@ -13980,6 +13980,9 @@ bool DoAxum_SetNewSource(int ModuleNr, int NewSource, int Forced)
         DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_SOURCE);
         DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_NONE);
 
+        AxumData.ModuleData[ModuleNr].TemporySourceLocal = AxumData.ModuleData[ModuleNr].SelectedSource;
+        CheckObjectsToSent(FunctionNrToSent+MODULE_FUNCTION_SOURCE);
+
         if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
         {
           unsigned int SourceNr = OldSource-matrix_sources.src_offset.min.source;
