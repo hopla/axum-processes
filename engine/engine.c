@@ -1251,17 +1251,41 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_LEVEL:
             { //EQ Level
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_LEVEL)/(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL);
-              if (type == MBN_DATATYPE_SINT)
+              float OldLevel = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level;
+              switch (type)
               {
-                AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level += (float)data.SInt/10;
-                if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level<-AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range)
+                case MBN_DATATYPE_SINT:
                 {
-                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level = -AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range;
+                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level += (float)data.SInt/10;
+                  if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level<-AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range)
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level = -AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range;
+                  }
+                  else if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level>AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range)
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range;
+                  }
                 }
-                else if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level>AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range)
+                break;
+                case MBN_DATATYPE_FLOAT:
                 {
-                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range;
+                  if ((data.Float>=-18) && (data.Float<=18))
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level = data.Float;
+                    if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level<-AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range)
+                    {
+                      AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level = -AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range;
+                    }
+                    else if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level>AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range)
+                    {
+                      AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Range;
+                    }
+                  }
                 }
+                break;
+              }
+              if (OldLevel != AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level)
+              {
                 SetAxum_EQ(ModuleNr, BandNr);
 
                 unsigned int FunctionNrToSend = ModuleNr<<12;
@@ -1280,25 +1304,41 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_FREQUENCY:
             { //EQ Frequency
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY)/(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY);
-              if (type == MBN_DATATYPE_SINT)
+              unsigned int OldFrequency = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency;
+              switch (type)
               {
-                if (data.SInt>=0)
+                case MBN_DATATYPE_SINT:
                 {
-                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency *= 1+((float)data.SInt/100);
-                }
-                else
-                {
-                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency /= 1+((float)-data.SInt/100);
-                }
+                  if (data.SInt>=0)
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency *= 1+((float)data.SInt/100);
+                  }
+                  else
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency /= 1+((float)-data.SInt/100);
+                  }
 
-                if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency<20)
-                {
-                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency = 20;
+                  if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency<20)
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency = 20;
+                  }
+                  else if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency>15000)
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency = 15000;
+                  }
                 }
-                else if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency>15000)
+                break;
+                case MBN_DATATYPE_UINT:
                 {
-                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency = 15000;
+                  if ((data.UInt>=20) && (data.UInt<=15000))
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency = data.UInt;
+                  }
                 }
+                break;
+              }
+              if (OldFrequency != AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency)
+              {
                 SetAxum_EQ(ModuleNr, BandNr);
 
                 unsigned int FunctionNrToSend = ModuleNr<<12;
@@ -1317,19 +1357,44 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_BANDWIDTH:
             { //EQ Bandwidth
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH)/(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH);
-              if (type == MBN_DATATYPE_SINT)
+              float OldBandwidth = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth;
+              switch (type)
               {
-                AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth += (float)data.SInt/10;
-
-                if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth<0.1)
+                case MBN_DATATYPE_SINT:
                 {
-                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = 0.1;
-                }
-                else if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth>10)
-                {
-                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = 10;
-                }
+                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth += (float)data.SInt/10;
 
+                  if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth<0.1)
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = 0.1;
+                  }
+                  else if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth>10)
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = 10;
+                  }
+                }
+                break;
+                case MBN_DATATYPE_FLOAT:
+                {
+                  if ((data.Float>=0.1) && (data.Float<=10))
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = data.Float;
+
+                    if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth<0.1)
+                    {
+                      AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = 0.1;
+                    }
+                    else if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth>10)
+                    {
+                      AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = 10;
+                    }
+                  }
+                }
+                break;
+              }
+
+              if (OldBandwidth != AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth)
+              {
                 SetAxum_EQ(ModuleNr, BandNr);
 
                 unsigned int FunctionNrToSend = ModuleNr<<12;
@@ -1432,20 +1497,37 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             case MODULE_FUNCTION_EQ_BAND_6_TYPE:
             { //EQ Type
               int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_TYPE)/(MODULE_FUNCTION_EQ_BAND_2_TYPE-MODULE_FUNCTION_EQ_BAND_1_TYPE);
-              if (type == MBN_DATATYPE_SINT)
-              {
-                int Type = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type;
-                Type += data.SInt;
+              int OldType = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type;
 
-                if (Type<OFF)
+              switch (type)
+              {
+                case MBN_DATATYPE_SINT:
                 {
-                  Type = OFF;
+                  int Type = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type;
+                  Type += data.SInt;
+
+                  if (Type<OFF)
+                  {
+                    Type = OFF;
+                  }
+                  else if (Type>NOTCH)
+                  {
+                    Type = NOTCH;
+                  }
+                  AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type = (FilterType)Type;
                 }
-                else if (Type>NOTCH)
+                break;
+                case MBN_DATATYPE_STATE:
                 {
-                  Type = NOTCH;
+                  if (data.State<=7)
+                  {
+                    AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type = (FilterType)data.State;
+                  }
                 }
-                AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type = (FilterType)Type;
+              }
+
+              if (OldType != AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type)
+              {
                 SetAxum_EQ(ModuleNr, BandNr);
 
                 unsigned int FunctionNrToSend = ModuleNr<<12;
@@ -8290,6 +8372,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
+            case MBN_DATATYPE_FLOAT:
+            {
+              data.Float = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+            }
+            break;
           }
         }
         break;
@@ -8311,6 +8399,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
           }
         }
         break;
@@ -8330,6 +8424,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               sprintf(LCDText, "%5.1f Q", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+            case MBN_DATATYPE_FLOAT:
+            {
+              data.Float = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
             }
             break;
           }
@@ -8376,50 +8476,56 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             {
               switch (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type)
               {
-              case OFF:
-              {
-                sprintf(LCDText, "  Off   ");
-              }
-              break;
-              case HPF:
-              {
-                sprintf(LCDText, "HighPass");
-              }
-              break;
-              case LOWSHELF:
-              {
-                sprintf(LCDText, "LowShelf");
-              }
-              break;
-              case PEAKINGEQ:
-              {
-                sprintf(LCDText, "Peaking ");
-              }
-              break;
-              case HIGHSHELF:
-              {
-                sprintf(LCDText, "Hi Shelf");
-              }
-              break;
-              case LPF:
-              {
-                sprintf(LCDText, "Low Pass");
-              }
-              break;
-              case BPF:
-              {
-                sprintf(LCDText, "BandPass");
-              }
-              break;
-              case NOTCH:
-              {
-                sprintf(LCDText, "  Notch ");
-              }
-              break;
+                case OFF:
+                {
+                  sprintf(LCDText, "  Off   ");
+                }
+                break;
+                case HPF:
+                {
+                  sprintf(LCDText, "HighPass");
+                }
+                break;
+                case LOWSHELF:
+                {
+                  sprintf(LCDText, "LowShelf");
+                }
+                break;
+                case PEAKINGEQ:
+                {
+                  sprintf(LCDText, "Peaking ");
+                }
+                break;
+                case HIGHSHELF:
+                {
+                  sprintf(LCDText, "Hi Shelf");
+                }
+                break;
+                case LPF:
+                {
+                  sprintf(LCDText, "Low Pass");
+                }
+                break;
+                case BPF:
+                {
+                  sprintf(LCDText, "BandPass");
+                }
+                break;
+                case NOTCH:
+                {
+                  sprintf(LCDText, "  Notch ");
+                }
+                break;
               }
 
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+            case MBN_DATATYPE_STATE:
+            {
+              data.State = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
