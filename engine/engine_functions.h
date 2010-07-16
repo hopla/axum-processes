@@ -71,9 +71,14 @@
 #define SOURCE_FUNCTION_GAIN                                  62
 #define SOURCE_FUNCTION_ALERT                                 63
 #define SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE_INACTIVE   64
+#define SOURCE_FUNCTION_SELECT_1                              65
+#define SOURCE_FUNCTION_SELECT_2                              66
+#define SOURCE_FUNCTION_SELECT_3                              67
+#define SOURCE_FUNCTION_SELECT_4                              68
+#define SOURCE_FUNCTION_LABEL                                 69
 
 
-#define NUMBER_OF_SOURCE_FUNCTIONS              65
+#define NUMBER_OF_SOURCE_FUNCTIONS              70
 #define  NUMBER_OF_SOURCES                    1280
 
 #define MODULE_FUNCTION_LABEL               0
@@ -338,20 +343,28 @@
 #define MODULE_FUNCTION_PRESET_A              259
 #define MODULE_FUNCTION_PRESET_B              260
 #define MODULE_FUNCTION_PRESET_A_B            261
+#define MODULE_FUNCTION_SELECT_1              262
+#define MODULE_FUNCTION_SELECT_2              263
+#define MODULE_FUNCTION_SELECT_3              264
+#define MODULE_FUNCTION_SELECT_4              265
 
-#define NUMBER_OF_MODULE_FUNCTIONS            262
+#define NUMBER_OF_MODULE_FUNCTIONS            266
 #define  NUMBER_OF_MODULES                    128
 
 #define BUSS_FUNCTION_MASTER_LEVEL              0
-#define BUSS_FUNCTION_MASTER_LEVEL_RESET          1
-#define BUSS_FUNCTION_MASTER_ON_OFF           2
-#define BUSS_FUNCTION_MASTER_PRE              3
-#define BUSS_FUNCTION_LABEL                 4
+#define BUSS_FUNCTION_MASTER_LEVEL_RESET        1
+#define BUSS_FUNCTION_MASTER_ON_OFF             2
+#define BUSS_FUNCTION_MASTER_PRE                3
+#define BUSS_FUNCTION_LABEL                     4
 #define BUSS_FUNCTION_AUDIO_LEVEL_LEFT          5
 #define BUSS_FUNCTION_AUDIO_LEVEL_RIGHT         6
+#define BUSS_FUNCTION_SELECT_1                  7
+#define BUSS_FUNCTION_SELECT_2                  8
+#define BUSS_FUNCTION_SELECT_3                  9
+#define BUSS_FUNCTION_SELECT_4                  10
 
-#define NUMBER_OF_BUSS_FUNCTIONS              7
-#define  NUMBER_OF_BUSSES                   16
+#define NUMBER_OF_BUSS_FUNCTIONS                11
+#define  NUMBER_OF_BUSSES                       16
 
 #define MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF     0
 #define MONITOR_BUSS_FUNCTION_BUSS_3_4_ON_OFF     1
@@ -450,8 +463,12 @@
 #define MONITOR_BUSS_FUNCTION_EXT_6_OFF         94
 #define MONITOR_BUSS_FUNCTION_EXT_7_OFF         95
 #define MONITOR_BUSS_FUNCTION_EXT_8_OFF         96
+#define MONITOR_BUSS_FUNCTION_SELECT_1          97
+#define MONITOR_BUSS_FUNCTION_SELECT_2          98
+#define MONITOR_BUSS_FUNCTION_SELECT_3          99
+#define MONITOR_BUSS_FUNCTION_SELECT_4          100
 
-#define NUMBER_OF_MONITOR_BUSS_FUNCTIONS        97
+#define NUMBER_OF_MONITOR_BUSS_FUNCTIONS        101
 #define NUMBER_OF_MONITOR_BUSSES                16
 
 #define DESTINATION_FUNCTION_LABEL                      0
@@ -500,8 +517,12 @@
 #define DESTINATION_FUNCTION_TALKBACK_16                  43
 #define DESTINATION_FUNCTION_TALKBACK_16_AND_MONITOR_TALKBACK_16  44
 #define DESTINATION_FUNCTION_ROUTING                              45
+#define DESTINATION_FUNCTION_SELECT_1                             46
+#define DESTINATION_FUNCTION_SELECT_2                             47
+#define DESTINATION_FUNCTION_SELECT_3                             48
+#define DESTINATION_FUNCTION_SELECT_4                             49
 
-#define NUMBER_OF_DESTINATION_FUNCTIONS               46
+#define NUMBER_OF_DESTINATION_FUNCTIONS               50
 #define  NUMBER_OF_DESTINATIONS                     1280
 
 #define GLOBAL_FUNCTION_REDLIGHT_1                    0
@@ -998,8 +1019,29 @@
 #define GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF  490
 #define GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF  491
 #define GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF  492
+#define GLOBAL_FUNCTION_MODULE_SELECT_1                 493
+#define GLOBAL_FUNCTION_MODULE_SELECT_2                 494
+#define GLOBAL_FUNCTION_MODULE_SELECT_3                 495
+#define GLOBAL_FUNCTION_MODULE_SELECT_4                 496
+#define GLOBAL_FUNCTION_BUSS_SELECT_1                   497
+#define GLOBAL_FUNCTION_BUSS_SELECT_2                   498
+#define GLOBAL_FUNCTION_BUSS_SELECT_3                   499
+#define GLOBAL_FUNCTION_BUSS_SELECT_4                   500
+#define GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_1           501
+#define GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_2           502
+#define GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_3           503
+#define GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_4           504
+#define GLOBAL_FUNCTION_SOURCE_SELECT_1                 505
+#define GLOBAL_FUNCTION_SOURCE_SELECT_2                 506
+#define GLOBAL_FUNCTION_SOURCE_SELECT_3                 507
+#define GLOBAL_FUNCTION_SOURCE_SELECT_4                 508
+#define GLOBAL_FUNCTION_DESTINATION_SELECT_1            509
+#define GLOBAL_FUNCTION_DESTINATION_SELECT_2            510
+#define GLOBAL_FUNCTION_DESTINATION_SELECT_3            511
+#define GLOBAL_FUNCTION_DESTINATION_SELECT_4            512
 
-#define NUMBER_OF_GLOBAL_FUNCTIONS                    493
+
+#define NUMBER_OF_GLOBAL_FUNCTIONS                    513
 
 #define MODULE_CONTROL_MODE_NONE                    -1
 #define MODULE_CONTROL_MODE_SOURCE                    0

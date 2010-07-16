@@ -363,6 +363,11 @@ typedef struct
   bool StartupState;
 
   unsigned int SelectedConsolePreset[4];
+  unsigned int SelectedModule[4];
+  unsigned int SelectedBuss[4];
+  unsigned int SelectedMonitorBuss[4];
+  unsigned int SelectedSource[4];
+  unsigned int SelectedDestination[4];
 
   AXUM_MONITOR_OUTPUT_DATA_STRUCT Monitor[16];
   AXUM_EXTERN_SOURCE_DATA_STRUCT ExternSource[4];
@@ -566,5 +571,12 @@ void DoAxum_UpdateModuleControlModeLabel(unsigned char ModuleNr, int ControlMode
 void DoAxum_UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode);
 void DoAxum_UpdateMasterControlMode(int ControlMode);
 void DoAxum_StartStopTrigger(unsigned int ModuleNr, float CurrentLevel, float NewLevel, unsigned char CurrentOn, unsigned char NewOn);
+
+//select functions
+void SetSelectedModule(unsigned char SelectNr, unsigned int NewModuleNr);
+void SetSelectedBuss(unsigned char SelectNr, unsigned int NewBussNr);
+void SetSelectedMonitorBuss(unsigned char SelectNr, unsigned int NewMonitorBussNr);
+void SetSelectedSource(unsigned char SelectNr, unsigned int NewSourceNr);
+void SetSelectedDestination(unsigned char SelectNr, unsigned int NewDestinationNr);
 
 #endif
