@@ -72,7 +72,7 @@ int scan_open_tty(char *ifname, struct can_data *dat, char *err);
 int scan_init(struct mbn_interface *, char *);
 int scan_hwparent(struct mbn_interface *, unsigned short *, char *);
 void scan_free(struct mbn_interface *);
-void scan_free_addr(void *);
+void scan_free_addr(struct mbn_interface *, void *);
 void *scan_send(void *);
 int scan_transmit(struct mbn_interface *, unsigned char *, int, void *, char *);
 int scan_parse(struct can_frame *frame, struct mbn_interface *itf);
@@ -293,8 +293,9 @@ void scan_free(struct mbn_interface *itf) {
 }
 
 
-void scan_free_addr(void *ptr) {
+void scan_free_addr(struct mbn_interface *itf, void *ptr) {
   struct can_ifaddr *adr = (struct can_ifaddr *)ptr;
+  mbnWriteLogMessage(itf, "Removed CAN interface using 0x%08X", adr->addr);
   adr->lnk->addrs[adr->lnkindex] = NULL;
   free(ptr);
 }
@@ -335,6 +336,7 @@ int scan_parse(struct can_frame *frame, struct mbn_interface *itf) {
     dat->addrs[n]->addr = src;
     dat->addrs[n]->seq = 0;
     ai = n;
+    mbnWriteLogMessage(itf, "Add CAN interface using 0x%08X", src);
   }
 
   /* check sequence ID */

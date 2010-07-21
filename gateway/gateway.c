@@ -38,12 +38,13 @@
 
 #define DEFAULT_UNIX_PATH "/tmp/axum-gateway"
 #define DEFAULT_DATA_PATH "/etc/conf.d/ip"
+#define DEFAULT_LOG_FILE  "/var/log/axum-gateway.log"
 
 #ifndef UNIX_PATH_MAX
 # define UNIX_PATH_MAX 108
 #endif
 
-#define nodestr(n) (n == eth ? "eth" : n == can ? "can" : "tcp")
+#define nodestr(n) (n == eth) ? "eth" : ((n == can) ? "can" : ((n == tcp) ? "tcp" : "udp"))
 
 #define OBJ_IPADDR   0
 #define OBJ_IPNET    1
@@ -51,23 +52,27 @@
 #define OBJ_CANNODES 3
 #define OBJ_ETHNODES 4
 #define OBJ_TCPNODES 5
+#define OBJ_UDPNODES 6
 
+#define NR_OF_OBJECTS 7
+//Major version 3 = 6 objects
+//Major version 4 = 7 objects, added UDP
 
 struct mbn_node_info this_node = {
   0x00000000, 0x00, /* MambaNet Addr + Services */
-  "MambaNet CAN+TCP+Ethernet Gateway",
+  "MambaNet CAN+TCP+UDP+Ethernet Gateway",
   "Axum MambaNet Gateway",
   0x0001, 0x000D, 0x0001,   /* UniqueMediaAccessId */
-  0, 0,    /* Hardware revision */
-  3, 1,    /* Firmware revision */
-  0, 0,    /* FPGAFirmware revision */
-  6,       /* NumberOfObjects */
-  0,       /* DefaultEngineAddr */
-  {0,0,0}, /* Hardwareparent */
-  0        /* Service request */
+  0, 0,           /* Hardware revision */
+  4, 1,           /* Firmware revision */
+  0, 0,           /* FPGAFirmware revision */
+  NR_OF_OBJECTS,  /* NumberOfObjects */
+  0,              /* DefaultEngineAddr */
+  {0,0,0},        /* Hardwareparent */
+  0               /* Service request */
 };
 
-struct mbn_handler *eth, *can, *tcp;
+struct mbn_handler *eth, *can, *tcp, *udp;
 int verbose;
 char ieth[50], data_path[1000];
 unsigned int net_ip, net_mask, net_gw;
@@ -82,12 +87,18 @@ void net_read() {
   if((f = fopen(data_path, "r")) == NULL)
     return;
   while(fgets(buf, 500, f) != NULL) {
-    if(sscanf(buf, "net_ip=\" %[0-9.]s \"", ip) == 1)
+    if(sscanf(buf, "net_ip=\" %[0-9.]s \"", ip) == 1) {
       net_ip = ntohl(inet_addr(ip));
-    if(sscanf(buf, "net_mask=\" %[0-9.]s \"", ip) == 1)
+      log_write("Read IP=%s", ip);
+    }
+    if(sscanf(buf, "net_mask=\" %[0-9.]s \"", ip) == 1) {
       net_mask = ntohl(inet_addr(ip));
-    if(sscanf(buf, "net_gw=\" %[0-9.]s \"", ip) == 1)
+      log_write("Read subnet mask=%s", ip);
+    }
+    if(sscanf(buf, "net_gw=\" %[0-9.]s \"", ip) == 1) {
       net_gw = ntohl(inet_addr(ip));
+      log_write("Read gateway=%s", ip);
+    }
   }
   fclose(f);
 }
@@ -107,12 +118,15 @@ void net_write() {
     if(!strncmp(buf, "net_ip=\"", 8)) {
       a.s_addr = ntohl(net_ip);
       fprintf(w, "net_ip=\"%s\"\n", inet_ntoa(a));
+      log_write("Write IP:%s", inet_ntoa(a));
     } else if(!strncmp(buf, "net_mask=\"", 8)) {
       a.s_addr = ntohl(net_mask);
       fprintf(w, "net_mask=\"%s\"\n", inet_ntoa(a));
+      log_write("Write subnet mask:%s", inet_ntoa(a));
     } else if(!strncmp(buf, "net_gw=\"", 8)) {
       a.s_addr = ntohl(net_gw);
       fprintf(w, "net_gw=\"%s\"\n", inet_ntoa(a));
+      log_write("Write gateway:%s", inet_ntoa(a));
     } else
       fprintf(w, "%s", buf);
   }
@@ -131,8 +145,7 @@ void SynchroniseDateTime(struct mbn_handler *mbn, time_t time) {
   /* Neither POSIX nor Linux provide a nice API to do this, so run hwclock instead
    * NOTE: this command can block a few seconds */
   system("/sbin/hwclock --systohc");
-  if(verbose)
-    printf("Setting system time to %ld, request from %s\n", time, nodestr(mbn));
+  log_write("Setting system time to %ld, request from %s\n", time, nodestr(mbn));
 }
 
 
@@ -150,14 +163,17 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
   if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPADDR+1024, dat);
   if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPADDR+1024, dat);
   if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPADDR+1024, dat);
+  if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPADDR+1024, dat);
   dat.UInt = net_mask;
   if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPNET+1024, dat);
   if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPNET+1024, dat);
   if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPNET+1024, dat);
+  if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPNET+1024, dat);
   dat.UInt = net_gw;
   if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPGW+1024, dat);
   if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPGW+1024, dat);
   if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPGW+1024, dat);
+  if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPGW+1024, dat);
 
   /* make the changes active */
   if(object == OBJ_IPGW) {
@@ -179,6 +195,7 @@ void OnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid) {
     if(can != NULL && mbn != can) mbnForceAddress(can, addr);
     if(eth != NULL && mbn != eth) mbnForceAddress(eth, addr);
     if(tcp != NULL && mbn != tcp) mbnForceAddress(tcp, addr);
+    if(udp != NULL && mbn != udp) mbnForceAddress(udp, addr);
   }
   this_node.MambaNetAddr = addr;
 }
@@ -189,6 +206,11 @@ void Error(struct mbn_handler *mbn, int code, char *msg) {
     printf("Error(%s, %d, \"%s\")\n", nodestr(mbn), code, msg);
 }
 
+void WriteLogMessage(struct mbn_handler *mbn, char *msg) {
+  log_write(msg);
+  return;
+  mbn = NULL;
+}
 
 int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
   struct mbn_handler *dest = NULL;
@@ -206,6 +228,8 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
       dest = eth;
     else if(tcp != NULL && mbnNodeStatus(tcp, msg->AddressTo) != NULL)
       dest = tcp;
+    else if(udp != NULL && mbnNodeStatus(udp, msg->AddressTo) != NULL)
+      dest = udp;
 
     /* don't forward if the destination is on the same network */
     if(dest == mbn)
@@ -228,6 +252,7 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
   else {
     if(eth != NULL && mbn != eth) fwd(eth);
     if(tcp != NULL && mbn != tcp) fwd(tcp);
+    if(udp != NULL && mbn != udp) fwd(udp);
     if(can != NULL && mbn != can) {
       /* filter out address reservation packets to can */
       if(!(dest == NULL && msg->MessageType == MBN_MSGTYPE_ADDRESS && msg->Message.Address.Action == MBN_ADDR_ACTION_INFO))
@@ -251,11 +276,12 @@ void AddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old, s
   while((n = mbnNextNode(mbn, n)) != NULL)
     count.UInt++;
 
-  obj = mbn == can ? OBJ_CANNODES : mbn == eth ? OBJ_ETHNODES : OBJ_TCPNODES;
+  obj = (mbn == can) ? OBJ_CANNODES : ((mbn == eth) ? OBJ_ETHNODES : ((mbn == tcp) ? OBJ_TCPNODES : OBJ_UDPNODES));
   obj += 1024;
   if(can != NULL) mbnUpdateSensorData(can, obj, count);
   if(eth != NULL) mbnUpdateSensorData(eth, obj, count);
   if(tcp != NULL) mbnUpdateSensorData(tcp, obj, count);
+  if(udp != NULL) mbnUpdateSensorData(udp, obj, count);
 }
 
 
@@ -302,23 +328,25 @@ void setcallbacks(struct mbn_handler *mbn) {
   mbnSetAddressTableChangeCallback(mbn, AddressTableChange);
   mbnSetSetActuatorDataCallback(mbn, SetActuatorData);
   mbnSetSynchroniseDateTimeCallback(mbn, SynchroniseDateTime);
+  mbnSetWriteLogMessageCallback(mbn, WriteLogMessage);
 }
 
 
 void init(int argc, char **argv, char *upath) {
   struct mbn_interface *itf = NULL;
-  struct mbn_object obj[6];
-  char err[MBN_ERRSIZE], ican[50], tport[10];
+  struct mbn_object obj[NR_OF_OBJECTS];
+  char err[MBN_ERRSIZE], ican[50], tport[10], uport[10];
   int c, itfcount = 0;
   char oem_name[32];
 
   strcpy(upath, DEFAULT_UNIX_PATH);
   strcpy(data_path, DEFAULT_DATA_PATH);
-  ican[0] = ieth[0] = tport[0] = 0;
-  can = eth = tcp = NULL;
+  strcpy(log_file, DEFAULT_LOG_FILE);
+  ican[0] = ieth[0] = tport[0] = uport[0] = 0;
+  can = eth = tcp = udp = NULL;
   verbose = 0;
 
-  while((c = getopt(argc, argv, "c:e:u:t:d:i:p:v")) != -1) {
+  while((c = getopt(argc, argv, "c:e:u:t:s:d:i:p:l:v")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
@@ -345,6 +373,14 @@ void init(int argc, char **argv, char *upath) {
           exit(1);
         }
         strcpy(tport, optarg);
+        itfcount++;
+        break;
+      case 's':
+        if (strlen(optarg) > 9) {
+          fprintf(stderr, "UDP port too long\n");
+          exit(1);
+        }
+        strcpy(uport, optarg);
         itfcount++;
         break;
       /* UNIX socket */
@@ -383,6 +419,9 @@ void init(int argc, char **argv, char *upath) {
           exit(1);
         }
         break;
+      case 'l':
+        strcpy(log_file, optarg);
+        break;
       /* verbose */
       case 'v':
         verbose++;
@@ -394,10 +433,12 @@ void init(int argc, char **argv, char *upath) {
         fprintf(stderr, "  -c dev   CAN device or TTY device\n");
         fprintf(stderr, "  -e dev   Ethernet device\n");
         fprintf(stderr, "  -t port  TCP port (0 = use default)\n");
+        fprintf(stderr, "  -s port  UDP port (0 = use default)\n");
         fprintf(stderr, "  -u path  Path to UNIX socket\n");
         fprintf(stderr, "  -d path  Path to data file (for IP setting)\n");
         fprintf(stderr, "  -p id    Hardware Parent (not specified = from CAN, 'self' = own ID)\n");
         fprintf(stderr, "  -i id    UniqueIDPerProduct for the MambaNet node\n");
+        fprintf(stderr, "  -l path  Path to log file.\n");
         exit(1);
     }
   }
@@ -407,6 +448,12 @@ void init(int argc, char **argv, char *upath) {
     exit(1);
   }
 
+  if(!verbose)
+    log_open();
+
+  log_write("------------------------------------------------");
+  log_write("Try to start the %s", this_node.Name);
+
   net_read();
   /* objects */
   obj[OBJ_IPADDR]   = MBN_OBJ("IP Address", MBN_DATATYPE_NODATA, MBN_DATATYPE_UINT, 4, 0, ~0, 0, net_ip);
@@ -415,6 +462,7 @@ void init(int argc, char **argv, char *upath) {
   obj[OBJ_CANNODES] = MBN_OBJ("CAN Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_TCPNODES] = MBN_OBJ("TCP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
+  obj[OBJ_UDPNODES] = MBN_OBJ("UDP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
 
   if(!verbose)
     daemonize();
@@ -425,10 +473,11 @@ void init(int argc, char **argv, char *upath) {
     strcat(this_node.Name, " MambaNet Gateway");
   }
 
-  /* init can */
+  /* init can interface */
   if(ican[0]) {
     if((itf = mbnCANOpen(ican, this_node.HardwareParent, err)) == NULL) {
       fprintf(stderr, "mbnCANOpen: %s\n", err);
+      log_close();
       exit(1);
     }
     if(verbose)
@@ -436,12 +485,14 @@ void init(int argc, char **argv, char *upath) {
         this_node.HardwareParent[0], this_node.HardwareParent[1], this_node.HardwareParent[2]);
     if((can = mbnInit(&this_node, obj, itf, err)) == NULL) {
       fprintf(stderr, "mbnInit(can): %s\n", err);
+      log_close();
       exit(1);
     }
     setcallbacks(can);
 
     //start interface for the mbn-handler
     mbnStartInterface(itf, err);
+    log_write("CAN interface started (%s)", ican);
   }
 
   /* init ethernet */
@@ -450,18 +501,21 @@ void init(int argc, char **argv, char *upath) {
       fprintf(stderr, "mbnEthernetOpen: %s\n", err);
       if(can)
         mbnFree(can);
+      log_close();
       exit(1);
     }
     if((eth = mbnInit(&this_node, obj, itf, err)) == NULL) {
       fprintf(stderr, "mbnInit(eth): %s\n", err);
       if(can)
         mbnFree(can);
+      log_close();
       exit(1);
     }
     setcallbacks(eth);
 
     //start interface for the mbn-handler
     mbnStartInterface(itf, err);
+    log_write("Ethernet interface started (%s)", ieth);
   }
 
   /* init TCP */
@@ -472,6 +526,7 @@ void init(int argc, char **argv, char *upath) {
         mbnFree(can);
       if(eth)
         mbnFree(eth);
+      log_close();
       exit(1);
     }
     if((tcp = mbnInit(&this_node, obj, itf, err)) == NULL) {
@@ -480,16 +535,50 @@ void init(int argc, char **argv, char *upath) {
         mbnFree(can);
       if(eth)
         mbnFree(eth);
+      log_close();
       exit(1);
     }
     setcallbacks(tcp);
 
     //start interface for the mbn-handler
     mbnStartInterface(itf, err);
+    log_write("TCP interface started listening on port %s", strcmp(tport, "0") ? tport : "34848");
+  }
+
+  if(uport[0]) {
+    if((itf = mbnUDPOpen(NULL, NULL, strcmp(uport, "0") ? uport : NULL, err)) == NULL) {
+      fprintf(stderr, "mbnUDPOpen: %s\n", err);
+      if(tcp)
+        mbnFree(tcp);
+      if(can)
+        mbnFree(can);
+      if(eth)
+        mbnFree(eth);
+      log_close();
+      exit(1);
+    }
+    if((udp = mbnInit(&this_node, obj, itf, err)) == NULL) {
+      fprintf(stderr, "mbnInit(udp): %s\n", err);
+      if(tcp)
+        mbnFree(tcp);
+      if(can)
+        mbnFree(can);
+      if(eth)
+        mbnFree(eth);
+      log_close();
+      exit(1);
+    }
+    setcallbacks(udp);
+
+    //start interface for the mbn-handler
+    mbnStartInterface(itf, err);
+    log_write("UDP interface started listening on port %s", strcmp(uport, "0") ? uport : "34848");
   }
 
   if(!verbose)
     daemonize_finish();
+
+  log_write("Axum Gateway Initialized");
 }
 
 
@@ -499,12 +588,18 @@ int main(int argc, char **argv) {
   init(argc, argv, upath);
   process_unix(upath);
 
+  log_write("Closing gateway");
+
   if(can)
     mbnFree(can);
   if(eth)
     mbnFree(eth);
   if(tcp)
     mbnFree(tcp);
+  if(udp)
+    mbnFree(udp);
+
+  log_close();
 
   return 0;
 }
