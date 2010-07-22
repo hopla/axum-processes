@@ -336,17 +336,18 @@ void init(int argc, char **argv, char *upath) {
   struct mbn_interface *itf = NULL;
   struct mbn_object obj[NR_OF_OBJECTS];
   char err[MBN_ERRSIZE], ican[50], tport[10], uport[10];
+  char remotehost[50], rport[10];
   int c, itfcount = 0;
   char oem_name[32];
 
   strcpy(upath, DEFAULT_UNIX_PATH);
   strcpy(data_path, DEFAULT_DATA_PATH);
   strcpy(log_file, DEFAULT_LOG_FILE);
-  ican[0] = ieth[0] = tport[0] = uport[0] = 0;
+  ican[0] = ieth[0] = tport[0] = uport[0] = remotehost[0] = rport[0] = 0;
   can = eth = tcp = udp = NULL;
   verbose = 0;
 
-  while((c = getopt(argc, argv, "c:e:u:t:s:d:i:p:l:v")) != -1) {
+  while((c = getopt(argc, argv, "c:e:u:t:s:h:r:d:i:p:l:v")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
@@ -383,6 +384,22 @@ void init(int argc, char **argv, char *upath) {
         strcpy(uport, optarg);
         itfcount++;
         break;
+      case 'h':
+        if (strlen(optarg) > 49) {
+          fprintf(stderr, "Hostname too long\n");
+          exit(1);
+        }
+        strcpy(remotehost, optarg);
+        itfcount++;
+        break;
+      case 'r':
+        if (strlen(optarg) > 9) {
+          fprintf(stderr, "UDP port too long\n");
+          exit(1);
+        }
+        strcpy(rport, optarg);
+        break;
+
       /* UNIX socket */
       case 'u':
         if(strlen(optarg) > UNIX_PATH_MAX) {
@@ -428,17 +445,19 @@ void init(int argc, char **argv, char *upath) {
         break;
       /* wrong option */
       default:
-        fprintf(stderr, "Usage: %s [-v] [-c dev] [-e dev] [-t port] [-u path] [-d path] [-i id] [-p id]\n", argv[0]);
-        fprintf(stderr, "  -v       Print verbose output to stdout\n");
-        fprintf(stderr, "  -c dev   CAN device or TTY device\n");
-        fprintf(stderr, "  -e dev   Ethernet device\n");
-        fprintf(stderr, "  -t port  TCP port (0 = use default)\n");
-        fprintf(stderr, "  -s port  UDP port (0 = use default)\n");
-        fprintf(stderr, "  -u path  Path to UNIX socket\n");
-        fprintf(stderr, "  -d path  Path to data file (for IP setting)\n");
-        fprintf(stderr, "  -p id    Hardware Parent (not specified = from CAN, 'self' = own ID)\n");
-        fprintf(stderr, "  -i id    UniqueIDPerProduct for the MambaNet node\n");
-        fprintf(stderr, "  -l path  Path to log file.\n");
+        fprintf(stderr, "Usage: %s [-v] [-c dev] [-e dev] [-t port] [-s port] [-h hostname] [-r hostpor] [-u path] [-d path] [-i id] [-p id]\n", argv[0]);
+        fprintf(stderr, "  -v           Print verbose output to stdout\n");
+        fprintf(stderr, "  -c dev       CAN device or TTY device\n");
+        fprintf(stderr, "  -e dev       Ethernet device\n");
+        fprintf(stderr, "  -t port      TCP listen port (0 = use default)\n");
+        fprintf(stderr, "  -s port      UDP listen port (0 = use default)\n");
+        fprintf(stderr, "  -h hostname  Host to connect via UDP\n");
+        fprintf(stderr, "  -r hostport  Hostport to connect via UDP\n");
+        fprintf(stderr, "  -u path      Path to UNIX socket\n");
+        fprintf(stderr, "  -d path      Path to data file (for IP setting)\n");
+        fprintf(stderr, "  -p id        Hardware Parent (not specified = from CAN, 'self' = own ID)\n");
+        fprintf(stderr, "  -i id        UniqueIDPerProduct for the MambaNet node\n");
+        fprintf(stderr, "  -l path      Path to log file.\n");
         exit(1);
     }
   }
@@ -545,8 +564,8 @@ void init(int argc, char **argv, char *upath) {
     log_write("TCP interface started listening on port %s", strcmp(tport, "0") ? tport : "34848");
   }
 
-  if(uport[0]) {
-    if((itf = mbnUDPOpen(NULL, NULL, strcmp(uport, "0") ? uport : NULL, err)) == NULL) {
+  if(uport[0] || remotehost[0]) {
+    if((itf = mbnUDPOpen(remotehost[0] != 0 ? remotehost : NULL, strcmp(rport, "0") ? rport: NULL, strcmp(uport, "0") ? uport : NULL, err)) == NULL) {
       fprintf(stderr, "mbnUDPOpen: %s\n", err);
       if(tcp)
         mbnFree(tcp);
