@@ -295,7 +295,7 @@ void scan_free(struct mbn_interface *itf) {
 
 void scan_free_addr(struct mbn_interface *itf, void *ptr) {
   struct can_ifaddr *adr = (struct can_ifaddr *)ptr;
-  mbnWriteLogMessage(itf, "Removed CAN interface using 0x%08X", adr->addr);
+  mbnWriteLogMessage(itf, "Removed CAN address 0x%08X", adr->addr);
   adr->lnk->addrs[adr->lnkindex] = NULL;
   free(ptr);
 }
@@ -336,7 +336,7 @@ int scan_parse(struct can_frame *frame, struct mbn_interface *itf) {
     dat->addrs[n]->addr = src;
     dat->addrs[n]->seq = 0;
     ai = n;
-    mbnWriteLogMessage(itf, "Add CAN interface using 0x%08X", src);
+    mbnWriteLogMessage(itf, "Add CAN address 0x%08X", src);
   }
 
   /* check sequence ID */
