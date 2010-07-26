@@ -1434,7 +1434,7 @@ void dsp_set_monitor_buss(DSP_HANDLER_STRUCT *dsp_handler, unsigned int MonitorC
   LOG_DEBUG("[%s] leave", __func__);
 }
 
-void dsp_read_buss_meters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdBLevel)
+void dsp_read_buss_levelmeters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdBLevel)
 {
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -1472,7 +1472,28 @@ void dsp_read_buss_meters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdBLevel
   LOG_DEBUG("[%s] leave", __func__);
 }
 
-void dsp_read_module_meters(DSP_HANDLER_STRUCT *dsp_handler, float *dBLevel)
+void dsp_read_buss_phasemeters(DSP_HANDLER_STRUCT *dsp_handler, float *BussPhase)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+
+  dsp_lock(1);
+  DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[0];
+  if (dspcard->dsp_regs[2].HPIA != NULL)
+  {
+    for (int cntChannel=0; cntChannel<20; cntChannel++)
+    {
+      unsigned int MeterAddress = SummingDSPPhaseRMS+cntChannel*4;
+
+      *dspcard->dsp_regs[2].HPIA = MeterAddress;
+      BussPhase[cntChannel] = atan(*((float *)dspcard->dsp_regs[2].HPID))*1.273239545;
+    }
+  }
+  dsp_lock(0);
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+
+void dsp_read_module_levelmeters(DSP_HANDLER_STRUCT *dsp_handler, float *dBLevel)
 {
   int cntDSPCard;
   LOG_DEBUG("[%s] enter", __func__);
@@ -1513,6 +1534,36 @@ void dsp_read_module_meters(DSP_HANDLER_STRUCT *dsp_handler, float *dBLevel)
         {
           dBLevel[32+cntChannel+(cntDSPCard*64)] = -2000;
         }
+      }
+    }
+    dsp_lock(0);
+  }
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void dsp_read_module_phasemeters(DSP_HANDLER_STRUCT *dsp_handler, float *Phase)
+{
+  int cntDSPCard;
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
+  {
+    dsp_lock(1);
+    DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[cntDSPCard];
+    if (dspcard->dsp_regs[0].HPIA != NULL)
+    {
+      for (int cntChannel=0; cntChannel<16; cntChannel++)
+      {
+        *dspcard->dsp_regs[0].HPIA = ModuleDSPPhaseRMS+cntChannel*4;
+        Phase[cntChannel+(cntDSPCard*32)] = atan(*((float *)dspcard->dsp_regs[0].HPID))*1.273239545;
+      }
+    }
+    if (dspcard->dsp_regs[1].HPIA != NULL)
+    {
+      for (int cntChannel=0; cntChannel<16; cntChannel++)
+      {
+        *dspcard->dsp_regs[1].HPIA = ModuleDSPPhaseRMS+cntChannel*4;
+        Phase[16+cntChannel+(cntDSPCard*32)] = atan(*((float *)dspcard->dsp_regs[1].HPID))*1.273239545;
       }
     }
     dsp_lock(0);

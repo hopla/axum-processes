@@ -114,8 +114,12 @@ void dsp_set_mixmin(DSP_HANDLER_STRUCT *dsp_handler, unsigned int SystemChannelN
 void dsp_set_buss_mstr_lvl(DSP_HANDLER_STRUCT *dsp_handler);
 void dsp_set_interpolation(DSP_HANDLER_STRUCT *dsp_handler, int Samplerate);
 void dsp_set_monitor_buss(DSP_HANDLER_STRUCT *dsp_handler, unsigned int MonitorChannelNr);
-void dsp_read_buss_meters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdBLevel);
-void dsp_read_module_meters(DSP_HANDLER_STRUCT *dsp_handler, float *dBLevel);
+void dsp_read_buss_levelmeters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdBLevel);
+void dsp_read_buss_phasemeters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingPhase);
+void dsp_read_module_levelmeters(DSP_HANDLER_STRUCT *dsp_handler, float *dBLevel);
+void dsp_read_module_phasemeters(DSP_HANDLER_STRUCT *dsp_handler, float *Phase);
+
+
 
 //debug function
 float dsp_read_float(DSP_HANDLER_STRUCT *dsp_handler, unsigned char CardNr, unsigned char DSPNr, unsigned int Address);

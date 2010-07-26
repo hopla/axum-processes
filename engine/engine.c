@@ -112,13 +112,17 @@ int cntDebugNodeObject=0;
 float cntFloatDebug = 0;
 
 unsigned char VUMeter = 0;
-unsigned char MeterFrequency = 5; //20Hz
+unsigned char LevelMeterFrequency = 5; //20Hz
+unsigned char PhaseMeterFrequency = 10; //10Hz
 
 AXUM_DATA_STRUCT AxumData;
 matrix_sources_struct matrix_sources;
 preset_pos_struct presets;
 
-float SummingdBLevel[48];
+float dBLevel[256];
+float Phase[128];
+float SummingdBLevel[64];
+float SummingPhase[32];
 unsigned int BackplaneMambaNetAddress = 0x00000000;
 
 DSP_HANDLER_STRUCT *dsp_handler;
@@ -324,6 +328,8 @@ void init(int argc, char **argv)
     log_close();
     exit(1);
   }
+
+  log_write(mbnVersion());
 
   if ((itf=mbnEthernetOpen(ethdev, error)) == NULL)
   {
@@ -6315,22 +6321,25 @@ int First = 1;
 
 void Timer100HzDone(int Value)
 {
-  float dBLevel[256];
 
   if (First)
   { //First time wait 20 seconds before starting meters
     PreviousCount_LevelMeter = cntMillisecondTimer+2000;
     PreviousCount_SignalDetect = cntMillisecondTimer+2000;
+    PreviousCount_PhaseMeter = cntMillisecondTimer+2000;
+
     //dummy read meters to empty level buffers
-    dsp_read_buss_meters(dsp_handler, SummingdBLevel);
-    dsp_read_module_meters(dsp_handler, dBLevel);
+    dsp_read_buss_levelmeters(dsp_handler, SummingdBLevel);
+    dsp_read_module_levelmeters(dsp_handler, dBLevel);
+    dsp_read_buss_phasemeters(dsp_handler, SummingPhase);
+    dsp_read_module_phasemeters(dsp_handler, Phase);
     First = 0;
   }
 
-  if ((cntMillisecondTimer-PreviousCount_LevelMeter)>MeterFrequency)
+  if ((cntMillisecondTimer-PreviousCount_LevelMeter)>LevelMeterFrequency)
   {
     PreviousCount_LevelMeter = cntMillisecondTimer;
-    dsp_read_buss_meters(dsp_handler, SummingdBLevel);
+    dsp_read_buss_levelmeters(dsp_handler, SummingdBLevel);
 
     //buss audio level
     for (int cntBuss=0; cntBuss<16; cntBuss++)
@@ -6347,15 +6356,42 @@ void Timer100HzDone(int Value)
     }
   }
 
+  if ((cntMillisecondTimer-PreviousCount_PhaseMeter)>PhaseMeterFrequency)
+  {
+    PreviousCount_PhaseMeter = cntMillisecondTimer;
+    dsp_read_buss_phasemeters(dsp_handler, SummingPhase);
+
+    //buss audio level
+    for (int cntBuss=0; cntBuss<16; cntBuss++)
+    {
+      CheckObjectsToSent(0x01000000 | (cntBuss<<12) | BUSS_FUNCTION_AUDIO_PHASE);
+    }
+
+    //monitor buss audio level
+    for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
+    {
+      CheckObjectsToSent(0x02000000 | (cntMonitorBuss<<12) | MONITOR_BUSS_FUNCTION_AUDIO_PHASE);
+    }
+
+    dsp_read_module_phasemeters(dsp_handler, Phase);
+    for (int cntModule=0; cntModule<128; cntModule++)
+    {
+      CheckObjectsToSent((cntModule<<12) | MODULE_FUNCTION_AUDIO_PHASE);
+    }
+  }
+
   if ((cntMillisecondTimer-PreviousCount_SignalDetect)>10)
   {
     PreviousCount_SignalDetect = cntMillisecondTimer;
-    dsp_read_module_meters(dsp_handler, dBLevel);
+    dsp_read_module_levelmeters(dsp_handler, dBLevel);
 
     for (int cntModule=0; cntModule<128; cntModule++)
     {
       int FirstChannelNr = cntModule<<1;
       unsigned int DisplayFunctionNumber;
+
+      CheckObjectsToSent((cntModule<<12) | MODULE_FUNCTION_AUDIO_LEVEL_LEFT);
+      CheckObjectsToSent((cntModule<<12) | MODULE_FUNCTION_AUDIO_LEVEL_RIGHT);
 
       if ((dBLevel[FirstChannelNr]>-50) || (dBLevel[FirstChannelNr+1]>-50))
       {   //Signal
@@ -9289,6 +9325,45 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           }
         }
         break;
+        case MODULE_FUNCTION_AUDIO_LEVEL_LEFT:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_FLOAT:
+            {
+              data.Float = dBLevel[(ModuleNr*2)+0];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+            }
+            break;
+          }
+        }
+        break;
+        case MODULE_FUNCTION_AUDIO_LEVEL_RIGHT:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_FLOAT:
+            {
+              data.Float = dBLevel[(ModuleNr*2)+1];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+            }
+            break;
+          }
+        }
+        break;
+        case MODULE_FUNCTION_AUDIO_PHASE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_FLOAT:
+            {
+              data.Float = Phase[ModuleNr];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+            }
+            break;
+          }
+        }
+        break;
       }
     }
     break;
@@ -9437,8 +9512,15 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case BUSS_FUNCTION_AUDIO_LEVEL_RIGHT:
         {
-          data.Float = SummingdBLevel[(BussNr*2)+1];
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+          switch (DataType)
+          {
+            case MBN_DATATYPE_FLOAT:
+            {
+              data.Float = SummingdBLevel[(BussNr*2)+1];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+            }
+          }
+          break;
         }
         break;
         case BUSS_FUNCTION_SELECT_1:
@@ -9457,6 +9539,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 data.State = 1;
               }
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case BUSS_FUNCTION_AUDIO_PHASE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_FLOAT:
+            {
+              data.Float = SummingPhase[BussNr];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
             }
             break;
           }
@@ -9843,6 +9938,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   data.State = 1;
                 }
                 mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              }
+              break;
+            }
+          }
+          break;
+          case MONITOR_BUSS_FUNCTION_AUDIO_PHASE:
+          {
+            switch (DataType)
+            {
+              case MBN_DATATYPE_FLOAT:
+              {
+                data.Float = SummingPhase[16+MonitorBussNr];
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
               }
               break;
             }

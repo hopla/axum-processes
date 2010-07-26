@@ -347,8 +347,11 @@
 #define MODULE_FUNCTION_SELECT_2              263
 #define MODULE_FUNCTION_SELECT_3              264
 #define MODULE_FUNCTION_SELECT_4              265
+#define MODULE_FUNCTION_AUDIO_LEVEL_LEFT      266
+#define MODULE_FUNCTION_AUDIO_LEVEL_RIGHT     267
+#define MODULE_FUNCTION_AUDIO_PHASE           268
 
-#define NUMBER_OF_MODULE_FUNCTIONS            266
+#define NUMBER_OF_MODULE_FUNCTIONS            269
 #define  NUMBER_OF_MODULES                    128
 
 #define BUSS_FUNCTION_MASTER_LEVEL              0
@@ -362,8 +365,9 @@
 #define BUSS_FUNCTION_SELECT_2                  8
 #define BUSS_FUNCTION_SELECT_3                  9
 #define BUSS_FUNCTION_SELECT_4                  10
+#define BUSS_FUNCTION_AUDIO_PHASE               11
 
-#define NUMBER_OF_BUSS_FUNCTIONS                11
+#define NUMBER_OF_BUSS_FUNCTIONS                12
 #define  NUMBER_OF_BUSSES                       16
 
 #define MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF     0
@@ -467,8 +471,9 @@
 #define MONITOR_BUSS_FUNCTION_SELECT_2          98
 #define MONITOR_BUSS_FUNCTION_SELECT_3          99
 #define MONITOR_BUSS_FUNCTION_SELECT_4          100
+#define MONITOR_BUSS_FUNCTION_AUDIO_PHASE       101
 
-#define NUMBER_OF_MONITOR_BUSS_FUNCTIONS        101
+#define NUMBER_OF_MONITOR_BUSS_FUNCTIONS        102
 #define NUMBER_OF_MONITOR_BUSSES                16
 
 #define DESTINATION_FUNCTION_LABEL                      0
