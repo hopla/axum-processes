@@ -565,7 +565,7 @@ void init(int argc, char **argv, char *upath) {
   }
 
   if(uport[0] || remotehost[0]) {
-    if((itf = mbnUDPOpen(remotehost[0] != 0 ? remotehost : NULL, strcmp(rport, "0") ? rport: NULL, strcmp(uport, "0") ? uport : NULL, err)) == NULL) {
+    if((itf = mbnUDPOpen(remotehost[0] != 0 ? remotehost : NULL, strcmp(rport, "0") ? rport: NULL, strcmp(uport, "0") ? uport : "34848", err)) == NULL) {
       fprintf(stderr, "mbnUDPOpen: %s\n", err);
       if(tcp)
         mbnFree(tcp);
