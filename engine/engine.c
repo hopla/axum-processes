@@ -9721,7 +9721,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               case MBN_DATATYPE_UINT:
               {
                 int dB = 0;
-                dB = ((AxumData.Monitor[MonitorBussNr].PhonesLevel-20)*10)+1400;
+                dB = ((AxumData.Monitor[MonitorBussNr].PhonesLevel-10)*10)+1400;
 
                 if (dB<0)
                 {
@@ -9804,7 +9804,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               case MBN_DATATYPE_UINT:
               {
                 int dB = 0;
-                dB = ((AxumData.Monitor[MonitorBussNr].SpeakerLevel-20)*10)+1400;
+                dB = ((AxumData.Monitor[MonitorBussNr].SpeakerLevel-10)*10)+1400;
 
                 if (dB<0)
                 {
@@ -10855,7 +10855,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             {
               case MBN_DATATYPE_UINT:
               {
-                int dB = (AxumData.Monitor[MonitorBussNr].SpeakerLevel*10)+1400;
+                int dB = ((AxumData.Monitor[MonitorBussNr].SpeakerLevel-10)*10)+1400;
                 if (dB<0)
                 {
                   dB = 0;
@@ -10916,7 +10916,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               case MBN_DATATYPE_UINT:
               {
                 int dB = 0;
-                dB = ((AxumData.Monitor[MonitorBussNr].PhonesLevel-20)*10)+1400;
+                dB = ((AxumData.Monitor[MonitorBussNr].PhonesLevel-10)*10)+1400;
 
                 if (dB<0)
                 {
