@@ -2224,9 +2224,12 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
           if (((sensor_rcv_func->FunctionNr&0xFF000FFF) == (0x02000000 | MONITOR_BUSS_FUNCTION_SPEAKER_LEVEL)) ||
               ((sensor_rcv_func->FunctionNr&0xFF000FFF) == (0x02000000 | MONITOR_BUSS_FUNCTION_PHONES_LEVEL)))
           {
-            if (node_info->ObjectInformation[cntObject-1024].SensorDataType != MBN_DATATYPE_NODATA)
+            if (NrOfObjectsAttachedToFunction(sensor_rcv_func->FunctionNr) <= 1)
             {
-              mbnGetSensorData(mbn, node_info->MambaNetAddress, cntObject, 1);
+              if (node_info->ObjectInformation[cntObject-1024].SensorDataType != MBN_DATATYPE_NODATA)
+              {
+                mbnGetSensorData(mbn, node_info->MambaNetAddress, cntObject, 1);
+              }
             }
           }
         }
