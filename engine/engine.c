@@ -1193,13 +1193,22 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             { //Low cut frequency
               if (type == MBN_DATATYPE_SINT)
               {
+                int old_freq = AxumData.ModuleData[ModuleNr].Filter.Frequency;
                 if (data.SInt>=0)
                 {
                   AxumData.ModuleData[ModuleNr].Filter.Frequency *= 1+((float)data.SInt/100);
+                  if (old_freq == AxumData.ModuleData[ModuleNr].Filter.Frequency)
+                  {
+                    AxumData.ModuleData[ModuleNr].Filter.Frequency++;
+                  }
                 }
                 else
                 {
                   AxumData.ModuleData[ModuleNr].Filter.Frequency /= 1+((float)-data.SInt/100);
+                  if (old_freq == AxumData.ModuleData[ModuleNr].Filter.Frequency)
+                  {
+                    AxumData.ModuleData[ModuleNr].Filter.Frequency--;
+                  }
                 }
 
                 if (AxumData.ModuleData[ModuleNr].Filter.Frequency <= 20)
@@ -1318,10 +1327,18 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   if (data.SInt>=0)
                   {
                     AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency *= 1+((float)data.SInt/100);
+                    if (OldFrequency == AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency)
+                    {
+                      AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency++;
+                    }
                   }
                   else
                   {
                     AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency /= 1+((float)-data.SInt/100);
+                    if (OldFrequency == AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency)
+                    {
+                      AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency--;
+                    }
                   }
 
                   if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency<20)
@@ -11774,10 +11791,18 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         if (data.SInt>=0)
         {
           AxumData.ModuleData[ModuleNr].Filter.Frequency *= 1+((float)data.SInt/100);
+          if (OldFrequency == AxumData.ModuleData[ModuleNr].Filter.Frequency)
+          {
+            AxumData.ModuleData[ModuleNr].Filter.Frequency++;
+          }
         }
         else
         {
           AxumData.ModuleData[ModuleNr].Filter.Frequency /= 1+((float)-data.SInt/100);
+          if (OldFrequency == AxumData.ModuleData[ModuleNr].Filter.Frequency)
+          {
+            AxumData.ModuleData[ModuleNr].Filter.Frequency--;
+          }
         }
 
         if (AxumData.ModuleData[ModuleNr].Filter.Frequency <= 20)
@@ -11844,10 +11869,18 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         if (data.SInt>=0)
         {
           AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency *= 1+((float)data.SInt/100);
+          if (OldFrequency == AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency)
+          {
+            AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency++;
+          }
         }
         else
         {
           AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency /= 1+((float)-data.SInt/100);
+          if (OldFrequency == AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency)
+          {
+            AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency++;
+          }
         }
 
         if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency<20)
