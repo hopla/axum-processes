@@ -58,6 +58,7 @@ CREATE TABLE node_config (
   object integer NOT NULL,
   firm_major integer NOT NULL,
   func function_number NOT NULL,
+  label varchar(16),
   PRIMARY KEY(addr, object, firm_major)
 );
 
@@ -93,6 +94,7 @@ CREATE TABLE functions (
   name varchar(64) NOT NULL,
   rcv_type smallint NOT NULL CHECK(rcv_type >= 0 AND rcv_type <= 6),
   xmt_type smallint NOT NULL CHECK(xmt_type >= 0 AND xmt_type <= 6),
+  label varchar(16) NOT NULL DEFAULT 'No label',
   pos smallint NOT NULL DEFAULT 9999,
 );
 CREATE UNIQUE INDEX functions_unique ON functions (rcv_type, xmt_type, ((func).type), ((func).seq), ((func).func));
