@@ -449,6 +449,7 @@ CREATE TABLE predefined_node_config (
   cfg_name varchar(32) NOT NULL,
   object integer NOT NULL,
   func function_number NOT NULL,
+  label varchar(16),
   PRIMARY KEY(man_id, prod_id, firm_major, cfg_name, object)
 );
 
