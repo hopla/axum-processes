@@ -1896,7 +1896,7 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
 
   if (last_obj > (1024+node_info->UsedNumberOfCustomObjects))
   {
-    log_write("[%s] Error obj: %d exceeds the reserved obj memory (last_obj: %d)", __func__, last_obj, 1024+node_info->UsedNumberOfCustomObjects);
+    log_write("[%s] Error obj: %d exceeds the reserved obj memory (last_obj: %d) at 0x%08X", __func__, last_obj, 1024+node_info->UsedNumberOfCustomObjects, node_info->MambaNetAddress);
     return 0;
   }
 
@@ -2140,7 +2140,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
 
   if (last_obj > (1024+node_info->UsedNumberOfCustomObjects))
   {
-    log_write("[%s] Error obj: %d exceeds the reserved obj memory (last_obj: %d)", __func__, last_obj, 1024+node_info->UsedNumberOfCustomObjects);
+    log_write("[%s] Error obj: %d exceeds the reserved obj memory (last_obj: %d) at 0x%08x", __func__, last_obj, 1024+node_info->UsedNumberOfCustomObjects, node_info->MambaNetAddress);
     return 0;
   }
 
