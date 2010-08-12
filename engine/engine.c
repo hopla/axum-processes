@@ -1262,7 +1262,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 SetAxum_ModuleProcessing(ModuleNr);
 
                 unsigned int FunctionNrToSend = ModuleNr<<12;
-                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+                CheckObjectsToSent(FunctionNrToSend | MODULE_FUNCTION_LOW_CUT_ON_OFF);
+                CheckObjectsToSent(FunctionNrToSend | MODULE_FUNCTION_LOW_CUT_FREQUENCY);
 
                 DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_LOW_CUT);
               }
@@ -14627,7 +14628,8 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
     CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON))));
     CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_OFF-MODULE_FUNCTION_BUSS_1_2_OFF))));
     CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_ON_OFF+(BussNr*(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF))));
-
+    //To adjust text if level object = octetstring
+    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_BUSS_1_2_LEVEL+(BussNr*(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL))));
 
     int ControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
     DoAxum_UpdateModuleControlMode(ModuleNr, ControlMode);
