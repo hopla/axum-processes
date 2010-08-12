@@ -2316,7 +2316,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             { //Buss balance
               int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_BALANCE)/(MODULE_FUNCTION_BUSS_3_4_BALANCE-MODULE_FUNCTION_BUSS_1_2_BALANCE);
 
-              if (type == MBN_DATATYPE_SINT)
+              if (type == MBN_DATATYPE_UINT)
+              {
+                AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance = ((data.UInt-DataMinimal)*1023)/(DataMaximal-DataMinimal);
+              }
+              else if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance += data.SInt;
                 if (AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance< 0)
@@ -2327,14 +2331,15 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance = 1023;
                 }
-                SetAxum_BussLevels(ModuleNr);
-
-                unsigned int FunctionNrToSend = ModuleNr<<12;
-                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-
-                int FunctionOffset = (MODULE_CONTROL_MODE_BUSS_1_2_BALANCE-MODULE_CONTROL_MODE_BUSS_3_4_BALANCE)*BussNr;
-                DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_BUSS_1_2_BALANCE+FunctionOffset);
               }
+
+              SetAxum_BussLevels(ModuleNr);
+
+              unsigned int FunctionNrToSend = ModuleNr<<12;
+              CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+
+              int FunctionOffset = (MODULE_CONTROL_MODE_BUSS_1_2_BALANCE-MODULE_CONTROL_MODE_BUSS_3_4_BALANCE)*BussNr;
+              DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_BUSS_1_2_BALANCE+FunctionOffset);
             }
             break;
             case MODULE_FUNCTION_BUSS_1_2_BALANCE_RESET:
@@ -9101,6 +9106,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_BALANCE)/(MODULE_FUNCTION_BUSS_3_4_BALANCE-MODULE_FUNCTION_BUSS_1_2_BALANCE);
           switch (DataType)
           {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = ((AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance*(DataMaximal-DataMinimal))/1023)+DataMinimal;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
             case MBN_DATATYPE_OCTETS:
             {
               unsigned char Types[4] = {'[','|','|',']'};
