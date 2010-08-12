@@ -1747,7 +1747,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_PAN:
             { //Pan
-              if (type == MBN_DATATYPE_SINT)
+              if (type == MBN_DATATYPE_UINT)
+              {
+                AxumData.ModuleData[ModuleNr].Panorama = ((data.UInt-DataMinimal)*1023)/(DataMaximal-DataMinimal);
+              }
+              else if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].Panorama += data.SInt;
                 if (AxumData.ModuleData[ModuleNr].Panorama< 0)
@@ -1758,13 +1762,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   AxumData.ModuleData[ModuleNr].Panorama = 1023;
                 }
-                SetAxum_BussLevels(ModuleNr);
-
-                unsigned int FunctionNrToSend = ModuleNr<<12;
-                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-
-                DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_PAN);
               }
+
+              SetAxum_BussLevels(ModuleNr);
+
+              unsigned int FunctionNrToSend = ModuleNr<<12;
+              CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+
+              DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_PAN);
             }
             break;
             case MODULE_FUNCTION_PAN_RESET:
@@ -8746,6 +8751,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         { //Pan
           switch (DataType)
           {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = ((AxumData.ModuleData[ModuleNr].Panorama*(DataMaximal-DataMinimal))/1023)+DataMinimal;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
             case MBN_DATATYPE_OCTETS:
             {
               unsigned char Types[4] = {'[','|','|',']'};
