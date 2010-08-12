@@ -1681,7 +1681,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_EXPANDER_THRESHOLD:
             { //Dynamics amount
-              if (type == MBN_DATATYPE_SINT)
+              if (type == MBN_DATATYPE_UINT)
+              {
+                AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold = ((50*data.UInt)/(DataMaximal-DataMinimal))-50;
+              }
+              else if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold += ((float)data.SInt/2);
                 if (AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold < -50)
@@ -1692,13 +1696,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold = 0;
                 }
-                SetAxum_ModuleProcessing(ModuleNr);
-
-                unsigned int FunctionNrToSend = ModuleNr<<12;
-                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-
-                DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_EXPANDER_THRESHOLD);
               }
+
+              SetAxum_ModuleProcessing(ModuleNr);
+
+              unsigned int FunctionNrToSend = ModuleNr<<12;
+              CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+
+              DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_EXPANDER_THRESHOLD);
             }
             break;
             case MODULE_FUNCTION_MONO_ON_OFF:
@@ -8686,6 +8691,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         { //Downward expander threshold
           switch (DataType)
           {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = (((AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold+50)*(DataMaximal-DataMinimal))/50)+DataMinimal;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold);
