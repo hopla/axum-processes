@@ -1610,7 +1610,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     //                              break;
             case MODULE_FUNCTION_AGC_THRESHOLD:
             { //Dynamics amount
-              if (type == MBN_DATATYPE_SINT)
+              if (type == MBN_DATATYPE_UINT)
+              {
+                AxumData.ModuleData[ModuleNr].AGCThreshold = ((30*data.UInt)/(DataMaximal-DataMinimal))-30;
+              }
+              else if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].AGCThreshold += ((float)data.SInt/2);
                 if (AxumData.ModuleData[ModuleNr].AGCThreshold < -30)
@@ -1621,13 +1625,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   AxumData.ModuleData[ModuleNr].AGCThreshold = 0;
                 }
-                SetAxum_ModuleProcessing(ModuleNr);
-
-                unsigned int FunctionNrToSend = ModuleNr<<12;
-                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-
-                DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_AGC_THRESHOLD);
               }
+
+              SetAxum_ModuleProcessing(ModuleNr);
+
+              unsigned int FunctionNrToSend = ModuleNr<<12;
+              CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+
+              DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_AGC_THRESHOLD);
             }
             break;
             case MODULE_FUNCTION_AGC_AMOUNT:
@@ -8650,6 +8655,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         { //Dynamics threshold
           switch (DataType)
           {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = (((AxumData.ModuleData[ModuleNr].AGCThreshold+30)*(DataMaximal-DataMinimal))/30)+DataMinimal;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].AGCThreshold);
