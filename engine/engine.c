@@ -1637,7 +1637,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_AGC_AMOUNT:
             { //Dynamics amount
-              if (type == MBN_DATATYPE_SINT)
+              if (type == MBN_DATATYPE_UINT)
+              {
+                AxumData.ModuleData[ModuleNr].AGCAmount = (100*data.UInt)/(DataMaximal-DataMinimal);
+              }
+              else if (type == MBN_DATATYPE_SINT)
               {
                 AxumData.ModuleData[ModuleNr].AGCAmount += data.SInt;
                 if (AxumData.ModuleData[ModuleNr].AGCAmount < 0)
@@ -1648,13 +1652,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   AxumData.ModuleData[ModuleNr].AGCAmount = 100;
                 }
-                SetAxum_ModuleProcessing(ModuleNr);
-
-                unsigned int FunctionNrToSend = ModuleNr<<12;
-                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-
-                DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_AGC);
               }
+
+              SetAxum_ModuleProcessing(ModuleNr);
+
+              unsigned int FunctionNrToSend = ModuleNr<<12;
+              CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+
+              DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_AGC);
             }
             break;
             case MODULE_FUNCTION_DYNAMICS_ON_OFF:
@@ -8675,6 +8680,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         { //Dynamics amount
           switch (DataType)
           {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = ((AxumData.ModuleData[ModuleNr].AGCAmount*(DataMaximal-DataMinimal))/100)+DataMinimal;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "  %3d%%  ", AxumData.ModuleData[ModuleNr].AGCAmount);
