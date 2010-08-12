@@ -1050,7 +1050,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
                     }
                   }
-                  DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_GAIN);
+                  DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_SOURCE_GAIN);
                 }
               }
             }
@@ -1081,7 +1081,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
                           }
                         }
-                        DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_GAIN);
+                        DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_SOURCE_GAIN);
                       }
                     }
                   }
