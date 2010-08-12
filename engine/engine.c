@@ -1068,9 +1068,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     if (data.State)
                     {
-                      if (AxumData.SourceData[SourceNr].Gain != 0)
+                      if (AxumData.SourceData[SourceNr].Gain != 30)
                       {
-                        AxumData.SourceData[SourceNr].Gain = 0;
+                        AxumData.SourceData[SourceNr].Gain = 30;
                         CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_GAIN);
 
                         for (int cntModule=0; cntModule<128; cntModule++)
