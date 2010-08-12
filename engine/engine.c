@@ -1015,36 +1015,42 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             break;
             case MODULE_FUNCTION_SOURCE_GAIN_LEVEL:
             {
-              if (type == MBN_DATATYPE_SINT)
+              if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
               {
-                if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
-                {
-                  unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-                  unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+                unsigned int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+                unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
-                  if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
+                if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
+                {
+                  if (type == MBN_DATATYPE_UINT)
+                  {
+                    AxumData.SourceData[SourceNr].Gain = (((float)55*(data.UInt-DataMinimal))/(DataMaximal-DataMinimal))+20;
+
+                  }
+                  else if (type == MBN_DATATYPE_SINT)
                   {
                     AxumData.SourceData[SourceNr].Gain += (float)data.SInt/10;
                     if (AxumData.SourceData[SourceNr].Gain<20)
                     {
                       AxumData.SourceData[SourceNr].Gain = 20;
                     }
-                    else if (AxumData.SourceData[SourceNr].Gain>20)
+                    else if (AxumData.SourceData[SourceNr].Gain>75)
                     {
                       AxumData.SourceData[SourceNr].Gain = 75;
                     }
+                  }
 
-                    CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_GAIN);
+                  CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_GAIN);
 
-                    for (int cntModule=0; cntModule<128; cntModule++)
+                  for (int cntModule=0; cntModule<128; cntModule++)
+                  {
+                    if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
                     {
-                      if (AxumData.ModuleData[cntModule].SelectedSource == AxumData.ModuleData[ModuleNr].SelectedSource)
-                      {
-                        FunctionNrToSent = (cntModule<<12);
-                        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
-                      }
+                      FunctionNrToSent = (cntModule<<12);
+                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
                     }
                   }
+                  DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_GAIN);
                 }
               }
             }
@@ -1075,6 +1081,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                             CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE_GAIN_LEVEL);
                           }
                         }
+                        DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_GAIN);
                       }
                     }
                   }
@@ -8290,15 +8297,29 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_SOURCE_GAIN_LEVEL:
         {
-          switch (DataType)
+          if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
           {
-            case MBN_DATATYPE_OCTETS:
-            {
-              if ((AxumData.ModuleData[ModuleNr].SelectedSource >= matrix_sources.src_offset.min.source) && (AxumData.ModuleData[ModuleNr].SelectedSource <= matrix_sources.src_offset.max.source))
-              {
-                int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
-                unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
+            int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
+            unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
+            switch (DataType)
+            {
+              case MBN_DATATYPE_UINT:
+              {
+                if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
+                {
+                  int Position = (((AxumData.SourceData[SourceNr].Gain-20)*(DataMaximal-DataMinimal))/55)+DataMinimal;
+                  data.UInt = Position;
+                }
+                else
+                {
+                  data.UInt = 0;
+                }
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              }
+              break;
+              case MBN_DATATYPE_OCTETS:
+              {
                 if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
                 {
                   sprintf(LCDText,     "%5.1fdB", AxumData.SourceData[SourceNr].Gain);
@@ -8307,15 +8328,30 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   sprintf(LCDText, "Not used");
                 }
+                data.Octets = (unsigned char *)LCDText;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
               }
-              else
-              {
-                sprintf(LCDText, "  - dB  ");
-              }
-              data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              break;
             }
-            break;
+          }
+          else
+          {
+            switch (DataType)
+            {
+              case MBN_DATATYPE_UINT:
+              {
+                data.UInt = 0;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              }
+              break;
+              case MBN_DATATYPE_OCTETS:
+              {
+                sprintf(LCDText, "- dB");
+                data.Octets = (unsigned char *)LCDText;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              }
+              break;
+            }
           }
         }
         break;
@@ -8355,7 +8391,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_UINT:
             {
-              int Position = ((AxumData.ModuleData[ModuleNr].Gain+20)*1023)/40;
+              int Position = (((AxumData.ModuleData[ModuleNr].Gain+20)*(DataMaximal-DataMinimal))/40)+DataMinimal;
 
               data.UInt = Position;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
