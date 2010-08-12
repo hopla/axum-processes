@@ -639,6 +639,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 CurrentSource = AdjustModuleSource(CurrentSource, data.SInt);
                 AxumData.ModuleData[ModuleNr].TemporySourceLocal = CurrentSource;
+
+                unsigned int FunctionNrToSent = (ModuleNr<<12);
+                CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_SOURCE);
               }
               else if (type == MBN_DATATYPE_STATE)
               {
