@@ -1196,7 +1196,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             { //Low cut frequency
               if (type == MBN_DATATYPE_SINT)
               {
-                int old_freq = AxumData.ModuleData[ModuleNr].Filter.Frequency;
+                unsigned int old_freq = AxumData.ModuleData[ModuleNr].Filter.Frequency;
                 if (data.SInt>=0)
                 {
                   AxumData.ModuleData[ModuleNr].Filter.Frequency *= 1+((float)data.SInt/100);
