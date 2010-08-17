@@ -71,6 +71,7 @@ int scan_open_sock(char *ifname, struct can_data *dat, char *err);
 int scan_open_tty(char *ifname, struct can_data *dat, char *err);
 int scan_init(struct mbn_interface *, char *);
 int scan_hwparent(struct mbn_interface *, unsigned short *, char *);
+void scan_stop(struct mbn_interface *);
 void scan_free(struct mbn_interface *);
 void scan_free_addr(struct mbn_interface *, void *);
 void *scan_send(void *);
@@ -123,6 +124,7 @@ struct mbn_interface * MBN_EXPORT mbnCANOpen(char *ifname, unsigned short *paren
   }
 
   itf->cb_init = scan_init;
+  itf->cb_stop = scan_stop;
   itf->cb_free = scan_free;
   itf->cb_transmit = scan_transmit;
   itf->cb_free_addr = scan_free_addr;
@@ -279,6 +281,13 @@ int scan_hwparent(struct mbn_interface *itf, unsigned short *par, char *err) {
   return 0;
 }
 
+void scan_stop(struct mbn_interface *itf) {
+  struct can_data *dat = (struct can_data *)itf->data;
+  pthread_cancel(dat->rxthread);
+  pthread_cancel(dat->txthread);
+  pthread_join(dat->rxthread, NULL);
+  pthread_join(dat->txthread, NULL);
+}
 
 void scan_free(struct mbn_interface *itf) {
   struct can_data *dat = (struct can_data *)itf->data;
