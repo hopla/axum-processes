@@ -40,7 +40,7 @@
 //10cm fader knob height 2,56 cm
 #define FADER_KNOB_HEIGHT              48.0
 
-#include <DNRDefines.h>
+#include "DNRDefines.h"
 #include <QWidget>
 #include <QtDesigner/QDesignerExportWidget>
 
