@@ -30,10 +30,24 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
 {
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-    timer->start(1000);
+    timer->start(100);
     
-    FMinuteLines = true;
-    FHourLines = true;
+    FHourLines = false;
+    FHourLinesLength = 8;
+    FHourLinesColor = QColor(0,0,0);
+    
+    FMinuteLines = false;
+    FMinuteLinesLength = 4;
+    FMinuteLinesColor = QColor(61,61,61,191);
+
+    FSecondDots = true;
+    FSecondDotsCountDown = false;
+    FDotSize = 1;
+    FDotColor = QColor(0,0,0);
+  
+    FHands = true;
+    FHourHandColor = QColor(0,0,0);
+    FMinuteHandColor = QColor(61,61,61,191);
 
     setWindowTitle(tr("Analog Clock"));
     resize(200, 200);
@@ -41,66 +55,114 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
 
 void DNRAnalogClock::paintEvent(QPaintEvent *)
 {
-    static const QPoint hourHand[3] = {
-        QPoint(7, 8),
-        QPoint(-7, 8),
-        QPoint(0, -40)
-    };
-    static const QPoint minuteHand[3] = {
-        QPoint(7, 8),
-        QPoint(-7, 8),
-        QPoint(0, -70)
-    };
+  static const QPoint hourHand[3] = {
+    QPoint(7, 8),
+    QPoint(-7, 8),
+    QPoint(0, -40)
+  };
+  static const QPoint minuteHand[3] = {
+    QPoint(7, 8),
+    QPoint(-7, 8),
+    QPoint(0, -70)
+  };
 
-    QColor hourColor(0, 0, 0);
-    QColor minuteColor(64, 64, 64, 191);
+//    QColor hourColor(0, 0, 0);
+//    QColor minuteColor(64, 64, 64, 191);
 
-    int side = qMin(width(), height());
-    QTime time = QTime::currentTime();
+  int side = qMin(width(), height());
+  QTime time = QTime::currentTime();
 
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.translate(width() / 2, height() / 2);
-    painter.scale(side / 200.0, side / 200.0);
+  QPainter painter(this);
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.translate(width() / 2, height() / 2);
+  painter.scale(side / 200.0, side / 200.0);
 
+  if (FHands)
+  {
     painter.setPen(Qt::NoPen);
-    painter.setBrush(hourColor);
+    painter.setBrush(FHourHandColor);
 
     painter.save();
     painter.rotate(30.0 * ((time.hour() + time.minute() / 60.0)));
     painter.drawConvexPolygon(hourHand, 3);
     painter.restore();
+  }
 
-    painter.setPen(hourColor);
+  if (FSecondDots)
+  {
+    if (FSecondDotsCountDown)
+    {
+      painter.setPen(FDotColor);
+      painter.setBrush(FDotColor);
+      int dotCount = 60-time.second();
 
-   if (FHourLines)
-   {
-      for (int i = 0; i < 12; ++i) 
+      painter.rotate(-6.0);
+      for (int j = 0; j < dotCount; ++j) 
       {
-         painter.drawLine(88, 0, 96, 0);
-         painter.rotate(30.0);
+        painter.drawEllipse(-FDotSize/2, -(100-FDotSize), FDotSize, FDotSize);
+        painter.rotate(-6.0);
       }
-   }
+      for (int j = 0; j < (60-dotCount); ++j) 
+      {
+        painter.rotate(-6.0);
+      }
+      painter.rotate(6.0);
+    }
+    else
+    {
+      painter.setPen(FDotColor);
+      painter.setBrush(FDotColor);
+      int dotCount = time.second();
+      if (dotCount == 0)
+        dotCount = 60;
 
+      painter.rotate(6.0);
+      for (int j = 0; j < dotCount; ++j) 
+      {
+        painter.drawEllipse(-FDotSize/2, -(100-FDotSize), FDotSize, FDotSize);
+        painter.rotate(6.0);
+      }
+      for (int j = 0; j < (60-dotCount); ++j) 
+      {
+        painter.rotate(6.0);
+      }
+      painter.rotate(-6.0);
+    }
+  }
+
+  
+  if (FHourLines)
+  {
+    painter.setPen(FHourLinesColor);
+    for (int i = 0; i < 12; ++i) 
+    {
+      painter.drawLine(96-FHourLinesLength, 0, 96, 0);
+      painter.rotate(30.0);
+    }
+  }
+
+  if (FHands)
+  {
     painter.setPen(Qt::NoPen);
-    painter.setBrush(minuteColor);
+    painter.setBrush(FMinuteHandColor);
 
     painter.save();
     painter.rotate(6.0 * (time.minute() + time.second() / 60.0));
     painter.drawConvexPolygon(minuteHand, 3);
     painter.restore();
+  }
 
-    painter.setPen(minuteColor);
 
-   if (FMinuteLines)
-   {
-      for (int j = 0; j < 60; ++j) 
-      {
-        if ((j % 5) != 0)
-            painter.drawLine(92, 0, 96, 0);
-        painter.rotate(6.0);
-      }
-   }
+  if (FMinuteLines)
+  {
+    painter.setPen(FMinuteHandColor);
+    for (int j = 0; j < 60; ++j) 
+    {
+      if ((j % 5) != 0)
+        painter.drawLine(96-FMinuteLinesLength, 0, 96, 0);
+      painter.rotate(6.0);
+    }
+  }
 }
 
 void DNRAnalogClock::setHourLines(bool NewHourLines)
@@ -116,7 +178,35 @@ bool DNRAnalogClock::getHourLines()
 {
    return FHourLines;
 }
+  
+void DNRAnalogClock::setHourLinesLength(int NewHourLinesLength)
+{
+  if (FHourLinesLength != NewHourLinesLength)
+  {
+    FHourLinesLength = NewHourLinesLength;
+    update();
+  }
+}
 
+int DNRAnalogClock::getHourLinesLength()
+{
+  return FHourLinesLength;
+}
+    
+void DNRAnalogClock::setHourLinesColor(QColor NewHourLinesColor)
+{
+  if (FHourLinesColor != NewHourLinesColor)
+  {
+    FHourLinesColor = NewHourLinesColor;
+    update();
+  }
+}
+
+QColor DNRAnalogClock::getHourLinesColor()
+{
+  return FHourLinesColor;
+}
+    
 void DNRAnalogClock::setMinuteLines(bool NewMinuteLines)
 {
    if (FMinuteLines != NewMinuteLines)
@@ -131,3 +221,128 @@ bool DNRAnalogClock::getMinuteLines()
    return FMinuteLines;
 }
 
+void DNRAnalogClock::setMinuteLinesLength(int NewMinuteLinesLength)
+{
+  if (FMinuteLinesLength != NewMinuteLinesLength)
+  {
+    FMinuteLinesLength = NewMinuteLinesLength;
+    update();
+  }
+}
+
+int DNRAnalogClock::getMinuteLinesLength()
+{
+  return FMinuteLinesLength;
+}
+    
+void DNRAnalogClock::setMinuteLinesColor(QColor NewMinuteLinesColor)
+{
+  if (FMinuteLinesColor != NewMinuteLinesColor)
+  {
+    FMinuteLinesColor = NewMinuteLinesColor;
+    update();
+  }
+}
+
+QColor DNRAnalogClock::getMinuteLinesColor()
+{
+  return FMinuteLinesColor;
+}
+
+void DNRAnalogClock::setSecondDots(bool NewSecondDots)
+{
+   if (FSecondDots != NewSecondDots)
+   {
+      FSecondDots = NewSecondDots;
+      update();
+   }
+}
+
+bool DNRAnalogClock::getSecondDots()
+{
+   return FSecondDots;
+}
+
+void DNRAnalogClock::setSecondDotsCountDown(bool NewSecondDotsCountDown)
+{
+   if (FSecondDotsCountDown != NewSecondDotsCountDown)
+   {
+      FSecondDotsCountDown = NewSecondDotsCountDown;
+      update();
+   }
+}
+
+bool DNRAnalogClock::getSecondDotsCountDown()
+{
+   return FSecondDotsCountDown;
+}
+
+void DNRAnalogClock::setDotSize(int NewDotSize)
+{
+  if (FDotSize != NewDotSize)
+  {
+    FDotSize = NewDotSize;
+    update();
+  }
+}
+
+int DNRAnalogClock::getDotSize()
+{
+  return FDotSize;
+}
+
+void DNRAnalogClock::setDotColor(QColor NewDotColor)
+{
+  if (FDotColor != NewDotColor)
+  {
+    FDotColor = NewDotColor;
+    update();
+  }
+}
+
+QColor DNRAnalogClock::getDotColor()
+{
+  return FDotColor;
+}
+
+void DNRAnalogClock::setHands(bool NewHands)
+{
+  if (FHands != NewHands)
+  {
+    FHands = NewHands;
+    update();
+  }
+}
+
+bool DNRAnalogClock::getHands()
+{
+  return FHands;
+}
+      
+void DNRAnalogClock::setHourHandColor(QColor NewHourHandColor)
+{
+  if (FHourHandColor != NewHourHandColor)
+  {
+    FHourHandColor = NewHourHandColor;
+    update();
+  }
+}
+
+QColor DNRAnalogClock::getHourHandColor()
+{
+  return FHourHandColor;
+}
+    
+void DNRAnalogClock::setMinuteHandColor(QColor NewMinuteHandColor)
+{
+  if (FMinuteHandColor != NewMinuteHandColor)
+  {
+    FMinuteHandColor = NewMinuteHandColor;
+    update();
+  }
+}
+
+QColor DNRAnalogClock::getMinuteHandColor()
+{
+  return FMinuteHandColor;
+}

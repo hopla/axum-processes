@@ -31,19 +31,77 @@ class QDESIGNER_WIDGET_EXPORT DNRAnalogClock : public QWidget
 {
     Q_OBJECT
     Q_PROPERTY(bool HourLines READ getHourLines WRITE setHourLines);
+    Q_PROPERTY(int HourLinesLength READ getHourLinesLength WRITE setHourLinesLength);
+    Q_PROPERTY(QColor HourLinesColor READ getHourLinesColor WRITE setHourLinesColor);    
     Q_PROPERTY(bool MinuteLines READ getMinuteLines WRITE setMinuteLines);
+    Q_PROPERTY(int MinuteLinesLength READ getMinuteLinesLength WRITE setMinuteLinesLength);
+    Q_PROPERTY(QColor MinuteLinesColor READ getMinuteLinesColor WRITE setMinuteLinesColor);    
+    Q_PROPERTY(bool SecondDots READ getSecondDots WRITE setSecondDots);
+    Q_PROPERTY(bool SecondDotsCountDown READ getSecondDotsCountDown WRITE setSecondDotsCountDown);
+    Q_PROPERTY(int DotSize READ getDotSize WRITE setDotSize);
+    Q_PROPERTY(QColor DotColor READ getDotColor WRITE setDotColor);
+    Q_PROPERTY(bool Hands READ getHands WRITE setHands);
+    Q_PROPERTY(QColor HourHandColor READ getHourHandColor WRITE setHourHandColor);
+    Q_PROPERTY(QColor MinuteHandColor READ getMinuteHandColor WRITE setMinuteHandColor);
 
 public:
     DNRAnalogClock(QWidget *parent = 0);
     
     bool FHourLines;
+    int FHourLinesLength;
+    QColor FHourLinesColor;
+    
     bool FMinuteLines;
+    int FMinuteLinesLength;
+    QColor FMinuteLinesColor;
+    
+    bool FSecondDots;
+    bool FSecondDotsCountDown;
+    int FDotSize;
+    QColor FDotColor;
+    
+    bool FHands;
+    QColor FHourHandColor;
+    QColor FMinuteHandColor;
 
     void setHourLines(bool NewHourLines);
     bool getHourLines();
+    
+    void setHourLinesLength(int NewHourLinesLength);
+    int getHourLinesLength();
+    
+    void setHourLinesColor(QColor NewHourLinesColor);
+    QColor getHourLinesColor();
 
     void setMinuteLines(bool NewMinuteLines);
     bool getMinuteLines();
+    
+    void setMinuteLinesLength(int NewMinuteLinesLength);
+    int getMinuteLinesLength();
+    
+    void setMinuteLinesColor(QColor NewMinuteLinesColor);
+    QColor getMinuteLinesColor();
+
+    void setSecondDots(bool NewSecondDots);
+    bool getSecondDots();
+    
+    void setSecondDotsCountDown(bool NewSecondDotsCountDown);
+    bool getSecondDotsCountDown();
+
+    void setDotSize(int NewDotSize);
+    int getDotSize();
+    
+    void setDotColor(QColor NewDotColor);
+    QColor getDotColor();
+    
+    void setHands(bool NewHands);
+    bool getHands();
+      
+    void setHourHandColor(QColor NewHourHandColor);
+    QColor getHourHandColor();
+    
+    void setMinuteHandColor(QColor NewMinuteHandColor);
+    QColor getMinuteHandColor();
 
 protected:
     void paintEvent(QPaintEvent *event);
