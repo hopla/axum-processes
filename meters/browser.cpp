@@ -67,7 +67,7 @@ Browser::Browser(QWidget *parent)
 
 	cntSecond = 0;
 
-	startTimer(10);
+	startTimer(30);
 
 	MeterData[0] = -50;
 	MeterData[1] = -50;
@@ -118,14 +118,16 @@ void Browser::MeterRelease()
 	previousNumberOfSeconds = newNumberOfSeconds;
 //	printf("time:%g - delta: %g\n", newNumberOfSeconds, elapsedTime);
 */
+//  #define RELEASE_STEP 0.15
+  #define RELEASE_STEP 0.45
   qt_mutex.lock();
   if ((NewDNRPPMMeter->FdBPosition>-50) || (MeterData[0]>-50))
   {
     Difference = MeterData[0]-NewDNRPPMMeter->FdBPosition;
 
-    if (Difference < -0.15)
+    if (Difference < -RELEASE_STEP)
     {
-      Difference = -0.15;
+      Difference = -RELEASE_STEP;
 		}
 
     if (Difference != 0)
@@ -139,9 +141,9 @@ void Browser::MeterRelease()
   {
     Difference = MeterData[1]-NewDNRPPMMeter_2->FdBPosition;
 
-    if (Difference < -0.15)
+    if (Difference < -RELEASE_STEP)
     {
-      Difference = -0.15;
+      Difference = -RELEASE_STEP;
 		}
 
     if (Difference != 0)
@@ -155,9 +157,9 @@ void Browser::MeterRelease()
   {
     Difference = MeterData[2]-NewDNRPPMMeter_3->FdBPosition;
 
-    if (Difference < -0.15)
+    if (Difference < -RELEASE_STEP)
     {
-      Difference = -0.15;
+      Difference = -RELEASE_STEP;
 		}
 
     if (Difference != 0)
@@ -171,9 +173,9 @@ void Browser::MeterRelease()
   {
     Difference = MeterData[3]-NewDNRPPMMeter_4->FdBPosition;
 
-    if (Difference < -0.15)
+    if (Difference < -RELEASE_STEP)
     {
-      Difference = -0.15;
+      Difference = -RELEASE_STEP;
 		}
 
     if (Difference != 0)
