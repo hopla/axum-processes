@@ -168,16 +168,14 @@ void DNRDigitalClock::checkTime()
   if (FSecond != NewSecond)
   {
     FSecond = NewSecond;
-    TimeChanged = true;
-  }
-  else if (FMinute != NewMinute)
-  {
-    FMinute = NewMinute;
-    TimeChanged = true;
-  }
-  else if (FHour != NewHour)
-  {
-    FHour = NewHour;
+    if (FMinute != NewMinute)
+    {
+      FMinute = NewMinute;
+      if (FHour != NewHour)
+      {
+        FHour = NewHour;
+      }
+    }
     TimeChanged = true;
   }
 

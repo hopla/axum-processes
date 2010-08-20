@@ -69,8 +69,9 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     QPoint(-7, 8),
     QPoint(0, -70)
   };
-
+  int XOffset = (int)(((float)FDotSize/2)+0.5);
   int side = qMin(width(), height());
+  
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
   painter.translate(width() / 2, height() / 2);
@@ -101,7 +102,7 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
       if (FMinuteLines)
       {
         painter.setPen(FMinuteLinesColor);
-        painter.drawLine(96-FMinuteLinesLength, 0, 96, 0);
+        painter.drawLine(0, -(96-FMinuteLinesLength), 0, -96);
       }
     }
     else
@@ -109,53 +110,31 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
       if (FHourLines)
       {
         painter.setPen(FHourLinesColor);
-        painter.drawLine(96-FHourLinesLength, 0, 96, 0);
+        painter.drawLine(0, -(96-FHourLinesLength), 0, -96);
+      }
+    }
+
+    if (FSecondDots)
+    {
+      painter.setPen(FDotColor);
+      painter.setBrush(FDotColor);
+      
+      if (FSecondDotsCountDown)
+      {
+        if (j>=FSecond)
+        {
+          painter.drawEllipse(-XOffset, -(100-FDotSize), FDotSize, FDotSize);
+        }
+      }
+      else
+      {
+        if (j<=FSecond)
+        {
+          painter.drawEllipse(-XOffset, -(100-FDotSize), FDotSize, FDotSize);
+        }
       }
     }
     painter.rotate(6.0);
-  }
-
-  if (FSecondDots)
-  {
-    if (FSecondDotsCountDown)
-    {
-      painter.setPen(FDotColor);
-      painter.setBrush(FDotColor);
-      int dotCount = 60-FSecond;
-
-      painter.rotate(-6.0);
-      for (int j = 0; j < dotCount; ++j)
-      {
-        int XOffset = (int)(((float)FDotSize/2)+0.5);
-        painter.drawEllipse(-XOffset, -(100-FDotSize), FDotSize, FDotSize);
-        painter.rotate(-6.0);
-      }
-      for (int j = 0; j < (60-dotCount); ++j)
-      {
-        painter.rotate(-6.0);
-      }
-      painter.rotate(6.0);
-    }
-    else
-    {
-      painter.setPen(FDotColor);
-      painter.setBrush(FDotColor);
-      int dotCount = FSecond+1;
-      //if (dotCount == 0)
-      //  dotCount = 60;
-
-      //painter.rotate(6.0);
-      for (int j = 0; j < dotCount; ++j)
-      {
-        painter.drawEllipse(-FDotSize/2, -(100-FDotSize), FDotSize, FDotSize);
-        painter.rotate(6.0);
-      }
-      for (int j = 0; j < (60-dotCount); ++j)
-      {
-        painter.rotate(6.0);
-      }
-      //painter.rotate(-6.0);
-    }
   }
 }
 
@@ -352,19 +331,17 @@ void DNRAnalogClock::checkTime()
   if (FSecond != NewSecond)
   {
     FSecond = NewSecond;
+    if (FMinute != NewMinute)
+    {
+      FMinute = NewMinute;
+      if (FHour != NewHour)
+      {
+        FHour = NewHour;
+      }
+    }
     TimeChanged = true;
   }
-  else if (FMinute != NewMinute)
-  {
-    FMinute = NewMinute;
-    TimeChanged = true;
-  }
-  else if (FHour != NewHour)
-  {
-    FHour = NewHour;
-    TimeChanged = true;
-  }
-  
+
   if (TimeChanged)
   {
     update();
