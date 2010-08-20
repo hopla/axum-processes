@@ -63,6 +63,8 @@ Browser::Browser(QWidget *parent)
 	connect(m_Forward, SIGNAL(triggered()), webView, SLOT(forward()));
 	connect(m_StopReload, SIGNAL(triggered()), webView, SLOT(reload()));*/
 
+  connect(toggleButton, SIGNAL(clicked()), this, SLOT(slotReverseDots()));
+
 	cntSecond = 0;
 
 	startTimer(10);
@@ -242,4 +244,7 @@ void Browser::MeterRelease()
 //	}
 //}
 
-
+void Browser::slotReverseDots()
+{
+  NewDNRAnalogClock->FSecondDotsCountDown = !NewDNRAnalogClock->FSecondDotsCountDown;
+}

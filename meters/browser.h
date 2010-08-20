@@ -75,6 +75,7 @@ public:
 
 public slots:
 	 void MeterRelease();
+   void slotReverseDots();
 
 private:
 };
