@@ -138,11 +138,11 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     {
       painter.setPen(FDotColor);
       painter.setBrush(FDotColor);
-      int dotCount = time.second();
-      if (dotCount == 0)
-        dotCount = 60;
+      int dotCount = time.second()+1;
+      //if (dotCount == 0)
+      //  dotCount = 60;
 
-      painter.rotate(6.0);
+      //painter.rotate(6.0);
       for (int j = 0; j < dotCount; ++j)
       {
         painter.drawEllipse(-FDotSize/2, -(100-FDotSize), FDotSize, FDotSize);
@@ -152,7 +152,7 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
       {
         painter.rotate(6.0);
       }
-      painter.rotate(-6.0);
+      //painter.rotate(-6.0);
     }
   }
 }
