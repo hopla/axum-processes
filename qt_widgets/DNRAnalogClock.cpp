@@ -94,25 +94,25 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     painter.restore();
   }
 
-  if (FHourLines)
+  for (int j = 0; j < 60; ++j)
   {
-    painter.setPen(FHourLinesColor);
-    for (int i = 0; i < 12; ++i) 
+    if ((j % 5) != 0)
     {
-      painter.drawLine(96-FHourLinesLength, 0, 96, 0);
-      painter.rotate(30.0);
-    }
-  }
-
-  if (FMinuteLines)
-  {
-    painter.setPen(FMinuteLinesColor);
-    for (int j = 0; j < 60; ++j) 
-    {
-      if ((j % 5) != 0)
+      if (FMinuteLines)
+      {
+        painter.setPen(FMinuteLinesColor);
         painter.drawLine(96-FMinuteLinesLength, 0, 96, 0);
-      painter.rotate(6.0);
+      }
     }
+    else
+    {
+      if (FHourLines)
+      {
+        painter.setPen(FHourLinesColor);
+        painter.drawLine(96-FHourLinesLength, 0, 96, 0);
+      }
+    }
+    painter.rotate(6.0);
   }
 
   if (FSecondDots)
