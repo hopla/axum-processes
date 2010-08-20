@@ -104,8 +104,14 @@ public:
     QColor getMinuteHandColor();
 
 protected:
+    int FHour;
+    int FMinute;
+    int FSecond;
+
     void paintEvent(QPaintEvent *event);
-    
+
+public slots:
+    void checkTime();
 };
 
 #endif

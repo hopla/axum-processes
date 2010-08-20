@@ -28,10 +28,10 @@
 DNRAnalogClock::DNRAnalogClock(QWidget *parent)
     : QWidget(parent)
 {
-    QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-    timer->start(100);
-    
+    FHour = 0;
+    FMinute = 0;
+    FSecond = 0;
+
     FHourLines = false;
     FHourLinesLength = 8;
     FHourLinesColor = QColor(0,0,0);
@@ -51,6 +51,10 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
 
     setWindowTitle(tr("Analog Clock"));
     resize(200, 200);
+
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(checkTime()));
+    timer->start(100);
 }
 
 void DNRAnalogClock::paintEvent(QPaintEvent *)
@@ -67,8 +71,6 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
   };
 
   int side = qMin(width(), height());
-  QTime time = QTime::currentTime();
-
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
   painter.translate(width() / 2, height() / 2);
@@ -80,14 +82,14 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     painter.setBrush(FHourHandColor);
 
     painter.save();
-    painter.rotate(30.0 * ((time.hour() + time.minute() / 60.0)));
+    painter.rotate(30.0 * ((FHour + FMinute / 60.0)));
     painter.drawConvexPolygon(hourHand, 3);
     painter.restore();
 
     painter.setBrush(FMinuteHandColor);
 
     painter.save();
-    painter.rotate(6.0 * (time.minute() + time.second() / 60.0));
+    painter.rotate(6.0 * (FMinute + FSecond / 60.0));
     painter.drawConvexPolygon(minuteHand, 3);
     painter.restore();
   }
@@ -119,12 +121,12 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     {
       painter.setPen(FDotColor);
       painter.setBrush(FDotColor);
-      int dotCount = 60-time.second();
+      int dotCount = 60-FSecond;
 
       painter.rotate(-6.0);
       for (int j = 0; j < dotCount; ++j)
       {
-        int XOffset = (FDotSize/2)+0.5;
+        int XOffset = (int)(((float)FDotSize/2)+0.5);
         painter.drawEllipse(-XOffset, -(100-FDotSize), FDotSize, FDotSize);
         painter.rotate(-6.0);
       }
@@ -138,7 +140,7 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     {
       painter.setPen(FDotColor);
       painter.setBrush(FDotColor);
-      int dotCount = time.second()+1;
+      int dotCount = FSecond+1;
       //if (dotCount == 0)
       //  dotCount = 60;
 
@@ -337,4 +339,34 @@ void DNRAnalogClock::setMinuteHandColor(QColor NewMinuteHandColor)
 QColor DNRAnalogClock::getMinuteHandColor()
 {
   return FMinuteHandColor;
+}
+
+void DNRAnalogClock::checkTime()
+{
+  bool TimeChanged = false;
+  QTime time = QTime::currentTime();
+  int NewHour = time.hour();
+  int NewMinute = time.minute();
+  int NewSecond = time.second();
+  
+  if (FSecond != NewSecond)
+  {
+    FSecond = NewSecond;
+    TimeChanged = true;
+  }
+  else if (FMinute != NewMinute)
+  {
+    FMinute = NewMinute;
+    TimeChanged = true;
+  }
+  else if (FHour != NewHour)
+  {
+    FHour = NewHour;
+    TimeChanged = true;
+  }
+  
+  if (TimeChanged)
+  {
+    update();
+  }
 }
