@@ -66,9 +66,6 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     QPoint(0, -70)
   };
 
-//    QColor hourColor(0, 0, 0);
-//    QColor minuteColor(64, 64, 64, 191);
-
   int side = qMin(width(), height());
   QTime time = QTime::currentTime();
 
@@ -86,6 +83,34 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     painter.rotate(30.0 * ((time.hour() + time.minute() / 60.0)));
     painter.drawConvexPolygon(hourHand, 3);
     painter.restore();
+
+    painter.setBrush(FMinuteHandColor);
+
+    painter.save();
+    painter.rotate(6.0 * (time.minute() + time.second() / 60.0));
+    painter.drawConvexPolygon(minuteHand, 3);
+    painter.restore();
+  }
+
+  if (FHourLines)
+  {
+    painter.setPen(FHourLinesColor);
+    for (int i = 0; i < 12; ++i) 
+    {
+      painter.drawLine(96-FHourLinesLength, 0, 96, 0);
+      painter.rotate(30.0);
+    }
+  }
+
+  if (FMinuteLines)
+  {
+    painter.setPen(FMinuteLinesColor);
+    for (int j = 0; j < 60; ++j) 
+    {
+      if ((j % 5) != 0)
+        painter.drawLine(96-FMinuteLinesLength, 0, 96, 0);
+      painter.rotate(6.0);
+    }
   }
 
   if (FSecondDots)
@@ -97,12 +122,13 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
       int dotCount = 60-time.second();
 
       painter.rotate(-6.0);
-      for (int j = 0; j < dotCount; ++j) 
+      for (int j = 0; j < dotCount; ++j)
       {
-        painter.drawEllipse(-FDotSize/2, -(100-FDotSize), FDotSize, FDotSize);
+        int XOffset = (FDotSize/2)+0.5;
+        painter.drawEllipse(-XOffset, -(100-FDotSize), FDotSize, FDotSize);
         painter.rotate(-6.0);
       }
-      for (int j = 0; j < (60-dotCount); ++j) 
+      for (int j = 0; j < (60-dotCount); ++j)
       {
         painter.rotate(-6.0);
       }
@@ -117,50 +143,16 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
         dotCount = 60;
 
       painter.rotate(6.0);
-      for (int j = 0; j < dotCount; ++j) 
+      for (int j = 0; j < dotCount; ++j)
       {
         painter.drawEllipse(-FDotSize/2, -(100-FDotSize), FDotSize, FDotSize);
         painter.rotate(6.0);
       }
-      for (int j = 0; j < (60-dotCount); ++j) 
+      for (int j = 0; j < (60-dotCount); ++j)
       {
         painter.rotate(6.0);
       }
       painter.rotate(-6.0);
-    }
-  }
-
-  
-  if (FHourLines)
-  {
-    painter.setPen(FHourLinesColor);
-    for (int i = 0; i < 12; ++i) 
-    {
-      painter.drawLine(96-FHourLinesLength, 0, 96, 0);
-      painter.rotate(30.0);
-    }
-  }
-
-  if (FHands)
-  {
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(FMinuteHandColor);
-
-    painter.save();
-    painter.rotate(6.0 * (time.minute() + time.second() / 60.0));
-    painter.drawConvexPolygon(minuteHand, 3);
-    painter.restore();
-  }
-
-
-  if (FMinuteLines)
-  {
-    painter.setPen(FMinuteHandColor);
-    for (int j = 0; j < 60; ++j) 
-    {
-      if ((j % 5) != 0)
-        painter.drawLine(96-FMinuteLinesLength, 0, 96, 0);
-      painter.rotate(6.0);
     }
   }
 }
