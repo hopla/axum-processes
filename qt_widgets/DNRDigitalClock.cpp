@@ -28,6 +28,9 @@
 DNRDigitalClock::DNRDigitalClock(QWidget *parent)
     : QWidget(parent)
 {
+    FTimeDisplay = true;  
+    FDateDisplay = true;
+
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(100);
@@ -38,24 +41,117 @@ DNRDigitalClock::DNRDigitalClock(QWidget *parent)
 
 void DNRDigitalClock::paintEvent(QPaintEvent *)
 {
-    QColor TextColor(0, 0, 0);
-
-    int side = qMin(width(), height());
-
-    QTime Time = QTime::currentTime();
-    QString TimeString = Time.toString("hh:mm:ss");
-
-    QDate Date = QDate::currentDate();
-    QString DateString = Date.toString();
-
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    painter.setPen(TextColor);
     painter.setBrush(Qt::NoBrush);
 
+    int PosY = 0;
     int HalfHeight = height()/2;
-    painter.drawText( 0, 0, width(), HalfHeight, Qt::AlignCenter, TimeString);
-    painter.drawText( 0, HalfHeight, width(), HalfHeight, Qt::AlignCenter, DateString);
+    
+    if (FTimeDisplay) {
+      QTime Time = QTime::currentTime();
+      QString TimeString = Time.toString("hh:mm:ss");
 
+      painter.setPen(FTimeDisplayFontColor);
+      painter.setFont(FTimeDisplayFont);
+      painter.drawText( 0, PosY, width(), HalfHeight, Qt::AlignCenter, TimeString);
+      
+      PosY += painter.fontMetrics().height();
+    }
+    
+    if (FDateDisplay) {
+      QDate Date = QDate::currentDate();
+      QString DateString = Date.toString();
+
+      painter.setPen(FDateDisplayFontColor);
+      painter.setFont(FDateDisplayFont);
+      painter.drawText( 0, PosY, width(), HalfHeight, Qt::AlignCenter, DateString);
+      PosY += painter.fontMetrics().height();
+    }
+
+}
+
+void DNRDigitalClock::setTimeDisplay(bool NewTimeDisplay)
+{
+  if (FTimeDisplay != NewTimeDisplay)
+  {
+    FTimeDisplay = NewTimeDisplay;
+    update();
+  }
+}
+
+bool DNRDigitalClock::getTimeDisplay()
+{
+  return FTimeDisplay;
+}
+
+void DNRDigitalClock::setTimeDisplayFont(QFont NewTimeDisplayFont)
+{
+  if (FTimeDisplayFont != NewTimeDisplayFont)
+  {
+    FTimeDisplayFont = NewTimeDisplayFont;
+    update();
+  }
+}
+
+QFont DNRDigitalClock::getTimeDisplayFont()
+{
+  return FTimeDisplayFont;
+}
+    
+void DNRDigitalClock::setTimeDisplayFontColor(QColor NewTimeDisplayFontColor)
+{
+  if (FTimeDisplayFontColor != NewTimeDisplayFontColor)
+  {
+    FTimeDisplayFontColor = NewTimeDisplayFontColor;
+    update();
+  }
+}
+
+QColor DNRDigitalClock::getTimeDisplayFontColor()
+{
+  return FTimeDisplayFontColor;
+}
+
+void DNRDigitalClock::setDateDisplay(bool NewDateDisplay)
+{
+  if (FDateDisplay != NewDateDisplay)
+  {
+    FDateDisplay = NewDateDisplay;
+    update();
+  }
+}
+
+bool DNRDigitalClock::getDateDisplay()
+{
+  return FDateDisplay;
+}
+
+void DNRDigitalClock::setDateDisplayFont(QFont NewDateDisplayFont)
+{
+  if (FDateDisplayFont != NewDateDisplayFont)
+  {
+    FDateDisplayFont = NewDateDisplayFont;
+    update();
+  }
+}
+
+QFont DNRDigitalClock::getDateDisplayFont()
+{
+  return FDateDisplayFont;
+}
+
+void DNRDigitalClock::setDateDisplayFontColor(QColor NewDateDisplayFontColor)
+{
+  if (FDateDisplayFontColor != NewDateDisplayFontColor)
+  {
+    FDateDisplayFontColor = NewDateDisplayFontColor;
+    update();
+  }
+}
+
+QColor DNRDigitalClock::getDateDisplayFontColor()
+{
+  return FDateDisplayFontColor;
 }
