@@ -28,11 +28,15 @@
 DNRDigitalClock::DNRDigitalClock(QWidget *parent)
     : QWidget(parent)
 {
-    FTimeDisplay = true;  
+    FHour = 0;
+    FMinute = 0;
+    FSecond = 0;
+
+    FTimeDisplay = true;
     FDateDisplay = true;
 
     QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(checkTime()));
     timer->start(100);
 
     setWindowTitle(tr("Digital Clock"));
@@ -50,9 +54,6 @@ void DNRDigitalClock::paintEvent(QPaintEvent *)
     int HalfHeight = height()/2;
     
     if (FTimeDisplay) {
-      QTime Time = QTime::currentTime();
-      QString TimeString = Time.toString("hh:mm:ss");
-
       painter.setPen(FTimeDisplayFontColor);
       painter.setFont(FTimeDisplayFont);
       painter.drawText( 0, PosY, width(), HalfHeight, Qt::AlignCenter, TimeString);
@@ -61,9 +62,6 @@ void DNRDigitalClock::paintEvent(QPaintEvent *)
     }
     
     if (FDateDisplay) {
-      QDate Date = QDate::currentDate();
-      QString DateString = Date.toString();
-
       painter.setPen(FDateDisplayFontColor);
       painter.setFont(FDateDisplayFont);
       painter.drawText( 0, PosY, width(), HalfHeight, Qt::AlignCenter, DateString);
@@ -154,4 +152,37 @@ void DNRDigitalClock::setDateDisplayFontColor(QColor NewDateDisplayFontColor)
 QColor DNRDigitalClock::getDateDisplayFontColor()
 {
   return FDateDisplayFontColor;
+}
+
+void DNRDigitalClock::checkTime()
+{
+  bool TimeChanged = false;
+  QTime time = QTime::currentTime();
+  QDate Date = QDate::currentDate();
+  int NewHour = time.hour();
+  int NewMinute = time.minute();
+  int NewSecond = time.second();
+  TimeString = time.toString("hh:mm:ss");
+  DateString = Date.toString();
+
+  if (FSecond != NewSecond)
+  {
+    FSecond = NewSecond;
+    TimeChanged = true;
+  }
+  else if (FMinute != NewMinute)
+  {
+    FMinute = NewMinute;
+    TimeChanged = true;
+  }
+  else if (FHour != NewHour)
+  {
+    FHour = NewHour;
+    TimeChanged = true;
+  }
+
+  if (TimeChanged)
+  {
+    update();
+  }
 }

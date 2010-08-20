@@ -67,7 +67,16 @@ public:
     QColor getDateDisplayFontColor();
 
 protected:
+    int FHour;
+    int FMinute;
+    int FSecond;
+    QString TimeString;
+    QString DateString;
+
     void paintEvent(QPaintEvent *event);
+
+public slots:
+    void checkTime();
 };
 
 #endif
