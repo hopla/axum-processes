@@ -298,7 +298,7 @@ QTabWidget::tab-bar
      <property name="geometry" >
       <rect>
        <x>469</x>
-       <y>82</y>
+       <y>83</y>
        <width>410</width>
        <height>410</height>
       </rect>
@@ -314,6 +314,33 @@ QTabWidget::tab-bar
      </property>
      <property name="MinuteLines" >
       <bool>false</bool>
+     </property>
+     <property name="DotSize">
+      <number>3</number>
+     </property>
+     <property name="DotColor">
+      <color>
+       <red>255</red>
+       <green>170</green>
+       <blue>0</blue>
+      </color>
+     </property>
+     <property name="Hands">
+      <bool>true</bool>
+     </property>
+     <property name="HourHandColor">
+      <color alpha="25">
+       <red>0</red>
+       <green>0</green>
+       <blue>0</blue>
+      </color>
+     </property>
+     <property name="MinuteHandColor">
+      <color alpha="20">
+       <red>61</red>
+       <green>61</green>
+       <blue>61</blue>
+      </color>
      </property>
     </widget>
     <widget class="QLabel" name="label_4" >
@@ -577,6 +604,7 @@ QTabWidget::tab-bar
      </property>
     </widget>
     <zorder>NewDNRImage</zorder>
+    <zorder>NewDNRAnalogClock</zorder>
     <zorder>NewDNRDigitalClock</zorder>
     <zorder>NewDNRPPMMeter_3</zorder>
     <zorder>NewDNRPPMMeter_4</zorder>
