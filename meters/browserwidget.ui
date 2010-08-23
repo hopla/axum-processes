@@ -390,12 +390,30 @@ QTabWidget::tab-bar
        <blue>255</blue>
       </color>
      </property>
+     <property name="HourHandBorder">
+      <number>24</number>
+     </property>
+     <property name="HourHandLength">
+      <number>12</number>
+     </property>
+     <property name="HourHandWidth">
+      <number>12</number>
+     </property>
      <property name="MinuteHandColor">
-      <color alpha="96">
+      <color alpha="128">
        <red>0</red>
        <green>0</green>
        <blue>255</blue>
       </color>
+     </property>
+     <property name="MinuteHandBorder">
+      <number>0</number>
+     </property>
+     <property name="MinuteHandLength">
+      <number>36</number>
+     </property>
+     <property name="MinuteHandWidth">
+      <number>8</number>
      </property>
     </widget>
     <widget class="QLabel" name="label_4">
