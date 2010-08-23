@@ -59,18 +59,21 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
 
 void DNRAnalogClock::paintEvent(QPaintEvent *)
 {
-  static const QPoint hourHand[3] = {
-    QPoint(7, 8),
-    QPoint(-7, 8),
-    QPoint(0, -40)
-  };
-  static const QPoint minuteHand[3] = {
-    QPoint(7, 8),
-    QPoint(-7, 8),
-    QPoint(0, -70)
-  };
   int XOffset = (int)(((float)FDotSize/2)+0.5);
   int side = qMin(width(), height());
+  int minuteBorderSize = qMax(FDotSize, FMinuteLinesLength);
+  int hourBorderSize = FHourLinesLength;
+
+  static const QPoint hourHand[3] = {
+    QPoint(7, -70),
+    QPoint(-7, -70),
+    QPoint(0, -(96-hourBorderSize))
+  };
+  static const QPoint minuteHand[3] = {
+    QPoint(3, -85),
+    QPoint(-3, -85),
+    QPoint(0, -(96-minuteBorderSize))
+  };
   
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
