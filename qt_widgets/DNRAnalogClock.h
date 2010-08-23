@@ -42,9 +42,11 @@ class QDESIGNER_WIDGET_EXPORT DNRAnalogClock : public QWidget
     Q_PROPERTY(QColor DotColor READ getDotColor WRITE setDotColor);
     Q_PROPERTY(bool Hands READ getHands WRITE setHands);
     Q_PROPERTY(QColor HourHandColor READ getHourHandColor WRITE setHourHandColor);
+    Q_PROPERTY(int HourHandBorder READ getHourHandBorder WRITE setHourHandBorder);
     Q_PROPERTY(int HourHandLength READ getHourHandLength WRITE setHourHandLength);
     Q_PROPERTY(int HourHandWidth READ getHourHandWidth WRITE setHourHandWidth);
     Q_PROPERTY(QColor MinuteHandColor READ getMinuteHandColor WRITE setMinuteHandColor);
+    Q_PROPERTY(int MinuteHandBorder READ getMinuteHandBorder WRITE setMinuteHandBorder);
     Q_PROPERTY(int MinuteHandLength READ getMinuteHandLength WRITE setMinuteHandLength);
     Q_PROPERTY(int MinuteHandWidth READ getMinuteHandWidth WRITE setMinuteHandWidth);
 
@@ -66,9 +68,12 @@ public:
     
     bool FHands;
     QColor FHourHandColor;
+    int FHourHandBorder;
     int FHourHandLength;
     int FHourHandWidth;
+    
     QColor FMinuteHandColor;
+    int FMinuteHandBorder;
     int FMinuteHandLength;
     int FMinuteHandWidth;
 
@@ -108,6 +113,9 @@ public:
     void setHourHandColor(QColor NewHourHandColor);
     QColor getHourHandColor();
     
+    void setHourHandBorder(int NewHourHandBorder);
+    int getHourHandBorder();
+    
     void setHourHandLength(int NewHourHandLength);
     int getHourHandLength();
 
@@ -116,6 +124,9 @@ public:
 
     void setMinuteHandColor(QColor NewMinuteHandColor);
     QColor getMinuteHandColor();
+
+    void setMinuteHandBorder(int NewMinuteHandBorder);
+    int getMinuteHandBorder();
 
     void setMinuteHandLength(int NewMinuteHandLength);
     int getMinuteHandLength();
