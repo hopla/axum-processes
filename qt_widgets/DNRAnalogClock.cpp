@@ -47,7 +47,11 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
   
     FHands = true;
     FHourHandColor = QColor(0,0,0);
+    FHourHandLength = 12;
+    FHourHandWidth = 12;
     FMinuteHandColor = QColor(61,61,61,191);
+    FMinuteHandLength = 8;
+    FMinuteHandWidth = 8;
 
     setWindowTitle(tr("Analog Clock"));
     resize(200, 200);
@@ -63,15 +67,18 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
   int side = qMin(width(), height());
   int minuteBorderSize = qMax(FDotSize, FMinuteLinesLength);
   int hourBorderSize = FHourLinesLength;
+  
+  int hourYOffset = (int)((((float)FHourHandWidth)/2)+0.5);
+  int minuteYOffset = (int)((((float)FMinuteHandWidth)/2)+0.5);
 
-  static const QPoint hourHand[3] = {
-    QPoint(7, -70),
-    QPoint(-7, -70),
+  QPoint hourHand[3] = {
+    QPoint(hourYOffset, -(96-hourBorderSize)+FHourHandLength),
+    QPoint(-hourYOffset, -(96-hourBorderSize)+FHourHandLength),
     QPoint(0, -(96-hourBorderSize))
   };
-  static const QPoint minuteHand[3] = {
-    QPoint(3, -85),
-    QPoint(-3, -85),
+  QPoint minuteHand[3] = {
+    QPoint(minuteYOffset, -(96-minuteBorderSize)+FMinuteHandLength),
+    QPoint(-minuteYOffset, -(96-minuteBorderSize)+FMinuteHandLength),
     QPoint(0, -(96-minuteBorderSize))
   };
   
@@ -309,6 +316,34 @@ QColor DNRAnalogClock::getHourHandColor()
   return FHourHandColor;
 }
     
+void DNRAnalogClock::setHourHandLength(int NewHourHandLength)
+{
+  if (FHourHandLength != NewHourHandLength)
+  {
+    FHourHandLength = NewHourHandLength;
+    update();
+  }
+}
+
+int DNRAnalogClock::getHourHandLength()
+{
+  return FHourHandLength;
+}
+
+void DNRAnalogClock::setHourHandWidth(int NewHourHandWidth)
+{
+  if (FHourHandWidth != NewHourHandWidth)
+  {
+    FHourHandWidth = NewHourHandWidth;
+    update();
+  }
+}
+
+int DNRAnalogClock::getHourHandWidth()
+{
+  return FHourHandWidth;
+}
+
 void DNRAnalogClock::setMinuteHandColor(QColor NewMinuteHandColor)
 {
   if (FMinuteHandColor != NewMinuteHandColor)
@@ -321,6 +356,34 @@ void DNRAnalogClock::setMinuteHandColor(QColor NewMinuteHandColor)
 QColor DNRAnalogClock::getMinuteHandColor()
 {
   return FMinuteHandColor;
+}
+
+void DNRAnalogClock::setMinuteHandLength(int NewMinuteHandLength)
+{
+  if (FMinuteHandLength != NewMinuteHandLength)
+  {
+    FMinuteHandLength = NewMinuteHandLength;
+    update();
+  }
+}
+
+int DNRAnalogClock::getMinuteHandLength()
+{
+  return FMinuteHandLength;
+}
+
+void DNRAnalogClock::setMinuteHandWidth(int NewMinuteHandWidth)
+{
+  if (FMinuteHandWidth != NewMinuteHandWidth)
+  {
+    FMinuteHandWidth = NewMinuteHandWidth;
+    update();
+  }
+}
+
+int DNRAnalogClock::getMinuteHandWidth()
+{
+  return FMinuteHandWidth;
 }
 
 void DNRAnalogClock::checkTime()
