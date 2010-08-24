@@ -35,7 +35,10 @@ extern QMutex qt_mutex;
 Browser::Browser(QWidget *parent)
     : QWidget(parent)
 {
-   setupUi(this);
+  setupUi(this);
+
+  TopOnAirWidget->setVisible(false);
+  BottomOnAirWidget->setVisible(false);
 
 /*	m_NavigationBar = new QToolBar(label_7);
 
@@ -208,6 +211,8 @@ void Browser::MeterRelease()
 
   if (OnAirState != CurrentOnAirState)
   {
+    TopOnAirWidget->setVisible(OnAirState);
+    BottomOnAirWidget->setVisible(OnAirState);
     if (OnAirState)
     {
       label_7->setText("ON AIR");

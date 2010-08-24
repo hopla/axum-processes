@@ -693,6 +693,38 @@ QTabWidget::tab-bar
    <zorder>toggleButton</zorder>
    <zorder>label_5</zorder>
   </widget>
+  <widget class="QWidget" name="TopOnAirWidget" native="true">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1024</width>
+     <height>93</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string>background-color: rgba(255, 0, 0, 128);</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="BottomOnAirWidget" native="true">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>673</y>
+     <width>1024</width>
+     <height>95</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string>background-color: rgba(255, 0, 0, 128);</string>
+   </property>
+  </widget>
   <action name="insertRowAction">
    <property name="enabled">
     <bool>false</bool>
