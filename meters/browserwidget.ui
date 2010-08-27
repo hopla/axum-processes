@@ -638,6 +638,12 @@ QTabWidget::tab-bar
     <property name="whatsThis">
      <string>The Phase Meter widget displays </string>
     </property>
+    <property name="MinPosition">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="MaxPosition">
+     <double>2.000000000000000</double>
+    </property>
     <property name="PointerWidth">
      <number>2</number>
     </property>
@@ -659,6 +665,12 @@ QTabWidget::tab-bar
     </property>
     <property name="whatsThis">
      <string>The Phase Meter widget displays </string>
+    </property>
+    <property name="MinPosition">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="MaxPosition">
+     <double>2.000000000000000</double>
     </property>
     <property name="PointerWidth">
      <number>2</number>
