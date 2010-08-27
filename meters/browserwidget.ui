@@ -1066,7 +1066,7 @@ QTabWidget::tab-bar
 }</string>
     </property>
     <property name="text">
-     <string>3</string>
+     <string>&lt;font color='#400000'&gt;3&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -1275,7 +1275,7 @@ QTabWidget::tab-bar
 }</string>
     </property>
     <property name="text">
-     <string>1</string>
+     <string>&lt;font color='#400000'&gt;1&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -1484,7 +1484,7 @@ QTabWidget::tab-bar
 }</string>
     </property>
     <property name="text">
-     <string>8</string>
+     <string>&lt;font color='#400000'&gt;8&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -1693,7 +1693,7 @@ QTabWidget::tab-bar
 }</string>
     </property>
     <property name="text">
-     <string>5</string>
+     <string>&lt;font color='#400000'&gt;5&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -1902,7 +1902,7 @@ QTabWidget::tab-bar
 }</string>
     </property>
     <property name="text">
-     <string>2</string>
+     <string>&lt;font color='#400000'&gt;2&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -2111,7 +2111,7 @@ QTabWidget::tab-bar
 }</string>
     </property>
     <property name="text">
-     <string>6</string>
+     <string>&lt;font color='#400000'&gt;6&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -2320,7 +2320,7 @@ QTabWidget::tab-bar
 }</string>
     </property>
     <property name="text">
-     <string>7</string>
+     <string>&lt;font color='#400000'&gt;7&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -2529,7 +2529,7 @@ QTabWidget::tab-bar
 }</string>
     </property>
     <property name="text">
-     <string>4</string>
+     <string>&lt;font color='#400000'&gt;4&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
