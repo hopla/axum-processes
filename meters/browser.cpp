@@ -37,8 +37,10 @@ Browser::Browser(QWidget *parent)
 {
   setupUi(this);
 
-  TopOnAirWidget->setVisible(false);
-  BottomOnAirWidget->setVisible(false);
+  NewDNRImageTopOnAir->setVisible(false);
+  NewDNRImageBottomOnAir->setVisible(false);
+  NewDNRImageTopOffAir->setVisible(true);
+  NewDNRImageBottomOffAir->setVisible(true);
 
 /*	m_NavigationBar = new QToolBar(label_7);
 
@@ -211,16 +213,18 @@ void Browser::MeterRelease()
 
   if (OnAirState != CurrentOnAirState)
   {
-    TopOnAirWidget->setVisible(OnAirState);
-    BottomOnAirWidget->setVisible(OnAirState);
-    if (OnAirState)
-    {
-      label_7->setText("ON AIR");
-    }
-    else
-    {
-      label_7->setText("");
-    }
+    NewDNRImageTopOnAir->setVisible(OnAirState);
+    NewDNRImageBottomOnAir->setVisible(OnAirState);
+    NewDNRImageTopOffAir->setVisible(!OnAirState);
+    NewDNRImageBottomOffAir->setVisible(!OnAirState);
+//    if (OnAirState)
+//    {
+//      label_7->setText("ON AIR");
+//    }
+//    else
+//    {
+//      label_7->setText("");
+//    }
     CurrentOnAirState = OnAirState;
   }
   qt_mutex.unlock();
