@@ -885,6 +885,27 @@ QTabWidget::tab-bar
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
+   <zorder>NewDNRImage</zorder>
+   <zorder>NewDNRPPMMeter_3</zorder>
+   <zorder>NewDNRDigitalClock</zorder>
+   <zorder>NewDNRPPMMeter</zorder>
+   <zorder>label_4</zorder>
+   <zorder>label_6</zorder>
+   <zorder>label_3</zorder>
+   <zorder>NewDNRPPMMeter_4</zorder>
+   <zorder>NewDNRPPMMeter_2</zorder>
+   <zorder>toggleButton</zorder>
+   <zorder>NewDNRAnalogClock</zorder>
+   <zorder>label_5</zorder>
+   <zorder>NewDNRPhaseMeter</zorder>
+   <zorder>NewDNRPhaseMeter_2</zorder>
+   <zorder>NewDNRPPMMeter_5</zorder>
+   <zorder>NewDNRPPMMeter_6</zorder>
+   <zorder>NewDNRPPMMeter_7</zorder>
+   <zorder>NewDNRPPMMeter_8</zorder>
+   <zorder>label_7</zorder>
+   <zorder>label_8</zorder>
+   <zorder>label_9</zorder>
   </widget>
   <widget class="QWidget" name="TopOnAirWidget" native="true">
    <property name="enabled">
