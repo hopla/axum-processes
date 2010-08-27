@@ -496,25 +496,6 @@ QTabWidget::tab-bar
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QPushButton" name="toggleButton">
-    <property name="geometry">
-     <rect>
-      <x>860</x>
-      <y>10</y>
-      <width>151</width>
-      <height>26</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Toggle count direction</string>
-    </property>
-    <property name="default">
-     <bool>false</bool>
-    </property>
-    <property name="flat">
-     <bool>true</bool>
-    </property>
-   </widget>
    <widget class="DNRAnalogClock" name="NewDNRAnalogClock">
     <property name="geometry">
      <rect>
@@ -894,7 +875,6 @@ QTabWidget::tab-bar
    <zorder>label_3</zorder>
    <zorder>NewDNRPPMMeter_4</zorder>
    <zorder>NewDNRPPMMeter_2</zorder>
-   <zorder>toggleButton</zorder>
    <zorder>NewDNRAnalogClock</zorder>
    <zorder>label_5</zorder>
    <zorder>NewDNRPhaseMeter</zorder>
@@ -972,8 +952,8 @@ QTabWidget::tab-bar
   <widget class="QLabel" name="redlight2Label">
    <property name="geometry">
     <rect>
-     <x>126</x>
-     <y>60</y>
+     <x>926</x>
+     <y>94</y>
      <width>14</width>
      <height>30</height>
     </rect>
@@ -1181,8 +1161,8 @@ QTabWidget::tab-bar
   <widget class="QLabel" name="redlight7Label">
    <property name="geometry">
     <rect>
-     <x>196</x>
-     <y>60</y>
+     <x>996</x>
+     <y>94</y>
      <width>14</width>
      <height>30</height>
     </rect>
@@ -1390,8 +1370,8 @@ QTabWidget::tab-bar
   <widget class="QLabel" name="redlight3Label">
    <property name="geometry">
     <rect>
-     <x>140</x>
-     <y>60</y>
+     <x>940</x>
+     <y>94</y>
      <width>14</width>
      <height>30</height>
     </rect>
@@ -1599,8 +1579,8 @@ QTabWidget::tab-bar
   <widget class="QLabel" name="redlight1Label">
    <property name="geometry">
     <rect>
-     <x>112</x>
-     <y>60</y>
+     <x>912</x>
+     <y>94</y>
      <width>14</width>
      <height>30</height>
     </rect>
@@ -1808,8 +1788,8 @@ QTabWidget::tab-bar
   <widget class="QLabel" name="redlight5Label">
    <property name="geometry">
     <rect>
-     <x>168</x>
-     <y>60</y>
+     <x>968</x>
+     <y>94</y>
      <width>14</width>
      <height>30</height>
     </rect>
@@ -2017,8 +1997,8 @@ QTabWidget::tab-bar
   <widget class="QLabel" name="redlight6Label">
    <property name="geometry">
     <rect>
-     <x>182</x>
-     <y>60</y>
+     <x>982</x>
+     <y>94</y>
      <width>14</width>
      <height>30</height>
     </rect>
@@ -2226,8 +2206,8 @@ QTabWidget::tab-bar
   <widget class="QLabel" name="redlight4Label">
    <property name="geometry">
     <rect>
-     <x>154</x>
-     <y>60</y>
+     <x>954</x>
+     <y>94</y>
      <width>14</width>
      <height>30</height>
     </rect>
@@ -2435,8 +2415,8 @@ QTabWidget::tab-bar
   <widget class="QLabel" name="redlight8Label">
    <property name="geometry">
     <rect>
-     <x>210</x>
-     <y>60</y>
+     <x>1010</x>
+     <y>94</y>
      <width>14</width>
      <height>30</height>
     </rect>
