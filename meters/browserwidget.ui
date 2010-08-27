@@ -291,7 +291,7 @@ QTabWidget::tab-bar
    <widget class="DNRImage" name="NewDNRImage">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>0</x>
       <y>0</y>
       <width>1024</width>
       <height>580</height>
@@ -345,7 +345,7 @@ QTabWidget::tab-bar
     <property name="geometry">
      <rect>
       <x>205</x>
-      <y>506</y>
+      <y>500</y>
       <width>114</width>
       <height>30</height>
      </rect>
@@ -382,7 +382,7 @@ QTabWidget::tab-bar
     <property name="geometry">
      <rect>
       <x>205</x>
-      <y>536</y>
+      <y>530</y>
       <width>114</width>
       <height>30</height>
      </rect>
@@ -419,7 +419,7 @@ QTabWidget::tab-bar
     <property name="geometry">
      <rect>
       <x>26</x>
-      <y>506</y>
+      <y>500</y>
       <width>114</width>
       <height>30</height>
      </rect>
@@ -609,7 +609,7 @@ QTabWidget::tab-bar
     <property name="geometry">
      <rect>
       <x>26</x>
-      <y>536</y>
+      <y>530</y>
       <width>114</width>
       <height>30</height>
      </rect>
@@ -910,8 +910,8 @@ QTabWidget::tab-bar
   <widget class="DNRImage" name="NewDNRImageBottomOnAir">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>10</y>
+     <x>0</x>
+     <y>673</y>
      <width>1024</width>
      <height>95</height>
     </rect>
@@ -941,8 +941,8 @@ QTabWidget::tab-bar
   <widget class="DNRImage" name="NewDNRImageTopOnAir">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>10</y>
+     <x>0</x>
+     <y>0</y>
      <width>1024</width>
      <height>94</height>
     </rect>
@@ -2663,6 +2663,19 @@ QTabWidget::tab-bar
     <string>Deletes the current Row</string>
    </property>
   </action>
+  <zorder>redlight1Label</zorder>
+  <zorder>redlight4Label</zorder>
+  <zorder>redlight3Label</zorder>
+  <zorder>redlight6Label</zorder>
+  <zorder>redlight7Label</zorder>
+  <zorder>redlight2Label</zorder>
+  <zorder>redlight5Label</zorder>
+  <zorder>redlight8Label</zorder>
+  <zorder>NewDNRImageTopOffAir</zorder>
+  <zorder>NewDNRImageBottomOffAir</zorder>
+  <zorder>frame</zorder>
+  <zorder>NewDNRImageBottomOnAir</zorder>
+  <zorder>NewDNRImageTopOnAir</zorder>
  </widget>
  <customwidgets>
   <customwidget>
