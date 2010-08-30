@@ -35,6 +35,8 @@ extern QMutex qt_mutex;
 Browser::Browser(QWidget *parent)
     : QWidget(parent)
 {
+  int cnt;
+
   setupUi(this);
 
   NewDNRImageTopOnAir->setVisible(false);
@@ -68,28 +70,40 @@ Browser::Browser(QWidget *parent)
 	connect(m_Forward, SIGNAL(triggered()), webView, SLOT(forward()));
 	connect(m_StopReload, SIGNAL(triggered()), webView, SLOT(reload()));*/
 
-  connect(toggleButton, SIGNAL(clicked()), this, SLOT(slotReverseDots()));
-
 	cntSecond = 0;
 
 	startTimer(30);
 
-	MeterData[0] = -50;
-	MeterData[1] = -50;
-	MeterData[2] = -50;
-	MeterData[3] = -50;
+	for (cnt=0; cnt<8; cnt++)
+  {
+    MeterData[cnt] = -50;
+  }
 
-  sprintf(Label[0]," Mon. 1 ");
+  sprintf(Label[0],"Meter 1 ");
   sprintf(Label[1],"  ----  ");
-  sprintf(Label[2]," Mon. 2 ");
+  sprintf(Label[2],"Meter 2 ");
   sprintf(Label[3],"  ----  ");
-  sprintf(CurrentLabel[0]," Mon. 1 ");
+  sprintf(Label[4],"Meter 3 ");
+  sprintf(Label[5],"Meter 4 ");
+  sprintf(Label[6],"  ----  ");
+  sprintf(CurrentLabel[0],"Meter 1 ");
   sprintf(CurrentLabel[1],"  ----  ");
-  sprintf(CurrentLabel[2]," Mon. 2 ");
+  sprintf(CurrentLabel[2],"Meter 2 ");
   sprintf(CurrentLabel[3],"  ----  ");
+  sprintf(CurrentLabel[4],"Meter 3 ");
+  sprintf(CurrentLabel[5],"Meter 4 ");
+  sprintf(CurrentLabel[6],"  ----  ");
 
   OnAirState = 0;
   CurrentOnAirState = 0;
+  for (cnt=0; cnt<8; cnt++)
+  {
+    RedlightState[cnt] = 0;
+    CurrentRedlightState[cnt] = 0;
+  }
+
+  CountDown = 0;
+  CurrentCountDown = 0;
 }
 
 Browser::~Browser()
@@ -107,6 +121,7 @@ void Browser::timerEvent(QTimerEvent *Event)
 void Browser::MeterRelease()
 {
   float Difference;
+  int cnt;
 /*
 #ifdef Q_OS_WIN32
 	LARGE_INTEGER freq, newTime;
@@ -125,7 +140,23 @@ void Browser::MeterRelease()
 */
 //  #define RELEASE_STEP 0.15
   #define RELEASE_STEP 0.45
+  #define PHASE_STEPSIZE 0.0075*4
   qt_mutex.lock();
+
+  if (PhaseMeterData[0] > (NewDNRPhaseMeter->FPosition+PHASE_STEPSIZE))
+    NewDNRPhaseMeter->setPosition(NewDNRPhaseMeter->FPosition+PHASE_STEPSIZE);
+  else if (PhaseMeterData[0] < (NewDNRPhaseMeter->FPosition-PHASE_STEPSIZE))
+    NewDNRPhaseMeter->setPosition(NewDNRPhaseMeter->FPosition-PHASE_STEPSIZE);
+  else
+    NewDNRPhaseMeter->setPosition(PhaseMeterData[0]);
+
+  if (PhaseMeterData[1] > (NewDNRPhaseMeter_2->FPosition+PHASE_STEPSIZE))
+    NewDNRPhaseMeter_2->setPosition(NewDNRPhaseMeter_2->FPosition+PHASE_STEPSIZE);
+  else if (PhaseMeterData[1] < (NewDNRPhaseMeter_2->FPosition-PHASE_STEPSIZE))
+    NewDNRPhaseMeter_2->setPosition(NewDNRPhaseMeter_2->FPosition-PHASE_STEPSIZE);
+  else
+    NewDNRPhaseMeter->setPosition(PhaseMeterData[1]);
+
   if ((NewDNRPPMMeter->FdBPosition>-50) || (MeterData[0]>-50))
   {
     Difference = MeterData[0]-NewDNRPPMMeter->FdBPosition;
@@ -141,7 +172,6 @@ void Browser::MeterRelease()
 			NewDNRPPMMeter->update();
     }
 	}
-
   if ((NewDNRPPMMeter_2->FdBPosition>-50) || (MeterData[1]>-50))
   {
     Difference = MeterData[1]-NewDNRPPMMeter_2->FdBPosition;
@@ -190,6 +220,67 @@ void Browser::MeterRelease()
     }
 	}
 
+  if ((NewDNRPPMMeter_5->FdBPosition>-50) || (MeterData[4]>-50))
+  {
+    Difference = MeterData[4]-NewDNRPPMMeter_5->FdBPosition;
+
+    if (Difference < -RELEASE_STEP)
+    {
+      Difference = -RELEASE_STEP;
+		}
+
+    if (Difference != 0)
+    {
+      NewDNRPPMMeter_5->FdBPosition += Difference;
+			NewDNRPPMMeter_5->update();
+    }
+	}
+  if ((NewDNRPPMMeter_6->FdBPosition>-50) || (MeterData[5]>-50))
+  {
+    Difference = MeterData[5]-NewDNRPPMMeter_6->FdBPosition;
+
+    if (Difference < -RELEASE_STEP)
+    {
+      Difference = -RELEASE_STEP;
+		}
+
+    if (Difference != 0)
+    {
+      NewDNRPPMMeter_6->FdBPosition += Difference;
+			NewDNRPPMMeter_6->update();
+    }
+	}
+  if ((NewDNRPPMMeter_7->FdBPosition>-50) || (MeterData[6]>-50))
+  {
+    Difference = MeterData[6]-NewDNRPPMMeter_7->FdBPosition;
+
+    if (Difference < -RELEASE_STEP)
+    {
+      Difference = -RELEASE_STEP;
+		}
+
+    if (Difference != 0)
+    {
+      NewDNRPPMMeter_7->FdBPosition += Difference;
+			NewDNRPPMMeter_7->update();
+    }
+	}
+  if ((NewDNRPPMMeter_8->FdBPosition>-50) || (MeterData[7]>-50))
+  {
+    Difference = MeterData[7]-NewDNRPPMMeter_8->FdBPosition;
+
+    if (Difference < -RELEASE_STEP)
+    {
+      Difference = -RELEASE_STEP;
+		}
+
+    if (Difference != 0)
+    {
+      NewDNRPPMMeter_8->FdBPosition += Difference;
+			NewDNRPPMMeter_8->update();
+    }
+	}
+
   if (strcmp(Label[0], CurrentLabel[0]) != 0)
   {
     label_3->setText(QString(Label[0]));
@@ -210,6 +301,30 @@ void Browser::MeterRelease()
     label_6->setText(QString(Label[3]));
     strcpy(Label[3], CurrentLabel[3]);
   }
+  if (strcmp(Label[4], CurrentLabel[4]) != 0)
+  {
+    label_7->setText(QString(Label[4]));
+    strcpy(Label[4], CurrentLabel[4]);
+  }
+  if (strcmp(Label[5], CurrentLabel[5]) != 0)
+  {
+    label_8->setText(QString(Label[5]));
+    strcpy(Label[5], CurrentLabel[5]);
+  }
+  if (strcmp(Label[6], CurrentLabel[6]) != 0)
+  {
+    label_9->setText(QString(Label[6]));
+    strcpy(Label[6], CurrentLabel[6]);
+  }
+
+  OnAirState = false;
+  for (cnt=0; cnt<8; cnt++)
+  {
+    if (RedlightState[cnt])
+    {
+      OnAirState = true;
+    }
+  }
 
   if (OnAirState != CurrentOnAirState)
   {
@@ -217,15 +332,66 @@ void Browser::MeterRelease()
     NewDNRImageBottomOnAir->setVisible(OnAirState);
     NewDNRImageTopOffAir->setVisible(!OnAirState);
     NewDNRImageBottomOffAir->setVisible(!OnAirState);
-//    if (OnAirState)
-//    {
-//      label_7->setText("ON AIR");
-//    }
-//    else
-//    {
-//      label_7->setText("");
-//    }
+
     CurrentOnAirState = OnAirState;
+  }
+
+  for (cnt=0; cnt<8; cnt++)
+  {
+    char FontText[64];
+
+    sprintf(FontText, "<font color=#%02X0000>%d</font>", RedlightState[cnt] ? (0xFF) : (0x40), cnt+1);
+
+    switch (cnt)
+    {
+      case 0:
+      {
+        redlight1Label->setText(FontText);
+      }
+      break;
+      case 1:
+      {
+        redlight2Label->setText(FontText);
+      }
+      break;
+      case 2:
+      {
+        redlight3Label->setText(FontText);
+      }
+      break;
+      case 3:
+      {
+        redlight4Label->setText(FontText);
+      }
+      break;
+      case 4:
+      {
+        redlight5Label->setText(FontText);
+      }
+      break;
+      case 5:
+      {
+        redlight6Label->setText(FontText);
+      }
+      break;
+      case 6:
+      {
+        redlight7Label->setText(FontText);
+      }
+      break;
+      case 7:
+      {
+        redlight8Label->setText(FontText);
+      }
+      break;
+    }
+    CurrentRedlightState[cnt] = RedlightState[cnt];
+  }
+  if (CountDown != CurrentCountDown)
+  {
+    NewDNRAnalogClock->FSecondDotsCountDown = CountDown;
+    NewDNRAnalogClock->update();
+    CurrentCountDown = CountDown;
   }
   qt_mutex.unlock();
 }
@@ -254,8 +420,3 @@ void Browser::MeterRelease()
 		m_stopReload->setToolTip(tr("Reload the current page"));*/
 //	}
 //}
-
-void Browser::slotReverseDots()
-{
-  NewDNRAnalogClock->FSecondDotsCountDown = !NewDNRAnalogClock->FSecondDotsCountDown;
-}

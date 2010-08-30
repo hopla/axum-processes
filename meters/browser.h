@@ -54,11 +54,16 @@ class Browser: public QWidget, public Ui::Browser
 public:
 	 int cntSecond;
 
-	 double MeterData[4];
-   char Label[4][9];
-   char CurrentLabel[4][9];
+	 double MeterData[8];
+   double PhaseMeterData[2];
+   char Label[7][9];
+   char CurrentLabel[7][9];
    bool OnAirState;
    bool CurrentOnAirState;
+   bool RedlightState[8];
+   bool CurrentRedlightState[8];
+   bool CountDown;
+   bool CurrentCountDown;
 	 double previouNumberOfSeconds;
 
    Browser(QWidget *parent = 0);
@@ -75,7 +80,7 @@ public:
 
 public slots:
 	 void MeterRelease();
-   void slotReverseDots();
+
 
 private:
 };

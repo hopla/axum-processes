@@ -47,7 +47,7 @@
 #define MANUFACTURER_ID          0x0001	//D&R
 #define PRODUCT_ID               0x001A	//Axum linux meters
 
-#define NR_OF_STATIC_OBJECTS    (1032-1023)
+#define NR_OF_STATIC_OBJECTS    (1049-1023)
 #define NR_OF_OBJECTS            NR_OF_STATIC_OBJECTS
 
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
@@ -67,7 +67,7 @@ struct mbn_node_info this_node = {
   "Axum-PPM-Meters",
   MANUFACTURER_ID, PRODUCT_ID, 0x0001,
   0, 0,                   //Hw revision
-  2, 0,                   //Fw revision
+  3, 0,                   //Fw revision
   0, 0,                   //FPGA revision
   NR_OF_OBJECTS,          //Number of objects
   0,                      //Default engine address
@@ -85,6 +85,7 @@ void init(int argc, char *argv[])
   struct mbn_object objects[NR_OF_STATIC_OBJECTS];
   int c;
   char oem_name[32];
+  int cntObject;
 
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(log_file, DEFAULT_LOG_FILE);
@@ -136,34 +137,86 @@ void init(int argc, char *argv[])
     }
   }
 
-  objects[0] = MBN_OBJ( (char *)"Meter 1 Left dB",
-                        MBN_DATATYPE_NODATA,
-                        MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
-  objects[1] = MBN_OBJ( (char *)"Meter 1 Right dB",
-                        MBN_DATATYPE_NODATA,
-                        MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
-  objects[2] = MBN_OBJ( (char *)"Meter 1 Label A",
-                        MBN_DATATYPE_NODATA,
-                        MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 1");
-  objects[3] = MBN_OBJ( (char *)"Meter 1 Label B",
-                        MBN_DATATYPE_NODATA,
-                        MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "-");
-  objects[4] = MBN_OBJ( (char *)"Meter 2 Left dB",
-                        MBN_DATATYPE_NODATA,
-                        MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
-  objects[5] = MBN_OBJ( (char *)"Meter 2 Right dB",
-                        MBN_DATATYPE_NODATA,
-                        MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
-  objects[6] = MBN_OBJ( (char *)"Meter 2 Label A",
-                        MBN_DATATYPE_NODATA,
-                        MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 2");
-  objects[7] = MBN_OBJ( (char *)"Meter 2 Label B",
-                        MBN_DATATYPE_NODATA,
-                        MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "-");
-  objects[8] = MBN_OBJ( (char *)"On Air",
-                        MBN_DATATYPE_NODATA,
-                        MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
-  this_node.NumberOfObjects = 9;
+  cntObject = 0;
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 1 Left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 1 Right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Phase Meter 1",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, 0.0, 2.0, 0.0, 0.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 1 Label A",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 1");
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 1 Label B",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "-");
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 2 Left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 2 Right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Phase Meter 2",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, 0.0, 2.0, 0.0, 0.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 2 Label A",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 2");
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 2 Label B",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "-");
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 3 Left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 3 Right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 3 Label",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 2");
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 4 Left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 4 Right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Meter 4 Label",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 2");
+  objects[cntObject++] = MBN_OBJ( (char *)"Main/Clock Label",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 2");
+  objects[cntObject++] = MBN_OBJ( (char *)"Redlight 1",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Redlight 2",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Redlight 3",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Redlight 4",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Redlight 5",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Redlight 6",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Redlight 7",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Redlight 8",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Clock count down",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  this_node.NumberOfObjects = cntObject;
 
   log_open();
 
@@ -180,7 +233,7 @@ void init(int argc, char *argv[])
 
   if ((itf=mbnEthernetOpen(ethdev, error)) == NULL)
   {
-    fprintf(stderr, "Error opening ethernet device: %s", error);
+    fprintf(stderr, "Error opening ethernet device: %s ('%s')", error, ethdev);
     log_close();
     exit(1);
   }
@@ -228,46 +281,116 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     break;
     case 1026:
     {
+      browser->PhaseMeterData[0] = in.Float;
+    }
+    break;
+    case 1027:
+    {
       strncpy(browser->Label[0], (char *)in.Octets, 8);
       browser->Label[0][8] = 0;
 		}
     break;
-    case 1027:
+    case 1028:
     {
       strncpy(browser->Label[1], (char *)in.Octets, 8);
       browser->Label[1][8] = 0;
     }
 		break;
-    case 1028:
+    case 1029:
     {
       float dB = in.Float+20;
 
       browser->MeterData[2] = dB;
     }
     break;
-    case 1029:
+    case 1030:
     {
       float dB = in.Float+20;
 
       browser->MeterData[3] = dB;
     }
     break;
-		case 1030:
+    case 1031:
+    {
+      browser->PhaseMeterData[1] = in.Float;
+    }
+    break;
+		case 1032:
 		{
       strncpy(browser->Label[2], (char *)in.Octets, 8);
       browser->Label[2][8] = 0;
 		}
 		break;
-    case 1031:
+    case 1033:
 		{
       strncpy(browser->Label[3], (char *)in.Octets, 8);
       browser->Label[3][8] = 0;
 		}
     break;
-		case 1032:
+    case 1034:
+    {
+      float dB = in.Float+20;
+
+      browser->MeterData[4] = dB;
+    }
+    break;
+    case 1035:
+    {
+      float dB = in.Float+20;
+
+      browser->MeterData[5] = dB;
+    }
+    break;
+		case 1036:
 		{
-      browser->OnAirState = in.State;
+      strncpy(browser->Label[4], (char *)in.Octets, 8);
+      browser->Label[4][8] = 0;
 		}
+		break;
+    case 1037:
+    {
+      float dB = in.Float+20;
+
+      browser->MeterData[6] = dB;
+    }
+    break;
+    case 1038:
+    {
+      float dB = in.Float+20;
+
+      browser->MeterData[7] = dB;
+    }
+    break;
+		case 1039:
+		{
+      strncpy(browser->Label[5], (char *)in.Octets, 8);
+      browser->Label[5][8] = 0;
+		}
+		break;
+		case 1040:
+		{
+      strncpy(browser->Label[6], (char *)in.Octets, 8);
+      browser->Label[6][8] = 0;
+		}
+		break;
+		case 1041:
+		case 1042:
+		case 1043:
+		case 1044:
+		case 1045:
+		case 1046:
+		case 1047:
+		case 1048:
+		{
+      int RedlightNr = object-1041;
+      browser->RedlightState[RedlightNr] = in.State;
+		}
+    break;
+    case 1049:
+    {
+      browser->CountDown = in.State;
+    }
+    break;
   }
   qt_mutex.unlock();
   mbnUpdateActuatorData(mbn, object, in);
