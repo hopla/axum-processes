@@ -111,22 +111,24 @@ void DNRPPMMeter::paintEvent(QPaintEvent *)
 	{
 		painter.drawImage(0,0, *PPMMeterBackgroundQImage);
 	}
+	
+	int HalfHeight = ((float)height()/2)+0.5;
 
-	QLinearGradient BackgroundGradient(0, height()/2, 0, 0);
+	QLinearGradient BackgroundGradient(0, HalfHeight, 0, 0);
 	BackgroundGradient.setColorAt(0, FMinBackgroundColor);
 	BackgroundGradient.setColorAt(1, FMaxBackgroundColor);
 
-	QLinearGradient ForgroundGradient(0, height()/2, 0, 0);
+	QLinearGradient ForgroundGradient(0, HalfHeight, 0, 0);
 	ForgroundGradient.setColorAt(0, FMinColor);
 	ForgroundGradient.setColorAt(1, FMaxColor);
 
 	if (FGradientBackground)
 	{
 		painter.setBrush(FMinBackgroundColor);
-		painter.drawRect(0, height()/2, width(), height()/2);
+		painter.drawRect(0, HalfHeight, width(), HalfHeight);
 
 		painter.setBrush(QBrush(BackgroundGradient));
-		painter.drawRect(0, 0, width(), height()/2);
+		painter.drawRect(0, 0, width(), HalfHeight);
 	}
 	else
 	{
@@ -140,18 +142,18 @@ void DNRPPMMeter::paintEvent(QPaintEvent *)
 	if (FGradientForground)
 	{
 		painter.setBrush(FMinColor);
-		int SingleColorHeight = height()/2;
+		int SingleColorHeight = HalfHeight+2;
 		if (MeterHeight<SingleColorHeight)
 		{
 			SingleColorHeight = MeterHeight;
 		}
 		painter.drawRect(0, height()-SingleColorHeight, width(), SingleColorHeight);
 
-		int GradientHeight = MeterHeight-(height()/2);
+		int GradientHeight = MeterHeight-HalfHeight;
 		if (GradientHeight>0)
 		{
 			painter.setBrush(QBrush(ForgroundGradient));
-			painter.drawRect(0, (height()/2)-GradientHeight, width(), GradientHeight);
+			painter.drawRect(0, HalfHeight-GradientHeight, width(), GradientHeight);
 		}
 	}
 	else
