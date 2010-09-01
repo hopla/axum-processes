@@ -169,7 +169,7 @@ QTabWidget::tab-bar
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>673</y>
+     <y>674</y>
      <width>1024</width>
      <height>95</height>
     </rect>
@@ -200,7 +200,7 @@ QTabWidget::tab-bar
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>93</y>
+     <y>94</y>
      <width>1024</width>
      <height>580</height>
     </rect>
@@ -214,10 +214,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_3">
     <property name="geometry">
      <rect>
-      <x>216</x>
-      <y>71</y>
-      <width>10</width>
-      <height>420</height>
+      <x>207</x>
+      <y>75</y>
+      <width>13</width>
+      <height>415</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -322,10 +322,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter">
     <property name="geometry">
      <rect>
-      <x>36</x>
-      <y>71</y>
-      <width>10</width>
-      <height>420</height>
+      <x>51</x>
+      <y>75</y>
+      <width>13</width>
+      <height>415</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -344,8 +344,8 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>205</x>
-      <y>500</y>
+      <x>203</x>
+      <y>503</y>
       <width>114</width>
       <height>30</height>
      </rect>
@@ -364,8 +364,8 @@ QTabWidget::tab-bar
     <property name="styleSheet">
      <string notr="true">QLabel
 {
-	color: rgba(208, 208, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	color: rgba(255, 170, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
@@ -381,9 +381,9 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>205</x>
-      <y>530</y>
-      <width>114</width>
+      <x>199</x>
+      <y>533</y>
+      <width>118</width>
       <height>30</height>
      </rect>
     </property>
@@ -401,8 +401,8 @@ QTabWidget::tab-bar
     <property name="styleSheet">
      <string notr="true">QLabel
 {
-	color: rgba(208, 208, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	color: rgba(255, 170, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
@@ -418,8 +418,8 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>26</x>
-      <y>500</y>
+      <x>47</x>
+      <y>503</y>
       <width>114</width>
       <height>30</height>
      </rect>
@@ -438,8 +438,8 @@ QTabWidget::tab-bar
     <property name="styleSheet">
      <string notr="true">QLabel
 {
-	color: rgba(208, 208, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	color: rgba(255, 170, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
@@ -455,10 +455,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_4">
     <property name="geometry">
      <rect>
-      <x>298</x>
-      <y>71</y>
-      <width>10</width>
-      <height>420</height>
+      <x>301</x>
+      <y>75</y>
+      <width>13</width>
+      <height>415</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -477,10 +477,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_2">
     <property name="geometry">
      <rect>
-      <x>119</x>
-      <y>71</y>
-      <width>10</width>
-      <height>420</height>
+      <x>145</x>
+      <y>75</y>
+      <width>13</width>
+      <height>415</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -499,7 +499,7 @@ QTabWidget::tab-bar
    <widget class="DNRAnalogClock" name="NewDNRAnalogClock">
     <property name="geometry">
      <rect>
-      <x>350</x>
+      <x>348</x>
       <y>85</y>
       <width>410</width>
       <height>410</height>
@@ -555,9 +555,9 @@ QTabWidget::tab-bar
     </property>
     <property name="HourHandColor">
      <color alpha="128">
-      <red>0</red>
+      <red>255</red>
       <green>0</green>
-      <blue>255</blue>
+      <blue>0</blue>
      </color>
     </property>
     <property name="HourHandBorder">
@@ -577,10 +577,10 @@ QTabWidget::tab-bar
      </color>
     </property>
     <property name="MinuteHandBorder">
-     <number>0</number>
+     <number>8</number>
     </property>
     <property name="MinuteHandLength">
-     <number>36</number>
+     <number>28</number>
     </property>
     <property name="MinuteHandWidth">
      <number>8</number>
@@ -589,8 +589,8 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_5">
     <property name="geometry">
      <rect>
-      <x>26</x>
-      <y>530</y>
+      <x>47</x>
+      <y>533</y>
       <width>114</width>
       <height>30</height>
      </rect>
@@ -609,8 +609,8 @@ QTabWidget::tab-bar
     <property name="styleSheet">
      <string notr="true">QLabel
 {
-	color: rgba(208, 208, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	color: rgba(255, 170, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
@@ -626,10 +626,10 @@ QTabWidget::tab-bar
    <widget class="DNRPhaseMeter" name="NewDNRPhaseMeter">
     <property name="geometry">
      <rect>
-      <x>36</x>
-      <y>44</y>
-      <width>93</width>
-      <height>10</height>
+      <x>51</x>
+      <y>37</y>
+      <width>107</width>
+      <height>17</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -646,6 +646,9 @@ QTabWidget::tab-bar
     </property>
     <property name="PointerWidth">
      <number>2</number>
+    </property>
+    <property name="GradientBackground">
+     <bool>true</bool>
     </property>
     <property name="Horizontal">
      <bool>true</bool>
@@ -654,10 +657,10 @@ QTabWidget::tab-bar
    <widget class="DNRPhaseMeter" name="NewDNRPhaseMeter_2">
     <property name="geometry">
      <rect>
-      <x>216</x>
-      <y>44</y>
-      <width>93</width>
-      <height>10</height>
+      <x>207</x>
+      <y>37</y>
+      <width>107</width>
+      <height>17</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -675,6 +678,9 @@ QTabWidget::tab-bar
     <property name="PointerWidth">
      <number>2</number>
     </property>
+    <property name="GradientBackground">
+     <bool>true</bool>
+    </property>
     <property name="Horizontal">
      <bool>true</bool>
     </property>
@@ -682,10 +688,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_8">
     <property name="geometry">
      <rect>
-      <x>980</x>
-      <y>280</y>
-      <width>8</width>
-      <height>210</height>
+      <x>966</x>
+      <y>200</y>
+      <width>9</width>
+      <height>290</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -704,10 +710,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_7">
     <property name="geometry">
      <rect>
-      <x>920</x>
-      <y>280</y>
-      <width>8</width>
-      <height>210</height>
+      <x>900</x>
+      <y>200</y>
+      <width>9</width>
+      <height>290</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -726,10 +732,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_6">
     <property name="geometry">
      <rect>
-      <x>860</x>
-      <y>280</y>
-      <width>8</width>
-      <height>210</height>
+      <x>858</x>
+      <y>200</y>
+      <width>9</width>
+      <height>290</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -748,10 +754,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_5">
     <property name="geometry">
      <rect>
-      <x>800</x>
-      <y>280</y>
-      <width>8</width>
-      <height>210</height>
+      <x>792</x>
+      <y>200</y>
+      <width>9</width>
+      <height>290</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -770,8 +776,8 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>790</x>
-      <y>500</y>
+      <x>784</x>
+      <y>503</y>
       <width>91</width>
       <height>30</height>
      </rect>
@@ -790,8 +796,8 @@ QTabWidget::tab-bar
     <property name="styleSheet">
      <string notr="true">QLabel
 {
-	color: rgba(208, 208, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	color: rgba(255, 170, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
@@ -807,8 +813,8 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>910</x>
-      <y>500</y>
+      <x>893</x>
+      <y>503</y>
       <width>91</width>
       <height>30</height>
      </rect>
@@ -827,8 +833,8 @@ QTabWidget::tab-bar
     <property name="styleSheet">
      <string notr="true">QLabel
 {
-	color: rgba(208, 208, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	color: rgba(255, 170, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
@@ -837,6 +843,9 @@ QTabWidget::tab-bar
     <property name="textFormat">
      <enum>Qt::PlainText</enum>
     </property>
+    <property name="scaledContents">
+     <bool>false</bool>
+    </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
     </property>
@@ -844,8 +853,8 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
-      <x>455</x>
-      <y>500</y>
+      <x>453</x>
+      <y>503</y>
       <width>200</width>
       <height>30</height>
      </rect>
@@ -864,8 +873,8 @@ QTabWidget::tab-bar
     <property name="styleSheet">
      <string notr="true">QLabel
 {
-	color: rgba(208, 208, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	color: rgba(255, 170, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
@@ -901,7 +910,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -928,7 +937,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -937,7 +946,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -957,7 +966,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -984,7 +993,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -993,7 +1002,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1013,7 +1022,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1040,7 +1049,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1049,7 +1058,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1074,11 +1083,11 @@ QTabWidget::tab-bar
      <string notr="true">QLabel
 {
 	color: rgba(255, 0, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
-     <string>&lt;font color='#400000'&gt;3&lt;/font&gt;</string>
+     <string>&lt;font color='#000000'&gt;3&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -1110,7 +1119,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1137,7 +1146,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1146,7 +1155,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1166,7 +1175,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1193,7 +1202,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1202,7 +1211,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1222,7 +1231,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1249,7 +1258,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1258,7 +1267,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1283,11 +1292,11 @@ QTabWidget::tab-bar
      <string notr="true">QLabel
 {
 	color: rgba(255, 0, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
-     <string>&lt;font color='#400000'&gt;1&lt;/font&gt;</string>
+     <string>&lt;font color='#000000'&gt;1&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -1319,7 +1328,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1346,7 +1355,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1355,7 +1364,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1375,7 +1384,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1402,7 +1411,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1411,7 +1420,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1431,7 +1440,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1458,7 +1467,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1467,7 +1476,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1492,11 +1501,15 @@ QTabWidget::tab-bar
      <string notr="true">QLabel
 {
 	color: rgba(255, 0, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
-     <string>&lt;font color='#400000'&gt;8&lt;/font&gt;</string>
+     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Arial Unicode MS'; font-size:14pt; font-weight:600; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; color:#000000;&quot;&gt;8&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -1528,7 +1541,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1555,7 +1568,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1564,7 +1577,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1584,7 +1597,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1611,7 +1624,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1620,7 +1633,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1640,7 +1653,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1667,7 +1680,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1676,7 +1689,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1701,11 +1714,11 @@ QTabWidget::tab-bar
      <string notr="true">QLabel
 {
 	color: rgba(255, 0, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
-     <string>&lt;font color='#400000'&gt;5&lt;/font&gt;</string>
+     <string>&lt;font color='#000000'&gt;5&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -1737,7 +1750,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1764,7 +1777,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1773,7 +1786,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1793,7 +1806,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1820,7 +1833,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1829,7 +1842,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1849,7 +1862,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1876,7 +1889,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1885,7 +1898,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1910,11 +1923,11 @@ QTabWidget::tab-bar
      <string notr="true">QLabel
 {
 	color: rgba(255, 0, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
-     <string>&lt;font color='#400000'&gt;2&lt;/font&gt;</string>
+     <string>&lt;font color='#000000'&gt;2&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -1946,7 +1959,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1973,7 +1986,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -1982,7 +1995,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2002,7 +2015,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2029,7 +2042,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2038,7 +2051,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2058,7 +2071,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2085,7 +2098,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2094,7 +2107,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2119,11 +2132,15 @@ QTabWidget::tab-bar
      <string notr="true">QLabel
 {
 	color: rgba(255, 0, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
-     <string>&lt;font color='#400000'&gt;6&lt;/font&gt;</string>
+     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Arial Unicode MS'; font-size:14pt; font-weight:600; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; color:#000000;&quot;&gt;6&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -2155,7 +2172,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2182,7 +2199,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2191,7 +2208,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2211,7 +2228,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2238,7 +2255,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2247,7 +2264,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2267,7 +2284,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2294,7 +2311,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2303,7 +2320,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2328,11 +2345,15 @@ QTabWidget::tab-bar
      <string notr="true">QLabel
 {
 	color: rgba(255, 0, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
-     <string>&lt;font color='#400000'&gt;7&lt;/font&gt;</string>
+     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Arial Unicode MS'; font-size:14pt; font-weight:600; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; color:#000000;&quot;&gt;7&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -2364,7 +2385,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2391,7 +2412,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2400,7 +2421,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2420,7 +2441,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2447,7 +2468,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2456,7 +2477,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2476,7 +2497,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2503,7 +2524,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2512,7 +2533,7 @@ QTabWidget::tab-bar
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
-         <color alpha="255">
+         <color alpha="0">
           <red>0</red>
           <green>0</green>
           <blue>0</blue>
@@ -2537,11 +2558,11 @@ QTabWidget::tab-bar
      <string notr="true">QLabel
 {
 	color: rgba(255, 0, 0, 255);
-	background: rgba(0, 0, 0, 255);
+	background: rgba(0, 0, 0, 0);
 }</string>
     </property>
     <property name="text">
-     <string>&lt;font color='#400000'&gt;4&lt;/font&gt;</string>
+     <string>&lt;font color='#000000'&gt;4&lt;/font&gt;</string>
     </property>
     <property name="textFormat">
      <enum>Qt::RichText</enum>
@@ -2583,7 +2604,7 @@ QTabWidget::tab-bar
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>673</y>
+     <y>674</y>
      <width>1024</width>
      <height>95</height>
     </rect>

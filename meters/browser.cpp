@@ -155,7 +155,7 @@ void Browser::MeterRelease()
   else if (PhaseMeterData[1] < (NewDNRPhaseMeter_2->FPosition-PHASE_STEPSIZE))
     NewDNRPhaseMeter_2->setPosition(NewDNRPhaseMeter_2->FPosition-PHASE_STEPSIZE);
   else
-    NewDNRPhaseMeter->setPosition(PhaseMeterData[1]);
+    NewDNRPhaseMeter_2->setPosition(PhaseMeterData[1]);
 
   if ((NewDNRPPMMeter->FdBPosition>-50) || (MeterData[0]>-50))
   {
@@ -340,7 +340,7 @@ void Browser::MeterRelease()
   {
     char FontText[64];
 
-    sprintf(FontText, "<font color=#%02X0000>%d</font>", RedlightState[cnt] ? (0xFF) : (0x40), cnt+1);
+    sprintf(FontText, "<font color=#%02X0000>%d</font>", RedlightState[cnt] ? (0xE0) : (0x00), cnt+1);
 
     switch (cnt)
     {
