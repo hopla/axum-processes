@@ -435,8 +435,9 @@ int main(int argc, char *argv[])
 {
   int app_return;
 
-
   QApplication app(argc, argv);
+
+
 
   QMainWindow mainWin;
   browser = new Browser(&mainWin);
@@ -451,6 +452,8 @@ int main(int argc, char *argv[])
 
 	mainWin.showFullScreen();
 	mainWin.setGeometry(0,0, 1024,800);
+
+  app.setOverrideCursor( QCursor( Qt::BlankCursor ) );
 
   app_return = app.exec();
 
