@@ -29,6 +29,7 @@
 #include <qthread.h>
 
 #include "chasewidget.h"
+#include "common.h"
 
 extern QMutex qt_mutex;
 
@@ -104,16 +105,34 @@ Browser::Browser(QWidget *parent)
 
   CountDown = 0;
   CurrentCountDown = 0;
+
+  LinkStatus = 0;
+  CurrentLinkStatus = 0;
 }
 
 Browser::~Browser()
 {
 }
 
+extern char CheckLinkStatus();
+
 void Browser::timerEvent(QTimerEvent *Event)
 {
+
 	cntSecond++;
 	MeterRelease();
+
+  if ((LinkStatus = CheckLinkStatus()) != -1)
+  {
+    if (CurrentLinkStatus != LinkStatus)
+    {
+      NewDNRImageNoLink->setVisible(!LinkStatus);
+      CurrentLinkStatus = LinkStatus;
+
+      log_write("Link status change: %s", LinkStatus ? ("Up") : ("Down"));
+    }
+  }
+
   return;
   Event = NULL;
 }

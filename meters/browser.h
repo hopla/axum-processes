@@ -65,6 +65,8 @@ public:
    bool CountDown;
    bool CurrentCountDown;
 	 double previouNumberOfSeconds;
+   bool LinkStatus;
+   bool CurrentLinkStatus;
 
    Browser(QWidget *parent = 0);
    virtual ~Browser();

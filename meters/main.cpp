@@ -238,6 +238,15 @@ void init(int argc, char *argv[])
     exit(1);
   }
 
+  log_write("start link check");
+
+  //open ethernet device for link status.
+  if (mbnEthernetMIILinkStatus(itf, error)) {
+    log_write("Link up");
+  } else {
+    log_write("Link down");
+  }
+
   if ((mbn=mbnInit(&this_node, objects, itf, error)) == NULL)
   {
     fprintf(stderr, "Error initializing MambaNet node: %s", error);
@@ -466,3 +475,15 @@ int main(int argc, char *argv[])
   return app_return;
 }
 
+char CheckLinkStatus()
+{
+  char LinkStatus;
+
+  if ((LinkStatus = mbnEthernetMIILinkStatus(mbn->itf, error)) == -1)
+  {
+    log_write("mbnEthernetMIILinkStatus error: %d", error);
+    return -1;
+  }
+  return LinkStatus;
+
+}

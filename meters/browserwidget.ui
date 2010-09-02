@@ -2662,6 +2662,28 @@ p, li { white-space: pre-wrap; }
     <bool>false</bool>
    </property>
   </widget>
+  <widget class="DNRImage" name="NewDNRImageNoLink">
+   <property name="geometry">
+    <rect>
+     <x>943</x>
+     <y>689</y>
+     <width>64</width>
+     <height>64</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/nolink.png</string>
+   </property>
+   <property name="ScaleImage">
+    <bool>false</bool>
+   </property>
+  </widget>
   <action name="insertRowAction">
    <property name="enabled">
     <bool>false</bool>
