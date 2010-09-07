@@ -621,7 +621,7 @@ CREATE TABLE buss_preset (
   label varchar(32) NOT NULL,
 );
 
-nCREATE TABLE buss_preset_rows (
+CREATE TABLE buss_preset_rows (
   number smallint NOT NULL CHECK(number>=1 AND number<=1280),
   buss smallint NOT NULL CHECK(buss>=1 AND buss<=16),
   use_preset boolean NOT NULL DEFAULT FALSE,
