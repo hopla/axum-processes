@@ -2641,7 +2641,7 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
   sprintf(str[0], "%hd", first_preset);
   sprintf(str[1], "%hd", last_preset);
 
-  PGresult *qres = sql_exec("SELECT number,               \
+  PGresult *qres = sql_exec("SELECT pos,               \
                                     label,                \
                                     console1,             \
                                     console2,             \
@@ -2652,8 +2652,8 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
                                     safe_recall_time,     \
                                     forced_recall_time    \
                                     FROM console_preset   \
-                                    WHERE number>=$1 AND number<=$2 \
-                                    ORDER BY number", 1, 2, params);
+                                    WHERE pos>=$1 AND pos<=$2 \
+                                    ORDER BY pos", 1, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
