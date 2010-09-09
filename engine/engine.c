@@ -6593,13 +6593,14 @@ void Timer100HzDone(int Value)
       {
         int Safe = ConsolePresetSwitch[cntConsolePreset].TimerValue-AxumData.ConsolePresetData[cntConsolePreset].SafeRecallTime;
         int Forced = ConsolePresetSwitch[cntConsolePreset].TimerValue-AxumData.ConsolePresetData[cntConsolePreset].ForcedRecallTime;
-        if ((Safe>=0) && (Safe<10))
-        {
-          DoAxum_LoadConsolePreset(cntConsolePreset+1, 0, 0);
-        }
-        else if ((Forced>=0) && (Forced<10))
+        if ((Forced>=0) && (Forced<10))
         {
           DoAxum_LoadConsolePreset(cntConsolePreset+1, 0, 1);
+          ConsolePresetSwitch[cntConsolePreset].State = 0;
+        }
+        else if ((Safe>=0) && (Safe<10))
+        {
+          DoAxum_LoadConsolePreset(cntConsolePreset+1, 0, 0);
         }
         ConsolePresetSwitch[cntConsolePreset].TimerValue += 10;
       }
