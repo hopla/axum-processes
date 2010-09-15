@@ -49,6 +49,12 @@ class QDESIGNER_WIDGET_EXPORT DNRAnalogClock : public QWidget
     Q_PROPERTY(int MinuteHandBorder READ getMinuteHandBorder WRITE setMinuteHandBorder);
     Q_PROPERTY(int MinuteHandLength READ getMinuteHandLength WRITE setMinuteHandLength);
     Q_PROPERTY(int MinuteHandWidth READ getMinuteHandWidth WRITE setMinuteHandWidth);
+    Q_PROPERTY(bool EndTime READ getEndTime WRITE setEndTime);
+    Q_PROPERTY(int EndTimeLength READ getEndTimeLength WRITE setEndTimeLength);
+    Q_PROPERTY(int EndTimeWidth READ getEndTimeWidth WRITE setEndTimeWidth);
+    Q_PROPERTY(int EndTimeMinute READ getEndTimeMinute WRITE setEndTimeMinute);
+    Q_PROPERTY(int EndTimeSecond READ getEndTimeSecond WRITE setEndTimeSecond);
+    Q_PROPERTY(QColor EndTimeColor READ getEndTimeColor WRITE setEndTimeColor);
 
 public:
     DNRAnalogClock(QWidget *parent = 0);
@@ -133,11 +139,36 @@ public:
 
     void setMinuteHandWidth(int NewMinuteHandWidth);
     int getMinuteHandWidth();
+    
+    void setEndTime(bool NewEndTime);
+    bool getEndTime();
+    
+    void setEndTimeLength(int NewEndTimeLength);
+    int getEndTimeLength();
+    
+    void setEndTimeWidth(int NewEndTimeWidth);
+    int getEndTimeWidth();
+    
+    void setEndTimeMinute(int NewEndTimeMinute);
+    int getEndTimeMinute();
+    
+    void setEndTimeSecond(int NewEndTimeSecond);
+    int getEndTimeSecond();
+    
+    void setEndTimeColor(QColor NewEndTimeColor);
+    QColor getEndTimeColor();
 
 protected:
     int FHour;
     int FMinute;
     int FSecond;
+
+    bool FEndTime;
+    int FEndTimeLength;
+    int FEndTimeWidth;
+    int FEndTimeMinute;
+    int FEndTimeSecond;
+    QColor FEndTimeColor;
 
     void paintEvent(QPaintEvent *event);
 

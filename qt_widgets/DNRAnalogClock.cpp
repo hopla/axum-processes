@@ -32,6 +32,13 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
     FMinute = 0;
     FSecond = 0;
 
+    FEndTime = false;
+    FEndTimeLength = 8;
+    FEndTimeWidth = 2;
+    FEndTimeMinute = 0;
+    FEndTimeSecond = 0;
+    FEndTimeColor = QColor(255,0,0);
+
     FHourLines = false;
     FHourLinesLength = 8;
     FHourLinesColor = QColor(0,0,0);
@@ -145,6 +152,25 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
       }
     }
     painter.rotate(6.0);
+  }
+  
+  if (FEndTime)
+  {
+    int TimeInSeconds = FMinute*60+FSecond;
+    int EndTimeInSeconds = FEndTimeMinute*60 + FEndTimeSecond;
+    int TimeToEnd = EndTimeInSeconds-TimeInSeconds;
+    
+    painter.save();
+    painter.rotate(6.0 * (FEndTimeMinute + FEndTimeSecond / 60.0));
+    painter.setPen(QPen(FEndTimeColor, FEndTimeWidth));
+    
+    painter.drawLine(0, -100+FEndTimeWidth/2, 0, -100+FEndTimeLength);
+    
+    if ((TimeToEnd>0) && (TimeToEnd<15))
+    {
+      painter.drawArc(-100+FEndTimeWidth/2,-100+FEndTimeWidth/2, 200-FEndTimeWidth*2, 200-FEndTimeWidth*2, 90*16, (90*16*TimeToEnd)/15);
+    }
+    painter.restore();
   }
 }
 
@@ -413,6 +439,92 @@ int DNRAnalogClock::getMinuteHandWidth()
 {
   return FMinuteHandWidth;
 }
+
+void DNRAnalogClock::setEndTime(bool NewEndTime)
+{
+  if (FEndTime != NewEndTime)
+  {
+    FEndTime = NewEndTime;
+    update();
+  }
+}
+
+bool DNRAnalogClock::getEndTime()
+{
+  return FEndTime;
+}
+
+void DNRAnalogClock::setEndTimeLength(int NewEndTimeLength)
+{
+  if (FEndTimeLength != NewEndTimeLength)
+  {
+    FEndTimeLength = NewEndTimeLength;
+    update();
+  }
+}
+
+int DNRAnalogClock::getEndTimeLength()
+{
+  return FEndTimeLength;
+}
+
+void DNRAnalogClock::setEndTimeWidth(int NewEndTimeWidth)
+{
+  if (FEndTimeWidth != NewEndTimeWidth)
+  {
+    FEndTimeWidth = NewEndTimeWidth;
+    update();
+  }
+}
+
+int DNRAnalogClock::getEndTimeWidth()
+{
+  return FEndTimeWidth;
+}
+
+void DNRAnalogClock::setEndTimeMinute(int NewEndTimeMinute)
+{
+  if (FEndTimeMinute != NewEndTimeMinute)
+  {
+    FEndTimeMinute = NewEndTimeMinute;
+    update();
+  }
+}
+
+int DNRAnalogClock::getEndTimeMinute()
+{
+  return FEndTimeMinute;
+}
+
+void DNRAnalogClock::setEndTimeSecond(int NewEndTimeSecond)
+{
+  if (FEndTimeSecond != NewEndTimeSecond)
+  {
+    FEndTimeSecond = NewEndTimeSecond;
+    update();
+  }
+}
+
+int DNRAnalogClock::getEndTimeSecond()
+{
+  return FEndTimeSecond;
+}
+
+void DNRAnalogClock::setEndTimeColor(QColor NewEndTimeColor)
+{
+  if (FEndTimeColor != NewEndTimeColor)
+  {
+    FEndTimeColor = NewEndTimeColor;
+    update();
+  }
+
+}
+
+QColor DNRAnalogClock::getEndTimeColor()
+{
+  return FEndTimeColor;
+}
+
 
 void DNRAnalogClock::checkTime()
 {
