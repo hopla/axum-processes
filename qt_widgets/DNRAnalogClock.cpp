@@ -32,6 +32,11 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
     FMinute = 0;
     FSecond = 0;
 
+    FCountDownTime = 0;
+    FCountDownColor = QColor(255,0,255);
+    FCountDownWidth = 2;
+    FCountDownSpacing = 1;
+
     FEndTime = false;
     FEndTimeLength = 8;
     FEndTimeWidth = 2;
@@ -171,6 +176,12 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
       painter.drawArc(-100+FEndTimeWidth/2,-100+FEndTimeWidth/2, 200-FEndTimeWidth*2, 200-FEndTimeWidth*2, 90*16, (90*16*TimeToEnd)/15);
     }
     painter.restore();
+  }
+  
+  if (FCountDownTime)
+  {
+    painter.setPen(QPen(FCountDownColor, FCountDownWidth));
+    painter.drawArc(-96+FHourLinesLength+FCountDownSpacing,-96+FHourLinesLength+FCountDownSpacing, 192-(FHourLinesLength+FCountDownSpacing)*2, 192-(FHourLinesLength+FCountDownSpacing)*2, 90*16, (360*FCountDownTime)*16/60);
   }
 }
 
@@ -525,6 +536,61 @@ QColor DNRAnalogClock::getEndTimeColor()
   return FEndTimeColor;
 }
 
+void DNRAnalogClock::setCountDownTime(int NewCountDownTime)
+{
+  if (FCountDownTime != NewCountDownTime)
+  {
+    FCountDownTime = NewCountDownTime;
+    update();
+  }
+}
+
+int DNRAnalogClock::getCountDownTime()
+{
+  return FCountDownTime;
+}
+
+void DNRAnalogClock::setCountDownWidth(int NewCountDownWidth)
+{
+  if (FCountDownWidth != NewCountDownWidth)
+  {
+    FCountDownWidth = NewCountDownWidth;
+    update();
+  }
+}
+
+int DNRAnalogClock::getCountDownWidth()
+{
+  return FCountDownWidth;
+}
+
+void DNRAnalogClock::setCountDownSpacing(int NewCountDownSpacing)
+{
+  if (FCountDownSpacing != NewCountDownSpacing)
+  {
+    FCountDownSpacing = NewCountDownSpacing;
+    update();
+  }
+}
+
+int DNRAnalogClock::getCountDownSpacing()
+{
+  return FCountDownSpacing;
+}
+
+void DNRAnalogClock::setCountDownColor(QColor NewCountDownColor)
+{
+  if (FCountDownColor != NewCountDownColor)
+  {
+    FCountDownColor = NewCountDownColor;
+    update();
+  }
+}
+
+QColor DNRAnalogClock::getCountDownColor()
+{
+  return FCountDownColor;
+}
 
 void DNRAnalogClock::checkTime()
 {

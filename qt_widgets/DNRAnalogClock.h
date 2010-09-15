@@ -55,6 +55,10 @@ class QDESIGNER_WIDGET_EXPORT DNRAnalogClock : public QWidget
     Q_PROPERTY(int EndTimeMinute READ getEndTimeMinute WRITE setEndTimeMinute);
     Q_PROPERTY(int EndTimeSecond READ getEndTimeSecond WRITE setEndTimeSecond);
     Q_PROPERTY(QColor EndTimeColor READ getEndTimeColor WRITE setEndTimeColor);
+    Q_PROPERTY(int CountDownTime READ getCountDownTime WRITE setCountDownTime);
+    Q_PROPERTY(int CountDownWidth READ getCountDownWidth WRITE setCountDownWidth);
+    Q_PROPERTY(int CountDownSpacing READ getCountDownSpacing WRITE setCountDownSpacing);
+    Q_PROPERTY(QColor CountDownColor READ getCountDownColor WRITE setCountDownColor);
 
 public:
     DNRAnalogClock(QWidget *parent = 0);
@@ -158,6 +162,18 @@ public:
     void setEndTimeColor(QColor NewEndTimeColor);
     QColor getEndTimeColor();
 
+    void setCountDownTime(int NewCountDownTime);
+    int getCountDownTime();
+
+    void setCountDownWidth(int NewCountDownWidth);
+    int getCountDownWidth();
+
+    void setCountDownSpacing(int NewCountDownSpacing);
+    int getCountDownSpacing();
+
+    void setCountDownColor(QColor NewCountDownColor);
+    QColor getCountDownColor();
+
 protected:
     int FHour;
     int FMinute;
@@ -169,6 +185,11 @@ protected:
     int FEndTimeMinute;
     int FEndTimeSecond;
     QColor FEndTimeColor;
+
+    int FCountDownTime;
+    int FCountDownWidth;
+    int FCountDownSpacing;
+    QColor FCountDownColor;
 
     void paintEvent(QPaintEvent *event);
 
