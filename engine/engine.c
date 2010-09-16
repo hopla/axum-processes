@@ -6665,7 +6665,7 @@ void Timer100HzDone(int Value)
       AxumData.ControlModeTimerValue[cntConsole] += 10;
       if (AxumData.ControlModeTimerValue[cntConsole] == 10000)
       { //set control mode to none
-        unsigned int OldFunctionNumber = GetFunctionNrFromControlMode(0);
+        unsigned int OldFunctionNumber = GetFunctionNrFromControlMode(cntConsole);
         AxumData.ControlMode[cntConsole] = -1;
         CheckObjectsToSent(OldFunctionNumber);
 
