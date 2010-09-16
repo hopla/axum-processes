@@ -4396,8 +4396,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
             else if ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_31_32))
             {
-              int ControlNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)/(GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_31_32-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
-              int BussNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)%(GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_31_32-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
+              int ControlNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)/(GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
+              int BussNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)%(GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
 
               if (type == MBN_DATATYPE_STATE)
               {
@@ -4444,7 +4444,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     CheckObjectsToSent(OldFunctionNumber);
                   }
-                  int NewFunctionNr = AxumData.MasterControlMode[ControlNr]+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
+                  int NewFunctionNr = AxumData.MasterControlMode[ControlNr]+(ControlNr*16)+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
                   CheckObjectsToSent(0x04000000 | NewFunctionNr);
                   switch (ControlNr)
                   {
@@ -10368,8 +10368,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         }
         else if ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_31_32))
         {
-          int ControlNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)/(GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_31_32-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
-          int BussNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)%(GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_31_32-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
+          int ControlNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)/(GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
+          int BussNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)%(GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
           char NewMasterControlMode = BussNr;
           bool Active = false;
 
