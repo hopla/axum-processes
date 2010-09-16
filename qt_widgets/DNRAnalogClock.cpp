@@ -164,6 +164,10 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     int TimeInSeconds = FMinute*60+FSecond;
     int EndTimeInSeconds = FEndTimeMinute*60 + FEndTimeSecond;
     int TimeToEnd = EndTimeInSeconds-TimeInSeconds;
+    if (TimeToEnd<=(15-3600))
+    {
+      TimeToEnd += 3600;
+    }
     
     painter.save();
     painter.rotate(6.0 * (FEndTimeMinute + FEndTimeSecond / 60.0));
@@ -171,7 +175,7 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     
     painter.drawLine(0, -100+FEndTimeWidth/2, 0, -100+FEndTimeLength);
     
-    if ((TimeToEnd>0) && (TimeToEnd<15))
+    if ((TimeToEnd>0) && (TimeToEnd<=15))
     {
       painter.drawArc(-100+FEndTimeWidth/2,-100+FEndTimeWidth/2, 200-FEndTimeWidth*2, 200-FEndTimeWidth*2, 90*16, (90*16*TimeToEnd)/15);
     }
