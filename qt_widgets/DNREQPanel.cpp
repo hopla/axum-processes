@@ -33,6 +33,69 @@
 DNREQPanel::DNREQPanel(QWidget *parent)
     : QWidget(parent)
 {
+  FBackgroundColor = QColor(22,51,105);
+  FAxisColor = QColor(135, 168, 228);
+  FGridColor = QColor(35, 80, 163);
+  FLogGridColor = QColor(35, 80, 163);
+  FVerticalGridAtdB = 6;
+  FAnchorSize = 3;
+  FGainBand1 = 0;
+  FGainBand2 = 0;
+  FGainBand3 = 0;
+  FGainBand4 = 0;
+  FGainBand5 = 0;
+  FGainBand6 = 0;
+  FFrequencyBand1 = 12000;
+  FFrequencyBand2 = 10000;
+  FFrequencyBand3 = 8000;
+  FFrequencyBand4 = 6000;
+  FFrequencyBand5 = 4000;
+  FFrequencyBand6 = 2000;
+  FBandwidthBand1 = 1;
+  FBandwidthBand2 = 1;
+  FBandwidthBand3 = 1;
+  FBandwidthBand4 = 1;
+  FBandwidthBand5 = 1;
+  FBandwidthBand6 = 1;
+  FNrOfPoints = 1024;
+  FAxisBorderWidth = 9;
+  FAxisLeftMargin = 0;
+  FActiveCurveColor = QColor(192, 192, 192);
+  FActiveCurveWidth = 1;
+  FTotalCurveColor = QColor (0, 0, 0);
+  FTotalCurveWidth = 1;
+  FAnchorBand1Color = QColor(226, 197, 182);
+  FAnchorBand2Color = QColor(255, 255, 196);
+  FAnchorBand3Color = QColor(199, 243, 205);
+  FAnchorBand4Color = QColor(236, 213, 253);
+  FAnchorBand5Color = QColor(187, 221, 255);
+  FAnchorBand6Color = QColor(221, 221, 221);
+  FDrawAnchors = true;
+  FTypeBand1 = 3;
+  FTypeBand2 = 3;
+  FTypeBand3 = 3;
+  FTypeBand4 = 3;
+  FTypeBand5 = 3;
+  FTypeBand6 = 3;
+  FSamplerate = 48000;
+  FNequistDivide = 2.04;
+  FAnchorPickupSize = 6;
+  FLogGrid = true;
+  FEQOn = false;
+  FOnBand1 = true;
+  FOnBand2 = true;
+  FOnBand3 = true;
+  FOnBand4 = true;
+  FOnBand5 = true;
+  FOnBand6 = true;
+  FShowFrequencyText = true;
+  FShowGainText = true;
+  FSlopeBand1 = 1;
+  FSlopeBand2 = 1;
+  FSlopeBand3 = 1;
+  FSlopeBand4 = 1;
+  FSlopeBand5 = 1;
+  FSlopeBand6 = 1;
 }
 
 void DNREQPanel::paintEvent(QPaintEvent *)
