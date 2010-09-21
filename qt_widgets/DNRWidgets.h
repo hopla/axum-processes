@@ -19,6 +19,7 @@
 #include "DNRPhaseMeterPlugin.h"
 #include "DNRImagePlugin.h"
 #include "DNRIndicationPlugin.h"
+#include "DNREQPanelPlugin.h"
 //#include "DNREnginePlugin.h"
 #include "DNRNetworkServerPlugin.h"
 #include "DNRNetworkClientPlugin.h"

@@ -24,6 +24,7 @@ DNRWidgets::DNRWidgets(QObject *parent)
         widgets.append(new PhaseMeterPlugin(this));
         widgets.append(new ImagePlugin(this));
         widgets.append(new IndicationPlugin(this));
+        widgets.append(new EQPanelPlugin(this));
 //        widgets.append(new EnginePlugin(this));
         widgets.append(new NetworkServerPlugin(this));
         widgets.append(new NetworkClientPlugin(this));
