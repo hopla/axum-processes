@@ -247,58 +247,76 @@ void DNREQPanel::paintEvent(QPaintEvent *)
   if (FDrawAnchors)
   {
     //Band 6
-    painter.setPen(QPen(FAnchorBand6Color));
-    painter.setBrush(FAnchorBand6Color);
+    if (FTypeBand6 != OFF)
+    {
+      painter.setPen(QPen(FAnchorBand6Color));
+      painter.setBrush(FAnchorBand6Color);
 
-    X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand6)-1))/log10((FSamplerate)/(FNequistDivide*10));
-    Y = height()-BorderWidth-(((float)(FGainBand6+18)*VerticalAxisLength)/36);
+      X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand6)-1))/log10((FSamplerate)/(FNequistDivide*10));
+      Y = height()-BorderWidth-(((float)(FGainBand6+18)*VerticalAxisLength)/36);
 
-    painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+      painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+    }
 
     //Band 5
-    painter.setPen(QPen(FAnchorBand5Color));
-    painter.setBrush(FAnchorBand5Color);
+    if (FTypeBand5 != OFF)
+    {
+      painter.setPen(QPen(FAnchorBand5Color));
+      painter.setBrush(FAnchorBand5Color);
 
-    X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand5)-1))/log10((FSamplerate)/(FNequistDivide*10));
-    Y = height()-BorderWidth-(((float)(FGainBand5+18)*VerticalAxisLength)/36);
+      X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand5)-1))/log10((FSamplerate)/(FNequistDivide*10));
+      Y = height()-BorderWidth-(((float)(FGainBand5+18)*VerticalAxisLength)/36);
 
-    painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+      painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+    }
 
     //Band 4
-    painter.setPen(QPen(FAnchorBand4Color));
-    painter.setBrush(FAnchorBand4Color);
+    if (FTypeBand4 != OFF)
+    {
+      painter.setPen(QPen(FAnchorBand4Color));
+      painter.setBrush(FAnchorBand4Color);
 
-    X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand4)-1))/log10((FSamplerate)/(FNequistDivide*10));
-    Y = height()-BorderWidth-(((float)(FGainBand4+18)*VerticalAxisLength)/36);
+      X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand4)-1))/log10((FSamplerate)/(FNequistDivide*10));
+      Y = height()-BorderWidth-(((float)(FGainBand4+18)*VerticalAxisLength)/36);
 
-    painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+      painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+    }
 
     //Band 3
-    painter.setPen(QPen(FAnchorBand3Color));
-    painter.setBrush(FAnchorBand3Color);
+    if (FTypeBand3 != OFF)
+    {
+      painter.setPen(QPen(FAnchorBand3Color));
+      painter.setBrush(FAnchorBand3Color);
 
-    X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand3)-1))/log10((FSamplerate)/(FNequistDivide*10));
-    Y = height()-BorderWidth-(((float)(FGainBand3+18)*VerticalAxisLength)/36);
+      X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand3)-1))/log10((FSamplerate)/(FNequistDivide*10));
+      Y = height()-BorderWidth-(((float)(FGainBand3+18)*VerticalAxisLength)/36);
 
-    painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+      painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+    }
 
     //Band 2
-    painter.setPen(QPen(FAnchorBand2Color));
-    painter.setBrush(FAnchorBand2Color);
+    if (FTypeBand2 != OFF)
+    {
+      painter.setPen(QPen(FAnchorBand2Color));
+      painter.setBrush(FAnchorBand2Color);
 
-    X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand2)-1))/log10((FSamplerate)/(FNequistDivide*10));
-    Y = height()-BorderWidth-(((float)(FGainBand2+18)*VerticalAxisLength)/36);
+      X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand2)-1))/log10((FSamplerate)/(FNequistDivide*10));
+      Y = height()-BorderWidth-(((float)(FGainBand2+18)*VerticalAxisLength)/36);
 
-    painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
-
+      painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+    }
+    
     //Band 1
-    painter.setPen(QPen(FAnchorBand1Color));
-    painter.setBrush(FAnchorBand1Color);
+    if (FTypeBand1 != OFF)
+    {
+      painter.setPen(QPen(FAnchorBand1Color));
+      painter.setBrush(FAnchorBand1Color);
 
-    X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand1)-1))/log10((FSamplerate)/(FNequistDivide*10));
-    Y = height()-BorderWidth-(((float)(FGainBand1+18)*VerticalAxisLength)/36);
+      X = FAxisLeftMargin+BorderWidth+((float)HorizontalAxisLength*(log10(FFrequencyBand1)-1))/log10((FSamplerate)/(FNequistDivide*10));
+      Y = height()-BorderWidth-(((float)(FGainBand1+18)*VerticalAxisLength)/36);
 
-    painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+      painter.drawEllipse(X-FAnchorSize, Y-FAnchorSize, FAnchorSize*2, FAnchorSize*2);
+    }
   }
 }
 
