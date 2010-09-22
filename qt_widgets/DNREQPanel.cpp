@@ -1557,6 +1557,8 @@ void DNREQPanel::CalculateCurve()
     int Y1 = height()-BorderWidth-(((float)(18-dBGain)*VerticalAxisLength)/36);
 	  ActiveCurve[cnt] = QPoint(X1, Y1);
   }
+  ActiveCurve[0] = QPoint(FAxisLeftMargin+BorderWidth, height()-BorderWidth-(VerticalAxisLength/2));
+  ActiveCurve[FNrOfPoints-2] = QPoint(FAxisLeftMargin+BorderWidth+HorizontalAxisLength, height()-BorderWidth-(VerticalAxisLength/2));
 }
 
 void DNREQPanel::CalculateCurveOn()
