@@ -108,6 +108,29 @@ Browser::Browser(QWidget *parent)
 
   LinkStatus = 0;
   CurrentLinkStatus = 0;
+
+  ProgramEndMinute = 0;
+  CurrentProgramEndMinute = 0;
+  ProgramEndSecond = 0;
+  CurrentProgramEndSecond = 0;
+
+  CountDownSeconds = 0;
+  CurrentCountDownSeconds = 0;
+
+  EQOn = false;
+  CurrentEQOn = false;
+
+  for (cnt=0; cnt<6; cnt++)
+  {
+    EQLevel[cnt] = 0;
+    CurrentEQLevel[cnt] = 0;
+    EQFrequency[cnt] = 1000;
+    CurrentEQFrequency[cnt] = 1000;
+    EQBandwidth[cnt] = 1;
+    CurrentEQBandwidth[cnt] = 1;
+    EQType[cnt] = 3;
+    CurrentEQType[cnt] = 3;
+  }
 }
 
 Browser::~Browser()
@@ -408,10 +431,94 @@ void Browser::MeterRelease()
   }
   if (CountDown != CurrentCountDown)
   {
-    NewDNRAnalogClock->FSecondDotsCountDown = CountDown;
-    NewDNRAnalogClock->update();
+    NewDNRAnalogClock->setSecondDotsCountDown(CountDown);
     CurrentCountDown = CountDown;
   }
+
+  if (ProgramEndMinute != CurrentProgramEndMinute)
+  {
+    NewDNRAnalogClock->setEndTimeMinute(ProgramEndMinute);
+    CurrentProgramEndMinute = ProgramEndMinute;
+  }
+
+  if (ProgramEndSecond != CurrentProgramEndSecond)
+  {
+    NewDNRAnalogClock->setEndTimeSecond(ProgramEndSecond);
+    CurrentProgramEndSecond = ProgramEndSecond;
+  }
+
+  if (CountDownSeconds != CurrentCountDownSeconds)
+  {
+    NewDNRAnalogClock->setCountDownTime(CountDownSeconds);
+    CurrentCountDownSeconds = CountDownSeconds;
+  }
+
+  if (EQOn != CurrentEQOn)
+  {
+    NewDNREQPanel->setOnBand1(EQOn);
+    NewDNREQPanel->setOnBand2(EQOn);
+    NewDNREQPanel->setOnBand3(EQOn);
+    NewDNREQPanel->setOnBand4(EQOn);
+    NewDNREQPanel->setOnBand5(EQOn);
+    NewDNREQPanel->setOnBand6(EQOn);
+    CurrentEQOn = EQOn;
+  }
+
+  for (cnt=0; cnt<6; cnt++)
+  {
+    if (EQLevel[cnt] != CurrentEQLevel[cnt])
+    {
+      switch (cnt)
+      {
+        case 0: NewDNREQPanel->setGainBand1(EQLevel[0]); break;
+        case 1: NewDNREQPanel->setGainBand2(EQLevel[1]); break;
+        case 2: NewDNREQPanel->setGainBand3(EQLevel[2]); break;
+        case 3: NewDNREQPanel->setGainBand4(EQLevel[3]); break;
+        case 4: NewDNREQPanel->setGainBand5(EQLevel[4]); break;
+        case 5: NewDNREQPanel->setGainBand6(EQLevel[5]); break;
+      }
+    }
+
+    if (EQFrequency[cnt] != CurrentEQFrequency[cnt])
+    {
+      switch (cnt)
+      {
+        case 0: NewDNREQPanel->setFrequencyBand1(EQFrequency[0]); break;
+        case 1: NewDNREQPanel->setFrequencyBand2(EQFrequency[1]); break;
+        case 2: NewDNREQPanel->setFrequencyBand3(EQFrequency[2]); break;
+        case 3: NewDNREQPanel->setFrequencyBand4(EQFrequency[3]); break;
+        case 4: NewDNREQPanel->setFrequencyBand5(EQFrequency[4]); break;
+        case 5: NewDNREQPanel->setFrequencyBand6(EQFrequency[5]); break;
+      }
+    }
+
+    if (EQBandwidth[cnt] != CurrentEQBandwidth[cnt])
+    {
+      switch (cnt)
+      {
+        case 0: NewDNREQPanel->setBandwidthBand1(EQBandwidth[0]); break;
+        case 1: NewDNREQPanel->setBandwidthBand2(EQBandwidth[1]); break;
+        case 2: NewDNREQPanel->setBandwidthBand3(EQBandwidth[2]); break;
+        case 3: NewDNREQPanel->setBandwidthBand4(EQBandwidth[3]); break;
+        case 4: NewDNREQPanel->setBandwidthBand5(EQBandwidth[4]); break;
+        case 5: NewDNREQPanel->setBandwidthBand6(EQBandwidth[5]); break;
+      }
+    }
+
+    if (EQType[cnt] != CurrentEQType[cnt])
+    {
+      switch (cnt)
+      {
+        case 0: NewDNREQPanel->setTypeBand1(EQType[0]); break;
+        case 1: NewDNREQPanel->setTypeBand2(EQType[1]); break;
+        case 2: NewDNREQPanel->setTypeBand3(EQType[2]); break;
+        case 3: NewDNREQPanel->setTypeBand4(EQType[3]); break;
+        case 4: NewDNREQPanel->setTypeBand5(EQType[4]); break;
+        case 5: NewDNREQPanel->setTypeBand6(EQType[5]); break;
+      }
+    }
+  }
+
   qt_mutex.unlock();
 }
 

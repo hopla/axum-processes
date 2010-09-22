@@ -68,6 +68,25 @@ public:
    bool LinkStatus;
    bool CurrentLinkStatus;
 
+   unsigned char ProgramEndMinute;
+   unsigned char CurrentProgramEndMinute;
+   unsigned char ProgramEndSecond;
+   unsigned char CurrentProgramEndSecond;
+
+   unsigned char CountDownSeconds;
+   unsigned char CurrentCountDownSeconds;
+
+   bool EQOn;
+   bool CurrentEQOn;
+   float EQLevel[6];
+   float CurrentEQLevel[6];
+   unsigned int EQFrequency[6];
+   unsigned int CurrentEQFrequency[6];
+   float EQBandwidth[6];
+   float CurrentEQBandwidth[6];
+   int EQType[6];
+   int CurrentEQType[6];
+
    Browser(QWidget *parent = 0);
    virtual ~Browser();
 

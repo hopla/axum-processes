@@ -2571,6 +2571,42 @@ p, li { white-space: pre-wrap; }
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
+   <widget class="DNREQPanel" name="NewDNREQPanel">
+    <property name="geometry">
+     <rect>
+      <x>792</x>
+      <y>41</y>
+      <width>183</width>
+      <height>125</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="toolTip">
+     <string>The EQ Panel</string>
+    </property>
+    <property name="whatsThis">
+     <string>The EQ Panel widget displays </string>
+    </property>
+    <property name="GainBand1">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="NrOfPoints">
+     <number>256</number>
+    </property>
+    <property name="AxisBorderWidth">
+     <number>16</number>
+    </property>
+    <property name="AxisLeftMargin">
+     <number>0</number>
+    </property>
+    <property name="ShowGainText">
+     <bool>false</bool>
+    </property>
+   </widget>
    <zorder>NewDNRImage</zorder>
    <zorder>NewDNRPPMMeter_3</zorder>
    <zorder>NewDNRDigitalClock</zorder>
@@ -2599,6 +2635,7 @@ p, li { white-space: pre-wrap; }
    <zorder>redlight6Label</zorder>
    <zorder>redlight7Label</zorder>
    <zorder>redlight4Label</zorder>
+   <zorder>NewDNREQPanel</zorder>
   </widget>
   <widget class="DNRImage" name="NewDNRImageBottomOnAir">
    <property name="geometry">
@@ -2732,6 +2769,11 @@ p, li { white-space: pre-wrap; }
    <class>DNRImage</class>
    <extends>QWidget</extends>
    <header>DNRImage.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DNREQPanel</class>
+   <extends>QWidget</extends>
+   <header>DNREQPanel.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
