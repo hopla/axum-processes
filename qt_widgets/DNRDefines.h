@@ -5,6 +5,15 @@
 
 #define FADER_CLOSE_LEVEL				48
 
+#define OFF       0
+#define HPF       1
+#define LOWSHELF  2
+#define PEAKINGEQ 3
+#define HIGHSHELF 4
+#define LPF       5
+#define BPF       6
+#define NOTCH     7
+
 #define MAX_NUMBER_OF_CONNECTIONS_TO_SERVER	30
 
 typedef double double_position;
