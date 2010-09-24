@@ -47,7 +47,7 @@
 #define MANUFACTURER_ID          0x0001	//D&R
 #define PRODUCT_ID               0x001A	//Axum linux meters
 
-#define NR_OF_STATIC_OBJECTS    (1079-1023)
+#define NR_OF_STATIC_OBJECTS    (1080-1023)
 #define NR_OF_OBJECTS            NR_OF_STATIC_OBJECTS
 
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
@@ -216,6 +216,9 @@ void init(int argc, char *argv[])
                                   MBN_DATATYPE_NODATA,
                                   MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
   objects[cntObject++] = MBN_OBJ( (char *)"Second dot count down",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Program end time enable",
                                   MBN_DATATYPE_NODATA,
                                   MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
   objects[cntObject++] = MBN_OBJ( (char *)"Program end minute",
@@ -435,33 +438,27 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     break;
     case 1050:
     {
-      browser->ProgramEndMinute = in.UInt;
+      browser->ProgramEndTimeEnabled = in.State;
     }
     break;
     case 1051:
     {
-      browser->ProgramEndSecond = in.UInt;
+      browser->ProgramEndMinute = in.UInt;
     }
     break;
     case 1052:
     {
-      browser->CountDownSeconds = in.UInt;
+      browser->ProgramEndSecond = in.UInt;
     }
     break;
     case 1053:
     {
-      browser->EQOn = in.State;
+      browser->CountDownSeconds = in.UInt;
     }
     break;
     case 1054:
-    case 1058:
-    case 1062:
-    case 1066:
-    case 1070:
-    case 1074:
     {
-      int BandNr = (object-1054)/4;
-      browser->EQLevel[BandNr] = in.Float;
+      browser->EQOn = in.State;
     }
     break;
     case 1055:
@@ -472,7 +469,7 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     case 1075:
     {
       int BandNr = (object-1055)/4;
-      browser->EQFrequency[BandNr] = in.UInt;
+      browser->EQLevel[BandNr] = in.Float;
     }
     break;
     case 1056:
@@ -483,7 +480,7 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     case 1076:
     {
       int BandNr = (object-1056)/4;
-      browser->EQBandwidth[BandNr] = in.Float;
+      browser->EQFrequency[BandNr] = in.UInt;
     }
     break;
     case 1057:
@@ -494,6 +491,17 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     case 1077:
     {
       int BandNr = (object-1057)/4;
+      browser->EQBandwidth[BandNr] = in.Float;
+    }
+    break;
+    case 1058:
+    case 1062:
+    case 1066:
+    case 1070:
+    case 1074:
+    case 1078:
+    {
+      int BandNr = (object-1058)/4;
       browser->EQType[BandNr] = in.State;
     }
     break;

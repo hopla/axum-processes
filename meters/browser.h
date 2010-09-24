@@ -68,6 +68,8 @@ public:
    bool LinkStatus;
    bool CurrentLinkStatus;
 
+   bool ProgramEndTimeEnabled;
+   bool CurrentProgramEndTimeEnabled;
    unsigned char ProgramEndMinute;
    unsigned char CurrentProgramEndMinute;
    unsigned char ProgramEndSecond;
