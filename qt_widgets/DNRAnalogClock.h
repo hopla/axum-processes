@@ -32,9 +32,11 @@ class QDESIGNER_WIDGET_EXPORT DNRAnalogClock : public QWidget
     Q_OBJECT
     Q_PROPERTY(bool HourLines READ getHourLines WRITE setHourLines);
     Q_PROPERTY(int HourLinesLength READ getHourLinesLength WRITE setHourLinesLength);
+    Q_PROPERTY(int HourLinesWidth READ getHourLinesWidth WRITE setHourLinesWidth);
     Q_PROPERTY(QColor HourLinesColor READ getHourLinesColor WRITE setHourLinesColor);    
     Q_PROPERTY(bool MinuteLines READ getMinuteLines WRITE setMinuteLines);
     Q_PROPERTY(int MinuteLinesLength READ getMinuteLinesLength WRITE setMinuteLinesLength);
+    Q_PROPERTY(int MinuteLinesWidth READ getMinuteLinesWidth WRITE setMinuteLinesWidth);
     Q_PROPERTY(QColor MinuteLinesColor READ getMinuteLinesColor WRITE setMinuteLinesColor);    
     Q_PROPERTY(bool SecondDots READ getSecondDots WRITE setSecondDots);
     Q_PROPERTY(bool SecondDotsCountDown READ getSecondDotsCountDown WRITE setSecondDotsCountDown);
@@ -65,10 +67,12 @@ public:
     
     bool FHourLines;
     int FHourLinesLength;
+    int FHourLinesWidth;
     QColor FHourLinesColor;
     
     bool FMinuteLines;
     int FMinuteLinesLength;
+    int FMinuteLinesWidth;
     QColor FMinuteLinesColor;
     
     bool FSecondDots;
@@ -93,6 +97,9 @@ public:
     void setHourLinesLength(int NewHourLinesLength);
     int getHourLinesLength();
     
+    void setHourLinesWidth(int NewHourLinesWidth);
+    int getHourLinesWidth();
+
     void setHourLinesColor(QColor NewHourLinesColor);
     QColor getHourLinesColor();
 
@@ -102,6 +109,9 @@ public:
     void setMinuteLinesLength(int NewMinuteLinesLength);
     int getMinuteLinesLength();
     
+    void setMinuteLinesWidth(int NewMinuteLinesWidth);
+    int getMinuteLinesWidth();
+
     void setMinuteLinesColor(QColor NewMinuteLinesColor);
     QColor getMinuteLinesColor();
 

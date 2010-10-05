@@ -46,10 +46,12 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
 
     FHourLines = false;
     FHourLinesLength = 8;
+    FHourLinesWidth = 2;
     FHourLinesColor = QColor(0,0,0);
     
     FMinuteLines = false;
     FMinuteLinesLength = 4;
+    FMinuteLinesWidth = 1;
     FMinuteLinesColor = QColor(61,61,61,191);
 
     FSecondDots = true;
@@ -123,7 +125,7 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     {
       if (FMinuteLines)
       {
-        painter.setPen(FMinuteLinesColor);
+        painter.setPen(QPen(FMinuteLinesColor, FMinuteLinesWidth));
         painter.drawLine(0, -(96-FMinuteLinesLength), 0, -96);
       }
     }
@@ -131,7 +133,7 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     {
       if (FHourLines)
       {
-        painter.setPen(FHourLinesColor);
+        painter.setPen(QPen(FHourLinesColor, FHourLinesWidth));
         painter.drawLine(0, -(96-FHourLinesLength), 0, -96);
       }
     }
@@ -217,6 +219,20 @@ int DNRAnalogClock::getHourLinesLength()
   return FHourLinesLength;
 }
     
+void DNRAnalogClock::setHourLinesWidth(int NewHourLinesWidth)
+{
+  if (FHourLinesWidth != NewHourLinesWidth)
+  {
+    FHourLinesWidth = NewHourLinesWidth;
+    update();
+  }
+}
+
+int DNRAnalogClock::getHourLinesWidth()
+{
+  return FHourLinesWidth;
+}
+
 void DNRAnalogClock::setHourLinesColor(QColor NewHourLinesColor)
 {
   if (FHourLinesColor != NewHourLinesColor)
@@ -259,6 +275,20 @@ int DNRAnalogClock::getMinuteLinesLength()
   return FMinuteLinesLength;
 }
     
+void DNRAnalogClock::setMinuteLinesWidth(int NewMinuteLinesWidth)
+{
+  if (FMinuteLinesWidth != NewMinuteLinesWidth)
+  {
+    FMinuteLinesWidth = NewMinuteLinesWidth;
+    update();
+  }
+}
+
+int DNRAnalogClock::getMinuteLinesWidth()
+{
+  return FMinuteLinesWidth;
+}
+
 void DNRAnalogClock::setMinuteLinesColor(QColor NewMinuteLinesColor)
 {
   if (FMinuteLinesColor != NewMinuteLinesColor)
