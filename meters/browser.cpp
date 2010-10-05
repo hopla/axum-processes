@@ -391,56 +391,56 @@ void Browser::MeterRelease()
       case 0:
       {
         redlight1Label->setText(FontText);
-        Redlight1OffDNRImage->setVisible(RedlightState[cnt]);
+        Redlight1OffDNRImage->setVisible(!RedlightState[cnt]);
         Redlight1OnDNRImage->setVisible(RedlightState[cnt]);
       }
       break;
       case 1:
       {
         redlight2Label->setText(FontText);
-        Redlight2OffDNRImage->setVisible(RedlightState[cnt]);
+        Redlight2OffDNRImage->setVisible(!RedlightState[cnt]);
         Redlight2OnDNRImage->setVisible(RedlightState[cnt]);
       }
       break;
       case 2:
       {
         redlight3Label->setText(FontText);
-        Redlight3OffDNRImage->setVisible(RedlightState[cnt]);
+        Redlight3OffDNRImage->setVisible(!RedlightState[cnt]);
         Redlight3OnDNRImage->setVisible(RedlightState[cnt]);
       }
       break;
       case 3:
       {
         redlight4Label->setText(FontText);
-        Redlight4OffDNRImage->setVisible(RedlightState[cnt]);
+        Redlight4OffDNRImage->setVisible(!RedlightState[cnt]);
         Redlight4OnDNRImage->setVisible(RedlightState[cnt]);
       }
       break;
       case 4:
       {
         redlight5Label->setText(FontText);
-        Redlight5OffDNRImage->setVisible(RedlightState[cnt]);
+        Redlight5OffDNRImage->setVisible(!RedlightState[cnt]);
         Redlight5OnDNRImage->setVisible(RedlightState[cnt]);
       }
       break;
       case 5:
       {
         redlight6Label->setText(FontText);
-        Redlight6OffDNRImage->setVisible(RedlightState[cnt]);
+        Redlight6OffDNRImage->setVisible(!RedlightState[cnt]);
         Redlight6OnDNRImage->setVisible(RedlightState[cnt]);
       }
       break;
       case 6:
       {
         redlight7Label->setText(FontText);
-        Redlight7OffDNRImage->setVisible(RedlightState[cnt]);
+        Redlight7OffDNRImage->setVisible(!RedlightState[cnt]);
         Redlight7OnDNRImage->setVisible(RedlightState[cnt]);
       }
       break;
       case 7:
       {
         redlight8Label->setText(FontText);
-        Redlight8OffDNRImage->setVisible(RedlightState[cnt]);
+        Redlight8OffDNRImage->setVisible(!RedlightState[cnt]);
         Redlight8OnDNRImage->setVisible(RedlightState[cnt]);
       }
       break;
