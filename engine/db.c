@@ -1975,7 +1975,6 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               data_size = obj_info->ActuatorDataSize;
               data.SInt = DataValue;
               send_default_data = 1;
-              obj_info->CurrentActuatorDataDefault = DataValue;
             }
           }
           break;
@@ -2004,7 +2003,6 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
               data_size = obj_info->ActuatorDataSize;
               data.Float = DataValue;
               send_default_data = 1;
-              obj_info->CurrentActuatorDataDefault = DataValue;
             }
             break;
             case MBN_DATATYPE_BITS:
@@ -2035,7 +2033,6 @@ int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned sh
                 data.Bits[cntByte] = (DataValue>>(((obj_info->ActuatorDataSize-1)-cntByte)*8))&0xFF;
               }
               send_default_data = 1;
-              obj_info->CurrentActuatorDataDefault = DataValue;
             }
             break;
           }
