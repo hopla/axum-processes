@@ -229,7 +229,7 @@ void init(int argc, char *argv[])
                                   MBN_DATATYPE_UINT, 1, 0, 59, 0, 0);
   objects[cntObject++] = MBN_OBJ( (char *)"Count down seconds",
                                   MBN_DATATYPE_NODATA,
-                                  MBN_DATATYPE_UINT, 1, 0, 60, 0, 0);
+                                  MBN_DATATYPE_FLOAT, 2, 0.0, 60.0, 0.0, 0.0);
   objects[cntObject++] = MBN_OBJ( (char *)"EQ on/off",
                                   MBN_DATATYPE_STATE, 1, 1, 0, 1, 0,
                                   MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
@@ -453,7 +453,7 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     break;
     case 1053:
     {
-      browser->CountDownSeconds = in.UInt;
+      browser->CountDownSeconds = in.Float;
     }
     break;
     case 1054:

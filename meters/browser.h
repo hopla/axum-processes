@@ -75,8 +75,8 @@ public:
    unsigned char ProgramEndSecond;
    unsigned char CurrentProgramEndSecond;
 
-   unsigned char CountDownSeconds;
-   unsigned char CurrentCountDownSeconds;
+   float CountDownSeconds;
+   float CurrentCountDownSeconds;
 
    bool EQOn;
    bool CurrentEQOn;
