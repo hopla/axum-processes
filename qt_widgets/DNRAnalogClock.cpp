@@ -48,7 +48,7 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
     FHourLinesLength = 8;
     FHourLinesWidth = 2;
     FHourLinesColor = QColor(0,0,0);
-    
+
     FMinuteLines = false;
     FMinuteLinesLength = 4;
     FMinuteLinesWidth = 1;
@@ -58,7 +58,7 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
     FSecondDotsCountDown = false;
     FDotSize = 1;
     FDotColor = QColor(0,0,0);
-  
+
     FHands = true;
     FHourHandColor = QColor(0,0,0);
     FHourHandBorder = 12;
@@ -81,7 +81,7 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
 {
   int XOffset = (int)(((float)FDotSize/2)+0.5);
   int side = qMin(width(), height());
-  
+
   int hourYOffset = (int)((((float)FHourHandWidth)/2)+0.5);
   int minuteYOffset = (int)((((float)FMinuteHandWidth)/2)+0.5);
 
@@ -95,11 +95,61 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     QPoint(-minuteYOffset, -(100-FMinuteHandBorder)+FMinuteHandLength),
     QPoint(0, -(100-FMinuteHandBorder))
   };
-  
+
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
   painter.translate(width() / 2, height() / 2);
   painter.scale(side / 200.0, side / 200.0);
+
+  for (int j = 0; j < 60; ++j)
+  {
+    if ((j % 5) != 0)
+    {
+      if (FMinuteLines)
+      {
+        painter.setPen(QPen(FMinuteLinesColor, FMinuteLinesWidth));
+        painter.drawLine(0, -(96-FMinuteLinesLength), 0, -96);
+      }
+    }
+    else
+    {
+      if (FHourLines)
+      {
+        painter.setPen(QPen(FHourLinesColor, FHourLinesWidth));
+        painter.drawLine(0, -(96-FHourLinesLength), 0, -96);
+      }
+    }
+    painter.rotate(6.0);
+  }
+
+  if (FEndTime)
+  {
+    int TimeInSeconds = FMinute*60+FSecond;
+    int EndTimeInSeconds = FEndTimeMinute*60 + FEndTimeSecond;
+    int TimeToEnd = EndTimeInSeconds-TimeInSeconds;
+    if (TimeToEnd<=(15-3600))
+    {
+      TimeToEnd += 3600;
+    }
+
+    painter.save();
+    painter.rotate(6.0 * (FEndTimeMinute + FEndTimeSecond / 60.0));
+    painter.setPen(QPen(FEndTimeColor, FEndTimeWidth));
+
+    painter.drawLine(0, -100+FEndTimeWidth/2, 0, -100+FEndTimeLength);
+
+    if ((TimeToEnd>0) && (TimeToEnd<=15))
+    {
+      painter.drawArc(-100+FEndTimeWidth/2,-100+FEndTimeWidth/2, 200-FEndTimeWidth*2, 200-FEndTimeWidth*2, 90*16, (90*16*TimeToEnd)/15);
+    }
+    painter.restore();
+  }
+
+  if (FCountDownTime)
+  {
+    painter.setPen(QPen(FCountDownColor, FCountDownWidth));
+    painter.drawArc(-96+FHourLinesLength+FCountDownSpacing,-96+FHourLinesLength+FCountDownSpacing, 192-(FHourLinesLength+FCountDownSpacing)*2, 192-(FHourLinesLength+FCountDownSpacing)*2, 90*16, (360*FCountDownTime)*16/60);
+  }
 
   if (FHands)
   {
@@ -121,28 +171,11 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
 
   for (int j = 0; j < 60; ++j)
   {
-    if ((j % 5) != 0)
-    {
-      if (FMinuteLines)
-      {
-        painter.setPen(QPen(FMinuteLinesColor, FMinuteLinesWidth));
-        painter.drawLine(0, -(96-FMinuteLinesLength), 0, -96);
-      }
-    }
-    else
-    {
-      if (FHourLines)
-      {
-        painter.setPen(QPen(FHourLinesColor, FHourLinesWidth));
-        painter.drawLine(0, -(96-FHourLinesLength), 0, -96);
-      }
-    }
-
     if (FSecondDots)
     {
       painter.setPen(FDotColor);
       painter.setBrush(FDotColor);
-      
+
       if (FSecondDotsCountDown)
       {
         if (j>=FSecond)
@@ -160,35 +193,7 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     }
     painter.rotate(6.0);
   }
-  
-  if (FEndTime)
-  {
-    int TimeInSeconds = FMinute*60+FSecond;
-    int EndTimeInSeconds = FEndTimeMinute*60 + FEndTimeSecond;
-    int TimeToEnd = EndTimeInSeconds-TimeInSeconds;
-    if (TimeToEnd<=(15-3600))
-    {
-      TimeToEnd += 3600;
-    }
-    
-    painter.save();
-    painter.rotate(6.0 * (FEndTimeMinute + FEndTimeSecond / 60.0));
-    painter.setPen(QPen(FEndTimeColor, FEndTimeWidth));
-    
-    painter.drawLine(0, -100+FEndTimeWidth/2, 0, -100+FEndTimeLength);
-    
-    if ((TimeToEnd>0) && (TimeToEnd<=15))
-    {
-      painter.drawArc(-100+FEndTimeWidth/2,-100+FEndTimeWidth/2, 200-FEndTimeWidth*2, 200-FEndTimeWidth*2, 90*16, (90*16*TimeToEnd)/15);
-    }
-    painter.restore();
-  }
-  
-  if (FCountDownTime)
-  {
-    painter.setPen(QPen(FCountDownColor, FCountDownWidth));
-    painter.drawArc(-96+FHourLinesLength+FCountDownSpacing,-96+FHourLinesLength+FCountDownSpacing, 192-(FHourLinesLength+FCountDownSpacing)*2, 192-(FHourLinesLength+FCountDownSpacing)*2, 90*16, (360*FCountDownTime)*16/60);
-  }
+
 }
 
 void DNRAnalogClock::setHourLines(bool NewHourLines)
@@ -204,7 +209,7 @@ bool DNRAnalogClock::getHourLines()
 {
    return FHourLines;
 }
-  
+
 void DNRAnalogClock::setHourLinesLength(int NewHourLinesLength)
 {
   if (FHourLinesLength != NewHourLinesLength)
@@ -218,7 +223,7 @@ int DNRAnalogClock::getHourLinesLength()
 {
   return FHourLinesLength;
 }
-    
+
 void DNRAnalogClock::setHourLinesWidth(int NewHourLinesWidth)
 {
   if (FHourLinesWidth != NewHourLinesWidth)
@@ -246,7 +251,7 @@ QColor DNRAnalogClock::getHourLinesColor()
 {
   return FHourLinesColor;
 }
-    
+
 void DNRAnalogClock::setMinuteLines(bool NewMinuteLines)
 {
    if (FMinuteLines != NewMinuteLines)
@@ -274,7 +279,7 @@ int DNRAnalogClock::getMinuteLinesLength()
 {
   return FMinuteLinesLength;
 }
-    
+
 void DNRAnalogClock::setMinuteLinesWidth(int NewMinuteLinesWidth)
 {
   if (FMinuteLinesWidth != NewMinuteLinesWidth)
@@ -372,7 +377,7 @@ bool DNRAnalogClock::getHands()
 {
   return FHands;
 }
-      
+
 void DNRAnalogClock::setHourHandColor(QColor NewHourHandColor)
 {
   if (FHourHandColor != NewHourHandColor)
@@ -386,7 +391,7 @@ QColor DNRAnalogClock::getHourHandColor()
 {
   return FHourHandColor;
 }
-    
+
 void DNRAnalogClock::setHourHandBorder(int NewHourHandBorder)
 {
   if (FHourHandBorder != NewHourHandBorder)
@@ -633,7 +638,7 @@ void DNRAnalogClock::checkTime()
   int NewHour = time.hour();
   int NewMinute = time.minute();
   int NewSecond = time.second();
-  
+
   if (FSecond != NewSecond)
   {
     FSecond = NewSecond;
