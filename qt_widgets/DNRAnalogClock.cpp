@@ -575,7 +575,7 @@ QColor DNRAnalogClock::getEndTimeColor()
   return FEndTimeColor;
 }
 
-void DNRAnalogClock::setCountDownTime(int NewCountDownTime)
+void DNRAnalogClock::setCountDownTime(float NewCountDownTime)
 {
   if (FCountDownTime != NewCountDownTime)
   {
@@ -584,7 +584,7 @@ void DNRAnalogClock::setCountDownTime(int NewCountDownTime)
   }
 }
 
-int DNRAnalogClock::getCountDownTime()
+float DNRAnalogClock::getCountDownTime()
 {
   return FCountDownTime;
 }
