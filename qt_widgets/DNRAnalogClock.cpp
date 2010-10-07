@@ -108,7 +108,7 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
       if (FMinuteLines)
       {
         painter.setPen(QPen(FMinuteLinesColor, FMinuteLinesWidth));
-        painter.drawLine(0, -(96-FMinuteLinesLength), 0, -96);
+        painter.drawLine(0, -(96-FMinuteLinesLength-FMinuteLinesWidth/2), 0, -96+(FMinuteLinesWidth/2));
       }
     }
     else
@@ -116,7 +116,7 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
       if (FHourLines)
       {
         painter.setPen(QPen(FHourLinesColor, FHourLinesWidth));
-        painter.drawLine(0, -(96-FHourLinesLength), 0, -96);
+        painter.drawLine(0, -(96-FHourLinesLength-FHourLinesWidth/2), 0, -96+(FHourLinesWidth/2));
       }
     }
     painter.rotate(6.0);
