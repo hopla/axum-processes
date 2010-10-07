@@ -5972,7 +5972,6 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             if (AxumData.RackOrganization[cntSlot] == message->AddressFrom)
             {
               AxumData.RackOrganization[cntSlot] = 0;
-
               db_delete_slot_config(cntSlot);
             }
           }
@@ -6249,6 +6248,9 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
         if (AxumData.RackOrganization[cntSlot] == old_info->MambaNetAddr)
         {
           AxumData.RackOrganization[cntSlot] = 0;
+          db_lock(1);
+          db_delete_slot_config(cntSlot);
+          db_lock(0);
         }
       }
 
