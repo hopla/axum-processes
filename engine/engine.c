@@ -2853,23 +2853,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                 if (MixMinusInUse)
                 {
-                  if (data.State)
-                  {
-                    AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = !AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr];
-                    UpdateDestinations = true;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                    {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                      {
-                        AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = !AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr];
-                        UpdateDestinations = true;
-                      }
-                    }
-                  }
+                  AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = data.State;
+                  UpdateDestinations = true;
                 }
                 else if (AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr])
                 {
@@ -3580,21 +3565,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   OldTalkbackActive |= AxumData.Monitor[MonitorBussNr].Talkback[cntTalkback];
                 }
 
-                if (data.State)
-                {
-                  AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr] = !AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr];
-                }
-                else
-                {
-                  int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                  if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                  {
-                    if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                    {
-                      AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr] = !AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr];
-                    }
-                  }
-                }
+                AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr] = data.State;
 
                 if (AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr] != OldTalkback)
                 {
@@ -5752,21 +5723,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 }
                 bool OldState = AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr];
 
-                if (data.State)
-                {
-                  AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr] = !AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr];
-                }
-                else
-                {
-                  int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                  if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                  {
-                    if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                    {
-                      AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr] = !AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr];
-                    }
-                  }
-                }
+                AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr] = data.State;
 
                 int NewTalkbackActive = 0;
                 for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
