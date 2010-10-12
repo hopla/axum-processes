@@ -4744,6 +4744,38 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(FunctionNrToSend | FunctionNr);
                 }
                 break;
+                case GLOBAL_FUNCTION_ACCOUNT_ACTIVE_1:
+                case GLOBAL_FUNCTION_ACCOUNT_ACTIVE_2:
+                case GLOBAL_FUNCTION_ACCOUNT_ACTIVE_3:
+                case GLOBAL_FUNCTION_ACCOUNT_ACTIVE_4:
+                {
+                  for (int cntObject=1024; cntObject<OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024; cntObject++)
+                  {
+                    SENSOR_RECEIVE_FUNCTION_STRUCT *ConnectedEngineFunction = &OnlineNodeInformationElement->SensorReceiveFunction[cntObject-1024];
+
+                    if ((int)ConnectedEngineFunction->FunctionNr != -1)
+                    {
+                      unsigned int EngineFunctionType = (ConnectedEngineFunction->FunctionNr>>24)&0xFF;
+                      unsigned int EngineFunctionSeqNr = (ConnectedEngineFunction->FunctionNr>>12)&0xFFF;
+                      unsigned int EngineFunctionNr = ConnectedEngineFunction->FunctionNr&0xFFF;
+
+                      if ((EngineFunctionType == GLOBAL_FUNCTIONS) && (EngineFunctionSeqNr == 0))
+                      {
+                        if ((EngineFunctionNr>= GLOBAL_FUNCTION_READ_WRITE_USER_1) &&
+                            (EngineFunctionNr<= GLOBAL_FUNCTION_READ_WRITE_USER_4))
+                        {
+                          mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
+                        }
+                        else if ((EngineFunctionNr>= GLOBAL_FUNCTION_READ_WRITE_PASS_1) &&
+                                 (EngineFunctionNr<= GLOBAL_FUNCTION_READ_WRITE_PASS_4))
+                        {
+                          mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
+                        }
+                      }
+                    }
+                  }
+                }
+                break;
               }
             }
           }
@@ -5822,6 +5854,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
     return 1;
   }
 
+  //fixed objects
   unsigned char CheckDBTemplateCount = 0;
 
   switch (type)
@@ -6093,6 +6126,141 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
       }
     }
     break;
+  }
+
+  //returned custom object-data that depends on function configuration
+  if (object>=1024)
+  {
+    if (OnlineNodeInformationElement->SensorReceiveFunction != NULL)
+    {
+      SENSOR_RECEIVE_FUNCTION_STRUCT *SensorReceiveFunction = &OnlineNodeInformationElement->SensorReceiveFunction[object-1024];
+      int SensorReceiveFunctionNumber = SensorReceiveFunction->FunctionNr;
+      //int DataType = OnlineNodeInformationElement->ObjectInformation[object-1024].SensorDataType;
+      //int DataSize = OnlineNodeInformationElement->ObjectInformation[object-1024].SensorDataSize;
+      //float DataMinimal = OnlineNodeInformationElement->ObjectInformation[object-1024].SensorDataMinimal;
+      //float DataMaximal = OnlineNodeInformationElement->ObjectInformation[object-1024].SensorDataMaximal;
+
+      if (SensorReceiveFunctionNumber != -1)
+      {
+        unsigned char SensorReceiveFunctionType = (SensorReceiveFunctionNumber>>24)&0xFF;
+
+        switch (SensorReceiveFunctionType)
+        {
+          case MODULE_FUNCTIONS:
+          {   //Module
+            unsigned int ModuleNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
+            unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+
+            if ((ModuleNr >= NUMBER_OF_MODULES) && (ModuleNr<(NUMBER_OF_MODULES+4)))
+            {
+              ModuleNr = AxumData.SelectedModule[ModuleNr-NUMBER_OF_MODULES];
+            }
+
+            switch (FunctionNr)
+            {
+            }
+          }
+          break;
+          case BUSS_FUNCTIONS:
+          {   //Busses
+            unsigned int BussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
+            unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+
+            if ((BussNr>=NUMBER_OF_BUSSES) && (BussNr<(NUMBER_OF_BUSSES+4)))
+            {
+              BussNr = AxumData.SelectedBuss[BussNr-NUMBER_OF_BUSSES];
+            }
+
+            switch (FunctionNr)
+            {
+            }
+          }
+          break;
+          case MONITOR_BUSS_FUNCTIONS:
+          {   //Monitor Busses
+            int MonitorBussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
+            int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+
+            if ((MonitorBussNr>=NUMBER_OF_MONITOR_BUSSES) && (MonitorBussNr<(NUMBER_OF_MONITOR_BUSSES+4)))
+            {
+              MonitorBussNr = AxumData.SelectedMonitorBuss[MonitorBussNr-NUMBER_OF_MONITOR_BUSSES];
+            }
+
+            switch (FunctionNr)
+            {
+            }
+          }
+          break;
+          case GLOBAL_FUNCTIONS:
+          {   //Global
+            unsigned int GlobalNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
+            unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+
+            if (GlobalNr == 0)
+            {
+              switch (FunctionNr)
+              {
+                case GLOBAL_FUNCTION_READ_WRITE_USER_1:
+                case GLOBAL_FUNCTION_READ_WRITE_USER_2:
+                case GLOBAL_FUNCTION_READ_WRITE_USER_3:
+                case GLOBAL_FUNCTION_READ_WRITE_USER_4:
+                {
+                  int Console = FunctionNr-GLOBAL_FUNCTION_READ_WRITE_USER_1;
+                  strncpy(AxumData.Username[Console], (char *)data.Octets, 32);
+
+                  unsigned int FunctionNrToSend = 0x04000000;
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
+                }
+                break;
+                case GLOBAL_FUNCTION_READ_WRITE_PASS_1:
+                case GLOBAL_FUNCTION_READ_WRITE_PASS_2:
+                case GLOBAL_FUNCTION_READ_WRITE_PASS_3:
+                case GLOBAL_FUNCTION_READ_WRITE_PASS_4:
+                {
+                  int Console = FunctionNr-GLOBAL_FUNCTION_READ_WRITE_PASS_1;
+                  strncpy(AxumData.Password[Console], (char *)data.Octets, 32);
+
+                  unsigned int FunctionNrToSend = 0x04000000;
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+Console));
+                }
+                break;
+              }
+            }
+          }
+          break;
+          case SOURCE_FUNCTIONS:
+          { //Source
+            int SourceNr = ((SensorReceiveFunctionNumber>>12)&0xFFF);
+            unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+
+            if ((SourceNr>=NUMBER_OF_SOURCES) && (SourceNr<(NUMBER_OF_SOURCES+4)))
+            {
+              SourceNr = AxumData.SelectedSource[SourceNr-NUMBER_OF_SOURCES];
+            }
+
+            switch (FunctionNr)
+            {
+            }
+          }
+          break;
+          case DESTINATION_FUNCTIONS:
+          { //Destination
+            unsigned int DestinationNr = ((SensorReceiveFunctionNumber>>12)&0xFFF);
+            unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+
+            if ((DestinationNr>=NUMBER_OF_DESTINATIONS) && (DestinationNr<(NUMBER_OF_DESTINATIONS+4)))
+            {
+              DestinationNr = AxumData.SelectedBuss[DestinationNr-NUMBER_OF_DESTINATIONS];
+            }
+
+            switch (FunctionNr)
+            {
+            }
+          }
+          break;
+        }
+      }
+    }
   }
   node_info_lock(0);
   return 0;
@@ -10542,6 +10710,42 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 sprintf(LCDText, "Src %d", AxumData.SelectedDestination[SelectNr]);
                 data.Octets = (unsigned char *)LCDText;
                 mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              }
+              break;
+            }
+          }
+          break;
+          case GLOBAL_FUNCTION_UPDATE_USER_1:
+          case GLOBAL_FUNCTION_UPDATE_USER_2:
+          case GLOBAL_FUNCTION_UPDATE_USER_3:
+          case GLOBAL_FUNCTION_UPDATE_USER_4:
+          {
+            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_UPDATE_USER_1;
+            switch (DataType)
+            {
+              case MBN_DATATYPE_OCTETS:
+              {
+                strncpy(LCDText, AxumData.Username[ConsoleNr], 32);
+                data.Octets = (unsigned char *)LCDText;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
+              }
+              break;
+            }
+          }
+          break;
+          case GLOBAL_FUNCTION_UPDATE_PASS_1:
+          case GLOBAL_FUNCTION_UPDATE_PASS_2:
+          case GLOBAL_FUNCTION_UPDATE_PASS_3:
+          case GLOBAL_FUNCTION_UPDATE_PASS_4:
+          {
+            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_UPDATE_PASS_1;
+            switch (DataType)
+            {
+              case MBN_DATATYPE_OCTETS:
+              {
+                strncpy(LCDText, AxumData.Password[ConsoleNr], 32);
+                data.Octets = (unsigned char *)LCDText;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
               }
               break;
             }
@@ -15304,6 +15508,8 @@ void initialize_axum_data_struct()
     AxumData.SelectedMonitorBuss[cntConsole] = 0;
     AxumData.SelectedSource[cntConsole] = 0;
     AxumData.SelectedDestination[cntConsole] = 0;
+    AxumData.Username[cntConsole][0] = 0;
+    AxumData.Password[cntConsole][0] = 0;
   }
 
   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)

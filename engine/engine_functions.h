@@ -1044,9 +1044,28 @@
 #define GLOBAL_FUNCTION_DESTINATION_SELECT_2            510
 #define GLOBAL_FUNCTION_DESTINATION_SELECT_3            511
 #define GLOBAL_FUNCTION_DESTINATION_SELECT_4            512
+#define GLOBAL_FUNCTION_ACCOUNT_ACTIVE_1                513
+#define GLOBAL_FUNCTION_ACCOUNT_ACTIVE_2                514
+#define GLOBAL_FUNCTION_ACCOUNT_ACTIVE_3                515
+#define GLOBAL_FUNCTION_ACCOUNT_ACTIVE_4                516
+#define GLOBAL_FUNCTION_READ_WRITE_USER_1               517
+#define GLOBAL_FUNCTION_READ_WRITE_USER_2               518
+#define GLOBAL_FUNCTION_READ_WRITE_USER_3               519
+#define GLOBAL_FUNCTION_READ_WRITE_USER_4               520
+#define GLOBAL_FUNCTION_READ_WRITE_PASS_1               521
+#define GLOBAL_FUNCTION_READ_WRITE_PASS_2               522
+#define GLOBAL_FUNCTION_READ_WRITE_PASS_3               523
+#define GLOBAL_FUNCTION_READ_WRITE_PASS_4               524
+#define GLOBAL_FUNCTION_UPDATE_USER_1                   525
+#define GLOBAL_FUNCTION_UPDATE_USER_2                   526
+#define GLOBAL_FUNCTION_UPDATE_USER_3                   527
+#define GLOBAL_FUNCTION_UPDATE_USER_4                   528
+#define GLOBAL_FUNCTION_UPDATE_PASS_1                   529
+#define GLOBAL_FUNCTION_UPDATE_PASS_2                   530
+#define GLOBAL_FUNCTION_UPDATE_PASS_3                   531
+#define GLOBAL_FUNCTION_UPDATE_PASS_4                   532
 
-
-#define NUMBER_OF_GLOBAL_FUNCTIONS                    513
+#define NUMBER_OF_GLOBAL_FUNCTIONS                    533
 
 #define MODULE_CONTROL_MODE_NONE                    -1
 #define MODULE_CONTROL_MODE_SOURCE                    0
