@@ -253,7 +253,7 @@ void DNREQPanel::paintEvent(QPaintEvent *)
     painter.setPen(QPen(FInactiveCurveColor, FInactiveCurveWidth));
     painter.setBrush(FInactiveCurveFillColor);
   }
-  painter.drawPolygon(ActiveCurve, FNrOfPoints);
+  painter.drawPolygon(ActiveCurve, FNrOfPoints-1);
 
 
   if (FDrawAnchors)
