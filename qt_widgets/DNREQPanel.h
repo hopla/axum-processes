@@ -63,6 +63,9 @@ class QDESIGNER_WIDGET_EXPORT DNREQPanel : public QWidget
     Q_PROPERTY(QColor ActiveCurveColor READ getActiveCurveColor WRITE setActiveCurveColor);
     Q_PROPERTY(int ActiveCurveWidth READ getActiveCurveWidth WRITE setActiveCurveWidth);
     Q_PROPERTY(QColor ActiveCurveFillColor READ getActiveCurveFillColor WRITE setActiveCurveFillColor);
+    Q_PROPERTY(QColor InactiveCurveColor READ getInactiveCurveColor WRITE setInactiveCurveColor);
+    Q_PROPERTY(int InactiveCurveWidth READ getInactiveCurveWidth WRITE setInactiveCurveWidth);
+    Q_PROPERTY(QColor InactiveCurveFillColor READ getInactiveCurveFillColor WRITE setInactiveCurveFillColor);
     Q_PROPERTY(QColor AnchorBand1Color READ getAnchorBand1Color WRITE setAnchorBand1Color);
     Q_PROPERTY(QColor AnchorBand2Color READ getAnchorBand2Color WRITE setAnchorBand2Color);
     Q_PROPERTY(QColor AnchorBand3Color READ getAnchorBand3Color WRITE setAnchorBand3Color);
@@ -179,6 +182,15 @@ public:
     QColor getActiveCurveFillColor();
     void setActiveCurveFillColor(QColor NewActiveCurveFillColor);
 
+    QColor getInactiveCurveColor();
+    void setInactiveCurveColor(QColor NewInactiveCurveColor);
+
+    int getInactiveCurveWidth();
+    void setInactiveCurveWidth(int setInactiveCurveWidth);
+
+    QColor getInactiveCurveFillColor();
+    void setInactiveCurveFillColor(QColor NewInactiveCurveFillColor);
+
     int getTotalCurveWidth();
     void setTotalCurveWidth(int NewTotalCurveWidth);
 
@@ -291,6 +303,9 @@ private:
     QColor FActiveCurveColor;
     int FActiveCurveWidth;
     QColor FActiveCurveFillColor;
+    QColor FInactiveCurveColor;
+    int FInactiveCurveWidth;
+    QColor FInactiveCurveFillColor;
     QColor FAnchorBand1Color;
     QColor FAnchorBand2Color;
     QColor FAnchorBand3Color;

@@ -66,6 +66,9 @@ DNREQPanel::DNREQPanel(QWidget *parent)
   FActiveCurveColor = QColor(192, 192, 192);
   FActiveCurveWidth = 1;
   FActiveCurveFillColor = QColor (0, 255, 0, 80);
+  FInactiveCurveColor = QColor(0, 0, 0);
+  FInactiveCurveWidth = 1;
+  FInactiveCurveFillColor = QColor (0, 0, 0, 0);
   FAnchorBand1Color = QColor(226, 197, 182);
   FAnchorBand2Color = QColor(255, 255, 196);
   FAnchorBand3Color = QColor(199, 243, 205);
@@ -240,9 +243,18 @@ void DNREQPanel::paintEvent(QPaintEvent *)
   }
 
   //Draw active curve
-  painter.setPen(QPen(FActiveCurveColor, FActiveCurveWidth));
-  painter.setBrush(FActiveCurveFillColor);
-  painter.drawPolygon(ActiveCurve, FNrOfPoints-1);
+  if (FEQOn)
+  {
+    painter.setPen(QPen(FActiveCurveColor, FActiveCurveWidth));
+    painter.setBrush(FActiveCurveFillColor);
+  }
+  else
+  {
+    painter.setPen(QPen(FInactiveCurveColor, FInactiveCurveWidth));
+    painter.setBrush(FInactiveCurveFillColor);
+  }
+  painter.drawPolygon(ActiveCurve, FNrOfPoints);
+
 
   if (FDrawAnchors)
   {
@@ -873,6 +885,48 @@ void DNREQPanel::setActiveCurveFillColor(QColor NewActiveCurveFillColor)
   }
 }
 
+QColor DNREQPanel::getInactiveCurveColor()
+{
+  return FInactiveCurveColor;
+}
+
+void DNREQPanel::setInactiveCurveColor(QColor NewInactiveCurveColor)
+{
+  if (FInactiveCurveColor != NewInactiveCurveColor)
+  {
+    FInactiveCurveColor = NewInactiveCurveColor;
+    update();
+  }
+}
+
+int DNREQPanel::getInactiveCurveWidth()
+{
+  return FInactiveCurveWidth;
+}
+
+void DNREQPanel::setInactiveCurveWidth(int NewInactiveCurveWidth)
+{
+  if (FInactiveCurveWidth != NewInactiveCurveWidth)
+  {
+    FInactiveCurveWidth = NewInactiveCurveWidth;
+    update();
+  }
+}
+
+QColor DNREQPanel::getInactiveCurveFillColor()
+{
+  return FInactiveCurveFillColor;
+}
+
+void DNREQPanel::setInactiveCurveFillColor(QColor NewInactiveCurveFillColor)
+{
+  if (FInactiveCurveFillColor != NewInactiveCurveFillColor)
+  {
+    FInactiveCurveFillColor = NewInactiveCurveFillColor;
+    update();
+  }
+}
+
 QColor DNREQPanel::getAnchorBand1Color()
 {
   return FAnchorBand1Color;
@@ -1442,9 +1496,9 @@ void DNREQPanel::CalculateCurve()
   int HorizontalAxisLength = width()-(2*BorderWidth)-FAxisLeftMargin;
   int VerticalAxisLength = height()-(2*BorderWidth);
 
-  for (cnt=0; cnt<FNrOfPoints; cnt++)
+  for (cnt=0; cnt<FNrOfPoints-2; cnt++)
   {
-    Freq = pow(10,(float) (cnt*log10((FSamplerate)/(FNequistDivide*10)))/FNrOfPoints)*10;
+    Freq = pow(10,(float) (cnt*log10((FSamplerate)/(FNequistDivide*10)))/(FNrOfPoints-2))*10;
     Alpha = (double)(M_PI*2*Freq)/(FSamplerate);
 
     X = cos(Alpha);
