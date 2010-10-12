@@ -1496,9 +1496,9 @@ void DNREQPanel::CalculateCurve()
   int HorizontalAxisLength = width()-(2*BorderWidth)-FAxisLeftMargin;
   int VerticalAxisLength = height()-(2*BorderWidth);
 
-  for (cnt=0; cnt<FNrOfPoints-2; cnt++)
+  for (cnt=0; cnt<FNrOfPoints; cnt++)
   {
-    Freq = pow(10,(float) (cnt*log10((FSamplerate)/(FNequistDivide*10)))/(FNrOfPoints-2))*10;
+    Freq = pow(10,(float) (cnt*log10((FSamplerate)/(FNequistDivide*10)))/FNrOfPoints)*10;
     Alpha = (double)(M_PI*2*Freq)/(FSamplerate);
 
     X = cos(Alpha);
