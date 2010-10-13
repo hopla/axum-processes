@@ -887,42 +887,6 @@ QTabWidget::tab-bar
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="DNREQPanel" name="NewDNREQPanel">
-    <property name="geometry">
-     <rect>
-      <x>828</x>
-      <y>55</y>
-      <width>183</width>
-      <height>125</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>8</pointsize>
-     </font>
-    </property>
-    <property name="toolTip">
-     <string>The EQ Panel</string>
-    </property>
-    <property name="whatsThis">
-     <string>The EQ Panel widget displays </string>
-    </property>
-    <property name="GainBand1">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="NrOfPoints">
-     <number>256</number>
-    </property>
-    <property name="AxisBorderWidth">
-     <number>16</number>
-    </property>
-    <property name="AxisLeftMargin">
-     <number>0</number>
-    </property>
-    <property name="ShowGainText">
-     <bool>false</bool>
-    </property>
-   </widget>
    <widget class="DNRImage" name="Redlight3OnDNRImage">
     <property name="geometry">
      <rect>
@@ -1227,202 +1191,257 @@ QTabWidget::tab-bar
      <string>/var/lib/axum/skins/meters/redlight8-off.png</string>
     </property>
    </widget>
-   <widget class="QLabel" name="DExpThLabel">
-    <property name="geometry">
-     <rect>
-      <x>764</x>
-      <y>55</y>
-      <width>64</width>
-      <height>42</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string>QLabel
-{
-	color: rgba(192, 192, 192, 255);
-	background: rgba(22, 51, 105, 255);
-	border-color: rgba(35,80,163, 255);
-	border-width: 1px;
-	border-style: solid;
-}</string>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::NoFrame</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
-    </property>
-    <property name="lineWidth">
-     <number>1</number>
-    </property>
-    <property name="text">
-     <string>D-Exp Th&lt;BR&gt;-20 dB</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="AGCThLabel">
-    <property name="geometry">
-     <rect>
-      <x>764</x>
-      <y>96</y>
-      <width>64</width>
-      <height>43</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string>QLabel
-{
-	color: rgba(192, 192, 192, 255);
-	background: rgba(22, 51, 105, 255);
-	border-color: rgba(35,80,163, 255);
-	border-width: 1px;
-	border-style: solid;
-}</string>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::Box</enum>
-    </property>
-    <property name="text">
-     <string>AGC Th&lt;BR&gt;-10dB</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="AGCRatioLabel">
-    <property name="geometry">
-     <rect>
-      <x>764</x>
-      <y>138</y>
-      <width>64</width>
-      <height>42</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string>QLabel
-{
-	color: rgba(192, 192, 192, 255);
-	background: rgba(22, 51, 105, 255);
-	border-color: rgba(35,80,163, 255);
-	border-width: 1px;
-	border-style: solid;
-}</string>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::Box</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
-    </property>
-    <property name="lineWidth">
-     <number>1</number>
-    </property>
-    <property name="text">
-     <string>AGC Ratio&lt;BR&gt;100%</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="SelectedModuleLabel">
+   <widget class="QWidget" name="widget_2" native="true">
     <property name="geometry">
      <rect>
       <x>756</x>
       <y>37</y>
-      <width>255</width>
-      <height>18</height>
+      <width>256</width>
+      <height>143</height>
      </rect>
     </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
+    <property name="autoFillBackground">
+     <bool>false</bool>
     </property>
     <property name="styleSheet">
-     <string>QLabel
+     <string>QWidget
+{
+	background: rgba(22, 51, 105, 255);
+}</string>
+    </property>
+    <widget class="DNREQPanel" name="NewDNREQPanel">
+     <property name="geometry">
+      <rect>
+       <x>73</x>
+       <y>18</y>
+       <width>183</width>
+       <height>125</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
+     <property name="toolTip">
+      <string>The EQ Panel</string>
+     </property>
+     <property name="whatsThis">
+      <string>The EQ Panel widget displays </string>
+     </property>
+     <property name="GainBand1">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="NrOfPoints">
+      <number>256</number>
+     </property>
+     <property name="AxisBorderWidth">
+      <number>16</number>
+     </property>
+     <property name="AxisLeftMargin">
+      <number>0</number>
+     </property>
+     <property name="ShowGainText">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="AGCThLabel">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>59</y>
+       <width>64</width>
+       <height>43</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string>AGC Th&lt;BR&gt;-10dB</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="AGCRatioLabel">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>101</y>
+       <width>64</width>
+       <height>42</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="text">
+      <string>AGC Ratio&lt;BR&gt;100%</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="DExpThLabel">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>18</y>
+       <width>64</width>
+       <height>42</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="text">
+      <string>D-Exp Th&lt;BR&gt;-20 dB</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="SelectedModuleLabel">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>256</width>
+       <height>18</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel
 {
 	color: rgba(22,51,105);
 	background: rgba(135, 168, 228);
 }</string>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::NoFrame</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
-    </property>
-    <property name="lineWidth">
-     <number>1</number>
-    </property>
-    <property name="text">
-     <string>Mod 1</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="DNRPPMMeter" name="NewDNRPPMMeter_9">
-    <property name="geometry">
-     <rect>
-      <x>756</x>
-      <y>55</y>
-      <width>4</width>
-      <height>125</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The PPM Meter</string>
-    </property>
-    <property name="whatsThis">
-     <string>The PPM Meter widget displays </string>
-    </property>
-    <property name="dBPosition" stdset="0">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="GradientForground">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="DNRPPMMeter" name="NewDNRPPMMeter_10">
-    <property name="geometry">
-     <rect>
-      <x>760</x>
-      <y>55</y>
-      <width>4</width>
-      <height>125</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The PPM Meter</string>
-    </property>
-    <property name="whatsThis">
-     <string>The PPM Meter widget displays </string>
-    </property>
-    <property name="dBPosition" stdset="0">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="GradientForground">
-     <bool>true</bool>
-    </property>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="text">
+      <string>Mod 1</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_9">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>18</y>
+       <width>4</width>
+       <height>125</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The PPM Meter</string>
+     </property>
+     <property name="whatsThis">
+      <string>The PPM Meter widget displays </string>
+     </property>
+     <property name="dBPosition" stdset="0">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="GradientForground">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_10">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>18</y>
+       <width>4</width>
+       <height>125</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The PPM Meter</string>
+     </property>
+     <property name="whatsThis">
+      <string>The PPM Meter widget displays </string>
+     </property>
+     <property name="dBPosition" stdset="0">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="GradientForground">
+      <bool>true</bool>
+     </property>
+    </widget>
    </widget>
    <zorder>NewDNRImage</zorder>
    <zorder>Redlight2OnDNRImage</zorder>
@@ -1463,11 +1482,8 @@ QTabWidget::tab-bar
    <zorder>Redlight4OffDNRImage</zorder>
    <zorder>Redlight2OffDNRImage</zorder>
    <zorder>Redlight8OffDNRImage</zorder>
-   <zorder>DExpThLabel</zorder>
-   <zorder>AGCThLabel</zorder>
-   <zorder>AGCRatioLabel</zorder>
-   <zorder>SelectedModuleLabel</zorder>
- </widget>
+   <zorder>widget_2</zorder>
+  </widget>
   <widget class="DNRImage" name="NewDNRImageBottomOnAir">
    <property name="geometry">
     <rect>
