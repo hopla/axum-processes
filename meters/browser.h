@@ -54,7 +54,7 @@ class Browser: public QWidget, public Ui::Browser
 public:
 	 int cntSecond;
 
-	 double MeterData[8];
+	 double MeterData[10];
    double PhaseMeterData[2];
    char Label[7][9];
    char CurrentLabel[7][9];
@@ -74,9 +74,22 @@ public:
    unsigned char CurrentProgramEndMinute;
    unsigned char ProgramEndSecond;
    unsigned char CurrentProgramEndSecond;
-
    float CountDownSeconds;
    float CurrentCountDownSeconds;
+
+   char ModuleLabel[9];
+   char CurrentModuleLabel[9];
+   char SourceLabel[9];
+   char CurrentSourceLabel[9];
+   unsigned char ModuleConsole;
+   unsigned char CurrentModuleConsole;
+
+   char DExpTh[9];
+   char CurrentDExpTh[9];
+   char AGCTh[9];
+   char CurrentAGCTh[9];
+   char AGCRatio[9];
+   char CurrentAGCRatio[9];
 
    bool EQOn;
    bool CurrentEQOn;

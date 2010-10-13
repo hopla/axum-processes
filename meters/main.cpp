@@ -47,7 +47,7 @@
 #define MANUFACTURER_ID          0x0001	//D&R
 #define PRODUCT_ID               0x001A	//Axum linux meters
 
-#define NR_OF_STATIC_OBJECTS    (1080-1023)
+#define NR_OF_STATIC_OBJECTS    (1088-1023)
 #define NR_OF_OBJECTS            NR_OF_STATIC_OBJECTS
 
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
@@ -230,6 +230,40 @@ void init(int argc, char *argv[])
   objects[cntObject++] = MBN_OBJ( (char *)"Count down seconds",
                                   MBN_DATATYPE_NODATA,
                                   MBN_DATATYPE_FLOAT, 2, 0.0, 60.0, 0.0, 0.0);
+//Module Label
+  objects[cntObject++] = MBN_OBJ( (char *)"Module label",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mod 1");
+//Module Source label
+  objects[cntObject++] = MBN_OBJ( (char *)"Module source label",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "None");
+//Module Console
+  objects[cntObject++] = MBN_OBJ( (char *)"Module console",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_UINT, 1, 0, 255, 0, 0);
+//Module Meter Left
+//Module Meter Right
+  objects[cntObject++] = MBN_OBJ( (char *)"Module Meter Left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Module Meter Right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+//DExp Th
+  objects[cntObject++] = MBN_OBJ( (char *)"D-Exp threshold",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "-20 dB");
+//AGC Th
+  objects[cntObject++] = MBN_OBJ( (char *)"AGC threshold",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "-10 dB");
+//AGC Ratio
+  objects[cntObject++] = MBN_OBJ( (char *)"AGC Ratio",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "100%");
+
+
   objects[cntObject++] = MBN_OBJ( (char *)"EQ on/off",
                                   MBN_DATATYPE_STATE, 1, 1, 0, 1, 0,
                                   MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
@@ -458,50 +492,99 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     break;
     case 1054:
     {
-      browser->EQOn = in.State;
+      strncpy(browser->ModuleLabel, (char *)in.Octets, 8);
+      browser->ModuleLabel[8] = 0;
     }
     break;
     case 1055:
+    {
+      strncpy(browser->SourceLabel, (char *)in.Octets, 8);
+      browser->SourceLabel[8] = 0;
+    }
+    break;
+    case 1056:
+    {
+      browser->ModuleConsole = in.UInt;
+    }
+    break;
+    case 1057:
+    {
+      float dB = in.Float+20;
+
+      browser->MeterData[8] = dB;
+    }
+    break;
+    case 1058:
+    {
+      float dB = in.Float+20;
+
+      browser->MeterData[9] = dB;
+    }
+    break;
     case 1059:
+    {
+      strncpy(browser->DExpTh, (char *)in.Octets, 8);
+      browser->DExpTh[8] = 0;
+    }
+    break;
+    case 1060:
+    {
+      strncpy(browser->AGCTh, (char *)in.Octets, 8);
+      browser->AGCTh[8] = 0;
+    }
+    break;
+    case 1061:
+    {
+      strncpy(browser->AGCRatio, (char *)in.Octets, 8);
+      browser->AGCRatio[8] = 0;
+    }
+    break;
+    case 1062:
+    {
+      browser->EQOn = in.State;
+    }
+    break;
     case 1063:
     case 1067:
     case 1071:
     case 1075:
+    case 1079:
+    case 1083:
     {
-      int BandNr = (object-1055)/4;
+      int BandNr = (object-1063)/4;
       browser->EQLevel[BandNr] = in.Float;
     }
     break;
-    case 1056:
-    case 1060:
     case 1064:
     case 1068:
     case 1072:
     case 1076:
+    case 1080:
+    case 1084:
     {
-      int BandNr = (object-1056)/4;
+      int BandNr = (object-1064)/4;
       browser->EQFrequency[BandNr] = in.UInt;
     }
     break;
-    case 1057:
-    case 1061:
     case 1065:
     case 1069:
     case 1073:
     case 1077:
+    case 1081:
+    case 1085:
     {
-      int BandNr = (object-1057)/4;
+      int BandNr = (object-1065)/4;
       browser->EQBandwidth[BandNr] = in.Float;
     }
     break;
-    case 1058:
-    case 1062:
     case 1066:
     case 1070:
     case 1074:
     case 1078:
+    case 1082:
+    case 1086:
     {
-      int BandNr = (object-1058)/4;
+      int BandNr = (object-1066)/4;
       browser->EQType[BandNr] = in.State;
     }
     break;

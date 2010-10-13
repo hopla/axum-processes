@@ -75,7 +75,7 @@ Browser::Browser(QWidget *parent)
 
 	startTimer(30);
 
-	for (cnt=0; cnt<8; cnt++)
+	for (cnt=0; cnt<10; cnt++)
   {
     MeterData[cnt] = -50;
   }
@@ -94,6 +94,20 @@ Browser::Browser(QWidget *parent)
   sprintf(CurrentLabel[4],"Meter 3 ");
   sprintf(CurrentLabel[5],"Meter 4 ");
   sprintf(CurrentLabel[6],"  ----  ");
+
+  sprintf(ModuleLabel, "Mod 1");
+  sprintf(CurrentModuleLabel, "Mod 1");
+  sprintf(SourceLabel, "None");
+  sprintf(CurrentSourceLabel, "None");
+  ModuleConsole = 0;
+  CurrentModuleConsole = 0;
+
+  sprintf(DExpTh, "-20 dB");
+  sprintf(CurrentDExpTh, "-20 dB");
+  sprintf(AGCTh, "-10 dB");
+  sprintf(CurrentAGCTh, "-20 dB");
+  sprintf(AGCRatio, "100%%");
+  sprintf(CurrentAGCRatio, "100%%");
 
   OnAirState = 0;
   CurrentOnAirState = 0;
@@ -166,6 +180,7 @@ void Browser::MeterRelease()
 {
   float Difference;
   int cnt;
+  char ConsoleString[8];
 /*
 #ifdef Q_OS_WIN32
 	LARGE_INTEGER freq, newTime;
@@ -324,6 +339,36 @@ void Browser::MeterRelease()
 			NewDNRPPMMeter_8->update();
     }
 	}
+  if ((NewDNRPPMMeter_9->FdBPosition>-50) || (MeterData[8]>-50))
+  {
+    Difference = MeterData[8]-NewDNRPPMMeter_9->FdBPosition;
+
+    if (Difference < -RELEASE_STEP)
+    {
+      Difference = -RELEASE_STEP;
+		}
+
+    if (Difference != 0)
+    {
+      NewDNRPPMMeter_9->FdBPosition += Difference;
+			NewDNRPPMMeter_9->update();
+    }
+	}
+  if ((NewDNRPPMMeter_10->FdBPosition>-50) || (MeterData[9]>-50))
+  {
+    Difference = MeterData[9]-NewDNRPPMMeter_10->FdBPosition;
+
+    if (Difference < -RELEASE_STEP)
+    {
+      Difference = -RELEASE_STEP;
+		}
+
+    if (Difference != 0)
+    {
+      NewDNRPPMMeter_10->FdBPosition += Difference;
+			NewDNRPPMMeter_10->update();
+    }
+	}
 
   if (strcmp(Label[0], CurrentLabel[0]) != 0)
   {
@@ -463,6 +508,40 @@ void Browser::MeterRelease()
   {
     NewDNRAnalogClock->setCountDownTime(CountDownSeconds);
     CurrentCountDownSeconds = CountDownSeconds;
+  }
+
+  if (strcmp(ModuleLabel, CurrentModuleLabel) != 0)
+  {
+    sprintf(ConsoleString, "%d", ModuleConsole+1);
+    SelectedModuleLabel->setText(QString(ModuleLabel).trimmed()+" - "+QString(CurrentSourceLabel)+" - "+QString(ConsoleString));
+    strcpy(CurrentModuleLabel, ModuleLabel);
+  }
+  if (strcmp(SourceLabel, CurrentSourceLabel) != 0)
+  {
+    sprintf(ConsoleString, "%d", ModuleConsole+1);
+    SelectedModuleLabel->setText(QString(CurrentModuleLabel).trimmed()+" - "+QString(SourceLabel)+" - "+QString(ConsoleString));
+    strcpy(CurrentSourceLabel, SourceLabel);
+  }
+  if (ModuleConsole != CurrentModuleConsole)
+  {
+    sprintf(ConsoleString, "%d", ModuleConsole+1);
+    SelectedModuleLabel->setText(QString(CurrentModuleLabel).trimmed()+" - "+QString(CurrentSourceLabel)+" - "+QString(ConsoleString));
+    CurrentModuleConsole = ModuleConsole;
+  }
+  if (strcmp(DExpTh, CurrentDExpTh) != 0)
+  {
+    DExpThLabel->setText(QString("D-Exp Th<BR>")+QString(DExpTh));
+    strcpy(CurrentDExpTh, DExpTh);
+  }
+  if (strcmp(AGCTh, CurrentAGCTh) != 0)
+  {
+    AGCThLabel->setText("AGC Th<BR>"+QString(AGCTh));
+    strcpy(CurrentAGCTh, AGCTh);
+  }
+  if (strcmp(AGCRatio, CurrentAGCRatio) != 0)
+  {
+    AGCRatioLabel->setText("AGC Ratio<BR>"+QString(AGCRatio));
+    strcpy(CurrentAGCRatio, AGCRatio);
   }
 
   if (EQOn != CurrentEQOn)
