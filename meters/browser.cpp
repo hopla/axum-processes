@@ -467,12 +467,7 @@ void Browser::MeterRelease()
 
   if (EQOn != CurrentEQOn)
   {
-    NewDNREQPanel->setOnBand1(EQOn);
-    NewDNREQPanel->setOnBand2(EQOn);
-    NewDNREQPanel->setOnBand3(EQOn);
-    NewDNREQPanel->setOnBand4(EQOn);
-    NewDNREQPanel->setOnBand5(EQOn);
-    NewDNREQPanel->setOnBand6(EQOn);
+    NewDNREQPanel->setEQOn(EQOn);
     CurrentEQOn = EQOn;
   }
 
