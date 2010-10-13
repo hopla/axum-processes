@@ -890,8 +890,8 @@ QTabWidget::tab-bar
    <widget class="DNREQPanel" name="NewDNREQPanel">
     <property name="geometry">
      <rect>
-      <x>792</x>
-      <y>41</y>
+      <x>824</x>
+      <y>55</y>
       <width>183</width>
       <height>125</height>
      </rect>
@@ -1227,6 +1227,159 @@ QTabWidget::tab-bar
      <string>/var/lib/axum/skins/meters/redlight8-off.png</string>
     </property>
    </widget>
+   <widget class="QLabel" name="DExpThLabel">
+    <property name="geometry">
+     <rect>
+      <x>760</x>
+      <y>55</y>
+      <width>64</width>
+      <height>42</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="lineWidth">
+     <number>1</number>
+    </property>
+    <property name="text">
+     <string>D-Exp Th&lt;BR&gt;-20 dB</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="AGCTHLabel">
+    <property name="geometry">
+     <rect>
+      <x>760</x>
+      <y>96</y>
+      <width>64</width>
+      <height>43</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="text">
+     <string>AGC Th&lt;BR&gt;-10dB</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="AGCRatioLabel">
+    <property name="geometry">
+     <rect>
+      <x>760</x>
+      <y>138</y>
+      <width>64</width>
+      <height>42</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="lineWidth">
+     <number>1</number>
+    </property>
+    <property name="text">
+     <string>AGC Ratio&lt;BR&gt;100%</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="SelectedModuleLabel">
+    <property name="geometry">
+     <rect>
+      <x>760</x>
+      <y>37</y>
+      <width>247</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string>QLabel
+{
+	color: rgba(22,51,105);
+	background: rgba(135, 168, 228);
+}</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="lineWidth">
+     <number>1</number>
+    </property>
+    <property name="text">
+     <string>Mod 1</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
    <zorder>NewDNRImage</zorder>
    <zorder>Redlight2OnDNRImage</zorder>
    <zorder>Redlight4OnDNRImage</zorder>
@@ -1264,6 +1417,10 @@ QTabWidget::tab-bar
    <zorder>Redlight4OffDNRImage</zorder>
    <zorder>Redlight2OffDNRImage</zorder>
    <zorder>Redlight8OffDNRImage</zorder>
+   <zorder>DExpThLabel</zorder>
+   <zorder>AGCTHLabel</zorder>
+   <zorder>AGCRatioLabel</zorder>
+   <zorder>SelectedModuleLabel</zorder>
   </widget>
   <widget class="DNRImage" name="NewDNRImageBottomOnAir">
    <property name="geometry">
