@@ -1267,7 +1267,7 @@ QTabWidget::tab-bar
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="AGCTHLabel">
+   <widget class="QLabel" name="AGCThLabel">
     <property name="geometry">
      <rect>
       <x>764</x>
@@ -1464,7 +1464,7 @@ QTabWidget::tab-bar
    <zorder>Redlight2OffDNRImage</zorder>
    <zorder>Redlight8OffDNRImage</zorder>
    <zorder>DExpThLabel</zorder>
-   <zorder>AGCTHLabel</zorder>
+   <zorder>AGCThLabel</zorder>
    <zorder>AGCRatioLabel</zorder>
    <zorder>SelectedModuleLabel</zorder>
  </widget>
