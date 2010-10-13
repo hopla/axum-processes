@@ -1424,7 +1424,50 @@ QTabWidget::tab-bar
      <bool>true</bool>
     </property>
    </widget>
-  </widget>
+   <zorder>NewDNRImage</zorder>
+   <zorder>Redlight2OnDNRImage</zorder>
+   <zorder>Redlight4OnDNRImage</zorder>
+   <zorder>Redlight7OnDNRImage</zorder>
+   <zorder>Redlight6OnDNRImage</zorder>
+   <zorder>Redlight3OnDNRImage</zorder>
+   <zorder>Redlight1OnDNRImage</zorder>
+   <zorder>Redlight5OnDNRImage</zorder>
+   <zorder>Redlight8OnDNRImage</zorder>
+   <zorder>NewDNRPPMMeter_3</zorder>
+   <zorder>NewDNRDigitalClock</zorder>
+   <zorder>NewDNRPPMMeter</zorder>
+   <zorder>label_4</zorder>
+   <zorder>label_6</zorder>
+   <zorder>label_3</zorder>
+   <zorder>NewDNRPPMMeter_4</zorder>
+   <zorder>NewDNRPPMMeter_2</zorder>
+   <zorder>NewDNRAnalogClock</zorder>
+   <zorder>label_5</zorder>
+   <zorder>NewDNRPhaseMeter</zorder>
+   <zorder>NewDNRPhaseMeter_2</zorder>
+   <zorder>NewDNRPPMMeter_8</zorder>
+   <zorder>NewDNRPPMMeter_7</zorder>
+   <zorder>NewDNRPPMMeter_6</zorder>
+   <zorder>NewDNRPPMMeter_5</zorder>
+   <zorder>NewDNRPPMMeter_9</zorder>
+   <zorder>NewDNRPPMMeter_10</zorder>
+   <zorder>label_7</zorder>
+   <zorder>label_8</zorder>
+   <zorder>label_9</zorder>
+   <zorder>NewDNREQPanel</zorder>
+   <zorder>Redlight3OffDNRImage</zorder>
+   <zorder>Redlight1OffDNRImage</zorder>
+   <zorder>Redlight6OffDNRImage</zorder>
+   <zorder>Redlight7OffDNRImage</zorder>
+   <zorder>Redlight5OffDNRImage</zorder>
+   <zorder>Redlight4OffDNRImage</zorder>
+   <zorder>Redlight2OffDNRImage</zorder>
+   <zorder>Redlight8OffDNRImage</zorder>
+   <zorder>DExpThLabel</zorder>
+   <zorder>AGCTHLabel</zorder>
+   <zorder>AGCRatioLabel</zorder>
+   <zorder>SelectedModuleLabel</zorder>
+ </widget>
   <widget class="DNRImage" name="NewDNRImageBottomOnAir">
    <property name="geometry">
     <rect>
