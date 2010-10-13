@@ -563,6 +563,7 @@ void Browser::MeterRelease()
         case 4: NewDNREQPanel->setGainBand5(EQLevel[4]); break;
         case 5: NewDNREQPanel->setGainBand6(EQLevel[5]); break;
       }
+      CurrentEQLevel[cnt] = EQLevel[cnt];
     }
 
     if (EQFrequency[cnt] != CurrentEQFrequency[cnt])
@@ -576,6 +577,7 @@ void Browser::MeterRelease()
         case 4: NewDNREQPanel->setFrequencyBand5(EQFrequency[4]); break;
         case 5: NewDNREQPanel->setFrequencyBand6(EQFrequency[5]); break;
       }
+      CurrentEQFrequency[cnt] = EQFrequency[cnt];
     }
 
     if (EQBandwidth[cnt] != CurrentEQBandwidth[cnt])
@@ -589,6 +591,7 @@ void Browser::MeterRelease()
         case 4: NewDNREQPanel->setBandwidthBand5(EQBandwidth[4]); break;
         case 5: NewDNREQPanel->setBandwidthBand6(EQBandwidth[5]); break;
       }
+      CurrentEQBandwidth[cnt] = EQBandwidth[cnt];
     }
 
     if (EQType[cnt] != CurrentEQType[cnt])
@@ -602,6 +605,7 @@ void Browser::MeterRelease()
         case 4: NewDNREQPanel->setTypeBand5(EQType[4]); break;
         case 5: NewDNREQPanel->setTypeBand6(EQType[5]); break;
       }
+      CurrentEQType[cnt] = EQType[cnt];
     }
   }
 
