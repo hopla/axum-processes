@@ -890,7 +890,7 @@ QTabWidget::tab-bar
    <widget class="DNREQPanel" name="NewDNREQPanel">
     <property name="geometry">
      <rect>
-      <x>824</x>
+      <x>828</x>
       <y>55</y>
       <width>183</width>
       <height>125</height>
@@ -1230,7 +1230,7 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="DExpThLabel">
     <property name="geometry">
      <rect>
-      <x>760</x>
+      <x>764</x>
       <y>55</y>
       <width>64</width>
       <height>42</height>
@@ -1270,7 +1270,7 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="AGCTHLabel">
     <property name="geometry">
      <rect>
-      <x>760</x>
+      <x>764</x>
       <y>96</y>
       <width>64</width>
       <height>43</height>
@@ -1304,7 +1304,7 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="AGCRatioLabel">
     <property name="geometry">
      <rect>
-      <x>760</x>
+      <x>764</x>
       <y>138</y>
       <width>64</width>
       <height>42</height>
@@ -1344,9 +1344,9 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="SelectedModuleLabel">
     <property name="geometry">
      <rect>
-      <x>760</x>
+      <x>756</x>
       <y>37</y>
-      <width>247</width>
+      <width>255</width>
       <height>18</height>
      </rect>
     </property>
@@ -1380,47 +1380,50 @@ QTabWidget::tab-bar
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <zorder>NewDNRImage</zorder>
-   <zorder>Redlight2OnDNRImage</zorder>
-   <zorder>Redlight4OnDNRImage</zorder>
-   <zorder>Redlight7OnDNRImage</zorder>
-   <zorder>Redlight6OnDNRImage</zorder>
-   <zorder>Redlight3OnDNRImage</zorder>
-   <zorder>Redlight1OnDNRImage</zorder>
-   <zorder>Redlight5OnDNRImage</zorder>
-   <zorder>Redlight8OnDNRImage</zorder>
-   <zorder>NewDNRPPMMeter_3</zorder>
-   <zorder>NewDNRDigitalClock</zorder>
-   <zorder>NewDNRPPMMeter</zorder>
-   <zorder>label_4</zorder>
-   <zorder>label_6</zorder>
-   <zorder>label_3</zorder>
-   <zorder>NewDNRPPMMeter_4</zorder>
-   <zorder>NewDNRPPMMeter_2</zorder>
-   <zorder>NewDNRAnalogClock</zorder>
-   <zorder>label_5</zorder>
-   <zorder>NewDNRPhaseMeter</zorder>
-   <zorder>NewDNRPhaseMeter_2</zorder>
-   <zorder>NewDNRPPMMeter_8</zorder>
-   <zorder>NewDNRPPMMeter_7</zorder>
-   <zorder>NewDNRPPMMeter_6</zorder>
-   <zorder>NewDNRPPMMeter_5</zorder>
-   <zorder>label_7</zorder>
-   <zorder>label_8</zorder>
-   <zorder>label_9</zorder>
-   <zorder>NewDNREQPanel</zorder>
-   <zorder>Redlight3OffDNRImage</zorder>
-   <zorder>Redlight1OffDNRImage</zorder>
-   <zorder>Redlight6OffDNRImage</zorder>
-   <zorder>Redlight7OffDNRImage</zorder>
-   <zorder>Redlight5OffDNRImage</zorder>
-   <zorder>Redlight4OffDNRImage</zorder>
-   <zorder>Redlight2OffDNRImage</zorder>
-   <zorder>Redlight8OffDNRImage</zorder>
-   <zorder>DExpThLabel</zorder>
-   <zorder>AGCTHLabel</zorder>
-   <zorder>AGCRatioLabel</zorder>
-   <zorder>SelectedModuleLabel</zorder>
+   <widget class="DNRPPMMeter" name="NewDNRPPMMeter_9">
+    <property name="geometry">
+     <rect>
+      <x>756</x>
+      <y>55</y>
+      <width>4</width>
+      <height>125</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>The PPM Meter</string>
+    </property>
+    <property name="whatsThis">
+     <string>The PPM Meter widget displays </string>
+    </property>
+    <property name="dBPosition" stdset="0">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="GradientForground">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="DNRPPMMeter" name="NewDNRPPMMeter_10">
+    <property name="geometry">
+     <rect>
+      <x>760</x>
+      <y>55</y>
+      <width>4</width>
+      <height>125</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>The PPM Meter</string>
+    </property>
+    <property name="whatsThis">
+     <string>The PPM Meter widget displays </string>
+    </property>
+    <property name="dBPosition" stdset="0">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="GradientForground">
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="DNRImage" name="NewDNRImageBottomOnAir">
    <property name="geometry">
