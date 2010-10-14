@@ -12595,6 +12595,11 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
     {
       switch (ControlMode)
       {
+        case MODULE_CONTROL_MODE_NONE:
+        {
+          SetSelectedModule(ControlNr, ModuleNr);
+        }
+        break;
         case MODULE_CONTROL_MODE_SOURCE:
         {
           if (DoAxum_SetNewSource(ModuleNr, AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr], 0))
