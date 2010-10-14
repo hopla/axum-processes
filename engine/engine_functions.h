@@ -1065,8 +1065,12 @@
 #define GLOBAL_FUNCTION_UPDATE_PASS_2                   530
 #define GLOBAL_FUNCTION_UPDATE_PASS_3                   531
 #define GLOBAL_FUNCTION_UPDATE_PASS_4                   532
+#define GLOBAL_FUNCTION_CONTROL_1_MODE_ACTIVE           533
+#define GLOBAL_FUNCTION_CONTROL_2_MODE_ACTIVE           534
+#define GLOBAL_FUNCTION_CONTROL_3_MODE_ACTIVE           535
+#define GLOBAL_FUNCTION_CONTROL_4_MODE_ACTIVE           536
 
-#define NUMBER_OF_GLOBAL_FUNCTIONS                    533
+#define NUMBER_OF_GLOBAL_FUNCTIONS                    537
 
 #define MODULE_CONTROL_MODE_NONE                    -1
 #define MODULE_CONTROL_MODE_SOURCE                    0

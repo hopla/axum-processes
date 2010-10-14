@@ -3811,8 +3811,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   }
                 }
 
-                //update Master & control mode 1
                 unsigned int FunctionNrToSent = 0x04000000;
+                CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_CONTROL_1_MODE_ACTIVE);
+
+                //update Master & control mode 1
+                FunctionNrToSent = 0x04000000;
                 for (int cntBuss=0; cntBuss<16; cntBuss++)
                 {
                   CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2+cntBuss));
@@ -3924,8 +3927,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   }
                 }
 
-                //update Master & control mode 2
                 unsigned int FunctionNrToSent = 0x04000000;
+                CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_CONTROL_2_MODE_ACTIVE);
+
+                //update Master & control mode 2
+                FunctionNrToSent = 0x04000000;
                 for (int cntBuss=0; cntBuss<16; cntBuss++)
                 {
                   CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2+cntBuss));
@@ -4035,8 +4041,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3_LABEL);
                   }
                 }
-                //update Master & control mode 3
+
                 unsigned int FunctionNrToSent = 0x04000000;
+                CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_CONTROL_3_MODE_ACTIVE);
+
+                //update Master & control mode 3
+                FunctionNrToSent = 0x04000000;
                 for (int cntBuss=0; cntBuss<16; cntBuss++)
                 {
                   CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_3_MODES_BUSS_1_2+cntBuss));
@@ -4145,8 +4155,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4_LABEL);
                   }
                 }
-                //update Master & control mode 4
+
                 unsigned int FunctionNrToSent = 0x04000000;
+                CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_CONTROL_4_MODE_ACTIVE);
+
+                //update Master & control mode 4
+                FunctionNrToSent = 0x04000000;
                 for (int cntBuss=0; cntBuss<16; cntBuss++)
                 {
                   CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_1_2+cntBuss));
@@ -6804,6 +6818,8 @@ void Timer100HzDone(int Value)
             DoAxum_UpdateModuleControlModeLabel(cntModule, MODULE_CONTROL_MODE_NONE);
           }
         }
+        unsigned int FunctionNrToSent = 0x04000000;
+        CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_1_MODE_ACTIVE + cntConsole));
       }
     }
   }
@@ -10758,6 +10774,31 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 strncpy(LCDText, AxumData.Password[ConsoleNr], 32);
                 data.Octets = (unsigned char *)LCDText;
                 mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
+              }
+              break;
+            }
+          }
+          break;
+          case GLOBAL_FUNCTION_CONTROL_1_MODE_ACTIVE:
+          case GLOBAL_FUNCTION_CONTROL_2_MODE_ACTIVE:
+          case GLOBAL_FUNCTION_CONTROL_3_MODE_ACTIVE:
+          case GLOBAL_FUNCTION_CONTROL_4_MODE_ACTIVE:
+          {
+            unsigned char ControlNr = FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODE_ACTIVE;
+
+            switch (DataType)
+            {
+              case MBN_DATATYPE_STATE:
+              {
+                if (AxumData.ControlMode[ControlNr] != MODULE_CONTROL_MODE_NONE)
+                {
+                  data.State = 1;
+                }
+                else
+                {
+                  data.State = 0;
+                }
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
             }
