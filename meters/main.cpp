@@ -47,7 +47,7 @@
 #define MANUFACTURER_ID          0x0001	//D&R
 #define PRODUCT_ID               0x001A	//Axum linux meters
 
-#define NR_OF_STATIC_OBJECTS    (1088-1023)
+#define NR_OF_STATIC_OBJECTS    (1093-1023)
 #define NR_OF_OBJECTS            NR_OF_STATIC_OBJECTS
 
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
@@ -250,6 +250,18 @@ void init(int argc, char *argv[])
   objects[cntObject++] = MBN_OBJ( (char *)"Module Meter Right dB",
                                   MBN_DATATYPE_NODATA,
                                   MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+//DSP Gain
+  objects[cntObject++] = MBN_OBJ( (char *)"DSP gain",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "0 dB");
+//LC On/Off
+  objects[cntObject++] = MBN_OBJ( (char *)"LC on/off",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
+//LC Freq
+  objects[cntObject++] = MBN_OBJ( (char *)"LC frequency",
+                                   MBN_DATATYPE_NODATA,
+                                   MBN_DATATYPE_UINT, 2, 10, 20000, 80, 80);
 //DExp Th
   objects[cntObject++] = MBN_OBJ( (char *)"D-Exp threshold",
                                   MBN_DATATYPE_NODATA,
@@ -265,27 +277,33 @@ void init(int argc, char *argv[])
 
 
   objects[cntObject++] = MBN_OBJ( (char *)"EQ on/off",
-                                  MBN_DATATYPE_STATE, 1, 1, 0, 1, 0,
+                                  MBN_DATATYPE_NODATA,
                                   MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
   for (cntBand=0; cntBand<6; cntBand++)
   {
     sprintf(obj_desc, "EQ%d level", cntBand+1);
     objects[cntObject++] = MBN_OBJ(obj_desc,
-                                   MBN_DATATYPE_FLOAT, 1, 2, -18.0, 18.0, 0.0,
+                                   MBN_DATATYPE_NODATA,
                                    MBN_DATATYPE_FLOAT, 2, -18.0, 18.0, 0.0, 0.0);
     sprintf(obj_desc, "EQ%d frequency", cntBand+1);
     objects[cntObject++] = MBN_OBJ(obj_desc,
-                                   MBN_DATATYPE_UINT, 1, 2, 10, 20000, 1000,
+                                   MBN_DATATYPE_NODATA,
                                    MBN_DATATYPE_UINT, 2, 10, 20000, 1000, 1000);
     sprintf(obj_desc, "EQ%d Q", cntBand+1);
     objects[cntObject++] = MBN_OBJ(obj_desc,
-                                   MBN_DATATYPE_FLOAT, 1, 2, 0.1, 10.0, 1.0,
+                                   MBN_DATATYPE_NODATA,
                                    MBN_DATATYPE_FLOAT, 2, 0.1, 10.0, 1.0, 1.0);
     sprintf(obj_desc, "EQ%d type", cntBand+1);
     objects[cntObject++] = MBN_OBJ(obj_desc,
-                                   MBN_DATATYPE_STATE, 1, 2, 0, 7, 3,
+                                   MBN_DATATYPE_NODATA,
                                    MBN_DATATYPE_STATE, 2, 0, 7, 3);
   }
+  objects[cntObject++] = MBN_OBJ( (char *)"Panorama",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_UINT, 2, 0, 1023, 512, 512);
+  objects[cntObject++] = MBN_OBJ( (char *)"Show module parameters",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 1, 1);
   this_node.NumberOfObjects = cntObject;
 
   log_open();
@@ -523,58 +541,41 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     break;
     case 1059:
     {
+      strncpy(browser->DSPGain, (char *)in.Octets, 8);
+      browser->DSPGain[8] = 0;
+    }
+    break;
+    case 1060:
+    {
+      browser->LCOn = in.State;
+    }
+    break;    
+    case 1061:
+    { 
+      browser->LCFreq = in.UInt;
+    }
+    break;
+    case 1062:
+    {
       strncpy(browser->DExpTh, (char *)in.Octets, 8);
       browser->DExpTh[8] = 0;
     }
     break;
-    case 1060:
+    case 1063:
     {
       strncpy(browser->AGCTh, (char *)in.Octets, 8);
       browser->AGCTh[8] = 0;
     }
     break;
-    case 1061:
+    case 1064:
     {
       strncpy(browser->AGCRatio, (char *)in.Octets, 8);
       browser->AGCRatio[8] = 0;
     }
     break;
-    case 1062:
+    case 1065:
     {
       browser->EQOn = in.State;
-    }
-    break;
-    case 1063:
-    case 1067:
-    case 1071:
-    case 1075:
-    case 1079:
-    case 1083:
-    {
-      int BandNr = (object-1063)/4;
-      browser->EQLevel[BandNr] = in.Float;
-    }
-    break;
-    case 1064:
-    case 1068:
-    case 1072:
-    case 1076:
-    case 1080:
-    case 1084:
-    {
-      int BandNr = (object-1064)/4;
-      browser->EQFrequency[BandNr] = in.UInt;
-    }
-    break;
-    case 1065:
-    case 1069:
-    case 1073:
-    case 1077:
-    case 1081:
-    case 1085:
-    {
-      int BandNr = (object-1065)/4;
-      browser->EQBandwidth[BandNr] = in.Float;
     }
     break;
     case 1066:
@@ -585,7 +586,50 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     case 1086:
     {
       int BandNr = (object-1066)/4;
+      browser->EQLevel[BandNr] = in.Float;
+    }
+    break;
+    case 1067:
+    case 1071:
+    case 1075:
+    case 1079:
+    case 1083:
+    case 1087:
+    {
+      int BandNr = (object-1067)/4;
+      browser->EQFrequency[BandNr] = in.UInt;
+    }
+    break;
+    case 1068:
+    case 1072:
+    case 1076:
+    case 1080:
+    case 1084:
+    case 1088:
+    {
+      int BandNr = (object-1068)/4;
+      browser->EQBandwidth[BandNr] = in.Float;
+    }
+    break;
+    case 1069:
+    case 1073:
+    case 1077:
+    case 1081:
+    case 1085:
+    case 1089:
+    {
+      int BandNr = (object-1069)/4;
       browser->EQType[BandNr] = in.State;
+    }
+    break;
+    case 1090:
+    { //Panorama
+      browser->Panorama = in.UInt;
+    }
+    break;
+    case 1091:
+    { //Show module parameters
+      browser->ShowModuleParameters = in.State;
     }
     break;
   }

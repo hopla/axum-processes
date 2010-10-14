@@ -84,6 +84,13 @@ public:
    unsigned char ModuleConsole;
    unsigned char CurrentModuleConsole;
 
+   char DSPGain[9];
+   char CurrentDSPGain[9];
+   unsigned int LCFreq;
+   unsigned int CurrentLCFreq;
+   bool LCOn;
+   bool CurrentLCOn;
+
    char DExpTh[9];
    char CurrentDExpTh[9];
    char AGCTh[9];
@@ -101,6 +108,12 @@ public:
    float CurrentEQBandwidth[6];
    int EQType[6];
    int CurrentEQType[6];
+
+   unsigned int Panorama;
+   unsigned int CurrentPanorama;
+
+   bool ShowModuleParameters;
+   bool CurrentShowModuleParameters;
 
    Browser(QWidget *parent = 0);
    virtual ~Browser();

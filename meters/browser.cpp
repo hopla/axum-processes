@@ -133,6 +133,21 @@ Browser::Browser(QWidget *parent)
   CountDownSeconds = 0;
   CurrentCountDownSeconds = 0;
 
+  sprintf(DSPGain, "0 dB");
+  sprintf(CurrentDSPGain, "0 dB");
+
+  LCFreq = 80;
+  CurrentLCFreq = 80;
+
+  LCOn = false;
+  CurrentLCOn = false;
+
+  Panorama = 512;
+  CurrentPanorama = 512;
+
+  ShowModuleParameters = true;
+  CurrentShowModuleParameters = true;
+
   EQOn = false;
   CurrentEQOn = false;
 
@@ -528,6 +543,25 @@ void Browser::MeterRelease()
     SelectedModuleLabel->setText(QString(CurrentModuleLabel).trimmed()+" - "+QString(CurrentSourceLabel)+" - "+QString(ConsoleString));
     CurrentModuleConsole = ModuleConsole;
   }
+
+  if (strcmp(DSPGain, CurrentDSPGain) != 0)
+  {
+    //DExpThLabel->setText(QString("D-Exp Th<BR>")+QString(DExpTh));
+    strcpy(CurrentDSPGain, DSPGain);
+  }
+
+  if (LCFreq != CurrentLCFreq)
+  {
+    NewDNREQPanel->setFrequencyLowCut(LCFreq);
+    CurrentLCFreq = LCFreq;
+  }
+
+  if (LCOn != CurrentLCOn)
+  {
+    NewDNREQPanel->setLCOn(LCOn);
+    CurrentLCOn = LCOn;
+  }
+
   if (strcmp(DExpTh, CurrentDExpTh) != 0)
   {
     DExpThLabel->setText(QString("D-Exp Th<BR>")+QString(DExpTh));
@@ -606,6 +640,17 @@ void Browser::MeterRelease()
         case 5: NewDNREQPanel->setTypeBand6(EQType[5]); break;
       }
       CurrentEQType[cnt] = EQType[cnt];
+    }
+
+    if (Panorama != CurrentPanorama)
+    {
+      CurrentPanorama = Panorama;
+    }
+
+    if (ShowModuleParameters != CurrentShowModuleParameters)
+    {
+      widget_2->setVisible(ShowModuleParameters);
+      CurrentShowModuleParameters = ShowModuleParameters;
     }
   }
 
