@@ -9420,8 +9420,15 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_CONSOLE:
         {
-          data.UInt = AxumData.ModuleData[ModuleNr].Console;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
+          switch (DataType)
+          {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = AxumData.ModuleData[ModuleNr].Console;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
+            }
+            break;
+          }
         }
         break;
       }
