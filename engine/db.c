@@ -988,6 +988,11 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
         }
       }
 
+      if (CurrentModuleData.Console != ModuleData->Console)
+      {
+        CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONSOLE);
+      }
+
       //Take source A
       if (take_source_a)
       {

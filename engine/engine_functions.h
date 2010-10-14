@@ -350,8 +350,9 @@
 #define MODULE_FUNCTION_AUDIO_LEVEL_LEFT      266
 #define MODULE_FUNCTION_AUDIO_LEVEL_RIGHT     267
 #define MODULE_FUNCTION_AUDIO_PHASE           268
+#define MODULE_FUNCTION_CONSOLE               269
 
-#define NUMBER_OF_MODULE_FUNCTIONS            269
+#define NUMBER_OF_MODULE_FUNCTIONS            270
 #define  NUMBER_OF_MODULES                    128
 
 #define BUSS_FUNCTION_MASTER_LEVEL              0
