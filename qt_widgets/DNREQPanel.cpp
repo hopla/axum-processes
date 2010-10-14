@@ -101,6 +101,14 @@ DNREQPanel::DNREQPanel(QWidget *parent)
   FSlopeBand4 = 1;
   FSlopeBand5 = 1;
   FSlopeBand6 = 1;
+  
+  FFrequencyLowCut = 80;
+  FLCOn = false;
+
+  GainFactorLowCut = CalculateEQ(Coefficients, 0, FFrequencyLowCut, 1.0, 1.0, 1, true);
+  CalculateZeroPosition(ZerosXLowCut, ZerosYLowCut, Coefficients);
+  CalculatePolePosition(PolesXLowCut, PolesYLowCut, Coefficients);
+  CalculateLCCurve();
 
   GainFactorBand1 = CalculateEQ(Coefficients, FGainBand1, FFrequencyBand1, FBandwidthBand1, FSlopeBand1, FTypeBand1, FOnBand1);
   GainFactorBand2 = CalculateEQ(Coefficients, FGainBand2, FFrequencyBand2, FBandwidthBand2, FSlopeBand2, FTypeBand2, FOnBand2);
@@ -120,7 +128,7 @@ DNREQPanel::DNREQPanel(QWidget *parent)
   CalculatePolePosition(PolesXBand5, PolesYBand5, Coefficients);
   CalculateZeroPosition(ZerosXBand6, ZerosYBand6, Coefficients);
   CalculatePolePosition(PolesXBand6, PolesYBand6, Coefficients);
-  CalculateCurve();
+  CalculateEQCurve();
 }
 
 void DNREQPanel::paintEvent(QPaintEvent *)
@@ -232,17 +240,20 @@ void DNREQPanel::paintEvent(QPaintEvent *)
     painter.drawText(FAxisLeftMargin+BorderWidth-TextWidth-2, (height()-BorderWidth)+TextMiddle, "-18dB");
   }
 
-  //vertical 10Hz
-  painter.setPen(QPen(FAxisColor, 1));
-  painter.drawLine(FAxisLeftMargin+BorderWidth, BorderWidth, FAxisLeftMargin+BorderWidth, height()-BorderWidth);
-  if (FShowFrequencyText)
+  //Draw LC curve
+  if (FLCOn)
   {
-    painter.setPen(QPen(FTextColor, 1));
-    TextWidth = fontMetrics().width("10Hz");
-    painter.drawText(FAxisLeftMargin+BorderWidth-(TextWidth/2), height()-BorderWidth+TextHeight, "10Hz");
+    painter.setPen(QPen(FActiveCurveColor, FActiveCurveWidth));
+    painter.setBrush(Qt::NoBrush);
   }
+  else
+  {
+    painter.setPen(QPen(FInactiveCurveColor, FInactiveCurveWidth));
+    painter.setBrush(Qt::NoBrush);
+  }
+  painter.drawPolyline(LCCurve, FNrOfPoints);
 
-  //Draw active curve
+  //Draw EQ curve
   if (FEQOn)
   {
     painter.setPen(QPen(FActiveCurveColor, FActiveCurveWidth));
@@ -253,8 +264,17 @@ void DNREQPanel::paintEvent(QPaintEvent *)
     painter.setPen(QPen(FInactiveCurveColor, FInactiveCurveWidth));
     painter.setBrush(FInactiveCurveFillColor);
   }
-  painter.drawPolygon(ActiveCurve, FNrOfPoints);
+  painter.drawPolygon(EQCurve, FNrOfPoints);
 
+  //vertical 10Hz
+  painter.setPen(QPen(FAxisColor, 1));
+  painter.drawLine(FAxisLeftMargin+BorderWidth, BorderWidth, FAxisLeftMargin+BorderWidth, height()-BorderWidth);
+  if (FShowFrequencyText)
+  {
+    painter.setPen(QPen(FTextColor, 1));
+    TextWidth = fontMetrics().width("10Hz");
+    painter.drawText(FAxisLeftMargin+BorderWidth-(TextWidth/2), height()-BorderWidth+TextHeight, "10Hz");
+  }
 
   if (FDrawAnchors)
   {
@@ -428,6 +448,41 @@ void DNREQPanel::setAnchorSize(int NewAnchorSize)
   }
 }
 
+int DNREQPanel::getFrequencyLowCut()
+{
+  return FFrequencyLowCut;
+}
+
+void DNREQPanel::setFrequencyLowCut(int NewFrequencyLowCut)
+{
+  float Coefficients[6];
+
+  if (FFrequencyLowCut != NewFrequencyLowCut)
+  {
+    FFrequencyLowCut = NewFrequencyLowCut;
+    GainFactorLowCut = CalculateEQ(Coefficients, 0, FFrequencyLowCut, 1, 1, 1, true);
+    CalculateZeroPosition(ZerosXLowCut, ZerosYLowCut, Coefficients);
+    CalculatePolePosition(PolesXLowCut, PolesYLowCut, Coefficients);
+    CalculateLCCurve();
+    update();
+  }
+}
+
+bool DNREQPanel::getLCOn()
+{
+  return FLCOn;
+}
+
+void DNREQPanel::setLCOn(bool NewLCOn)
+{
+  if (FLCOn != NewLCOn)
+  {
+    FLCOn = NewLCOn;
+    update();
+  }
+}
+
+
 double DNREQPanel::getGainBand1()
 {
   return FGainBand1;
@@ -443,7 +498,7 @@ void DNREQPanel::setGainBand1(double NewGainBand1)
     GainFactorBand1 = CalculateEQ(Coefficients, FGainBand1, FFrequencyBand1, FBandwidthBand1,FSlopeBand1, FTypeBand1, FOnBand1);
     CalculateZeroPosition(ZerosXBand1, ZerosYBand1, Coefficients);
     CalculatePolePosition(PolesXBand1, PolesYBand1, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -463,7 +518,7 @@ void DNREQPanel::setGainBand2(double NewGainBand2)
     GainFactorBand2 = CalculateEQ(Coefficients, FGainBand2, FFrequencyBand2, FBandwidthBand2,FSlopeBand2, FTypeBand2, FOnBand2);
     CalculateZeroPosition(ZerosXBand2, ZerosYBand2, Coefficients);
     CalculatePolePosition(PolesXBand2, PolesYBand2, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -483,7 +538,7 @@ void DNREQPanel::setGainBand3(double NewGainBand3)
     GainFactorBand3 = CalculateEQ(Coefficients, FGainBand3, FFrequencyBand3, FBandwidthBand3,FSlopeBand3, FTypeBand3, FOnBand3);
     CalculateZeroPosition(ZerosXBand3, ZerosYBand3, Coefficients);
     CalculatePolePosition(PolesXBand3, PolesYBand3, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -503,7 +558,7 @@ void DNREQPanel::setGainBand4(double NewGainBand4)
     GainFactorBand4 = CalculateEQ(Coefficients, FGainBand4, FFrequencyBand4, FBandwidthBand4,FSlopeBand4, FTypeBand4, FOnBand4);
     CalculateZeroPosition(ZerosXBand4, ZerosYBand4, Coefficients);
     CalculatePolePosition(PolesXBand4, PolesYBand4, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -523,7 +578,7 @@ void DNREQPanel::setGainBand5(double NewGainBand5)
     GainFactorBand5 = CalculateEQ(Coefficients, FGainBand5, FFrequencyBand5, FBandwidthBand5,FSlopeBand5, FTypeBand5, FOnBand5);
     CalculateZeroPosition(ZerosXBand5, ZerosYBand5, Coefficients);
     CalculatePolePosition(PolesXBand5, PolesYBand5, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -543,7 +598,7 @@ void DNREQPanel::setGainBand6(double NewGainBand6)
     GainFactorBand6 = CalculateEQ(Coefficients, FGainBand6, FFrequencyBand6, FBandwidthBand6,FSlopeBand6, FTypeBand6, FOnBand6);
     CalculateZeroPosition(ZerosXBand6, ZerosYBand6, Coefficients);
     CalculatePolePosition(PolesXBand6, PolesYBand6, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -563,7 +618,7 @@ void DNREQPanel::setFrequencyBand1(int NewFrequencyBand1)
     GainFactorBand1 = CalculateEQ(Coefficients, FGainBand1, FFrequencyBand1, FBandwidthBand1,FSlopeBand1, FTypeBand1, FOnBand1);
     CalculateZeroPosition(ZerosXBand1, ZerosYBand1, Coefficients);
     CalculatePolePosition(PolesXBand1, PolesYBand1, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -583,7 +638,7 @@ void DNREQPanel::setFrequencyBand2(int NewFrequencyBand2)
     GainFactorBand2 = CalculateEQ(Coefficients, FGainBand2, FFrequencyBand2, FBandwidthBand2,FSlopeBand2, FTypeBand2, FOnBand2);
     CalculateZeroPosition(ZerosXBand2, ZerosYBand2, Coefficients);
     CalculatePolePosition(PolesXBand2, PolesYBand2, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -603,7 +658,7 @@ void DNREQPanel::setFrequencyBand3(int NewFrequencyBand3)
     GainFactorBand3 = CalculateEQ(Coefficients, FGainBand3, FFrequencyBand3, FBandwidthBand3,FSlopeBand3, FTypeBand3, FOnBand3);
     CalculateZeroPosition(ZerosXBand3, ZerosYBand3, Coefficients);
     CalculatePolePosition(PolesXBand3, PolesYBand3, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -623,7 +678,7 @@ void DNREQPanel::setFrequencyBand4(int NewFrequencyBand4)
     GainFactorBand4 = CalculateEQ(Coefficients, FGainBand4, FFrequencyBand4, FBandwidthBand4,FSlopeBand4, FTypeBand4, FOnBand4);
     CalculateZeroPosition(ZerosXBand4, ZerosYBand4, Coefficients);
     CalculatePolePosition(PolesXBand4, PolesYBand4, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -643,7 +698,7 @@ void DNREQPanel::setFrequencyBand5(int NewFrequencyBand5)
     GainFactorBand5 = CalculateEQ(Coefficients, FGainBand5, FFrequencyBand5, FBandwidthBand5,FSlopeBand5, FTypeBand5, FOnBand5);
     CalculateZeroPosition(ZerosXBand5, ZerosYBand5, Coefficients);
     CalculatePolePosition(PolesXBand5, PolesYBand5, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -663,7 +718,7 @@ void DNREQPanel::setFrequencyBand6(int NewFrequencyBand6)
     GainFactorBand6 = CalculateEQ(Coefficients, FGainBand6, FFrequencyBand6, FBandwidthBand6,FSlopeBand6, FTypeBand6, FOnBand6);
     CalculateZeroPosition(ZerosXBand6, ZerosYBand6, Coefficients);
     CalculatePolePosition(PolesXBand6, PolesYBand6, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -684,7 +739,7 @@ void DNREQPanel::setBandwidthBand1(double NewBandwidthBand1)
     GainFactorBand1 = CalculateEQ(Coefficients, FGainBand1, FFrequencyBand1, FBandwidthBand1,FSlopeBand1, FTypeBand1, FOnBand1);
     CalculateZeroPosition(ZerosXBand1, ZerosYBand1, Coefficients);
     CalculatePolePosition(PolesXBand1, PolesYBand1, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -704,7 +759,7 @@ void DNREQPanel::setBandwidthBand2(double NewBandwidthBand2)
     GainFactorBand2 = CalculateEQ(Coefficients, FGainBand2, FFrequencyBand2, FBandwidthBand2,FSlopeBand2, FTypeBand2, FOnBand2);
     CalculateZeroPosition(ZerosXBand2, ZerosYBand2, Coefficients);
     CalculatePolePosition(PolesXBand2, PolesYBand2, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -724,7 +779,7 @@ void DNREQPanel::setBandwidthBand3(double NewBandwidthBand3)
     GainFactorBand3 = CalculateEQ(Coefficients, FGainBand3, FFrequencyBand3, FBandwidthBand3,FSlopeBand3, FTypeBand3, FOnBand3);
     CalculateZeroPosition(ZerosXBand3, ZerosYBand3, Coefficients);
     CalculatePolePosition(PolesXBand3, PolesYBand3, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -744,7 +799,7 @@ void DNREQPanel::setBandwidthBand4(double NewBandwidthBand4)
     GainFactorBand4 = CalculateEQ(Coefficients, FGainBand4, FFrequencyBand4, FBandwidthBand4,FSlopeBand4, FTypeBand4, FOnBand4);
     CalculateZeroPosition(ZerosXBand4, ZerosYBand4, Coefficients);
     CalculatePolePosition(PolesXBand4, PolesYBand4, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -764,7 +819,7 @@ void DNREQPanel::setBandwidthBand5(double NewBandwidthBand5)
     GainFactorBand5 = CalculateEQ(Coefficients, FGainBand5, FFrequencyBand5, FBandwidthBand5,FSlopeBand5, FTypeBand5, FOnBand5);
     CalculateZeroPosition(ZerosXBand5, ZerosYBand5, Coefficients);
     CalculatePolePosition(PolesXBand5, PolesYBand5, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -784,7 +839,7 @@ void DNREQPanel::setBandwidthBand6(double NewBandwidthBand6)
     GainFactorBand6 = CalculateEQ(Coefficients, FGainBand6, FFrequencyBand6, FBandwidthBand6,FSlopeBand6, FTypeBand6, FOnBand6);
     CalculateZeroPosition(ZerosXBand6, ZerosYBand6, Coefficients);
     CalculatePolePosition(PolesXBand6, PolesYBand6, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -808,7 +863,7 @@ void DNREQPanel::setNrOfPoints(int NewNrOfPoints)
       NewNrOfPoints = 0;
     }
     FNrOfPoints = NewNrOfPoints;
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -823,7 +878,7 @@ void DNREQPanel::setAxisBorderWidth(int NewAxisBorderWidth)
   if (FAxisBorderWidth != NewAxisBorderWidth)
   {
     FAxisBorderWidth = NewAxisBorderWidth;
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -838,7 +893,7 @@ void DNREQPanel::setAxisLeftMargin(int NewAxisLeftMargin)
   if (FAxisLeftMargin != NewAxisLeftMargin)
   {
     FAxisLeftMargin = NewAxisLeftMargin;
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1040,7 +1095,7 @@ void DNREQPanel::setTypeBand1(int NewTypeBand1)
     GainFactorBand1 = CalculateEQ(Coefficients, FGainBand1, FFrequencyBand1, FBandwidthBand1,FSlopeBand1, FTypeBand1, FOnBand1);
     CalculateZeroPosition(ZerosXBand1, ZerosYBand1, Coefficients);
     CalculatePolePosition(PolesXBand1, PolesYBand1, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1060,7 +1115,7 @@ void DNREQPanel::setTypeBand2(int NewTypeBand2)
     GainFactorBand2 = CalculateEQ(Coefficients, FGainBand2, FFrequencyBand2, FBandwidthBand2,FSlopeBand2, FTypeBand2, FOnBand2);
     CalculateZeroPosition(ZerosXBand2, ZerosYBand2, Coefficients);
     CalculatePolePosition(PolesXBand2, PolesYBand2, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1080,7 +1135,7 @@ void DNREQPanel::setTypeBand3(int NewTypeBand3)
     GainFactorBand3 = CalculateEQ(Coefficients, FGainBand3, FFrequencyBand3, FBandwidthBand3,FSlopeBand3, FTypeBand3, FOnBand3);
     CalculateZeroPosition(ZerosXBand3, ZerosYBand3, Coefficients);
     CalculatePolePosition(PolesXBand3, PolesYBand3, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1100,7 +1155,7 @@ void DNREQPanel::setTypeBand4(int NewTypeBand4)
     GainFactorBand4 = CalculateEQ(Coefficients, FGainBand4, FFrequencyBand4, FBandwidthBand4,FSlopeBand4, FTypeBand4, FOnBand4);
     CalculateZeroPosition(ZerosXBand4, ZerosYBand4, Coefficients);
     CalculatePolePosition(PolesXBand4, PolesYBand4, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1120,7 +1175,7 @@ void DNREQPanel::setTypeBand5(int NewTypeBand5)
     GainFactorBand5 = CalculateEQ(Coefficients, FGainBand5, FFrequencyBand5, FBandwidthBand5,FSlopeBand5, FTypeBand5, FOnBand5);
     CalculateZeroPosition(ZerosXBand5, ZerosYBand5, Coefficients);
     CalculatePolePosition(PolesXBand5, PolesYBand5, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1140,7 +1195,7 @@ void DNREQPanel::setTypeBand6(int NewTypeBand6)
     GainFactorBand6 = CalculateEQ(Coefficients, FGainBand6, FFrequencyBand6, FBandwidthBand6,FSlopeBand6, FTypeBand6, FOnBand6);
     CalculateZeroPosition(ZerosXBand6, ZerosYBand6, Coefficients);
     CalculatePolePosition(PolesXBand6, PolesYBand6, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1230,7 +1285,7 @@ void DNREQPanel::setOnBand1(bool NewOnBand1)
     GainFactorBand1 = CalculateEQ(Coefficients, FGainBand1, FFrequencyBand1, FBandwidthBand1,FSlopeBand1, FTypeBand1, FOnBand1);
     CalculateZeroPosition(ZerosXBand1, ZerosYBand1, Coefficients);
     CalculatePolePosition(PolesXBand1, PolesYBand1, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1250,7 +1305,7 @@ void DNREQPanel::setOnBand2(bool NewOnBand2)
     GainFactorBand2 = CalculateEQ(Coefficients, FGainBand2, FFrequencyBand2, FBandwidthBand2,FSlopeBand2, FTypeBand2, FOnBand2);
     CalculateZeroPosition(ZerosXBand2, ZerosYBand2, Coefficients);
     CalculatePolePosition(PolesXBand2, PolesYBand2, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1270,7 +1325,7 @@ void DNREQPanel::setOnBand3(bool NewOnBand3)
     GainFactorBand3 = CalculateEQ(Coefficients, FGainBand3, FFrequencyBand3, FBandwidthBand3,FSlopeBand3, FTypeBand3, FOnBand3);
     CalculateZeroPosition(ZerosXBand3, ZerosYBand3, Coefficients);
     CalculatePolePosition(PolesXBand3, PolesYBand3, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1290,7 +1345,7 @@ void DNREQPanel::setOnBand4(bool NewOnBand4)
     GainFactorBand4 = CalculateEQ(Coefficients, FGainBand4, FFrequencyBand4, FBandwidthBand4,FSlopeBand4, FTypeBand4, FOnBand4);
     CalculateZeroPosition(ZerosXBand4, ZerosYBand4, Coefficients);
     CalculatePolePosition(PolesXBand4, PolesYBand4, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1310,7 +1365,7 @@ void DNREQPanel::setOnBand5(bool NewOnBand5)
     GainFactorBand5 = CalculateEQ(Coefficients, FGainBand5, FFrequencyBand5, FBandwidthBand5,FSlopeBand5, FTypeBand5, FOnBand5);
     CalculateZeroPosition(ZerosXBand5, ZerosYBand5, Coefficients);
     CalculatePolePosition(PolesXBand5, PolesYBand5, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1330,7 +1385,7 @@ void DNREQPanel::setOnBand6(bool NewOnBand6)
     GainFactorBand6 = CalculateEQ(Coefficients, FGainBand6, FFrequencyBand6, FBandwidthBand6,FSlopeBand6, FTypeBand6, FOnBand6);
     CalculateZeroPosition(ZerosXBand6, ZerosYBand6, Coefficients);
     CalculatePolePosition(PolesXBand6, PolesYBand6, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1378,7 +1433,7 @@ void DNREQPanel::setSlopeBand1(double NewSlopeBand1)
     GainFactorBand1 = CalculateEQ(Coefficients, FGainBand1, FFrequencyBand1, FBandwidthBand1,FSlopeBand1, FTypeBand1, FOnBand1);
     CalculateZeroPosition(ZerosXBand1, ZerosYBand1, Coefficients);
     CalculatePolePosition(PolesXBand1, PolesYBand1, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1398,7 +1453,7 @@ void DNREQPanel::setSlopeBand2(double NewSlopeBand2)
     GainFactorBand2 = CalculateEQ(Coefficients, FGainBand2, FFrequencyBand2, FBandwidthBand2,FSlopeBand2, FTypeBand2, FOnBand2);
     CalculateZeroPosition(ZerosXBand2, ZerosYBand2, Coefficients);
     CalculatePolePosition(PolesXBand2, PolesYBand2, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1418,7 +1473,7 @@ void DNREQPanel::setSlopeBand3(double NewSlopeBand3)
     GainFactorBand3 = CalculateEQ(Coefficients, FGainBand3, FFrequencyBand3, FBandwidthBand3,FSlopeBand3, FTypeBand3, FOnBand3);
     CalculateZeroPosition(ZerosXBand3, ZerosYBand3, Coefficients);
     CalculatePolePosition(PolesXBand3, PolesYBand3, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1438,7 +1493,7 @@ void DNREQPanel::setSlopeBand4(double NewSlopeBand4)
     GainFactorBand4 = CalculateEQ(Coefficients, FGainBand4, FFrequencyBand4, FBandwidthBand4,FSlopeBand4, FTypeBand4, FOnBand4);
     CalculateZeroPosition(ZerosXBand4, ZerosYBand4, Coefficients);
     CalculatePolePosition(PolesXBand4, PolesYBand4, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1458,7 +1513,7 @@ void DNREQPanel::setSlopeBand5(double NewSlopeBand5)
     GainFactorBand5 = CalculateEQ(Coefficients, FGainBand5, FFrequencyBand5, FBandwidthBand5,FSlopeBand5, FTypeBand5, FOnBand5);
     CalculateZeroPosition(ZerosXBand5, ZerosYBand5, Coefficients);
     CalculatePolePosition(PolesXBand5, PolesYBand5, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
@@ -1478,13 +1533,13 @@ void DNREQPanel::setSlopeBand6(double NewSlopeBand6)
     GainFactorBand6 = CalculateEQ(Coefficients, FGainBand6, FFrequencyBand6, FBandwidthBand6,FSlopeBand6, FTypeBand6, FOnBand6);
     CalculateZeroPosition(ZerosXBand6, ZerosYBand6, Coefficients);
     CalculatePolePosition(PolesXBand6, PolesYBand6, Coefficients);
-    CalculateCurve();
+    CalculateEQCurve();
     update();
   }
 }
 
 //Supporting routines for calculations
-void DNREQPanel::CalculateCurve()
+void DNREQPanel::CalculateEQCurve()
 {
   int cnt;
   double Freq, Alpha;
@@ -1496,7 +1551,7 @@ void DNREQPanel::CalculateCurve()
   int HorizontalAxisLength = width()-(2*BorderWidth)-FAxisLeftMargin;
   int VerticalAxisLength = height()-(2*BorderWidth);
 
-  ActiveCurve[0] = QPoint(FAxisLeftMargin+BorderWidth, height()-BorderWidth-(VerticalAxisLength/2));
+  EQCurve[0] = QPoint(FAxisLeftMargin+BorderWidth, height()-BorderWidth-(VerticalAxisLength/2));
   for (cnt=0; cnt<FNrOfPoints-2; cnt++)
   {
     Freq = pow(10,(float) (cnt*log10((FSamplerate)/(FNequistDivide*10)))/(FNrOfPoints-3))*10;
@@ -1628,12 +1683,12 @@ void DNREQPanel::CalculateCurve()
 
     int X1 = FAxisLeftMargin+BorderWidth+((float)(cnt*HorizontalAxisLength)/(FNrOfPoints-3));
     int Y1 = height()-BorderWidth-(((float)(18-dBGain)*VerticalAxisLength)/36);
-	  ActiveCurve[cnt+1] = QPoint(X1, Y1);
+	  EQCurve[cnt+1] = QPoint(X1, Y1);
   }
-  ActiveCurve[FNrOfPoints-1] = QPoint(FAxisLeftMargin+BorderWidth+HorizontalAxisLength, height()-BorderWidth-(VerticalAxisLength/2));
+  EQCurve[FNrOfPoints-1] = QPoint(FAxisLeftMargin+BorderWidth+HorizontalAxisLength, height()-BorderWidth-(VerticalAxisLength/2));
 }
 
-void DNREQPanel::CalculateCurveOn()
+void DNREQPanel::CalculateLCCurve()
 {
   int cnt;
   double Freq, Alpha;
@@ -1647,7 +1702,7 @@ void DNREQPanel::CalculateCurveOn()
 
   for (cnt=0; cnt<FNrOfPoints; cnt++)
   {
-    Freq = pow(10,(float) (cnt*log10((FSamplerate)/(FNequistDivide*10)))/FNrOfPoints)*10;
+    Freq = pow(10,(float) (cnt*log10((FSamplerate)/(FNequistDivide*10)))/(FNrOfPoints-1))*10;
     Alpha = (double)(M_PI*2*Freq)/(FSamplerate);
 
     X = cos(Alpha);
@@ -1655,128 +1710,33 @@ void DNREQPanel::CalculateCurveOn()
 
     Length = 1;
 
-    // Band 1
-    DeltaX = X-ZerosXBand1On[0];
-    DeltaY = Y-ZerosYBand1On[0];
+    // Low cut
+    DeltaX = X-ZerosXLowCut[0];
+    DeltaY = Y-ZerosYLowCut[0];
     Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
 
-    DeltaX = X-ZerosXBand1On[1];
-    DeltaY = Y-ZerosYBand1On[1];
+    DeltaX = X-ZerosXLowCut[1];
+    DeltaY = Y-ZerosYLowCut[1];
     Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
 
-    DeltaX = X-PolesXBand1On[0];
-    DeltaY = Y-PolesYBand1On[0];
+    DeltaX = X-PolesXLowCut[0];
+    DeltaY = Y-PolesYLowCut[0];
     Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
 
-	  DeltaX = X-PolesXBand1On[1];
-	  DeltaY = Y-PolesYBand1On[1];
+	  DeltaX = X-PolesXLowCut[1];
+	  DeltaY = Y-PolesYLowCut[1];
 	  Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
 
-	  Length *= GainFactorBand1On;
-
-    // Band 2
-    DeltaX = X-ZerosXBand2On[0];
-	  DeltaY = Y-ZerosYBand2On[0];
-	  Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-	  DeltaX = X-ZerosXBand2On[1];
-	  DeltaY = Y-ZerosYBand2On[1];
-	  Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	DeltaX = X-PolesXBand2On[0];
-  	DeltaY = Y-PolesYBand2On[0];
-  	Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	DeltaX = X-PolesXBand2On[1];
-  	DeltaY = Y-PolesYBand2On[1];
-    Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	Length *= GainFactorBand2On;
-
-    // Band 3
-    DeltaX = X-ZerosXBand3On[0];
-	  DeltaY = Y-ZerosYBand3On[0];
-	  Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-	  DeltaX = X-ZerosXBand3On[1];
-	  DeltaY = Y-ZerosYBand3On[1];
-	  Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	DeltaX = X-PolesXBand3On[0];
-  	DeltaY = Y-PolesYBand3On[0];
-  	Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	DeltaX = X-PolesXBand3On[1];
-  	DeltaY = Y-PolesYBand3On[1];
-  	Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-   	Length *= GainFactorBand3On;
-
-    // Band 4
-    DeltaX = X-ZerosXBand4On[0];
-	  DeltaY = Y-ZerosYBand4On[0];
-	  Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-	  DeltaX = X-ZerosXBand4On[1];
-	  DeltaY = Y-ZerosYBand4On[1];
-	  Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	DeltaX = X-PolesXBand4On[0];
-  	DeltaY = Y-PolesYBand4On[0];
-  	Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	DeltaX = X-PolesXBand4On[1];
-  	DeltaY = Y-PolesYBand4On[1];
-  	Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	Length *= GainFactorBand4On;
-
-    // Band 5
-    DeltaX = X-ZerosXBand5On[0];
-	  DeltaY = Y-ZerosYBand5On[0];
-	  Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-	  DeltaX = X-ZerosXBand5On[1];
-	  DeltaY = Y-ZerosYBand5On[1];
-	  Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	DeltaX = X-PolesXBand5On[0];
-  	DeltaY = Y-PolesYBand5On[0];
-  	Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	DeltaX = X-PolesXBand5On[1];
-  	DeltaY = Y-PolesYBand5On[1];
-  	Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	Length *= GainFactorBand5On;
-
-    // Band 6
-    DeltaX = X-ZerosXBand6On[0];
-	  DeltaY = Y-ZerosYBand6On[0];
-	  Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-	  DeltaX = X-ZerosXBand6On[1];
-	  DeltaY = Y-ZerosYBand6On[1];
-	  Length *= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	DeltaX = X-PolesXBand6On[0];
-  	DeltaY = Y-PolesYBand6On[0];
-  	Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	DeltaX = X-PolesXBand6On[1];
-  	DeltaY = Y-PolesYBand6On[1];
-  	Length /= sqrt(DeltaX*DeltaX+DeltaY*DeltaY);
-
-  	Length *= GainFactorBand6On;
+	  Length *= GainFactorLowCut;
 
     if (Length==0)
       dBGain = -90;
     else
 		  dBGain = log10(Length)*-20;
 
-    int X1 = FAxisLeftMargin+BorderWidth+((float)(cnt*HorizontalAxisLength)/FNrOfPoints);
+    int X1 = FAxisLeftMargin+BorderWidth+((float)(cnt*HorizontalAxisLength)/(FNrOfPoints-1));
     int Y1 = height()-BorderWidth-(((float)(18-dBGain)*VerticalAxisLength)/36);
-	  TotalCurve[cnt] = QPoint(X1, Y1);
+	  LCCurve[cnt] = QPoint(X1, Y1);
   }
 }
 
@@ -2156,6 +2116,7 @@ float DNREQPanel::CalculateEQ(float *Coefficients, double Gain, int Frequency, d
 
 void DNREQPanel::resizeEvent(QResizeEvent *event)
 {
-  CalculateCurve();
+  CalculateEQCurve();
+  CalculateLCCurve();
   update();
 }

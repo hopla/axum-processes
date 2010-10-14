@@ -39,6 +39,8 @@ class QDESIGNER_WIDGET_EXPORT DNREQPanel : public QWidget
 //    Q_PROPERTY(TAnchors Anchors READ getAnchors WRITE setAnchors);
     Q_PROPERTY(int VerticalGridAtdB READ getVerticalGridAtdB WRITE setVerticalGridAtdB);
     Q_PROPERTY(int AnchorSize READ getAnchorSize WRITE setAnchorSize);
+    Q_PROPERTY(int FrequencyLowCut READ getFrequencyLowCut WRITE setFrequencyLowCut);
+    Q_PROPERTY(bool LCOn READ getLCOn WRITE setLCOn);
     Q_PROPERTY(double GainBand1 READ getGainBand1 WRITE setGainBand1);
     Q_PROPERTY(double GainBand2 READ getGainBand2 WRITE setGainBand2);
     Q_PROPERTY(double GainBand3 READ getGainBand3 WRITE setGainBand3);
@@ -124,6 +126,12 @@ public:
 
     int getAnchorSize();
     void setAnchorSize(int NewAnchorSize);
+
+    int getFrequencyLowCut();
+    void setFrequencyLowCut(int NewFrequencyLowCut);
+    
+    bool getLCOn();
+    void setLCOn(bool NewLCOn);
 
     double getGainBand1();
     void setGainBand1(double NewGainBand1);
@@ -279,6 +287,10 @@ private:
 //    TAnchors FAnchors;
     int FVerticalGridAtdB;
     int FAnchorSize;
+    
+    int FFrequencyLowCut;
+    bool FLCOn;
+    
     double FGainBand1;
     double FGainBand2;
     double FGainBand3;
@@ -339,8 +351,10 @@ private:
     double FSlopeBand5;
     double FSlopeBand6;
     
-    QPoint TotalCurve[1024];
-    QPoint ActiveCurve[1024];
+    QPoint EQCurve[1024];
+    QPoint LCCurve[1024];
+
+    float GainFactorLowCut;
 
     float GainFactorBand1;
     float GainFactorBand2;
@@ -354,6 +368,11 @@ private:
     float GainFactorBand4On;
     float GainFactorBand5On;
     float GainFactorBand6On;
+
+    float PolesXLowCut[2];
+    float PolesYLowCut[2];
+    float ZerosXLowCut[2];
+    float ZerosYLowCut[2];
 
     float PolesXBand1[2];
     float PolesYBand1[2];
@@ -406,8 +425,8 @@ private:
 
 protected:
     void paintEvent(QPaintEvent *event);
-    void CalculateCurve();
-    void CalculateCurveOn();
+    void CalculateEQCurve();
+    void CalculateLCCurve();
     void CalculatePolePosition(float *X, float *Y, float *Coefficients);
     void CalculateZeroPosition(float *X, float *Y, float *Coefficients);
     float CalculateEQ(float *Coefficients, double Gain, int Frequency, double Bandwidth, double Slope, int Type, bool On);
