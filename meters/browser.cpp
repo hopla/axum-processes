@@ -550,7 +550,7 @@ void Browser::MeterRelease()
 
   if (strcmp(DSPGain, CurrentDSPGain) != 0)
   {
-    //DExpThLabel->setText(QString("D-Exp Th<BR>")+QString(DExpTh));
+    DSPGainLabel->setText(QString("DSP Gain<BR>")+QString(DSPGain));
     strcpy(CurrentDSPGain, DSPGain);
   }
 
