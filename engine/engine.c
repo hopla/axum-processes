@@ -8585,6 +8585,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = AxumData.ModuleData[ModuleNr].Filter.Frequency;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
           }
         }
         break;
