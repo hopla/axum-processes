@@ -12704,6 +12704,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           DoAxum_UpdateModuleControlMode(ModuleNr, ControlMode);
           unsigned int FunctionNrToSent = (ModuleNr<<12);
 
+          CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_ON_OFF);
           CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_LOW_CUT_FREQUENCY);
         }
         break;
