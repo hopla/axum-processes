@@ -91,6 +91,8 @@ public:
    bool LCOn;
    bool CurrentLCOn;
 
+   bool DynOn;
+   bool CurrentDynOn;
    char DExpTh[9];
    char CurrentDExpTh[9];
    char AGCTh[9];

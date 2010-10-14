@@ -142,6 +142,9 @@ Browser::Browser(QWidget *parent)
   LCOn = false;
   CurrentLCOn = false;
 
+  DynOn = false;
+  CurrentDynOn = false;
+
   Panorama = 512;
   CurrentPanorama = 512;
 
@@ -196,6 +199,7 @@ void Browser::MeterRelease()
   float Difference;
   int cnt;
   char ConsoleString[8];
+  char ColorString[8];
 /*
 #ifdef Q_OS_WIN32
 	LARGE_INTEGER freq, newTime;
@@ -562,19 +566,61 @@ void Browser::MeterRelease()
     CurrentLCOn = LCOn;
   }
 
+  if (DynOn != CurrentDynOn)
+  {
+    if (DynOn)
+    {
+      sprintf(ColorString, "#C0C0C0");
+    }
+    else
+    {
+      sprintf(ColorString, "#000000");
+    }
+
+    DExpThLabel->setText(QString("<font color='%1'>D-Exp Th<BR>%2").arg(ColorString, QString(CurrentDExpTh)));
+    AGCThLabel->setText(QString("<font color='%1'>AGC Th<BR>%2").arg(ColorString, QString(CurrentAGCTh)));
+    AGCRatioLabel->setText(QString("<font color='%1'>AGC Ratio<BR>%2").arg(ColorString, QString(CurrentAGCRatio)));
+
+    CurrentDynOn = DynOn;
+  }
+
   if (strcmp(DExpTh, CurrentDExpTh) != 0)
   {
-    DExpThLabel->setText(QString("D-Exp Th<BR>")+QString(DExpTh));
+    if (CurrentDynOn)
+    {
+      sprintf(ColorString, "#C0C0C0");
+    }
+    else
+    {
+      sprintf(ColorString, "#000000");
+    }
+    DExpThLabel->setText(QString("<font color='%1'>D-Exp Th<BR>%2").arg(ColorString, QString(DExpTh)));
     strcpy(CurrentDExpTh, DExpTh);
   }
   if (strcmp(AGCTh, CurrentAGCTh) != 0)
   {
-    AGCThLabel->setText("AGC Th<BR>"+QString(AGCTh));
+    if (CurrentDynOn)
+    {
+      sprintf(ColorString, "#C0C0C0");
+    }
+    else
+    {
+      sprintf(ColorString, "#000000");
+    }
+    AGCThLabel->setText(QString("<font color='%1'>AGC Th<BR>%2").arg(ColorString, QString(CurrentAGCTh)));
     strcpy(CurrentAGCTh, AGCTh);
   }
   if (strcmp(AGCRatio, CurrentAGCRatio) != 0)
   {
-    AGCRatioLabel->setText("AGC Ratio<BR>"+QString(AGCRatio));
+    if (CurrentDynOn)
+    {
+      sprintf(ColorString, "#C0C0C0");
+    }
+    else
+    {
+      sprintf(ColorString, "#000000");
+    }
+    AGCRatioLabel->setText(QString("<font color='%1'>AGC Ratio<BR>%2").arg(ColorString, QString(CurrentAGCRatio)));
     strcpy(CurrentAGCRatio, AGCRatio);
   }
 
