@@ -253,7 +253,7 @@ void DNREQPanel::paintEvent(QPaintEvent *)
     painter.setPen(QPen(FInactiveCurveColor, FInactiveCurveWidth));
     painter.setBrush(FInactiveCurveFillColor);
   }
-  painter.drawPolygon(ActiveCurve, FNrOfPoints-1);
+  painter.drawPolygon(ActiveCurve, FNrOfPoints);
 
 
   if (FDrawAnchors)
@@ -1496,9 +1496,10 @@ void DNREQPanel::CalculateCurve()
   int HorizontalAxisLength = width()-(2*BorderWidth)-FAxisLeftMargin;
   int VerticalAxisLength = height()-(2*BorderWidth);
 
-  for (cnt=0; cnt<FNrOfPoints; cnt++)
+  ActiveCurve[0] = QPoint(FAxisLeftMargin+BorderWidth, height()-BorderWidth-(VerticalAxisLength/2));
+  for (cnt=0; cnt<FNrOfPoints-2; cnt++)
   {
-    Freq = pow(10,(float) (cnt*log10((FSamplerate)/(FNequistDivide*10)))/FNrOfPoints)*10;
+    Freq = pow(10,(float) (cnt*log10((FSamplerate)/(FNequistDivide*10)))/(FNrOfPoints-3))*10;
     Alpha = (double)(M_PI*2*Freq)/(FSamplerate);
 
     X = cos(Alpha);
@@ -1625,12 +1626,11 @@ void DNREQPanel::CalculateCurve()
     else
 		  dBGain = log10(Length)*-20;
 
-    int X1 = FAxisLeftMargin+BorderWidth+((float)(cnt*HorizontalAxisLength)/FNrOfPoints);
+    int X1 = FAxisLeftMargin+BorderWidth+((float)(cnt*HorizontalAxisLength)/(FNrOfPoints-3));
     int Y1 = height()-BorderWidth-(((float)(18-dBGain)*VerticalAxisLength)/36);
-	  ActiveCurve[cnt] = QPoint(X1, Y1);
+	  ActiveCurve[cnt+1] = QPoint(X1, Y1);
   }
-  ActiveCurve[0] = QPoint(FAxisLeftMargin+BorderWidth, height()-BorderWidth-(VerticalAxisLength/2));
-  ActiveCurve[FNrOfPoints-2] = QPoint(FAxisLeftMargin+BorderWidth+HorizontalAxisLength, height()-BorderWidth-(VerticalAxisLength/2));
+  ActiveCurve[FNrOfPoints-1] = QPoint(FAxisLeftMargin+BorderWidth+HorizontalAxisLength, height()-BorderWidth-(VerticalAxisLength/2));
 }
 
 void DNREQPanel::CalculateCurveOn()
