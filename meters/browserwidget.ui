@@ -1249,9 +1249,9 @@ QTabWidget::tab-bar
      <property name="geometry">
       <rect>
        <x>9</x>
-       <y>59</y>
+       <y>80</y>
        <width>64</width>
-       <height>43</height>
+       <height>32</height>
       </rect>
      </property>
      <property name="font">
@@ -1283,9 +1283,9 @@ QTabWidget::tab-bar
      <property name="geometry">
       <rect>
        <x>9</x>
-       <y>101</y>
+       <y>111</y>
        <width>64</width>
-       <height>42</height>
+       <height>32</height>
       </rect>
      </property>
      <property name="font">
@@ -1323,9 +1323,9 @@ QTabWidget::tab-bar
      <property name="geometry">
       <rect>
        <x>9</x>
-       <y>18</y>
+       <y>49</y>
        <width>64</width>
-       <height>42</height>
+       <height>32</height>
       </rect>
      </property>
      <property name="font">
@@ -1440,6 +1440,46 @@ QTabWidget::tab-bar
      </property>
      <property name="GradientForground">
       <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="DSPGainLabel">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>18</y>
+       <width>64</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="text">
+      <string>DSP Gain&lt;BR&gt;0 dB</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
     </widget>
    </widget>
