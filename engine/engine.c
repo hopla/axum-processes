@@ -6382,16 +6382,16 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
       }
 
       //remove audio routing if set..
+      db_lock(1);
       for (unsigned char cntSlot=0; cntSlot<42; cntSlot++)
       {
         if (AxumData.RackOrganization[cntSlot] == old_info->MambaNetAddr)
         {
           AxumData.RackOrganization[cntSlot] = 0;
-          db_lock(1);
           db_delete_slot_config(cntSlot);
-          db_lock(0);
         }
       }
+      db_lock(0);
 
       for (int cntSource=0; cntSource<1280; cntSource++)
       {
