@@ -136,6 +136,8 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
   pci2040_ioctl_linux pci2040_ioctl_message;
   PCI2040_DUMP_CONFIG_REGS HPIConfigurationRegisters;
 
+  memset(&HPIConfigurationRegisters, 0, sizeof(PCI2040_DUMP_CONFIG_REGS));
+
   pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_DUMP_CONFIGURATION;
   pci2040_ioctl_message.BufferLength = sizeof(PCI2040_DUMP_CONFIG_REGS);
   pci2040_ioctl_message.Buffer = (unsigned char *)&HPIConfigurationRegisters;
@@ -181,6 +183,7 @@ int dsp_init(char *devname, DSPCARD_STRUCT *dspcard)
   else
   {
     PCI2040_RESOURCE res;
+    memset(&res, 0, sizeof(PCI2040_RESOURCE));
 
     //Get PCI_resources
     pci2040_ioctl_message.FunctionNr = IOCTL_PCI2040_HPI_CSR_SPACES;
