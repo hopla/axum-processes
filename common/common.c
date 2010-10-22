@@ -136,6 +136,8 @@ void daemonize() {
   struct sigaction act;
   pid_t pid;
 
+  memset(&act, 0, sizeof(struct sigaction));
+
   /* catch signals in parent process */
   act.sa_handler = trapsig;
   act.sa_flags = 0;
