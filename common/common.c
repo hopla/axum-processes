@@ -370,9 +370,10 @@ int oem_name_short(char *name, int name_length)
     char *line=NULL;
     size_t len=0;
     size_t i;
-    if (getline(&line, &len, F) != -1)
+    size_t ReadedBytes = getline(&line, &len, F);
+    if (ReadedBytes>0)
     {
-      for (i=0; i<len; i++)
+      for (i=0; i<ReadedBytes; i++)
       {
         if (line[i] == '\n')
         {
