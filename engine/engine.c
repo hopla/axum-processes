@@ -8303,7 +8303,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
 void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
 {
   unsigned char SensorReceiveFunctionType = (SensorReceiveFunctionNumber>>24)&0xFF;
-  char LCDText[9];
+  char LCDText[65];
   mbn_data data;
 
   switch (SensorReceiveFunctionType)
@@ -10790,9 +10790,9 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             {
               case MBN_DATATYPE_OCTETS:
               {
-                strncpy(LCDText, AxumData.Password[ConsoleNr], 32);
+                strncpy(LCDText, AxumData.Password[ConsoleNr], 16);
                 data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
               }
               break;
             }
