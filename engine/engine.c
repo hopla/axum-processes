@@ -6512,9 +6512,11 @@ void mAcknowledgeReply(struct mbn_handler *m, struct mbn_message *request, struc
 }
 
 int First = 1;
+char CurrentLinkStatus = 0;
 
 void Timer100HzDone(int Value)
 {
+  char LinkStatus;
 
   if (First)
   { //First time wait 20 seconds before starting meters
@@ -6824,6 +6826,16 @@ void Timer100HzDone(int Value)
     }
   }
 
+  if ((LinkStatus = mbnEthernetMIILinkStatus(mbn->itf, error)) == -1)
+  {
+    log_write("mbnEthernetMIILinkStatus error: %d", error);
+  }
+  else if (CurrentLinkStatus != LinkStatus)
+  {
+    log_write("Link %s", LinkStatus ? "up" : "down");
+    CurrentLinkStatus = LinkStatus;
+  }
+  
   Value = 0;
 }
 
@@ -11753,7 +11765,6 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
     delete AxumFunctionInformationStructToDelete;
   }
 
-//  pthread_mutex_lock(&get_node_info_mutex);
   ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = OnlineNodeInformationList;
   while (OnlineNodeInformationElement != NULL)
   {
@@ -11818,7 +11829,6 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
     }
     OnlineNodeInformationElement = OnlineNodeInformationElement->Next;
   }
-//  pthread_mutex_unlock(&get_node_info_mutex);
 
   //Debug print the function list
   WalkAxumFunctionInformationStruct = NULL;
@@ -15660,7 +15670,6 @@ void initialize_axum_data_struct()
 ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
 {
   bool Found = false;
-//  pthread_mutex_lock(&get_node_info_mutex);
   ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = OnlineNodeInformationList;
   ONLINE_NODE_INFORMATION_STRUCT *FoundOnlineNodeInformationElement = NULL;
 
@@ -15673,7 +15682,6 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
     }
     OnlineNodeInformationElement = OnlineNodeInformationElement->Next;
   }
-//  pthread_mutex_unlock(&get_node_info_mutex);
 
   return FoundOnlineNodeInformationElement;
 }
