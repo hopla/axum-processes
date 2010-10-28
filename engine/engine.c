@@ -157,13 +157,13 @@ unsigned char LocalMACAddress[6];  //Buffer to store local MAC Address
 
 int EthernetInterfaceIndex = -1;
 
-long cntMillisecondTimer;
-long PreviousCount_Second;
-long PreviousCount_SignalDetect;
-long PreviousCount_LevelMeter;
-long PreviousCount_PhaseMeter;
-long PreviousCount_BroadcastPing;
-long cntBroadcastPing;
+unsigned long cntMillisecondTimer;
+unsigned long PreviousCount_Second;
+unsigned long PreviousCount_SignalDetect;
+unsigned long PreviousCount_LevelMeter;
+unsigned long PreviousCount_PhaseMeter;
+unsigned long PreviousCount_BroadcastPing;
+unsigned long cntBroadcastPing;
 
 int LinuxIfIndex;
 struct CONSOLE_PRESET_SWITCH_STRUCT {
