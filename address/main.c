@@ -336,6 +336,8 @@ void init(int argc, char **argv) {
   int c;
   int verbose;
   char oem_name[32];
+  char cmdline[1024];
+  int cnt;
 
   verbose = 0;
 
@@ -429,6 +431,14 @@ void init(int argc, char **argv) {
     daemonize_finish();
   log_write("--------------------------------------------------");
   log_write("%s Initialized", this_node.Name);
+  log_write("Version %d.%d, compiled at %s (%s)", this_node.FirmwareMajorRevision, this_node.FirmwareMinorRevision, __DATE__, __TIME__);
+  sprintf(cmdline, "command line:");
+  for (cnt=0; cnt<argc; cnt++)
+  {
+    strcat(cmdline, " ");
+    strcat(cmdline, argv[cnt]);
+  }
+  log_write(cmdline);
 }
 
 

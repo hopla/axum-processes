@@ -339,6 +339,8 @@ void init(int argc, char **argv, char *upath) {
   char remotehost[50], rport[10];
   int c, itfcount = 0;
   char oem_name[32];
+  char cmdline[1024];
+  int cnt;
 
   strcpy(upath, DEFAULT_UNIX_PATH);
   strcpy(data_path, DEFAULT_DATA_PATH);
@@ -472,6 +474,14 @@ void init(int argc, char **argv, char *upath) {
 
   log_write("------------------------------------------------");
   log_write("Try to start the %s", this_node.Name);
+  log_write("Version %d.%d, compiled at %s (%s)", this_node.FirmwareMajorRevision, this_node.FirmwareMinorRevision, __DATE__, __TIME__);
+  sprintf(cmdline, "command line:");
+  for (cnt=0; cnt<argc; cnt++)
+  {
+    strcat(cmdline, " ");
+    strcat(cmdline, argv[cnt]);
+  }
+  log_write(cmdline);
 
   net_read();
   /* objects */

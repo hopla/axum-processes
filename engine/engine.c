@@ -311,7 +311,7 @@ void init(int argc, char **argv)
     strcat(cmdline, " ");
     strcat(cmdline, argv[cnt]);
   }
-  log_write(cmdline); 
+  log_write(cmdline);
 
   hwparent(&this_node);
   log_write("hwparent %04X:%04X:%04X", this_node.HardwareParent[0], this_node.HardwareParent[1], this_node.HardwareParent[2]);
@@ -6844,7 +6844,7 @@ void Timer100HzDone(int Value)
     log_write("Link %s", LinkStatus ? "up" : "down");
     CurrentLinkStatus = LinkStatus;
   }
-  
+
   Value = 0;
 }
 

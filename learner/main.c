@@ -392,6 +392,8 @@ void init(int argc, char *argv[]) {
   pthread_mutexattr_t mattr;
   int c;
   char oem_name[32];
+  char cmdline[1024];
+  int cnt;
 
   pthread_mutexattr_init(&mattr);
   pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
@@ -485,6 +487,14 @@ void init(int argc, char *argv[]) {
   daemonize_finish();
   log_write("--------------------------------------");
   log_write("%s Initialized", this_node.Name);
+  log_write("Version %d.%d, compiled at %s (%s)", this_node.FirmwareMajorRevision, this_node.FirmwareMinorRevision, __DATE__, __TIME__);
+  sprintf(cmdline, "command line:");
+  for (cnt=0; cnt<argc; cnt++)
+  {
+    strcat(cmdline, " ");
+    strcat(cmdline, argv[cnt]);
+  }
+  log_write(cmdline);
 }
 
 int main(int argc, char *argv[]) {

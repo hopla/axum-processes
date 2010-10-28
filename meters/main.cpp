@@ -88,6 +88,7 @@ void init(int argc, char *argv[])
   int cntObject;
   char obj_desc[32];
   int cntBand;
+  char cmdline[1024];
 
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(log_file, DEFAULT_LOG_FILE);
@@ -352,6 +353,14 @@ void init(int argc, char *argv[])
 
   log_write("-----------------------");
   log_write("Axum meters initialized");
+  log_write("Version %d.%d, compiled at %s (%s)", this_node.FirmwareMajorRevision, this_node.FirmwareMinorRevision, __DATE__, __TIME__);
+  sprintf(cmdline, "command line:");
+  for (int cnt=0; cnt<argc; cnt++)
+  {
+    strcat(cmdline, " ");
+    strcat(cmdline, argv[cnt]);
+  }
+  log_write(cmdline);
   log_write("Starting QApplication");
 }
 
