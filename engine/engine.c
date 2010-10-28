@@ -95,7 +95,7 @@ struct mbn_node_info this_node =
   "Axum-Engine",                        //Name
   MANUFACTURER_ID, PRODUCT_ID, 0x0001,
   0, 0,                                 //Hw revision
-  2, 0,                                 //Fw revision
+  FIRMWARE_MAJOR_VERSION, FIRMWARE_MINOR_VERSION, //Fw revision
   0, 0,                                 //FPGA revision
   NR_OF_OBJECTS,                        //Number of objects
   0,                                    //Default engine address
@@ -214,6 +214,7 @@ void init(int argc, char **argv)
   pthread_mutexattr_t mattr;
   int c;
   char oem_name[32];
+  char cmdline[1024];
 
   pthread_mutexattr_init(&mattr);
   //pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
@@ -303,6 +304,14 @@ void init(int argc, char **argv)
 
   log_write("------------------------------------------------");
   log_write("Try to start the %s", this_node.Name);
+  log_write("Version %d.%d, compiled at %s (%s)", this_node.FirmwareMajorRevision, this_node.FirmwareMinorRevision, __DATE__, __TIME__);
+  sprintf(cmdline, "command line:");
+  for (int cnt=0; cnt<argc; cnt++)
+  {
+    strcat(cmdline, " ");
+    strcat(cmdline, argv[cnt]);
+  }
+  log_write(cmdline); 
 
   hwparent(&this_node);
   log_write("hwparent %04X:%04X:%04X", this_node.HardwareParent[0], this_node.HardwareParent[1], this_node.HardwareParent[2]);
