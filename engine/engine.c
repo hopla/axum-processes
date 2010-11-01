@@ -54,6 +54,7 @@
 
 /* deadlock warning: don't use sql_lock() within this mutex */
 pthread_mutex_t get_node_info_mutex;
+pthread_mutex_t axum_data_mutex;
 
 #define LOG_DEBUG_ENABLED
 
@@ -202,6 +203,18 @@ void node_info_lock(int l)
   else
   {
     pthread_mutex_unlock(&get_node_info_mutex);
+  }
+}
+
+void axum_data_lock(int l)
+{
+  if (l)
+  {
+    pthread_mutex_lock(&axum_data_mutex);
+  }
+  else
+  {
+    pthread_mutex_unlock(&axum_data_mutex);
   }
 }
 
@@ -436,6 +449,7 @@ int main(int argc, char *argv[])
   db_lock(0);
 
   //Update default values of EQ to the current values
+  axum_data_lock(1);
   for (int cntModule=0; cntModule<128; cntModule++)
   {
     for (int cntEQBand=0; cntEQBand<6; cntEQBand++)
@@ -447,9 +461,11 @@ int main(int argc, char *argv[])
       AxumData.ModuleData[cntModule].EQBand[cntEQBand].Type = AxumData.ModuleData[cntModule].Defaults.EQBand[cntEQBand].Type;
     }
   }
+  axum_data_lock(0);
 
   //Check for backup
-  if (backup_open((void *)&AxumData, sizeof(AxumData), !AxumData.StartupState))
+  axum_data_lock(1);
+  if (backup_open((void *)&AxumData, sizeof(AxumData), &axum_data_mutex, !AxumData.StartupState))
   { //Backup loaded, clear rack-config and set processing data
     if (AxumData.StartupState)
     {
@@ -475,6 +491,7 @@ int main(int argc, char *argv[])
       }
     }
   }
+  axum_data_lock(0);
 
   if((mbn = mbnInit(&this_node, NULL, itf, error)) == NULL) {
     fprintf(stderr, "mbnInit: %s\n", error);
@@ -494,9 +511,11 @@ int main(int argc, char *argv[])
 
   //start interface for the mbn-handler
   mbnStartInterface(itf, error);
-  log_write("Axum engine process started, version %d.%d", FIRMWARE_MAJOR_VERSION, FIRMWARE_MINOR_VERSION);
+  log_write("Axum engine process started");
 
+  node_info_lock(1);
   InitalizeAllObjectListPerFunction();
+  node_info_lock(0);
 
   //**************************************************************/
   //Initialize Timer thread
@@ -523,17 +542,29 @@ int main(int argc, char *argv[])
     else
     {//no error or non-blocked signal)
       //Test if the database notifier generated an event.
+
+      //node_info_lock required for db_read_node_config
+      axum_data_lock(1);
+      node_info_lock(1);
       db_lock(1);
       db_processnotifies();
       db_lock(0);
+      node_info_lock(0);
+      axum_data_lock(0);
     }
   }
   log_write("Closing Engine");
 
+  axum_data_lock(1);
   backup_close(0);
+  axum_data_lock(0);
 
+  log_write("node_info_lock");
+  node_info_lock(1);
   DeleteAllObjectListPerFunction();
+  node_info_lock(0);
 
+  log_write("dsp_close");
   dsp_close(dsp_handler);
 
   if (mbn)
@@ -542,6 +573,7 @@ int main(int argc, char *argv[])
   }
   db_close();
 
+  node_info_lock(1);
   ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = OnlineNodeInformationList;
   while (OnlineNodeInformationElement != NULL)
   {
@@ -558,6 +590,7 @@ int main(int argc, char *argv[])
     delete DeleteOnlineNodeInformationElement;
   }
   OnlineNodeInformationList = NULL;
+  node_info_lock(0);
 
   log_close();
 
@@ -567,24 +600,28 @@ int main(int argc, char *argv[])
 //normally response on GetSensorData
 int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data)
 {
+  axum_data_lock(1);
   node_info_lock(1);
   ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = GetOnlineNodeInformation(message->AddressFrom);
   if (OnlineNodeInformationElement == NULL)
   {
     log_write("[mSensorDataChanged] OnlineNodeInformationElement not found");
     node_info_lock(0);
+    axum_data_lock(0);
     return 1;
   }
   if (object>=(OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024))
   {
     log_write("[mSensorDataChanged] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->UsedNumberOfCustomObjects);
     node_info_lock(0);
+    axum_data_lock(0);
     return 1;
   }
   else if (object<1024)
   {
     log_write("[mSensorDataChanged] Sensor change is not allowed for object: %d (<1024)", object);
     node_info_lock(0);
+    axum_data_lock(0);
     return 1;
   }
 
@@ -5852,6 +5889,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     SensorReceiveFunction->PreviousLastChangedTime = SensorReceiveFunction->LastChangedTime;
   }
   node_info_lock(0);
+  axum_data_lock(0);
+
   return 0;
 
   mbn=NULL;
@@ -5860,6 +5899,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 //normally response on GetSensorData
 int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data)
 {
+  axum_data_lock(1);
   node_info_lock(1);
 
   ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = GetOnlineNodeInformation(message->AddressFrom);
@@ -5868,12 +5908,14 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
   {
     log_write("[mSensorDataResponse] OnlineNodeInformationElement not found");
     node_info_lock(0);
+    axum_data_lock(0);
     return 1;
   }
   if (object>=(OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024))
   {
     log_write("[mSensorDataResponse] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->UsedNumberOfCustomObjects);
     node_info_lock(0);
+    axum_data_lock(0);
     return 1;
   }
 
@@ -6286,11 +6328,13 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
     }
   }
   node_info_lock(0);
+  axum_data_lock(0);
   return 0;
 }
 
 void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_info, struct mbn_address_node *new_info)
 {
+  axum_data_lock(1);
   node_info_lock(1);
   if (old_info == NULL)
   {
@@ -6498,6 +6542,7 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     log_write("Address changed: %08lX => %08lX", old_info->MambaNetAddr, new_info->MambaNetAddr);
   }
   node_info_lock(0);
+  axum_data_lock(0);
   mbn = NULL;
 }
 
@@ -6590,6 +6635,7 @@ void Timer100HzDone(int Value)
     PreviousCount_SignalDetect = cntMillisecondTimer;
     dsp_read_module_levelmeters(dsp_handler, dBLevel);
 
+    axum_data_lock(1);
     for (int cntModule=0; cntModule<128; cntModule++)
     {
       int FirstChannelNr = cntModule<<1;
@@ -6644,6 +6690,7 @@ void Timer100HzDone(int Value)
         }
       }
     }
+    axum_data_lock(0);
   }
 
   cntMillisecondTimer++;
@@ -6654,6 +6701,9 @@ void Timer100HzDone(int Value)
     //Check for firmware requests
     if (mbn->node.Services&0x80)
     {
+      axum_data_lock(1);
+      node_info_lock(1);
+
       if (TimerWalkOnlineNodeInformationElement != NULL)
       {
         if ((TimerWalkOnlineNodeInformationElement->MambaNetAddress != 0x00000000) &&
@@ -6716,6 +6766,8 @@ void Timer100HzDone(int Value)
       {
         TimerWalkOnlineNodeInformationElement = TimerWalkOnlineNodeInformationElement->Next;
       }
+      node_info_lock(0);
+      axum_data_lock(0);
     }
   }
 
@@ -6729,6 +6781,7 @@ void Timer100HzDone(int Value)
     }
   }
 
+  axum_data_lock(1);
   for (int cntConsolePreset=0; cntConsolePreset<32; cntConsolePreset++)
   {
     if (ConsolePresetSwitch[cntConsolePreset].PreviousState != ConsolePresetSwitch[cntConsolePreset].State)
@@ -6758,6 +6811,9 @@ void Timer100HzDone(int Value)
       }
     }
   }
+  axum_data_lock(0);
+
+  axum_data_lock(1);
   for (unsigned char cntConsole=0; cntConsole<4; cntConsole++)
   {
     if (ProgrammedDefaultSwitch[cntConsole].PreviousState != ProgrammedDefaultSwitch[cntConsole].State)
@@ -6809,7 +6865,9 @@ void Timer100HzDone(int Value)
       }
     }
   }
+  axum_data_lock(0);
 
+  axum_data_lock(1);
   for (unsigned char cntConsole=0; cntConsole<4; cntConsole++)
   {
     if (AxumData.ControlModeTimerValue[cntConsole]<10000)
@@ -6834,6 +6892,7 @@ void Timer100HzDone(int Value)
       }
     }
   }
+  axum_data_lock(0);
 
   if ((LinkStatus = mbnEthernetMIILinkStatus(mbn->itf, error)) == -1)
   {

@@ -14,12 +14,15 @@ pthread_t backup_thread;
 backup_info_struct backup_info;
 backup_info_struct old_backup_info;
 
-size_t backup_open(void *buffer, size_t length, unsigned char write_only) {
+size_t backup_open(void *buffer, size_t length, pthread_mutex_t *mutex, unsigned char write_only) {
   size_t readed_length = 0;
   backup_info.buffer = buffer;
   backup_info.length = length;
+  backup_info.mutex = mutex;
+
   old_backup_info.buffer = calloc(length, 1);
   old_backup_info.length = length;
+  old_backup_info.mutex = NULL;
 
   if(backupfd != NULL)
     fclose(backupfd);
@@ -98,6 +101,7 @@ void *backup_thread_loop(void *arg)
     sleep(30);
     pthread_testcancel();
 
+    pthread_mutex_lock(backup_info.mutex);
     if(backup_info.length == old_backup_info.length) {
       if (memcmp(old_backup_info.buffer, backup_info.buffer, old_backup_info.length) != 0) {
         backup_write(bi->buffer, bi->length);
@@ -106,6 +110,7 @@ void *backup_thread_loop(void *arg)
     } else {
       log_write("old and new backup buffer have a different length!");
     }
+    pthread_mutex_unlock(backup_info.mutex);
   }
   log_write("exit backup thread");
   return NULL;
