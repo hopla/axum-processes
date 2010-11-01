@@ -12685,6 +12685,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       break;
     }
   }
+  SetSelectedModule(ControlNr, ModuleNr);
 
   SensorReceiveFunctionNr = 0;
   type = 0;
@@ -12723,7 +12724,6 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
       {
         case MODULE_CONTROL_MODE_NONE:
         {
-          SetSelectedModule(ControlNr, ModuleNr);
         }
         break;
         case MODULE_CONTROL_MODE_SOURCE:
@@ -13189,6 +13189,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         }
         break;
       }
+      SetSelectedModule(ControlNr, ModuleNr);
     }
   }
 
