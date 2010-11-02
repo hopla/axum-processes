@@ -1195,9 +1195,9 @@ QTabWidget::tab-bar
     <property name="geometry">
      <rect>
       <x>756</x>
-      <y>37</y>
+      <y>34</y>
       <width>256</width>
-      <height>143</height>
+      <height>150</height>
      </rect>
     </property>
     <property name="autoFillBackground">
@@ -1206,16 +1206,16 @@ QTabWidget::tab-bar
     <property name="styleSheet">
      <string>QWidget
 {
-	background: rgba(22, 51, 105, 255);
+	background: rgba(35, 80, 163, 255);
 }</string>
     </property>
     <widget class="DNREQPanel" name="NewDNREQPanel">
      <property name="geometry">
       <rect>
        <x>73</x>
-       <y>18</y>
-       <width>183</width>
-       <height>125</height>
+       <y>19</y>
+       <width>182</width>
+       <height>123</height>
       </rect>
      </property>
      <property name="font">
@@ -1404,7 +1404,7 @@ QTabWidget::tab-bar
        <x>0</x>
        <y>18</y>
        <width>4</width>
-       <height>125</height>
+       <height>132</height>
       </rect>
      </property>
      <property name="toolTip">
@@ -1426,7 +1426,7 @@ QTabWidget::tab-bar
        <x>5</x>
        <y>18</y>
        <width>4</width>
-       <height>125</height>
+       <height>132</height>
       </rect>
      </property>
      <property name="toolTip">
@@ -1480,6 +1480,68 @@ QTabWidget::tab-bar
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="DNRPhaseMeter" name="NewDNRPanorama">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>143</y>
+       <width>246</width>
+       <height>7</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The Phase Meter</string>
+     </property>
+     <property name="whatsThis">
+      <string>The Phase Meter widget displays </string>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="Position">
+      <double>512.000000000000000</double>
+     </property>
+     <property name="MinPosition">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="MaxPosition">
+      <double>1023.000000000000000</double>
+     </property>
+     <property name="PointerWidth">
+      <number>5</number>
+     </property>
+     <property name="PointerMinColor">
+      <color>
+       <red>0</red>
+       <green>0</green>
+       <blue>0</blue>
+      </color>
+     </property>
+     <property name="PointerMaxColor">
+      <color>
+       <red>0</red>
+       <green>0</green>
+       <blue>0</blue>
+      </color>
+     </property>
+     <property name="BackgroundMonoColor">
+      <color>
+       <red>135</red>
+       <green>168</green>
+       <blue>228</blue>
+      </color>
+     </property>
+     <property name="BackgroundOutOfPhaseColor">
+      <color>
+       <red>135</red>
+       <green>168</green>
+       <blue>228</blue>
+      </color>
+     </property>
+     <property name="Horizontal">
+      <bool>true</bool>
      </property>
     </widget>
    </widget>

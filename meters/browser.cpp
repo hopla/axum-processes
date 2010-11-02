@@ -690,6 +690,7 @@ void Browser::MeterRelease()
 
     if (Panorama != CurrentPanorama)
     {
+      NewDNRPanorama->setPosition(1023-Panorama);
       CurrentPanorama = Panorama;
     }
 
