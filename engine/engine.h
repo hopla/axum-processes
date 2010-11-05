@@ -354,7 +354,9 @@ typedef struct
   unsigned int ControlModeTimerValue[4];
   int MasterControlMode[4];
   char Username[4][32];
-  char Password[4][32];
+  char Password[4][16];
+  char UsernameToWrite[4][32];
+  char PasswordToWrite[4][16];
 
   bool Redlight[8];
   unsigned int Samplerate;
@@ -483,6 +485,14 @@ struct ONLINE_NODE_INFORMATION_STRUCT
 
   SENSOR_RECEIVE_FUNCTION_STRUCT *SensorReceiveFunction;
   OBJECT_INFORMATION_STRUCT *ObjectInformation;
+
+  struct
+  {
+    unsigned char UsernameReceived;
+    char Username[32];
+    unsigned char PasswordReceived;
+    char Password[16];
+  } Account;
 
   ONLINE_NODE_INFORMATION_STRUCT *Next;
 };

@@ -4809,31 +4809,95 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 case GLOBAL_FUNCTION_ACCOUNT_ACTIVE_3:
                 case GLOBAL_FUNCTION_ACCOUNT_ACTIVE_4:
                 {
-                  for (int cntObject=1024; cntObject<OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024; cntObject++)
+                  int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_ACCOUNT_ACTIVE_1;
+                  switch (type)
                   {
-                    SENSOR_RECEIVE_FUNCTION_STRUCT *ConnectedEngineFunction = &OnlineNodeInformationElement->SensorReceiveFunction[cntObject-1024];
-
-                    if ((int)ConnectedEngineFunction->FunctionNr != -1)
+                    case MBN_DATATYPE_STATE:
                     {
-                      unsigned int EngineFunctionType = (ConnectedEngineFunction->FunctionNr>>24)&0xFF;
-                      unsigned int EngineFunctionSeqNr = (ConnectedEngineFunction->FunctionNr>>12)&0xFFF;
-                      unsigned int EngineFunctionNr = ConnectedEngineFunction->FunctionNr&0xFFF;
-
-                      if ((EngineFunctionType == GLOBAL_FUNCTIONS) && (EngineFunctionSeqNr == 0))
+                      if (data.State)
                       {
-                        if ((EngineFunctionNr>= GLOBAL_FUNCTION_READ_WRITE_USER_1) &&
-                            (EngineFunctionNr<= GLOBAL_FUNCTION_READ_WRITE_USER_4))
+                        OnlineNodeInformationElement->Account.UsernameReceived = 0;
+                        OnlineNodeInformationElement->Account.PasswordReceived = 0;
+
+                        for (int cntObject=1024; cntObject<OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024; cntObject++)
                         {
-                          mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
+                          SENSOR_RECEIVE_FUNCTION_STRUCT *ConnectedEngineFunction = &OnlineNodeInformationElement->SensorReceiveFunction[cntObject-1024];
+
+                          if ((int)ConnectedEngineFunction->FunctionNr != -1)
+                          {
+                            unsigned int EngineFunctionType = (ConnectedEngineFunction->FunctionNr>>24)&0xFF;
+                            unsigned int EngineFunctionSeqNr = (ConnectedEngineFunction->FunctionNr>>12)&0xFFF;
+                            unsigned int EngineFunctionNr = ConnectedEngineFunction->FunctionNr&0xFFF;
+
+                            if ((EngineFunctionType == GLOBAL_FUNCTIONS) && (EngineFunctionSeqNr == 0))
+                            {
+                              if (EngineFunctionNr>=((unsigned int)GLOBAL_FUNCTION_READ_WRITE_USER_1+ConsoleNr))
+                              {
+                                mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
+                              }
+                              else if (EngineFunctionNr>=((unsigned int)GLOBAL_FUNCTION_READ_WRITE_PASS_1+ConsoleNr))
+                              {
+                                mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
+                              }
+                            }
+                          }
                         }
-                        else if ((EngineFunctionNr>= GLOBAL_FUNCTION_READ_WRITE_PASS_1) &&
-                                 (EngineFunctionNr<= GLOBAL_FUNCTION_READ_WRITE_PASS_4))
-                        {
-                          mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
-                        }
+                      }
+                      else
+                      { //Send user/pass idle
+                        unsigned int FunctionNrToSend = 0x04000000;
+                        memset(AxumData.Username, 0, 32);
+                        memset(AxumData.Password, 0, 16);
+                        OnlineNodeInformationElement->Account.UsernameReceived = 0;
+                        OnlineNodeInformationElement->Account.PasswordReceived = 0;
+                        memset(OnlineNodeInformationElement->Account.Username, 0, 32);
+                        memset(OnlineNodeInformationElement->Account.Password, 0, 16);
+                        CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+ConsoleNr));
+                        CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+ConsoleNr));
+                        CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+ConsoleNr));
                       }
                     }
                   }
+                }
+                break;
+                case GLOBAL_FUNCTION_UPDATE_USER_1:
+                case GLOBAL_FUNCTION_UPDATE_USER_2:
+                case GLOBAL_FUNCTION_UPDATE_USER_3:
+                case GLOBAL_FUNCTION_UPDATE_USER_4:
+                {
+                  int Console = FunctionNr-GLOBAL_FUNCTION_UPDATE_USER_1;
+                  strncpy(AxumData.UsernameToWrite[Console], (char *)data.Octets, 32);
+
+                  unsigned int FunctionNrToSend = 0x04000000;
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_READ_WRITE_USER_1+Console));
+                }
+                break;
+                case GLOBAL_FUNCTION_UPDATE_PASS_1:
+                case GLOBAL_FUNCTION_UPDATE_PASS_2:
+                case GLOBAL_FUNCTION_UPDATE_PASS_3:
+                case GLOBAL_FUNCTION_UPDATE_PASS_4:
+                {
+                  int Console = FunctionNr-GLOBAL_FUNCTION_UPDATE_PASS_1;
+                  strncpy(AxumData.PasswordToWrite[Console], (char *)data.Octets, 16);
+
+                  unsigned int FunctionNrToSend = 0x04000000;
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_READ_WRITE_PASS_1+Console));
+                }
+                break;
+                case GLOBAL_FUNCTION_UPDATE_USER_PASS_1:
+                case GLOBAL_FUNCTION_UPDATE_USER_PASS_2:
+                case GLOBAL_FUNCTION_UPDATE_USER_PASS_3:
+                case GLOBAL_FUNCTION_UPDATE_USER_PASS_4:
+                {
+                  int Console = FunctionNr-GLOBAL_FUNCTION_UPDATE_USER_PASS_1;
+
+                  char *DataString = (char *)data.Octets;
+                  strncpy(AxumData.UsernameToWrite[Console], DataString, 32);
+                  strncpy(AxumData.PasswordToWrite[Console], &DataString[32], 16);
+
+                  unsigned int FunctionNrToSend = 0x04000000;
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_READ_WRITE_USER_1+Console));
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_READ_WRITE_PASS_1+Console));
                 }
                 break;
               }
@@ -6271,7 +6335,16 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
                 case GLOBAL_FUNCTION_READ_WRITE_USER_4:
                 {
                   int Console = FunctionNr-GLOBAL_FUNCTION_READ_WRITE_USER_1;
+
+                  OnlineNodeInformationElement->Account.UsernameReceived = 1;
+                  strncpy(OnlineNodeInformationElement->Account.Username, (char *)data.Octets, 32);
                   strncpy(AxumData.Username[Console], (char *)data.Octets, 32);
+                  if (OnlineNodeInformationElement->Account.PasswordReceived)
+                  {
+                    strncpy(AxumData.Password[Console], OnlineNodeInformationElement->Account.Password, 16);
+                    unsigned int FunctionNrToSend = 0x04000000;
+                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
+                  }
 
                   unsigned int FunctionNrToSend = 0x04000000;
                   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
@@ -6283,7 +6356,17 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
                 case GLOBAL_FUNCTION_READ_WRITE_PASS_4:
                 {
                   int Console = FunctionNr-GLOBAL_FUNCTION_READ_WRITE_PASS_1;
-                  strncpy(AxumData.Password[Console], (char *)data.Octets, 32);
+
+                  OnlineNodeInformationElement->Account.PasswordReceived = 1;
+                  strncpy(OnlineNodeInformationElement->Account.Password, (char *)data.Octets, 16);
+                  strncpy(AxumData.Password[Console], (char *)data.Octets, 16);
+                  if (OnlineNodeInformationElement->Account.UsernameReceived)
+                  {
+                    strncpy(AxumData.Username[Console], OnlineNodeInformationElement->Account.Username, 32);
+                    unsigned int FunctionNrToSend = 0x04000000;
+                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
+                  }
+
 
                   unsigned int FunctionNrToSend = 0x04000000;
                   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+Console));
@@ -6357,6 +6440,10 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     NewOnlineNodeInformationElement->TemplateNumberOfCustomObjects = -1;
     NewOnlineNodeInformationElement->SensorReceiveFunction = NULL;
     NewOnlineNodeInformationElement->ObjectInformation = NULL;
+    NewOnlineNodeInformationElement->Account.UsernameReceived = 0;
+    NewOnlineNodeInformationElement->Account.Username[0] = 0;
+    NewOnlineNodeInformationElement->Account.PasswordReceived = 0;
+    NewOnlineNodeInformationElement->Account.Password[0] = 0;
 
     if (OnlineNodeInformationList == NULL)
     {
@@ -10830,6 +10917,42 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             }
           }
           break;
+          case GLOBAL_FUNCTION_READ_WRITE_USER_1:
+          case GLOBAL_FUNCTION_READ_WRITE_USER_2:
+          case GLOBAL_FUNCTION_READ_WRITE_USER_3:
+          case GLOBAL_FUNCTION_READ_WRITE_USER_4:
+          {
+            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_READ_WRITE_USER_1;
+            switch (DataType)
+            {
+              case MBN_DATATYPE_OCTETS:
+              {
+                strncpy(LCDText, AxumData.UsernameToWrite[ConsoleNr], 32);
+                data.Octets = (unsigned char *)LCDText;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
+              }
+              break;
+            }
+          }
+          break;
+          case GLOBAL_FUNCTION_READ_WRITE_PASS_1:
+          case GLOBAL_FUNCTION_READ_WRITE_PASS_2:
+          case GLOBAL_FUNCTION_READ_WRITE_PASS_3:
+          case GLOBAL_FUNCTION_READ_WRITE_PASS_4:
+          {
+            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_READ_WRITE_PASS_1;
+            switch (DataType)
+            {
+              case MBN_DATATYPE_OCTETS:
+              {
+                strncpy(LCDText, AxumData.PasswordToWrite[ConsoleNr], 16);
+                data.Octets = (unsigned char *)LCDText;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
+              }
+              break;
+            }
+          }
+          break;
           case GLOBAL_FUNCTION_UPDATE_USER_1:
           case GLOBAL_FUNCTION_UPDATE_USER_2:
           case GLOBAL_FUNCTION_UPDATE_USER_3:
@@ -10861,6 +10984,25 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 strncpy(LCDText, AxumData.Password[ConsoleNr], 16);
                 data.Octets = (unsigned char *)LCDText;
                 mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
+              }
+              break;
+            }
+          }
+          break;
+          case GLOBAL_FUNCTION_UPDATE_USER_PASS_1:
+          case GLOBAL_FUNCTION_UPDATE_USER_PASS_2:
+          case GLOBAL_FUNCTION_UPDATE_USER_PASS_3:
+          case GLOBAL_FUNCTION_UPDATE_USER_PASS_4:
+          {
+            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_UPDATE_USER_PASS_1;
+            switch (DataType)
+            {
+              case MBN_DATATYPE_OCTETS:
+              {
+                memcpy(LCDText, AxumData.Username[ConsoleNr], 32);
+                memcpy(&LCDText[32], AxumData.Password[ConsoleNr], 16);
+                data.Octets = (unsigned char *)LCDText;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 48, data, 1);
               }
               break;
             }
@@ -15655,6 +15797,8 @@ void initialize_axum_data_struct()
     AxumData.SelectedDestination[cntConsole] = 0;
     AxumData.Username[cntConsole][0] = 0;
     AxumData.Password[cntConsole][0] = 0;
+    AxumData.UsernameToWrite[cntConsole][0] = 0;
+    AxumData.PasswordToWrite[cntConsole][0] = 0;
   }
 
   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
