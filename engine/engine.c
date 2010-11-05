@@ -605,21 +605,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
   ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = GetOnlineNodeInformation(message->AddressFrom);
   if (OnlineNodeInformationElement == NULL)
   {
-    log_write("[mSensorDataChanged] OnlineNodeInformationElement not found");
+    log_write("[mSensorDataChanged] OnlineNodeInformationElement not found for address: 0x%08X", message->AddressFrom);
     node_info_lock(0);
     axum_data_lock(0);
     return 1;
   }
   if (object>=(OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024))
   {
-    log_write("[mSensorDataChanged] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->UsedNumberOfCustomObjects);
+    log_write("[mSensorDataChanged] Object: %d is unknown, this node (0x%08x), contains %d objects", object, message->AddressFrom, OnlineNodeInformationElement->UsedNumberOfCustomObjects);
     node_info_lock(0);
     axum_data_lock(0);
     return 1;
   }
   else if (object<1024)
   {
-    log_write("[mSensorDataChanged] Sensor change is not allowed for object: %d (<1024)", object);
+    log_write("[mSensorDataChanged] On node 0x%08X a sensor change is not allowed for object: %d (<1024)", message->AddressFrom, object);
     node_info_lock(0);
     axum_data_lock(0);
     return 1;
@@ -5906,14 +5906,14 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
   if (OnlineNodeInformationElement == NULL)
   {
-    log_write("[mSensorDataResponse] OnlineNodeInformationElement not found");
+    log_write("[mSensorDataResponse] OnlineNodeInformationElement not found for address: 0x%08X", message->AddressFrom);
     node_info_lock(0);
     axum_data_lock(0);
     return 1;
   }
   if (object>=(OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024))
   {
-    log_write("[mSensorDataResponse] Object: %d is unknown, this node contains %d objects", object, OnlineNodeInformationElement->UsedNumberOfCustomObjects);
+    log_write("[mSensorDataResponse] Object: %d is unknown, this node (0x%08x), contains %d objects", object, message->AddressFrom, OnlineNodeInformationElement->UsedNumberOfCustomObjects);
     node_info_lock(0);
     axum_data_lock(0);
     return 1;
