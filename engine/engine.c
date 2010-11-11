@@ -9675,10 +9675,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             Active = 0;
             if (AxumData.ModuleData[ModuleNr].FaderLevel>-80)
             {
-              if (AxumData.ModuleData[ModuleNr].On)
-              {
-                Active = 1;
-              }
+              Active = 1;
             }
 
             if (FunctionNr == MODULE_FUNCTION_FADER_OFF)
