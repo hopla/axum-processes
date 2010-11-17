@@ -466,6 +466,7 @@ struct ONLINE_NODE_INFORMATION_STRUCT
   unsigned int ProductID;
   unsigned int UniqueIDPerProduct;
   int FirmwareMajorRevision;
+  unsigned char TimerRequestDone;
 
 //Not sure if should be stored here...
   int SlotNumberObjectNr;

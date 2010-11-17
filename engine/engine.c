@@ -185,7 +185,7 @@ struct PROGRAMMED_DEFAULT_SWITCH_STRUCT {
 void *thread(void *vargp);
 
 ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationList = NULL;
-ONLINE_NODE_INFORMATION_STRUCT *TimerWalkOnlineNodeInformationElement = NULL;
+
 //#define ADDRESS_TABLE_SIZE 65536
 //ONLINE_NODE_INFORMATION_STRUCT OnlineNodeInformation[ADDRESS_TABLE_SIZE];
 
@@ -6428,7 +6428,8 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     NewOnlineNodeInformationElement->ManufacturerID = new_info->ManufacturerID;
     NewOnlineNodeInformationElement->ProductID = new_info->ProductID;
     NewOnlineNodeInformationElement->UniqueIDPerProduct = new_info->UniqueIDPerProduct;
-    NewOnlineNodeInformationElement->FirmwareMajorRevision  = -1;
+    NewOnlineNodeInformationElement->FirmwareMajorRevision = -1;
+    NewOnlineNodeInformationElement->TimerRequestDone = 0;
     NewOnlineNodeInformationElement->SlotNumberObjectNr = -1;
     NewOnlineNodeInformationElement->InputChannelCountObjectNr = -1;
     NewOnlineNodeInformationElement->OutputChannelCountObjectNr = -1;
@@ -6788,70 +6789,85 @@ void Timer100HzDone(int Value)
     //Check for firmware requests
     if (mbn->node.Services&0x80)
     {
+      ONLINE_NODE_INFORMATION_STRUCT *TimerWalkOnlineNodeInformationElement = NULL;
+      bool RequestDone = false;
+
       axum_data_lock(1);
       node_info_lock(1);
 
-      if (TimerWalkOnlineNodeInformationElement != NULL)
+      //We may only start from the first element because multiple threads
+      TimerWalkOnlineNodeInformationElement = OnlineNodeInformationList;
+      while ((TimerWalkOnlineNodeInformationElement != NULL) && (!RequestDone))
       {
-        if ((TimerWalkOnlineNodeInformationElement->MambaNetAddress != 0x00000000) &&
-            (TimerWalkOnlineNodeInformationElement->FirmwareMajorRevision == -1))
+        if ((TimerWalkOnlineNodeInformationElement->FirmwareMajorRevision == -1) ||
+            (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects == -1) ||
+            ((TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects != TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects) &&
+             (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects)))
         {
-          unsigned int ObjectNr = 7; //Firmware major revision
-          log_write("timer: Get firmware 0x%08X", TimerWalkOnlineNodeInformationElement->MambaNetAddress);
-          mbnGetSensorData(mbn, TimerWalkOnlineNodeInformationElement->MambaNetAddress, ObjectNr, 0);
-        }
-        if ((TimerWalkOnlineNodeInformationElement->MambaNetAddress != 0x00000000) &&
-            (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects == -1))
-        {
-          unsigned int ObjectNr = 13; //Number of custom objects
-          log_write("timer: Get number of custom objects 0x%08X", TimerWalkOnlineNodeInformationElement->MambaNetAddress);
-          mbnGetSensorData(mbn, TimerWalkOnlineNodeInformationElement->MambaNetAddress, ObjectNr, 0);
-        }
-        if ((TimerWalkOnlineNodeInformationElement->FirmwareMajorRevision != -1) &&
-            (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects > 0) &&
-            (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects != TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects))
-        {
-          log_write("timer: Get template number of custom objects 0x%08X, (%d/%d)", TimerWalkOnlineNodeInformationElement->MambaNetAddress,
-                                                                                    TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects,
-                                                                                    TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects);
-          db_lock(1);
-          TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects =
-            db_read_template_count(TimerWalkOnlineNodeInformationElement->ManufacturerID,
-            TimerWalkOnlineNodeInformationElement->ProductID,
-            TimerWalkOnlineNodeInformationElement->FirmwareMajorRevision);
-
-          if (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects == TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects)
+          if ((TimerWalkOnlineNodeInformationElement->MambaNetAddress != 0x00000000) &&
+             (!TimerWalkOnlineNodeInformationElement->TimerRequestDone))
           {
-            log_write("database filled with the template from 0x%08X, %d objects", TimerWalkOnlineNodeInformationElement->MambaNetAddress,
-                                                                                   TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects);
-
-            db_read_template_info(TimerWalkOnlineNodeInformationElement, 1);
-
-            if (TimerWalkOnlineNodeInformationElement->SlotNumberObjectNr != -1)
+            if (TimerWalkOnlineNodeInformationElement->FirmwareMajorRevision == -1)
             {
-              mbnGetSensorData(mbn, TimerWalkOnlineNodeInformationElement->MambaNetAddress, TimerWalkOnlineNodeInformationElement->SlotNumberObjectNr, 1);
+              unsigned int ObjectNr = 7; //Firmware major revision
+              log_write("timer: Get firmware 0x%08X", TimerWalkOnlineNodeInformationElement->MambaNetAddress);
+              mbnGetSensorData(mbn, TimerWalkOnlineNodeInformationElement->MambaNetAddress, ObjectNr, 0);
+              RequestDone = true;
+              TimerWalkOnlineNodeInformationElement->TimerRequestDone = true;
             }
+            else if (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects == -1)
+            {
+              unsigned int ObjectNr = 13; //Number of custom objects
+              log_write("timer: Get number of custom objects 0x%08X", TimerWalkOnlineNodeInformationElement->MambaNetAddress);
+              mbnGetSensorData(mbn, TimerWalkOnlineNodeInformationElement->MambaNetAddress, ObjectNr, 0);
+              RequestDone = true;
+              TimerWalkOnlineNodeInformationElement->TimerRequestDone = true;
+            }
+            if ((TimerWalkOnlineNodeInformationElement->FirmwareMajorRevision != -1) &&
+                (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects > 0) &&
+                (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects != TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects))
+            {
+              log_write("timer: Get template number of custom objects 0x%08X, (%d/%d)", TimerWalkOnlineNodeInformationElement->MambaNetAddress,
+                                                                                      TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects,
+                                                                                      TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects);
+              db_lock(1);
+              TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects =
+                db_read_template_count(TimerWalkOnlineNodeInformationElement->ManufacturerID,
+                TimerWalkOnlineNodeInformationElement->ProductID,
+                TimerWalkOnlineNodeInformationElement->FirmwareMajorRevision);
 
-            db_read_node_defaults(TimerWalkOnlineNodeInformationElement, 1024, TimerWalkOnlineNodeInformationElement->UsedNumberOfCustomObjects+1023, 0, 0);
-            db_read_node_config(TimerWalkOnlineNodeInformationElement, 1024, TimerWalkOnlineNodeInformationElement->UsedNumberOfCustomObjects+1023);
+              if (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects == TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects)
+              {
+                log_write("database filled with the template from 0x%08X, %d objects", TimerWalkOnlineNodeInformationElement->MambaNetAddress,
+                                                                                     TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects);
+
+                db_read_template_info(TimerWalkOnlineNodeInformationElement, 1);
+
+                if (TimerWalkOnlineNodeInformationElement->SlotNumberObjectNr != -1)
+                {
+                  mbnGetSensorData(mbn, TimerWalkOnlineNodeInformationElement->MambaNetAddress, TimerWalkOnlineNodeInformationElement->SlotNumberObjectNr, 1);
+                  RequestDone = true;
+                  TimerWalkOnlineNodeInformationElement->TimerRequestDone = true;
+                }
+
+                db_read_node_defaults(TimerWalkOnlineNodeInformationElement, 1024, TimerWalkOnlineNodeInformationElement->UsedNumberOfCustomObjects+1023, 0, 0);
+                db_read_node_config(TimerWalkOnlineNodeInformationElement, 1024, TimerWalkOnlineNodeInformationElement->UsedNumberOfCustomObjects+1023);
+              }
+              db_lock(0);
+            }
           }
-          db_lock(0);
         }
-
         TimerWalkOnlineNodeInformationElement = TimerWalkOnlineNodeInformationElement->Next;
       }
-      else
-      {
+      //Last in list, clear the TimerRequestDone bits
+      if (TimerWalkOnlineNodeInformationElement == NULL)
+      { 
         TimerWalkOnlineNodeInformationElement = OnlineNodeInformationList;
-      }
-
-      while ((TimerWalkOnlineNodeInformationElement != NULL) &&
-             (TimerWalkOnlineNodeInformationElement->FirmwareMajorRevision != -1) &&
-             (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects != -1) &&
-             ((TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects == TimerWalkOnlineNodeInformationElement->TemplateNumberOfCustomObjects) ||
-              (TimerWalkOnlineNodeInformationElement->OnlineNumberOfCustomObjects == 0)))
-      {
-        TimerWalkOnlineNodeInformationElement = TimerWalkOnlineNodeInformationElement->Next;
+        while (TimerWalkOnlineNodeInformationElement != NULL)
+        {
+          TimerWalkOnlineNodeInformationElement->TimerRequestDone = false;
+          TimerWalkOnlineNodeInformationElement = TimerWalkOnlineNodeInformationElement->Next;
+        }
       }
       node_info_lock(0);
       axum_data_lock(0);
