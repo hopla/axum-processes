@@ -260,7 +260,7 @@ void Browser::timerEvent(QTimerEvent *Event)
       int Difference = ElapsedTime-CurrentElapsedTime;
       if (Difference == 60)
       {
-        IntToTimerString(timer_str, ElapsedTime);
+        IntToTimerString(timer_str, CurrentElapsedTime);
         QString rich_str = tr("<font color='%1'>%2</font>");
         TimerLabel->setText(rich_str.arg("#551B1B", timer_str));
       }
