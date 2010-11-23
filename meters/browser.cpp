@@ -204,6 +204,8 @@ void IntToTimerString(char *timer_str, int elapsed_time)
 
 void Browser::timerEvent(QTimerEvent *Event)
 {
+  char timer_str[16] = "";
+
 	cntSecond++;
 	MeterRelease();
 
@@ -222,19 +224,19 @@ void Browser::timerEvent(QTimerEvent *Event)
     CurrentMICActiveTimerEnabled = MICActiveTimerEnabled;
     if (MICActiveTimerEnabled)
     {
-      char timer_str[16] = "";
       timespec newTime;
       clock_gettime(CLOCK_MONOTONIC, &newTime);
       PreviousNumberOfSeconds = newTime.tv_sec+((double)newTime.tv_nsec/1000000000);
       CurrentElapsedTime = 0;
 
       IntToTimerString(timer_str, 0);
-      TimerLabel->setText(timer_str);
+      QString rich_str = tr("<font color='%1'>%2</font>");
+      TimerLabel->setText(rich_str.arg("#FF5555", timer_str));
+      TimerLabel->setVisible(true);
     }
   }
   else if (CurrentMICActiveTimerEnabled)
   {
-    char timer_str[16] = "";
     timespec newTime;
     clock_gettime(CLOCK_MONOTONIC, &newTime);
     int ElapsedTime = (newTime.tv_sec+((double)newTime.tv_nsec/1000000000)) - PreviousNumberOfSeconds;
@@ -242,8 +244,30 @@ void Browser::timerEvent(QTimerEvent *Event)
     if (CurrentElapsedTime != ElapsedTime)
     {
       IntToTimerString(timer_str, ElapsedTime);
-      TimerLabel->setText(timer_str);
+      QString rich_str = tr("<font color='%1'>%2</font>");
+      TimerLabel->setText(rich_str.arg("#FF5555", timer_str));
       CurrentElapsedTime = ElapsedTime;
+    }
+  }
+  else if (TimerLabel->isVisible())
+  {
+    timespec newTime;
+    clock_gettime(CLOCK_MONOTONIC, &newTime);
+    int ElapsedTime = (newTime.tv_sec+((double)newTime.tv_nsec/1000000000)) - PreviousNumberOfSeconds;
+
+    if (CurrentElapsedTime != ElapsedTime)
+    {
+      int Difference = ElapsedTime-CurrentElapsedTime;
+      if (Difference == 60)
+      {
+        IntToTimerString(timer_str, ElapsedTime);
+        QString rich_str = tr("<font color='%1'>%2</font>");
+        TimerLabel->setText(rich_str.arg("#551B1B", timer_str));
+      }
+      else if (Difference > 60*10)
+      {
+        TimerLabel->setVisible(false);
+      }
     }
   }
 
