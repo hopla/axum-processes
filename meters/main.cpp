@@ -365,6 +365,7 @@ void init(int argc, char *argv[])
   }
   log_write(cmdline);
   log_write("Starting QApplication");
+  log_write(mbnVersion());
 }
 
 int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_data in)

@@ -482,6 +482,7 @@ void init(int argc, char **argv, char *upath) {
     strcat(cmdline, argv[cnt]);
   }
   log_write(cmdline);
+  log_write(mbnVersion());
 
   net_read();
   /* objects */

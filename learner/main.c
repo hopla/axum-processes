@@ -495,6 +495,7 @@ void init(int argc, char *argv[]) {
     strcat(cmdline, argv[cnt]);
   }
   log_write(cmdline);
+  log_write(mbnVersion());
 }
 
 int main(int argc, char *argv[]) {
