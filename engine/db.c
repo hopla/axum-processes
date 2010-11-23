@@ -2654,7 +2654,7 @@ int db_read_console_preset(unsigned short int first_preset, unsigned short int l
                                     safe_recall_time,     \
                                     forced_recall_time    \
                                     FROM console_preset   \
-                                    WHERE pos>=$1 AND pos<=$2 \
+                                    WHERE number>=$1 AND number<=$2 \
                                     ORDER BY pos", 1, 2, params);
   if (qres == NULL)
   {
