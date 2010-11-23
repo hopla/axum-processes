@@ -47,7 +47,7 @@
 #define MANUFACTURER_ID          0x0001	//D&R
 #define PRODUCT_ID               0x001A	//Axum linux meters
 
-#define NR_OF_STATIC_OBJECTS    (1094-1023)
+#define NR_OF_STATIC_OBJECTS    (1093-1023)
 #define NR_OF_OBJECTS            NR_OF_STATIC_OBJECTS
 
 #define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
@@ -67,7 +67,7 @@ struct mbn_node_info this_node = {
   "Axum-PPM-Meters",
   MANUFACTURER_ID, PRODUCT_ID, 0x0001,
   0, 0,                   //Hw revision
-  4, 0,                   //Fw revision
+  5, 0,                   //Fw revision
   0, 0,                   //FPGA revision
   NR_OF_OBJECTS,          //Number of objects
   0,                      //Default engine address
@@ -307,6 +307,9 @@ void init(int argc, char *argv[])
                                   MBN_DATATYPE_NODATA,
                                   MBN_DATATYPE_UINT, 2, 0, 1023, 512, 512);
   objects[cntObject++] = MBN_OBJ( (char *)"Show module parameters",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_STATE, 1, 0, 1, 1, 1);
+  objects[cntObject++] = MBN_OBJ( (char *)"MIC active timer",
                                   MBN_DATATYPE_NODATA,
                                   MBN_DATATYPE_STATE, 1, 0, 1, 1, 1);
   this_node.NumberOfObjects = cntObject;
@@ -648,6 +651,11 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     case 1092:
     { //Show module parameters
       browser->ShowModuleParameters = in.State;
+    }
+    break;
+    case 1093:
+    {
+      browser->MICActiveTimerEnabled = in.State;
     }
     break;
   }

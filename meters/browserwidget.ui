@@ -1587,6 +1587,7 @@ QTabWidget::tab-bar
    <zorder>Redlight8OnDNRImage</zorder>
    <zorder>NewDNRPPMMeter_3</zorder>
    <zorder>NewDNRDigitalClock</zorder>
+   <zorder>TimerLabel</zorder>
    <zorder>NewDNRPPMMeter</zorder>
    <zorder>label_4</zorder>
    <zorder>label_6</zorder>

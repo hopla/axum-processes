@@ -67,6 +67,10 @@ public:
 	 double previouNumberOfSeconds;
    bool LinkStatus;
    bool CurrentLinkStatus;
+   bool MICActiveTimerEnabled;
+   bool CurrentMICActiveTimerEnabled;
+   double PreviousNumberOfSeconds;
+   int CurrentElapsedTime;
 
    bool ProgramEndTimeEnabled;
    bool CurrentProgramEndTimeEnabled;

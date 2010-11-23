@@ -123,6 +123,10 @@ Browser::Browser(QWidget *parent)
   LinkStatus = 0;
   CurrentLinkStatus = 0;
 
+  MICActiveTimerEnabled = 0;
+  CurrentMICActiveTimerEnabled = 0;
+  CurrentElapsedTime = 0;
+
   ProgramEndTimeEnabled = false;
   CurrentProgramEndTimeEnabled = false;
   ProgramEndMinute = 0;
@@ -173,9 +177,33 @@ Browser::~Browser()
 
 extern char CheckLinkStatus();
 
+void IntToTimerString(char *timer_str, int elapsed_time)
+{
+  char TempStr[16];
+  int Days = elapsed_time/86400;
+  int time_left = elapsed_time%86400;
+  int Hours = time_left/3600;
+  time_left = time_left%3600;
+  int Minutes = time_left/60;
+  time_left = time_left%60;
+  int Seconds = time_left;
+
+  if (Days)
+  {
+    sprintf(TempStr, "%dd ", Days);
+    strcat(timer_str, TempStr);
+  }
+  if (Hours)
+  {
+    sprintf(TempStr, "%02d:", Hours);
+    strcat(timer_str, TempStr);
+  }
+  sprintf(TempStr, "%02d:%02d", Minutes, Seconds);
+  strcat(timer_str, TempStr);
+}
+
 void Browser::timerEvent(QTimerEvent *Event)
 {
-
 	cntSecond++;
 	MeterRelease();
 
@@ -187,6 +215,35 @@ void Browser::timerEvent(QTimerEvent *Event)
       CurrentLinkStatus = LinkStatus;
 
       log_write("Link status change: %s", LinkStatus ? ("Up") : ("Down"));
+    }
+  }
+  if (CurrentMICActiveTimerEnabled != MICActiveTimerEnabled)
+  {
+    CurrentMICActiveTimerEnabled = MICActiveTimerEnabled;
+    if (MICActiveTimerEnabled)
+    {
+      char timer_str[16] = "";
+      timespec newTime;
+      clock_gettime(CLOCK_MONOTONIC, &newTime);
+      PreviousNumberOfSeconds = newTime.tv_sec+((double)newTime.tv_nsec/1000000000);
+      CurrentElapsedTime = 0;
+
+      IntToTimerString(timer_str, 0);
+      TimerLabel->setText(timer_str);
+    }
+  }
+  else if (CurrentMICActiveTimerEnabled)
+  {
+    char timer_str[16] = "";
+    timespec newTime;
+    clock_gettime(CLOCK_MONOTONIC, &newTime);
+    int ElapsedTime = (newTime.tv_sec+((double)newTime.tv_nsec/1000000000)) - PreviousNumberOfSeconds;
+
+    if (CurrentElapsedTime != ElapsedTime)
+    {
+      IntToTimerString(timer_str, ElapsedTime);
+      TimerLabel->setText(timer_str);
+      CurrentElapsedTime = ElapsedTime;
     }
   }
 
