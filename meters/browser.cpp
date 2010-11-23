@@ -169,6 +169,8 @@ Browser::Browser(QWidget *parent)
     EQType[cnt] = 3;
     CurrentEQType[cnt] = 3;
   }
+
+  TimerLabel->setVisible(false);
 }
 
 Browser::~Browser()
