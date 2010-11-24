@@ -1573,7 +1573,36 @@ QTabWidget::tab-bar
      <string>/var/lib/axum/skins/meters/logo.png</string>
     </property>
     <property name="ScaleImage">
-     <bool>false</bool>
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="TimerLabel">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>371</y>
+      <width>410</width>
+      <height>64</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>20</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string>QLabel
+{
+	color: rgba(255, 85, 85, 255);
+	color: rgb(255, 85, 85);
+	background: rgba(0, 0, 0, 0);
+}</string>
+    </property>
+    <property name="text">
+     <string>00:00</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <zorder>NewDNRImage</zorder>
