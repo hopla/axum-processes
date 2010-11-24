@@ -1647,35 +1647,6 @@ QTabWidget::tab-bar
    <zorder>Redlight8OffDNRImage</zorder>
    <zorder>NewDNRImageLogo</zorder>
    <zorder>widget_2</zorder>
-   <widget class="QLabel" name="TimerLabel">
-    <property name="geometry">
-     <rect>
-      <x>350</x>
-      <y>371</y>
-      <width>410</width>
-      <height>64</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>20</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string>QLabel
-{
-	color: rgba(255, 85, 85, 255);
-	color: rgb(255, 85, 85);
-	background: rgba(0, 0, 0, 0);
-}</string>
-    </property>
-    <property name="text">
-     <string>00:00</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
   </widget>
   <widget class="DNRImage" name="NewDNRImageBottomOnAir">
    <property name="geometry">
