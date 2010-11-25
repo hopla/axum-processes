@@ -325,6 +325,7 @@ void init(int argc, char **argv)
     strcat(cmdline, argv[cnt]);
   }
   log_write(cmdline);
+  log_write(mbnVersion());
 
   hwparent(&this_node);
   log_write("hwparent %04X:%04X:%04X", this_node.HardwareParent[0], this_node.HardwareParent[1], this_node.HardwareParent[2]);
@@ -350,8 +351,6 @@ void init(int argc, char **argv)
     log_close();
     exit(1);
   }
-
-  log_write(mbnVersion());
 
   if ((itf=mbnEthernetOpen(ethdev, error)) == NULL)
   {
