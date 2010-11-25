@@ -4854,6 +4854,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+ConsoleNr));
                         CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+ConsoleNr));
                         CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+ConsoleNr));
+                        CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+ConsoleNr));
                       }
                     }
                   }
@@ -4893,6 +4894,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
                   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
                   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+Console));
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
                 }
                 break;
                 case GLOBAL_FUNCTION_CHIPCARD_USER_1:
@@ -4951,6 +4953,19 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   unsigned int FunctionNrToSend = 0x04000000;
                   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_USER_1+Console));
                   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_PASS_1+Console));
+                }
+                break;
+                case GLOBAL_FUNCTION_USER_LEVEL_1:
+                case GLOBAL_FUNCTION_USER_LEVEL_2:
+                case GLOBAL_FUNCTION_USER_LEVEL_3:
+                case GLOBAL_FUNCTION_USER_LEVEL_4:
+                {
+                  int Console = FunctionNr-GLOBAL_FUNCTION_USER_LEVEL_1;
+
+                  AxumData.UserLevel[Console] = data.State;
+
+                  unsigned int FunctionNrToSend = 0x04000000;
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
                 }
                 break;
               }
@@ -6397,6 +6412,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
                     strncpy(AxumData.Password[Console], OnlineNodeInformationElement->Account.Password, 16);
                     unsigned int FunctionNrToSend = 0x04000000;
                     CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
+                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
                   }
 
                   unsigned int FunctionNrToSend = 0x04000000;
@@ -6418,6 +6434,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
                     strncpy(AxumData.Username[Console], OnlineNodeInformationElement->Account.Username, 32);
                     unsigned int FunctionNrToSend = 0x04000000;
                     CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
+                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
                   }
 
 
@@ -11071,6 +11088,29 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 48, data, 1);
               }
               break;
+            }
+          }
+          break;
+          case GLOBAL_FUNCTION_USER_LEVEL_1:
+          case GLOBAL_FUNCTION_USER_LEVEL_2:
+          case GLOBAL_FUNCTION_USER_LEVEL_3:
+          case GLOBAL_FUNCTION_USER_LEVEL_4:
+          {
+            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_USER_LEVEL_1;
+            switch (DataType)
+            {
+              case MBN_DATATYPE_STATE:
+              {
+                data.State = AxumData.UserLevel[ConsoleNr];
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              }
+              break;
+              case MBN_DATATYPE_OCTETS:
+              {
+                char UserLevelNames[7][21] = {"Idle", "Unknown user", "Operator 1", "Operator 2", "Supervisor 1", "Supervisor 2", "System adminsitrator"};
+                data.Octets = (unsigned char *)UserLevelNames[AxumData.UserLevel[ConsoleNr]];
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              }
             }
           }
           break;

@@ -357,6 +357,7 @@ typedef struct
   char Password[4][16];
   char UsernameToWrite[4][32];
   char PasswordToWrite[4][16];
+  unsigned char UserLevel[4];
 
   bool Redlight[8];
   unsigned int Samplerate;

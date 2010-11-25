@@ -1077,8 +1077,12 @@
 #define GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_2      542
 #define GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_3      543
 #define GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_4      544
+#define GLOBAL_FUNCTION_USER_LEVEL_1                    545
+#define GLOBAL_FUNCTION_USER_LEVEL_2                    546
+#define GLOBAL_FUNCTION_USER_LEVEL_3                    547
+#define GLOBAL_FUNCTION_USER_LEVEL_4                    548
 
-#define NUMBER_OF_GLOBAL_FUNCTIONS                    545
+#define NUMBER_OF_GLOBAL_FUNCTIONS                    549
 
 #define MODULE_CONTROL_MODE_NONE                    -1
 #define MODULE_CONTROL_MODE_SOURCE                    0
