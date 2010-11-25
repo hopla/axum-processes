@@ -195,7 +195,7 @@ void IntToTimerString(char *timer_str, int elapsed_time)
     sprintf(TempStr, "%dd ", Days);
     strcat(timer_str, TempStr);
   }
-  if (Hours)
+  if ((Days) || (Hours))
   {
     sprintf(TempStr, "%02d:", Hours);
     strcat(timer_str, TempStr);
