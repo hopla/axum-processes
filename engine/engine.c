@@ -4803,12 +4803,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   CheckObjectsToSent(FunctionNrToSend | FunctionNr);
                 }
                 break;
-                case GLOBAL_FUNCTION_ACCOUNT_ACTIVE_1:
-                case GLOBAL_FUNCTION_ACCOUNT_ACTIVE_2:
-                case GLOBAL_FUNCTION_ACCOUNT_ACTIVE_3:
-                case GLOBAL_FUNCTION_ACCOUNT_ACTIVE_4:
+                case GLOBAL_FUNCTION_CHIPCARD_ACTIVE_1:
+                case GLOBAL_FUNCTION_CHIPCARD_ACTIVE_2:
+                case GLOBAL_FUNCTION_CHIPCARD_ACTIVE_3:
+                case GLOBAL_FUNCTION_CHIPCARD_ACTIVE_4:
                 {
-                  int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_ACCOUNT_ACTIVE_1;
+                  int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_ACTIVE_1;
                   switch (type)
                   {
                     case MBN_DATATYPE_STATE:
@@ -4830,11 +4830,11 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                             if ((EngineFunctionType == GLOBAL_FUNCTIONS) && (EngineFunctionSeqNr == 0))
                             {
-                              if (EngineFunctionNr>=((unsigned int)GLOBAL_FUNCTION_READ_WRITE_USER_1+ConsoleNr))
+                              if (EngineFunctionNr>=((unsigned int)GLOBAL_FUNCTION_CHIPCARD_USER_1+ConsoleNr))
                               {
                                 mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
                               }
-                              else if (EngineFunctionNr>=((unsigned int)GLOBAL_FUNCTION_READ_WRITE_PASS_1+ConsoleNr))
+                              else if (EngineFunctionNr>=((unsigned int)GLOBAL_FUNCTION_CHIPCARD_PASS_1+ConsoleNr))
                               {
                                 mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
                               }
@@ -4863,24 +4863,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 case GLOBAL_FUNCTION_UPDATE_USER_2:
                 case GLOBAL_FUNCTION_UPDATE_USER_3:
                 case GLOBAL_FUNCTION_UPDATE_USER_4:
-                {
-                  int Console = FunctionNr-GLOBAL_FUNCTION_UPDATE_USER_1;
-                  strncpy(AxumData.UsernameToWrite[Console], (char *)data.Octets, 32);
-
-                  unsigned int FunctionNrToSend = 0x04000000;
-                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_READ_WRITE_USER_1+Console));
+                { //Only atomic update allowed
                 }
                 break;
                 case GLOBAL_FUNCTION_UPDATE_PASS_1:
                 case GLOBAL_FUNCTION_UPDATE_PASS_2:
                 case GLOBAL_FUNCTION_UPDATE_PASS_3:
                 case GLOBAL_FUNCTION_UPDATE_PASS_4:
-                {
-                  int Console = FunctionNr-GLOBAL_FUNCTION_UPDATE_PASS_1;
-                  strncpy(AxumData.PasswordToWrite[Console], (char *)data.Octets, 16);
-
-                  unsigned int FunctionNrToSend = 0x04000000;
-                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_READ_WRITE_PASS_1+Console));
+                { //Only atomic update allowed
                 }
                 break;
                 case GLOBAL_FUNCTION_UPDATE_USER_PASS_1:
@@ -4890,13 +4880,77 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   int Console = FunctionNr-GLOBAL_FUNCTION_UPDATE_USER_PASS_1;
 
+                  char *data_str = (char *)data.Octets;
+
+                  OnlineNodeInformationElement->Account.UsernameReceived = 1;
+                  OnlineNodeInformationElement->Account.PasswordReceived = 1;
+                  strncpy(OnlineNodeInformationElement->Account.Username, data_str, 32);
+                  strncpy(OnlineNodeInformationElement->Account.Password, &(data_str[32]), 16);
+                  strncpy(AxumData.Username[Console], data_str, 32);
+                  strncpy(AxumData.Password[Console], &(data_str[32]), 16);
+
+                  unsigned int FunctionNrToSend = 0x04000000;
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+Console));
+                }
+                break;
+                case GLOBAL_FUNCTION_CHIPCARD_USER_1:
+                case GLOBAL_FUNCTION_CHIPCARD_USER_2:
+                case GLOBAL_FUNCTION_CHIPCARD_USER_3:
+                case GLOBAL_FUNCTION_CHIPCARD_USER_4:
+                { //Maybe not allowed, only atomic sensor changes on user/pass?
+                  int Console = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_USER_1;
+
+                  OnlineNodeInformationElement->Account.UsernameReceived = 1;
+                  strncpy(OnlineNodeInformationElement->Account.Username, (char *)data.Octets, 32);
+                  strncpy(AxumData.Username[Console], (char *)data.Octets, 32);
+                  if (OnlineNodeInformationElement->Account.PasswordReceived)
+                  {
+                    strncpy(AxumData.Password[Console], OnlineNodeInformationElement->Account.Password, 16);
+                    unsigned int FunctionNrToSend = 0x04000000;
+                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
+                  }
+
+                  unsigned int FunctionNrToSend = 0x04000000;
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
+                }
+                break;
+                case GLOBAL_FUNCTION_CHIPCARD_PASS_1:
+                case GLOBAL_FUNCTION_CHIPCARD_PASS_2:
+                case GLOBAL_FUNCTION_CHIPCARD_PASS_3:
+                case GLOBAL_FUNCTION_CHIPCARD_PASS_4:
+                { //Maybe not allowed, only atomic sensor changes on user/pass?
+                  int Console = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_PASS_1;
+
+                  OnlineNodeInformationElement->Account.PasswordReceived = 1;
+                  strncpy(OnlineNodeInformationElement->Account.Password, (char *)data.Octets, 16);
+                  strncpy(AxumData.Password[Console], (char *)data.Octets, 16);
+                  if (OnlineNodeInformationElement->Account.UsernameReceived)
+                  {
+                    strncpy(AxumData.Username[Console], OnlineNodeInformationElement->Account.Username, 32);
+                    unsigned int FunctionNrToSend = 0x04000000;
+                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
+                  }
+
+
+                  unsigned int FunctionNrToSend = 0x04000000;
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+Console));
+                }
+                break;
+                case GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_1:
+                case GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_2:
+                case GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_3:
+                case GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_4:
+                {
+                  int Console = FunctionNr-GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_1;
                   char *DataString = (char *)data.Octets;
                   strncpy(AxumData.UsernameToWrite[Console], DataString, 32);
                   strncpy(AxumData.PasswordToWrite[Console], &DataString[32], 16);
 
                   unsigned int FunctionNrToSend = 0x04000000;
-                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_READ_WRITE_USER_1+Console));
-                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_READ_WRITE_PASS_1+Console));
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_USER_1+Console));
+                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_PASS_1+Console));
                 }
                 break;
               }
@@ -6328,12 +6382,12 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             {
               switch (FunctionNr)
               {
-                case GLOBAL_FUNCTION_READ_WRITE_USER_1:
-                case GLOBAL_FUNCTION_READ_WRITE_USER_2:
-                case GLOBAL_FUNCTION_READ_WRITE_USER_3:
-                case GLOBAL_FUNCTION_READ_WRITE_USER_4:
+                case GLOBAL_FUNCTION_CHIPCARD_USER_1:
+                case GLOBAL_FUNCTION_CHIPCARD_USER_2:
+                case GLOBAL_FUNCTION_CHIPCARD_USER_3:
+                case GLOBAL_FUNCTION_CHIPCARD_USER_4:
                 {
-                  int Console = FunctionNr-GLOBAL_FUNCTION_READ_WRITE_USER_1;
+                  int Console = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_USER_1;
 
                   OnlineNodeInformationElement->Account.UsernameReceived = 1;
                   strncpy(OnlineNodeInformationElement->Account.Username, (char *)data.Octets, 32);
@@ -6349,12 +6403,12 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
                   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
                 }
                 break;
-                case GLOBAL_FUNCTION_READ_WRITE_PASS_1:
-                case GLOBAL_FUNCTION_READ_WRITE_PASS_2:
-                case GLOBAL_FUNCTION_READ_WRITE_PASS_3:
-                case GLOBAL_FUNCTION_READ_WRITE_PASS_4:
+                case GLOBAL_FUNCTION_CHIPCARD_PASS_1:
+                case GLOBAL_FUNCTION_CHIPCARD_PASS_2:
+                case GLOBAL_FUNCTION_CHIPCARD_PASS_3:
+                case GLOBAL_FUNCTION_CHIPCARD_PASS_4:
                 {
-                  int Console = FunctionNr-GLOBAL_FUNCTION_READ_WRITE_PASS_1;
+                  int Console = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_PASS_1;
 
                   OnlineNodeInformationElement->Account.PasswordReceived = 1;
                   strncpy(OnlineNodeInformationElement->Account.Password, (char *)data.Octets, 16);
@@ -10929,12 +10983,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             }
           }
           break;
-          case GLOBAL_FUNCTION_READ_WRITE_USER_1:
-          case GLOBAL_FUNCTION_READ_WRITE_USER_2:
-          case GLOBAL_FUNCTION_READ_WRITE_USER_3:
-          case GLOBAL_FUNCTION_READ_WRITE_USER_4:
+          case GLOBAL_FUNCTION_CHIPCARD_USER_1:
+          case GLOBAL_FUNCTION_CHIPCARD_USER_2:
+          case GLOBAL_FUNCTION_CHIPCARD_USER_3:
+          case GLOBAL_FUNCTION_CHIPCARD_USER_4:
           {
-            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_READ_WRITE_USER_1;
+            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_USER_1;
             switch (DataType)
             {
               case MBN_DATATYPE_OCTETS:
@@ -10947,12 +11001,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             }
           }
           break;
-          case GLOBAL_FUNCTION_READ_WRITE_PASS_1:
-          case GLOBAL_FUNCTION_READ_WRITE_PASS_2:
-          case GLOBAL_FUNCTION_READ_WRITE_PASS_3:
-          case GLOBAL_FUNCTION_READ_WRITE_PASS_4:
+          case GLOBAL_FUNCTION_CHIPCARD_PASS_1:
+          case GLOBAL_FUNCTION_CHIPCARD_PASS_2:
+          case GLOBAL_FUNCTION_CHIPCARD_PASS_3:
+          case GLOBAL_FUNCTION_CHIPCARD_PASS_4:
           {
-            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_READ_WRITE_PASS_1;
+            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_PASS_1;
             switch (DataType)
             {
               case MBN_DATATYPE_OCTETS:
