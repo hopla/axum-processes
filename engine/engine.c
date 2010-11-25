@@ -626,7 +626,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
 //  if (OnlineNodeInformationElement->ManufacturerID == 2)
 //  {
-//    debug_mambanet_data(object, type, data);
+//    debug_mambanet_data(message->AddressFrom, object, type, data);
 //  }
 
   if (OnlineNodeInformationElement->SensorReceiveFunction != NULL)
@@ -17627,7 +17627,7 @@ unsigned int GetModuleFunctionNrFromPresetNr(unsigned char PresetNr)
   return FunctionNr;
 }
 
-void debug_mambanet_data(unsigned int object, unsigned char type, union mbn_data data)
+void debug_mambanet_data(unsigned int addr, unsigned int object, unsigned char type, union mbn_data data)
 {
   char TypeString[64] = "";
   char DataString[64] = "";
@@ -17684,7 +17684,7 @@ void debug_mambanet_data(unsigned int object, unsigned char type, union mbn_data
     }
     break;
   }
-  log_write("[mSensorDataChanged] Object: %d, type:%s, data:%s", object, TypeString, DataString);
+  log_write("[mSensorDataChanged] addr:0x%08X, obj: %d, type:%s, data:%s", addr, object, TypeString, DataString);
 }
 
 void DoAxum_SetCRMBussOnOff(int MonitorBussNr, int BussNr, unsigned char NewState, int PreventDoingInterlock)

@@ -518,7 +518,7 @@ void initialize_axum_data_struct();
 int delay_ms(double sleep_time);
 int delay_us(double sleep_time);
 void axum_get_mtrx_chs_from_src(int src, unsigned int *l_ch, unsigned int *r_ch);
-void debug_mambanet_data(unsigned int object, unsigned char type, union mbn_data data);
+void debug_mambanet_data(unsigned int addr, unsigned int object, unsigned char type, union mbn_data data);
 
 //MambaNet object vs Engine function utilities
 void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress=0x00000000);
