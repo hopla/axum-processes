@@ -125,6 +125,24 @@ END
 $$ LANGUAGE plpgsql;
 
 
+-- Renumbers the position column to be continues from '1'
+
+CREATE OR REPLACE FUNCTION users_renumber() RETURNS integer AS $$
+DECLARE
+  _record RECORD;
+  cnt_pos smallint;
+BEGIN
+  cnt_pos := 1;
+  FOR _record IN ( SELECT number FROM users ORDER BY pos )
+  LOOP
+    UPDATE users SET pos = cnt_pos WHERE number = _record.number;
+    cnt_pos := cnt_pos + 1;
+  END LOOP;
+  RETURN cnt_pos;
+END
+$$ LANGUAGE plpgsql;
+
+
 -- a VIEW with all channels available on the matrix
 
 CREATE OR REPLACE VIEW matrix_sources (pos, type, number, label, active) AS

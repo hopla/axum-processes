@@ -652,26 +652,45 @@ CREATE TABLE console_preset (
   forced_recall_time float NOT NULL DEFAULT 3 CHECK(forced_recall_time>=safe_recall_time AND forced_recall_time<=10)
 );
 
+CREATE TABLE users (
+  pos smallint NOT NULL DEFAULT 9999,
+  number smallint NOT NULL CHECK(number>=1 AND number<=2000) PRIMARY KEY,
+  username varchar(32) NOT NULL DEFAULT 'New user',
+  password varchar(16) NOT NULL DEFAULT 'service',
+  console1_user_level smallint NOT NULL DEFAULT 2 CHECK(console1_user_level>=0 AND console1_user_level<=6),
+  console2_user_level smallint NOT NULL DEFAULT 2 CHECK(console2_user_level>=0 AND console2_user_level<=6),
+  console3_user_level smallint NOT NULL DEFAULT 2 CHECK(console3_user_level>=0 AND console3_user_level<=6),
+  console4_user_level smallint NOT NULL DEFAULT 2 CHECK(console4_user_level>=0 AND console4_user_level<=6),
+  console1_preset smallint,
+  console2_preset smallint,
+  console3_preset smallint,
+  console4_preset smallint
+);
+
 
 -- F O R E I G N   K E Y S
 
-ALTER TABLE node_config               ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE defaults                  ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE slot_config               ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE src_config                ADD FOREIGN KEY (input1_addr)        REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE src_config                ADD FOREIGN KEY (input2_addr)        REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE dest_config               ADD FOREIGN KEY (output1_addr)       REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE dest_config               ADD FOREIGN KEY (output2_addr)       REFERENCES addresses (addr)      ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE module_config             ADD FOREIGN KEY (source_a_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
-ALTER TABLE module_config             ADD FOREIGN KEY (source_b_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
-ALTER TABLE module_config             ADD FOREIGN KEY (source_c_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
-ALTER TABLE module_config             ADD FOREIGN KEY (source_d_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
-ALTER TABLE module_config             ADD FOREIGN KEY (source_e_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
-ALTER TABLE module_config             ADD FOREIGN KEY (source_f_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
-ALTER TABLE module_config             ADD FOREIGN KEY (source_g_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
-ALTER TABLE module_config             ADD FOREIGN KEY (source_h_preset)    REFERENCES src_preset (number)   ON DELETE SET NULL;
-ALTER TABLE src_config                ADD FOREIGN KEY (default_src_preset) REFERENCES src_preset (number)   ON DELETE SET NULL;
-ALTER TABLE buss_preset_rows          ADD FOREIGN KEY (number)             REFERENCES buss_preset (number)  ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE monitor_buss_preset_rows  ADD FOREIGN KEY (number)             REFERENCES buss_preset (number)  ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE node_config               ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)        ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE defaults                  ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)        ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE slot_config               ADD FOREIGN KEY (addr)               REFERENCES addresses (addr)        ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE src_config                ADD FOREIGN KEY (input1_addr)        REFERENCES addresses (addr)        ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE src_config                ADD FOREIGN KEY (input2_addr)        REFERENCES addresses (addr)        ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE dest_config               ADD FOREIGN KEY (output1_addr)       REFERENCES addresses (addr)        ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE dest_config               ADD FOREIGN KEY (output2_addr)       REFERENCES addresses (addr)        ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_a_preset)    REFERENCES src_preset (number)     ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_b_preset)    REFERENCES src_preset (number)     ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_c_preset)    REFERENCES src_preset (number)     ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_d_preset)    REFERENCES src_preset (number)     ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_e_preset)    REFERENCES src_preset (number)     ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_f_preset)    REFERENCES src_preset (number)     ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_g_preset)    REFERENCES src_preset (number)     ON DELETE SET NULL;
+ALTER TABLE module_config             ADD FOREIGN KEY (source_h_preset)    REFERENCES src_preset (number)     ON DELETE SET NULL;
+ALTER TABLE src_config                ADD FOREIGN KEY (default_src_preset) REFERENCES src_preset (number)     ON DELETE SET NULL;
+ALTER TABLE buss_preset_rows          ADD FOREIGN KEY (number)             REFERENCES buss_preset (number)    ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE monitor_buss_preset_rows  ADD FOREIGN KEY (number)             REFERENCES buss_preset (number)    ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE users                     ADD FOREIGN KEY (console1_preset)    REFERENCES console_preset (number) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE users                     ADD FOREIGN KEY (console2_preset)    REFERENCES console_preset (number) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE users                     ADD FOREIGN KEY (console3_preset)    REFERENCES console_preset (number) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE users                     ADD FOREIGN KEY (console4_preset)    REFERENCES console_preset (number) ON DELETE SET NULL ON UPDATE CASCADE;
 
 
