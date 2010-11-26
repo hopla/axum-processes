@@ -52,6 +52,8 @@ struct sql_notify notifies[] = {
   { (char *)"monitor_buss_preset_rows_changed",       db_event_monitor_buss_preset_rows_changed},
   { (char *)"console_preset_changed",                 db_event_console_preset_changed},
   { (char *)"set_module_to_startup_state",            db_event_set_module_to_startup_state},
+  { (char *)"login",                                  db_event_login},
+  { (char *)"write",                                  db_event_write},
 };
 
 double read_minmax(char *mambanet_minmax)
@@ -3168,6 +3170,134 @@ void db_event_set_module_to_startup_state(char myself, char *arg)
       AxumData.ModuleData[ModuleNr].EQBand[cntEQBand].Type = AxumData.ModuleData[ModuleNr].Defaults.EQBand[cntEQBand].Type;
     }
   }
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_address_user_level(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned long int addr;
+
+  if (sscanf(arg, "%ld", &addr) != 1)
+  {
+    log_write("address_user_level notify has wrong number of arguments");
+    LOG_DEBUG("[%s] leave with error", __func__);
+  }
+
+  ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(addr);
+  if (node_info == NULL)
+  {
+    log_write("No node information for address: %08lX", addr);
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return;
+  }
+  db_read_node_info(node_info);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_login(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned char console;
+  unsigned int user;
+  char str[1][32];
+  const char *params[1];
+  int cntParams;
+  int cntRow;
+
+  if (sscanf(arg, "%hhd %d", &console, &user) != 2)
+  {
+    log_write("login notify has wrong number of arguments");
+    LOG_DEBUG("[%s] leave with error", __func__);
+  }
+
+  console--;
+
+  for (cntParams=0; cntParams<1; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%d", user);
+
+  PGresult *qres = sql_exec("SELECT username, password  \
+                                    FROM users          \
+                                    WHERE number=$1", 1, 1, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    unsigned int cntField;
+
+    cntField = 0;
+    strncpy(AxumData.Username[console], PQgetvalue(qres, cntRow, cntField++), 32);
+    strncpy(AxumData.Password[console], PQgetvalue(qres, cntRow, cntField++), 16);
+  }
+  PQclear(qres);
+
+  unsigned int FunctionNrToSend = 0x04000000;
+  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+console));
+  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+console));
+  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+console));
+  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+console));
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_write(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned char console;
+  unsigned int user;
+  char str[1][32];
+  const char *params[1];
+  int cntParams;
+  int cntRow;
+
+  if (sscanf(arg, "%hhd %d", &console, &user) != 2)
+  {
+    log_write("write notify has wrong number of arguments");
+    LOG_DEBUG("[%s] leave with error", __func__);
+  }
+
+  console--;
+
+  for (cntParams=0; cntParams<1; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%d", user);
+
+  PGresult *qres = sql_exec("SELECT username, password  \
+                                    FROM users          \
+                                    WHERE number=$1", 1, 1, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    unsigned int cntField;
+
+    cntField = 0;
+    strncpy(AxumData.UsernameToWrite[console], PQgetvalue(qres, cntRow, cntField++), 32);
+    strncpy(AxumData.PasswordToWrite[console], PQgetvalue(qres, cntRow, cntField++), 16);
+  }
+  PQclear(qres);
+
+  unsigned int FunctionNrToSend = 0x04000000;
+  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_USER_1+console));
+  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_PASS_1+console));
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);

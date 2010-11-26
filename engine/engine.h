@@ -353,10 +353,10 @@ typedef struct
   int ControlMode[4];
   unsigned int ControlModeTimerValue[4];
   int MasterControlMode[4];
-  char Username[4][32];
-  char Password[4][16];
-  char UsernameToWrite[4][32];
-  char PasswordToWrite[4][16];
+  char Username[4][33];
+  char Password[4][17];
+  char UsernameToWrite[4][33];
+  char PasswordToWrite[4][17];
   unsigned char UserLevel[4];
 
   bool Redlight[8];

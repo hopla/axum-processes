@@ -64,5 +64,8 @@ void db_event_buss_preset_rows_changed(char myself, char *arg);
 void db_event_monitor_buss_preset_rows_changed(char myself, char *arg);
 void db_event_console_preset_changed(char myself, char *arg);
 void db_event_set_module_to_startup_state(char myself, char *arg);
+void db_event_login(char myself, char *arg);
+void db_event_write(char myself, char *arg);
+
 
 #endif
