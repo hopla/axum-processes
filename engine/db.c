@@ -52,6 +52,7 @@ struct sql_notify notifies[] = {
   { (char *)"monitor_buss_preset_rows_changed",       db_event_monitor_buss_preset_rows_changed},
   { (char *)"console_preset_changed",                 db_event_console_preset_changed},
   { (char *)"set_module_to_startup_state",            db_event_set_module_to_startup_state},
+  { (char *)"address_user_level",                     db_event_address_user_level},
   { (char *)"login",                                  db_event_login},
   { (char *)"write",                                  db_event_write},
 };
@@ -75,7 +76,7 @@ double read_minmax(char *mambanet_minmax)
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 20, notifies);
+  sql_open(dbstr, 23, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1800,6 +1801,12 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
       node_info->SensorReceiveFunction[cntObject].LastChangedTime = 0;
       node_info->SensorReceiveFunction[cntObject].PreviousLastChangedTime = 0;
       node_info->SensorReceiveFunction[cntObject].TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
+      node_info->SensorReceiveFunction[cntObject].ActiveInUserLevel[0] = true;
+      node_info->SensorReceiveFunction[cntObject].ActiveInUserLevel[1] = true;
+      node_info->SensorReceiveFunction[cntObject].ActiveInUserLevel[2] = true;
+      node_info->SensorReceiveFunction[cntObject].ActiveInUserLevel[3] = true;
+      node_info->SensorReceiveFunction[cntObject].ActiveInUserLevel[4] = true;
+      node_info->SensorReceiveFunction[cntObject].ActiveInUserLevel[5] = true;
     }
   }
   PQclear(qres);
@@ -2133,6 +2140,8 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
 
   LOG_DEBUG("[%s] enter", __func__);
 
+  log_write("node_config: %08X, %d-%d", node_info->MambaNetAddress, first_obj, last_obj);
+
   if (first_obj>last_obj)
   {
     unsigned short int dummy = first_obj;
@@ -2166,7 +2175,36 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   sprintf(str[2], "%hd", last_obj);
   sprintf(str[3], "%d", node_info->FirmwareMajorRevision);
 
-  PGresult *qres = sql_exec("SELECT object, func FROM node_config WHERE addr=$1 AND object>=$2 AND object<=$3 AND firm_major=$4", 1, 4, params);
+  PGresult *qres = sql_exec("SELECT n.object, n.func,                                     \
+                                    CASE                                                  \
+                                      WHEN n.user_level0 IS NOT NULL THEN n.user_level0   \
+                                      ELSE f.user_level0                                  \
+                                    END,                                                  \
+                                    CASE                                                  \
+                                      WHEN n.user_level1 IS NOT NULL THEN n.user_level1   \
+                                      ELSE f.user_level1                                  \
+                                    END,                                                  \
+                                    CASE                                                  \
+                                      WHEN n.user_level2 IS NOT NULL THEN n.user_level2   \
+                                      ELSE f.user_level2                                  \
+                                    END,                                                  \
+                                    CASE                                                  \
+                                      WHEN n.user_level3 IS NOT NULL THEN n.user_level3   \
+                                      ELSE f.user_level3                                  \
+                                    END,                                                  \
+                                    CASE                                                  \
+                                      WHEN n.user_level4 IS NOT NULL THEN n.user_level4   \
+                                      ELSE f.user_level4                                  \
+                                    END,                                                  \
+                                    CASE                                                  \
+                                      WHEN n.user_level5 IS NOT NULL THEN n.user_level5   \
+                                      ELSE f.user_level5                                  \
+                                    END                                                   \
+                             FROM addresses a                                             \
+                             JOIN templates t ON (a.id).man = t.man_id AND (a.id).prod = t.prod_id AND a.firm_major = t.firm_major                                                         \
+                             LEFT JOIN node_config n ON t.number = n.object AND a.addr=n.addr                                                                                              \
+                             LEFT JOIN functions f ON (n.func).type = (f.func).type AND (n.func).func = (f.func).func AND ((f.rcv_type = t.sensor_type) OR (f.xmt_type = t.actuator_type)) \
+                             WHERE a.addr=$1 AND n.object>=$2 AND n.object<=$3 AND n.firm_major=$4", 1, 4, params);
   if (qres == NULL)
   {
     delete[] OldFunctions;
@@ -2187,17 +2225,28 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
     unsigned short int seq_nr;
     unsigned short int func_nr;
     unsigned int TotalFunctionNr = -1;
+    unsigned char ActiveInUserLevel[6];
 
     sscanf(PQgetvalue(qres, cntRow, 0), "%hd", &ObjectNr);
     sscanf(PQgetvalue(qres, cntRow, 1), "(%hhd,%hd,%hd)", &type, &seq_nr, &func_nr);
     TotalFunctionNr = (((unsigned int)type)<<24)|(((unsigned int)seq_nr)<<12)|func_nr;
 
+    for (int cnt=0; cnt<6; cnt++)
+    {
+      ActiveInUserLevel[cnt] = (strcmp(PQgetvalue(qres, cntRow, 2+cnt), "f") > 0) ? (1) : (0);
+    }
     if ((ObjectNr>=1024) && ((ObjectNr-1024)<node_info->UsedNumberOfCustomObjects))
     {
       if (node_info->SensorReceiveFunction != NULL)
       {
         SENSOR_RECEIVE_FUNCTION_STRUCT *sensor_rcv_func = &node_info->SensorReceiveFunction[ObjectNr-1024];
         sensor_rcv_func->FunctionNr = TotalFunctionNr;
+        sensor_rcv_func->ActiveInUserLevel[0] = ActiveInUserLevel[0];
+        sensor_rcv_func->ActiveInUserLevel[1] = ActiveInUserLevel[1];
+        sensor_rcv_func->ActiveInUserLevel[2] = ActiveInUserLevel[2];
+        sensor_rcv_func->ActiveInUserLevel[3] = ActiveInUserLevel[3];
+        sensor_rcv_func->ActiveInUserLevel[4] = ActiveInUserLevel[4];
+        sensor_rcv_func->ActiveInUserLevel[5] = ActiveInUserLevel[5];
       }
     }
   }
@@ -2215,6 +2264,12 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
           sensor_rcv_func->LastChangedTime = 0;
           sensor_rcv_func->PreviousLastChangedTime = 0;
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
+          sensor_rcv_func->ActiveInUserLevel[0] = true;
+          sensor_rcv_func->ActiveInUserLevel[1] = true;
+          sensor_rcv_func->ActiveInUserLevel[2] = true;
+          sensor_rcv_func->ActiveInUserLevel[3] = true;
+          sensor_rcv_func->ActiveInUserLevel[4] = true;
+          sensor_rcv_func->ActiveInUserLevel[5] = true;
           MakeObjectListPerFunction(OldFunctions[cntObject-first_obj]);
         }
         if (sensor_rcv_func->FunctionNr != (unsigned int)-1)
@@ -3035,8 +3090,13 @@ void db_event_node_config_changed(char myself, char *arg)
 {
   LOG_DEBUG("[%s] enter", __func__);
   unsigned long int addr;
+  unsigned int obj;
 
-  sscanf(arg, "%ld", &addr);
+  if (sscanf(arg, "%ld %d", &addr, &obj) != 2)
+  {
+    log_write("config_changed notify has to less arguments");
+    LOG_DEBUG("[%s] leave with error", __func__);
+  }
 
   ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(addr);
   if (node_info == NULL)
@@ -3045,7 +3105,8 @@ void db_event_node_config_changed(char myself, char *arg)
     LOG_DEBUG("[%s] leave with error", __func__);
     return;
   }
-  db_read_node_config(node_info, 1024, node_info->UsedNumberOfCustomObjects+1023);
+  db_read_node_config(node_info, obj, obj);
+//  db_read_node_config(node_info, 1024, node_info->UsedNumberOfCustomObjects+1023);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
@@ -3336,6 +3397,44 @@ int db_read_template_count(unsigned short int man_id, unsigned short int prod_id
 
   return template_count;
 }
+
+int db_read_node_info(ONLINE_NODE_INFORMATION_STRUCT *node_info)
+{
+  char str[1][32];
+  const char *params[1];
+  int cntParams;
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<1; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%d", node_info->MambaNetAddress);
+
+  PGresult *qres = sql_exec("SELECT user_level_from_console FROM addresses WHERE addr=$1", 1, 1, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+
+  if (PQntuples(qres) == 1)
+  {
+    sscanf(PQgetvalue(qres, 0, 0), "%hhd", &node_info->UserLevelFromConsole);
+  }
+  else
+  {
+    log_write("No addresses table entry for 0x%08X", node_info->MambaNetAddress);
+  }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
+}
+
 
 void db_lock(int lock)
 {

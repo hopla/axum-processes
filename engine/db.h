@@ -23,7 +23,7 @@ int db_read_buss_preset_rows(unsigned short int first_preset, unsigned short int
 int db_read_monitor_buss_preset_rows(unsigned short int first_preset, unsigned short int last_preset);
 int db_read_console_preset(unsigned short int first_preset, unsigned short int last_preset);
 
-
+int db_read_node_info(ONLINE_NODE_INFORMATION_STRUCT *node_info);
 int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned char in_powerup_state);
 int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj, bool DoNotCheckCurrentDefault, bool SetFirmwareDefaults);
 int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj);
@@ -64,6 +64,7 @@ void db_event_buss_preset_rows_changed(char myself, char *arg);
 void db_event_monitor_buss_preset_rows_changed(char myself, char *arg);
 void db_event_console_preset_changed(char myself, char *arg);
 void db_event_set_module_to_startup_state(char myself, char *arg);
+void db_event_address_user_level(char myself, char *arg);
 void db_event_login(char myself, char *arg);
 void db_event_write(char myself, char *arg);
 

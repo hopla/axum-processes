@@ -458,6 +458,7 @@ typedef struct
   unsigned long LastChangedTime;
   unsigned long PreviousLastChangedTime;
   int TimeBeforeMomentary;
+  unsigned char ActiveInUserLevel[6];
 } SENSOR_RECEIVE_FUNCTION_STRUCT;
 
 struct ONLINE_NODE_INFORMATION_STRUCT
@@ -467,6 +468,7 @@ struct ONLINE_NODE_INFORMATION_STRUCT
   unsigned int ProductID;
   unsigned int UniqueIDPerProduct;
   int FirmwareMajorRevision;
+  unsigned char UserLevelFromConsole;
   unsigned char TimerRequestDone;
 
 //Not sure if should be stored here...
