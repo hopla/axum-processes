@@ -28,6 +28,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
 int db_read_node_defaults(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj, bool DoNotCheckCurrentDefault, bool SetFirmwareDefaults);
 int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned short int first_obj, unsigned short int last_obj);
 int db_read_template_count(unsigned short int man_id, unsigned short int prod_id, unsigned char firm_major);
+int db_read_user(unsigned char console, char *user, char *pass);
 
 int db_insert_slot_config(unsigned char slot_nr, unsigned long int addr, unsigned char input_ch_cnt, unsigned char output_ch_cnt);
 int db_delete_slot_config(unsigned char slot_nr);

@@ -493,9 +493,9 @@ struct ONLINE_NODE_INFORMATION_STRUCT
   struct
   {
     unsigned char UsernameReceived;
-    char Username[32];
+    char Username[33];
     unsigned char PasswordReceived;
-    char Password[16];
+    char Password[17];
   } Account;
 
   ONLINE_NODE_INFORMATION_STRUCT *Next;

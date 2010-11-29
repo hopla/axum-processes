@@ -6526,7 +6526,8 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     NewOnlineNodeInformationElement->SensorReceiveFunction = NULL;
     NewOnlineNodeInformationElement->ObjectInformation = NULL;
     NewOnlineNodeInformationElement->Account.UsernameReceived = 0;
-    NewOnlineNodeInformationElement->Account.Username[0] = 0;
+    memset(NewOnlineNodeInformationElement->Account.Username, 0, 33);
+    memset(NewOnlineNodeInformationElement->Account.Password, 0, 17);
     NewOnlineNodeInformationElement->Account.PasswordReceived = 0;
     NewOnlineNodeInformationElement->Account.Password[0] = 0;
     //update element from database
@@ -11125,10 +11126,11 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               break;
               case MBN_DATATYPE_OCTETS:
               {
-                char UserLevelNames[7][21] = {"Idle", "Unknown user", "Operator 1", "Operator 2", "Supervisor 1", "Supervisor 2", "System adminsitrator"};
+                char UserLevelNames[7][21] = {"Idle", "Unknown user", "Operator 1", "Operator 2", "Supervisor 1", "Supervisor 2", "Administrator"};
                 data.Octets = (unsigned char *)UserLevelNames[AxumData.UserLevel[ConsoleNr]];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 13, data, 1);
               }
+              break;
             }
           }
           break;
@@ -15919,8 +15921,8 @@ void initialize_axum_data_struct()
     AxumData.SelectedMonitorBuss[cntConsole] = 0;
     AxumData.SelectedSource[cntConsole] = 0;
     AxumData.SelectedDestination[cntConsole] = 0;
-    AxumData.Username[cntConsole][0] = 0;
-    AxumData.Password[cntConsole][0] = 0;
+    memset(AxumData.Username[cntConsole], 0, 33);
+    memset(AxumData.Password[cntConsole], 0, 17);
     AxumData.UsernameToWrite[cntConsole][0] = 0;
     AxumData.PasswordToWrite[cntConsole][0] = 0;
   }

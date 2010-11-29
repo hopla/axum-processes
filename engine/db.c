@@ -3269,13 +3269,17 @@ void db_event_login(char myself, char *arg)
   const char *params[1];
   int cntParams;
   int cntRow;
+  char Username[33];
+  char Password[17];
+
+  memset(Username, 0, 33);
+  memset(Password, 0, 17);
 
   if (sscanf(arg, "%hhd %d", &console, &user) != 2)
   {
     log_write("login notify has wrong number of arguments");
     LOG_DEBUG("[%s] leave with error", __func__);
   }
-
   console--;
 
   for (cntParams=0; cntParams<1; cntParams++)
@@ -3298,16 +3302,12 @@ void db_event_login(char myself, char *arg)
     unsigned int cntField;
 
     cntField = 0;
-    strncpy(AxumData.Username[console], PQgetvalue(qres, cntRow, cntField++), 32);
-    strncpy(AxumData.Password[console], PQgetvalue(qres, cntRow, cntField++), 16);
+    strncpy(Username, PQgetvalue(qres, cntRow, cntField++), 32);
+    strncpy(Password, PQgetvalue(qres, cntRow, cntField++), 16);
   }
   PQclear(qres);
 
-  unsigned int FunctionNrToSend = 0x04000000;
-  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+console));
-  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+console));
-  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+console));
-  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+console));
+  db_read_user(console, Username, Password);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
@@ -3328,7 +3328,6 @@ void db_event_write(char myself, char *arg)
     log_write("write notify has wrong number of arguments");
     LOG_DEBUG("[%s] leave with error", __func__);
   }
-
   console--;
 
   for (cntParams=0; cntParams<1; cntParams++)
@@ -3362,6 +3361,64 @@ void db_event_write(char myself, char *arg)
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
+}
+
+int db_read_user(unsigned char console, char *user, char *pass)
+{
+  char str[3][33];
+  const char *params[3];
+  int cntParams;
+  int cntRow;
+  char user_level[4] = {0,0,0,0};
+  int console_preset[4] = {0,0,0,0};
+
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  strncpy(str[0], user, 32);
+  strncpy(str[1], pass, 16);
+
+  PGresult *qres = sql_exec("SELECT console1_user_level, console2_user_level, console3_user_level, console4_user_level, \
+                                    console1_preset, console2_preset, console3_preset, console4_preset                  \
+                             FROM users WHERE username=$1 AND password=$2", 1, 2, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return -1;
+  }
+
+  for (cntRow=0; cntRow<4; cntRow++)
+  {
+    sscanf(PQgetvalue(qres, 0, 0), "%hhd", &user_level[cntRow]);
+  }
+  for (cntRow=0; cntRow<4; cntRow++)
+  {
+    sscanf(PQgetvalue(qres, 0, 0), "%d", &console_preset[cntRow]);
+  }
+  PQclear(qres);
+
+  strncpy(AxumData.Username[console], user, 32);
+  strncpy(AxumData.Password[console], pass, 16);
+  AxumData.UserLevel[console] = user_level[console];
+
+  unsigned int FunctionNrToSend = 0x04000000;
+  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+console));
+  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+console));
+  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+console));
+  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+console));
+
+  if (console_preset[console]) 
+  {
+    DoAxum_LoadConsolePreset(console_preset[console], 0, 0);
+  }
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return user_level[console];
 }
 
 int db_read_template_count(unsigned short int man_id, unsigned short int prod_id, unsigned char firm_major)
