@@ -3428,41 +3428,50 @@ int db_read_user(unsigned char console, char *user, char *pass)
     return -1;
   }
 
-  cntField = 0;
-  for (cntRow=0; cntRow<4; cntRow++)
+  if (PQntuples(qres) == 1)
   {
-    sscanf(PQgetvalue(qres, 0, cntField++), "%hhd", &user_level[cntRow]);
+    cntField = 0;
+    for (cntRow=0; cntRow<4; cntRow++)
+    {
+      sscanf(PQgetvalue(qres, 0, cntField++), "%hhd", &user_level[cntRow]);
+    }
+    for (cntRow=0; cntRow<4; cntRow++)
+    {
+      sscanf(PQgetvalue(qres, 0, cntField++), "%d", &console_preset[cntRow]);
+    }
+    for (cntRow=0; cntRow<4; cntRow++)
+    {
+      sscanf(PQgetvalue(qres, 0, cntField++), "%d", &source_pool[cntRow]);
+    }
+    for (cntRow=0; cntRow<4; cntRow++)
+    {
+      sscanf(PQgetvalue(qres, 0, cntField++), "%d", &preset_pool[cntRow]);
+    }
+
+    strncpy(AxumData.Username[console], user, 32);
+    strncpy(AxumData.Password[console], pass, 16);
+    AxumData.UserLevel[console] = user_level[console];
+    AxumData.SourcePool[console] = source_pool[console];
+    AxumData.PresetPool[console] = preset_pool[console];
+
+    unsigned int FunctionNrToSend = 0x04000000;
+    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+console));
+    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+console));
+    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+console));
+    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+console));
+
+    if (console_preset[console])
+    {
+      DoAxum_LoadConsolePreset(console_preset[console], 0, 0);
+    }
+    log_write("On console %d, user '%s' logged on", console, user, pass);
   }
-  for (cntRow=0; cntRow<4; cntRow++)
+  else
   {
-    sscanf(PQgetvalue(qres, 0, cntField++), "%d", &console_preset[cntRow]);
-  }
-  for (cntRow=0; cntRow<4; cntRow++)
-  {
-    sscanf(PQgetvalue(qres, 0, cntField++), "%d", &source_pool[cntRow]);
-  }
-  for (cntRow=0; cntRow<4; cntRow++)
-  {
-    sscanf(PQgetvalue(qres, 0, cntField++), "%d", &preset_pool[cntRow]);
+    log_write("On console %d, user '%s' not found (pass: '%s')", console, user, pass);
   }
   PQclear(qres);
 
-  strncpy(AxumData.Username[console], user, 32);
-  strncpy(AxumData.Password[console], pass, 16);
-  AxumData.UserLevel[console] = user_level[console];
-  AxumData.SourcePool[console] = source_pool[console];
-  AxumData.PresetPool[console] = preset_pool[console];
-
-  unsigned int FunctionNrToSend = 0x04000000;
-  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+console));
-  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+console));
-  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+console));
-  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+console));
-
-  if (console_preset[console])
-  {
-    DoAxum_LoadConsolePreset(console_preset[console], 0, 0);
-  }
   LOG_DEBUG("[%s] leave", __func__);
 
   return user_level[console];

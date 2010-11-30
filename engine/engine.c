@@ -6438,6 +6438,10 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
                     unsigned int FunctionNrToSend = 0x04000000;
                     CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
                     CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
+
+                    db_lock(1);
+                    db_read_user(Console, AxumData.Username[Console], AxumData.Password[Console]);
+                    db_lock(0);
                   }
 
                   unsigned int FunctionNrToSend = 0x04000000;
@@ -6460,6 +6464,10 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
                     unsigned int FunctionNrToSend = 0x04000000;
                     CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
                     CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
+
+                    db_lock(1);
+                    db_read_user(Console, AxumData.Username[Console], AxumData.Password[Console]);
+                    db_lock(0);
                   }
 
 
