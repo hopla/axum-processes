@@ -153,7 +153,8 @@ int db_get_matrix_sources()
   PQclear(qres);
 
   //load the complete matrix_sources list
-  qres = sql_exec("SELECT pos, number, active, type FROM matrix_sources", 1, 0, NULL);
+  qres = sql_exec("SELECT pos, number, active, type, pool1, pool2, pool3, pool4, pool5, pool6, pool7, pool8 \
+                   FROM matrix_sources", 1, 0, NULL);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -180,6 +181,7 @@ int db_get_matrix_sources()
     int cntField=0;
     char src_type[32];
     unsigned short int pos;
+    int cnt;
 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &pos);
     if ((pos>=1) && (pos<=MAX_POS_LIST_SIZE))
@@ -188,7 +190,6 @@ int db_get_matrix_sources()
       matrix_sources.pos[pos-1].active = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
       strcpy(src_type, PQgetvalue(qres, cntRow, cntField++));
-
       if (strcmp(src_type, "none") == 0)
       {
         matrix_sources.pos[pos-1].type = none;
@@ -212,6 +213,11 @@ int db_get_matrix_sources()
       else if (strcmp(src_type, "source") == 0)
       {
         matrix_sources.pos[pos-1].type = source;
+      }
+
+      for (cnt=0; cnt<8; cnt++)
+      {
+        matrix_sources.pos[pos-1].pool[cnt] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       }
     }
   }
@@ -350,7 +356,7 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
   {
     unsigned int number;
     int cntField;
-    int cntEQ;
+    int cnt;
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &number);
@@ -378,14 +384,14 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
     PresetData->MonoOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     PresetData->UseEQ = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    for (cntEQ=0; cntEQ<6; cntEQ++)
+    for (cnt=0; cnt<6; cnt++)
     {
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cntEQ].Range);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cntEQ].Level);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &PresetData->EQBand[cntEQ].Frequency);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cntEQ].Bandwidth);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cntEQ].Slope);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&PresetData->EQBand[cntEQ].Type);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cnt].Range);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cnt].Level);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &PresetData->EQBand[cnt].Frequency);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cnt].Bandwidth);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->EQBand[cnt].Slope);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", (char *)&PresetData->EQBand[cnt].Type);
     }
     PresetData->EQOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
@@ -404,12 +410,13 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
   PQclear(qres);
 
   //get position/type list for presets
-  qres = sql_exec("SELECT number FROM src_preset ORDER BY pos", 1, 0, NULL);
+  qres = sql_exec("SELECT number, pool1, pool2, pool3, pool4, pool5, pool6, pool7, pool8 FROM src_preset ORDER BY pos", 1, 0, NULL);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
+
   for (int cntPreset=0; cntPreset<MAX_NR_OF_PRESETS; cntPreset++)
   {
     presets.pos[cntPreset].filled = 0;
@@ -420,11 +427,17 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
   {
     unsigned int number;
     int cntField;
+    int cnt;
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &number);
     presets.pos[cntRow+1].number = number;
     presets.pos[cntRow+1].filled = 1;
+
+    for (cnt=0; cnt<8; cnt++)
+    {
+      presets.pos[cntRow+1].pool[cnt] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    }
   }
   PQclear(qres);
 
@@ -3369,8 +3382,11 @@ int db_read_user(unsigned char console, char *user, char *pass)
   const char *params[3];
   int cntParams;
   int cntRow;
+  int cntField;
   char user_level[4] = {0,0,0,0};
   int console_preset[4] = {0,0,0,0};
+  int source_pool[4] = {0,0,0,0};
+  int preset_pool[4] = {0,0,0,0};
 
 
   LOG_DEBUG("[%s] enter", __func__);
@@ -3384,7 +3400,9 @@ int db_read_user(unsigned char console, char *user, char *pass)
   strncpy(str[1], pass, 16);
 
   PGresult *qres = sql_exec("SELECT console1_user_level, console2_user_level, console3_user_level, console4_user_level, \
-                                    console1_preset, console2_preset, console3_preset, console4_preset                  \
+                                    console1_preset, console2_preset, console3_preset, console4_preset,                 \
+                                    console1_sourcepool, console2_sourcepool, console3_sourcepool, console4_sourcepool, \
+                                    console1_presetpool, console2_presetpool, console3_presetpool, console4_presetpool  \
                              FROM users WHERE username=$1 AND password=$2", 1, 2, params);
   if (qres == NULL)
   {
@@ -3392,19 +3410,30 @@ int db_read_user(unsigned char console, char *user, char *pass)
     return -1;
   }
 
+  cntField = 0;
   for (cntRow=0; cntRow<4; cntRow++)
   {
-    sscanf(PQgetvalue(qres, 0, 0), "%hhd", &user_level[cntRow]);
+    sscanf(PQgetvalue(qres, 0, cntField++), "%hhd", &user_level[cntRow]);
   }
   for (cntRow=0; cntRow<4; cntRow++)
   {
-    sscanf(PQgetvalue(qres, 0, 0), "%d", &console_preset[cntRow]);
+    sscanf(PQgetvalue(qres, 0, cntField++), "%d", &console_preset[cntRow]);
+  }
+  for (cntRow=0; cntRow<4; cntRow++)
+  {
+    sscanf(PQgetvalue(qres, 0, cntField++), "%d", &source_pool[cntRow]);
+  }
+  for (cntRow=0; cntRow<4; cntRow++)
+  {
+    sscanf(PQgetvalue(qres, 0, cntField++), "%d", &preset_pool[cntRow]);
   }
   PQclear(qres);
 
   strncpy(AxumData.Username[console], user, 32);
   strncpy(AxumData.Password[console], pass, 16);
   AxumData.UserLevel[console] = user_level[console];
+  AxumData.SourcePool[console] = source_pool[console];
+  AxumData.PresetPool[console] = preset_pool[console];
 
   unsigned int FunctionNrToSend = 0x04000000;
   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+console));
@@ -3412,7 +3441,7 @@ int db_read_user(unsigned char console, char *user, char *pass)
   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+console));
   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+console));
 
-  if (console_preset[console]) 
+  if (console_preset[console])
   {
     DoAxum_LoadConsolePreset(console_preset[console], 0, 0);
   }

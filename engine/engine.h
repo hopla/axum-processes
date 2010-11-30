@@ -358,6 +358,8 @@ typedef struct
   char UsernameToWrite[4][33];
   char PasswordToWrite[4][17];
   unsigned char UserLevel[4];
+  unsigned char SourcePool[4];
+  unsigned char PresetPool[4];
 
   bool Redlight[8];
   unsigned int Samplerate;
@@ -415,6 +417,7 @@ typedef struct
 {
   short int number;
   unsigned char filled;
+  unsigned char pool[8];
 } preset_list_struct;
 
 typedef struct
@@ -552,8 +555,8 @@ void SetAxum_MonitorBuss(unsigned int MonitorBussNr);
 int MixMinusSourceUsed(int CurrentSource);
 void GetSourceLabel(int SourceNr, char *TextString, int MaxLength);
 #define AdjustDestinationSource AdjustModuleSource
-int AdjustModuleSource(int CurrentSource, int Offset);
-unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset);
+int AdjustModuleSource(int CurrentSource, int Offset, unsigned char Pool);
+unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset, unsigned char Pool);
 void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength);
 void GetConsolePresetLabel(unsigned int ConsolePresetNr, char *TextString, int MaxLength);
 unsigned int GetFunctionNrFromControlMode(int ControlNr);

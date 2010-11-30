@@ -666,6 +666,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
           {   //Module
             unsigned int ModuleNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
             unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+            unsigned char ConsoleNr = AxumData.ModuleData[ModuleNr].Console;
 
             if ((ModuleNr >= NUMBER_OF_MODULES) && (ModuleNr<(NUMBER_OF_MODULES+4)))
             {
@@ -694,7 +695,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                 if (type == MBN_DATATYPE_SINT)
                 {
-                  CurrentSource = AdjustModuleSource(CurrentSource, data.SInt);
+                  unsigned char Pool = 8;
+                  if (AxumData.SourcePool[ConsoleNr] < 3)
+                  {
+                    Pool = (ConsoleNr*2)+AxumData.SourcePool[ConsoleNr];
+                  }
+                  CurrentSource = AdjustModuleSource(CurrentSource, data.SInt, Pool);
                   AxumData.ModuleData[ModuleNr].TemporySourceLocal = CurrentSource;
 
                   unsigned int FunctionNrToSent = (ModuleNr<<12);
@@ -980,7 +986,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   break;
                   case MBN_DATATYPE_SINT:
                   {
-                    AxumData.ModuleData[ModuleNr].TemporyPresetLocal = AdjustModulePreset(CurrentPreset, data.SInt);
+                    unsigned char Pool = 8;
+                    if (AxumData.PresetPool[ConsoleNr] < 3)
+                    {
+                      Pool = (ConsoleNr*2)+AxumData.PresetPool[ConsoleNr];
+                    }
+                    AxumData.ModuleData[ModuleNr].TemporyPresetLocal = AdjustModulePreset(CurrentPreset, data.SInt, Pool);
                   }
                   break;
                 }
@@ -5709,7 +5720,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 if (type == MBN_DATATYPE_SINT)
                 {
-                  AxumData.DestinationData[DestinationNr].Source = (int)AdjustDestinationSource(AxumData.DestinationData[DestinationNr].Source, data.SInt);
+                  unsigned char Pool = 8;
+                  AxumData.DestinationData[DestinationNr].Source = (int)AdjustDestinationSource(AxumData.DestinationData[DestinationNr].Source, data.SInt, Pool);
 
                   SetAxum_DestinationSource(DestinationNr);
 
@@ -6950,7 +6962,7 @@ void Timer100HzDone(int Value)
       }
       //Last in list, clear the TimerRequestDone bits
       if (TimerWalkOnlineNodeInformationElement == NULL)
-      { 
+      {
         TimerWalkOnlineNodeInformationElement = OnlineNodeInformationList;
         while (TimerWalkOnlineNodeInformationElement != NULL)
         {
@@ -12337,8 +12349,12 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       case MODULE_CONTROL_MODE_SOURCE:
       {   //Source
         int CurrentSource = AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr];
-
-        AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr] = AdjustModuleSource(CurrentSource, data.SInt);
+        unsigned char Pool = 8;
+        if (AxumData.SourcePool[ControlNr] < 3)
+        {
+          Pool = (ControlNr*2)+AxumData.SourcePool[ControlNr];
+        }
+        AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr] = AdjustModuleSource(CurrentSource, data.SInt, Pool);
 
         if (AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr] != CurrentSource)
         {
@@ -12353,7 +12369,12 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       case MODULE_CONTROL_MODE_MODULE_PRESET:
       {
         unsigned int CurrentPreset = AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr];
-        AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr] = AdjustModulePreset(CurrentPreset, data.SInt);
+        unsigned char Pool = 8;
+        if (AxumData.PresetPool[ControlNr] < 3)
+        {
+          Pool = (ControlNr*2)+AxumData.PresetPool[ControlNr];
+        }
+        AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr] = AdjustModulePreset(CurrentPreset, data.SInt, Pool);
 
         if (AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr] != CurrentPreset)
         {
@@ -14699,7 +14720,7 @@ void GetSourceLabel(int SourceNr, char *TextString, int MaxLength)
   }
 }
 
-int AdjustModuleSource(int CurrentSource, int Offset)
+int AdjustModuleSource(int CurrentSource, int Offset, unsigned char Pool)
 {
   char check_for_next_pos;
   int cntPos;
@@ -14788,6 +14809,14 @@ int AdjustModuleSource(int CurrentSource, int Offset)
           {
             check_for_next_pos = 1;
           }
+
+          if (Pool<8)
+          {
+            if (!matrix_sources.pos[CurrentPos].pool[Pool])
+            {
+              check_for_next_pos = 1;
+            }
+          }
         }
         Offset--;
       }
@@ -14825,6 +14854,14 @@ int AdjustModuleSource(int CurrentSource, int Offset)
           if (CurrentSource == -1)
           {
             check_for_next_pos = 1;
+          }
+
+          if (Pool<8)
+          {
+            if (!matrix_sources.pos[CurrentPos].pool[Pool])
+            {
+              check_for_next_pos = 1;
+            }
           }
         }
         Offset++;
@@ -15925,6 +15962,9 @@ void initialize_axum_data_struct()
     memset(AxumData.Password[cntConsole], 0, 17);
     AxumData.UsernameToWrite[cntConsole][0] = 0;
     AxumData.PasswordToWrite[cntConsole][0] = 0;
+    AxumData.UserLevel[cntConsole] = 0;
+    AxumData.SourcePool[cntConsole] = 2;
+    AxumData.PresetPool[cntConsole] = 2;
   }
 
   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
@@ -17111,7 +17151,7 @@ unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck)
   return NumberOfObjects;
 }
 
-unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset)
+unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset, unsigned char Pool)
 {
   char check_for_next_pos;
 
@@ -17186,6 +17226,14 @@ unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset)
           {
             check_for_next_pos = 1;
           }
+
+          if (Pool<8)
+          {
+            if (!presets.pos[CurrentPos].pool[Pool])
+            {
+              check_for_next_pos = 1;
+            }
+          }
         }
         Offset--;
       }
@@ -17208,6 +17256,14 @@ unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset)
           if (!presets.pos[CurrentPos].filled)
           {
             check_for_next_pos = 1;
+          }
+
+          if (Pool<8)
+          {
+            if (!presets.pos[CurrentPos].pool[Pool])
+            {
+              check_for_next_pos = 1;
+            }
           }
         }
         Offset++;
