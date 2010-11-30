@@ -6538,10 +6538,9 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     NewOnlineNodeInformationElement->SensorReceiveFunction = NULL;
     NewOnlineNodeInformationElement->ObjectInformation = NULL;
     NewOnlineNodeInformationElement->Account.UsernameReceived = 0;
+    NewOnlineNodeInformationElement->Account.PasswordReceived = 0;
     memset(NewOnlineNodeInformationElement->Account.Username, 0, 33);
     memset(NewOnlineNodeInformationElement->Account.Password, 0, 17);
-    NewOnlineNodeInformationElement->Account.PasswordReceived = 0;
-    NewOnlineNodeInformationElement->Account.Password[0] = 0;
     //update element from database
     db_lock(1);
     db_read_node_info(NewOnlineNodeInformationElement);
@@ -6554,11 +6553,19 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     else
     {
       ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = OnlineNodeInformationList;
-      while (OnlineNodeInformationElement->Next != NULL)
+      while ((OnlineNodeInformationElement->Next != NULL) && (OnlineNodeInformationElement->MambaNetAddress != new_info->MambaNetAddr))
       {
         OnlineNodeInformationElement = OnlineNodeInformationElement->Next;
       }
-      OnlineNodeInformationElement->Next = NewOnlineNodeInformationElement;
+
+      if (OnlineNodeInformationElement->MambaNetAddress == new_info->MambaNetAddr)
+      {
+        log_write("WARNING: MambaNet address 0x%08X already found in node inforamtion list", new_info->MambaNetAddr);
+      }
+      else
+      {
+        OnlineNodeInformationElement->Next = NewOnlineNodeInformationElement;
+      }
     }
 
     /*if (mbn->node.Services&0x80)
@@ -6570,143 +6577,161 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
   }
   else if (new_info == NULL)
   {
-    if (OnlineNodeInformationList == NULL)
+    bool removed = false;
+    if (old_info->MambaNetAddr != 0x00000000)
     {
-      log_write("Error removing NodeInformationElement of address 0x%08lX", old_info->MambaNetAddr);
-    }
-    else
-    {
-      bool removed = false;
-      ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = OnlineNodeInformationList;
-      ONLINE_NODE_INFORMATION_STRUCT *PreviousOnlineNodeInformationElement = NULL;
-
-      while ((!removed) && (OnlineNodeInformationElement != NULL))
+      if (OnlineNodeInformationList == NULL)
       {
-        if (OnlineNodeInformationElement->MambaNetAddress == old_info->MambaNetAddr)
-        {
-          if (OnlineNodeInformationElement == OnlineNodeInformationList)
-          {
-            OnlineNodeInformationList = OnlineNodeInformationElement->Next;
-          }
-          else if (PreviousOnlineNodeInformationElement != NULL)
-          {
-            PreviousOnlineNodeInformationElement->Next = OnlineNodeInformationElement->Next;
-          }
-
-          //Adjust function lists
-          for (int cntObject=0; cntObject<OnlineNodeInformationElement->UsedNumberOfCustomObjects; cntObject++)
-          {
-            int FunctionNr = OnlineNodeInformationElement->SensorReceiveFunction[cntObject].FunctionNr;
-            OnlineNodeInformationElement->SensorReceiveFunction[cntObject].FunctionNr = -1;
-            if (FunctionNr != -1)
-            {
-              MakeObjectListPerFunction(FunctionNr);
-            }
-          }
-
-          if (OnlineNodeInformationElement->SensorReceiveFunction != NULL)
-          {
-            delete[] OnlineNodeInformationElement->SensorReceiveFunction;
-          }
-          if (OnlineNodeInformationElement->ObjectInformation != NULL)
-          {
-            delete[] OnlineNodeInformationElement->ObjectInformation;
-          }
-
-          delete OnlineNodeInformationElement;
-          removed = true;
-        }
-        else
-        {
-          PreviousOnlineNodeInformationElement = OnlineNodeInformationElement;
-          OnlineNodeInformationElement = OnlineNodeInformationElement->Next;
-        }
+        log_write("Error removing NodeInformationElement of address 0x%08lX", old_info->MambaNetAddr);
       }
-
-      //remove audio routing if set..
-      db_lock(1);
-      for (unsigned char cntSlot=0; cntSlot<42; cntSlot++)
+      else
       {
-        if (AxumData.RackOrganization[cntSlot] == old_info->MambaNetAddr)
-        {
-          AxumData.RackOrganization[cntSlot] = 0;
-          db_delete_slot_config(cntSlot);
-        }
-      }
-      db_lock(0);
+        ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationElement = OnlineNodeInformationList;
+        ONLINE_NODE_INFORMATION_STRUCT *PreviousOnlineNodeInformationElement = NULL;
 
-      for (int cntSource=0; cntSource<1280; cntSource++)
-      {
-        unsigned char RemoveSource = 0;
-
-        for (int cntInput=0; cntInput<8; cntInput++)
+        while ((!removed) && (OnlineNodeInformationElement != NULL))
         {
-          if (AxumData.SourceData[cntSource].InputData[cntInput].MambaNetAddress == old_info->MambaNetAddr)
+          if (OnlineNodeInformationElement->MambaNetAddress == old_info->MambaNetAddr)
           {
-            RemoveSource = 1;
-          }
-        }
-        if (RemoveSource)
-        {
-          //Found source 'cntSource'
-          for (int cntModule=0; cntModule<128; cntModule++)
-          {
-            if (AxumData.ModuleData[cntModule].SelectedSource == (cntSource+matrix_sources.src_offset.min.source))
+            if (OnlineNodeInformationElement == OnlineNodeInformationList)
             {
-              //Found source @ module 'cntModule'
-              SetAxum_ModuleSource(cntModule);
-              SetAxum_ModuleMixMinus(cntModule, 0);
+              OnlineNodeInformationList = OnlineNodeInformationElement->Next;
             }
-          }
-          for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
-          {
-            for (int cntExt=0; cntExt<8; cntExt++)
+            else if (PreviousOnlineNodeInformationElement != NULL)
             {
-              if (AxumData.ExternSource[cntDSPCard].Ext[cntExt] == (cntSource+matrix_sources.src_offset.min.source))
+              PreviousOnlineNodeInformationElement->Next = OnlineNodeInformationElement->Next;
+            }
+            else
+            {
+              log_write("WARNING: PreviousOnlineNodeInformationElement == NULL");
+            }
+
+            //Adjust function lists
+            for (int cntObject=0; cntObject<OnlineNodeInformationElement->UsedNumberOfCustomObjects; cntObject++)
+            {
+              int FunctionNr = OnlineNodeInformationElement->SensorReceiveFunction[cntObject].FunctionNr;
+              OnlineNodeInformationElement->SensorReceiveFunction[cntObject].FunctionNr = -1;
+              if (FunctionNr != -1)
               {
-                //Found source @ extern input 'cntDSPCard'
-                SetAxum_ExternSources(cntDSPCard);
+                MakeObjectListPerFunction(FunctionNr);
+              }
+            }
+
+            if (OnlineNodeInformationElement->SensorReceiveFunction != NULL)
+            {
+              delete[] OnlineNodeInformationElement->SensorReceiveFunction;
+            }
+            if (OnlineNodeInformationElement->ObjectInformation != NULL)
+            {
+              delete[] OnlineNodeInformationElement->ObjectInformation;
+            }
+
+            delete OnlineNodeInformationElement;
+            removed = true;
+          }
+          else
+          {
+            PreviousOnlineNodeInformationElement = OnlineNodeInformationElement;
+            OnlineNodeInformationElement = OnlineNodeInformationElement->Next;
+          }
+        }
+
+        //remove audio routing if set..
+        db_lock(1);
+        for (unsigned char cntSlot=0; cntSlot<42; cntSlot++)
+        {
+          if (AxumData.RackOrganization[cntSlot] == old_info->MambaNetAddr)
+          {
+            AxumData.RackOrganization[cntSlot] = 0;
+            db_delete_slot_config(cntSlot);
+          }
+        }
+        db_lock(0);
+
+        for (int cntSource=0; cntSource<1280; cntSource++)
+        {
+          unsigned char RemoveSource = 0;
+
+          for (int cntInput=0; cntInput<8; cntInput++)
+          {
+            if (AxumData.SourceData[cntSource].InputData[cntInput].MambaNetAddress == old_info->MambaNetAddr)
+            {
+              RemoveSource = 1;
+            }
+          }
+          if (RemoveSource)
+          {
+            //Found source 'cntSource'
+            for (int cntModule=0; cntModule<128; cntModule++)
+            {
+              if (AxumData.ModuleData[cntModule].SelectedSource == (cntSource+matrix_sources.src_offset.min.source))
+              {
+                //Found source @ module 'cntModule'
+                SetAxum_ModuleSource(cntModule);
+                SetAxum_ModuleMixMinus(cntModule, 0);
+              }
+            }
+            for (int cntDSPCard=0; cntDSPCard<4; cntDSPCard++)
+            {
+              for (int cntExt=0; cntExt<8; cntExt++)
+              {
+                if (AxumData.ExternSource[cntDSPCard].Ext[cntExt] == (cntSource+matrix_sources.src_offset.min.source))
+                {
+                  //Found source @ extern input 'cntDSPCard'
+                  SetAxum_ExternSources(cntDSPCard);
+                }
+              }
+            }
+            for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+            {
+              if (AxumData.Talkback[cntTalkback].Source == (cntSource+matrix_sources.src_offset.min.source))
+              {
+                //Found source @ talkback 'cntTalkback'
+                SetAxum_TalkbackSource(cntTalkback);
+              }
+            }
+            for (int cntDestination=0; cntDestination<1280; cntDestination++)
+            {
+              if (AxumData.DestinationData[cntDestination].Source == (cntSource+matrix_sources.src_offset.min.source))
+              {
+                //Found source @ destination 'cntDestination';
+                SetAxum_DestinationSource(cntDestination);
               }
             }
           }
-          for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+        }
+
+        //Check for destination if I/O card changed.
+        for (int cntDestination=0; cntDestination<1280; cntDestination++)
+        {
+          unsigned char RemoveDestination = 0;
+          for (int cntOutput=0; cntOutput<8; cntOutput++)
           {
-            if (AxumData.Talkback[cntTalkback].Source == (cntSource+matrix_sources.src_offset.min.source))
+            if (AxumData.DestinationData[cntDestination].OutputData[cntOutput].MambaNetAddress == old_info->MambaNetAddr)
             {
-              //Found source @ talkback 'cntTalkback'
-              SetAxum_TalkbackSource(cntTalkback);
+              RemoveDestination = 1;
             }
           }
-          for (int cntDestination=0; cntDestination<1280; cntDestination++)
+          if (RemoveDestination)
           {
-            if (AxumData.DestinationData[cntDestination].Source == (cntSource+matrix_sources.src_offset.min.source))
-            {
-              //Found source @ destination 'cntDestination';
-              SetAxum_DestinationSource(cntDestination);
-            }
+            //Found destination 'cntDestination';
+            SetAxum_DestinationSource(cntDestination);
           }
         }
       }
-
-      //Check for destination if I/O card changed.
-      for (int cntDestination=0; cntDestination<1280; cntDestination++)
+      if (removed)
       {
-        unsigned char RemoveDestination = 0;
-        for (int cntOutput=0; cntOutput<8; cntOutput++)
-        {
-          if (AxumData.DestinationData[cntDestination].OutputData[cntOutput].MambaNetAddress == old_info->MambaNetAddr)
-          {
-            RemoveDestination = 1;
-          }
-        }
-        if (RemoveDestination)
-        {
-          //Found destination 'cntDestination';
-          SetAxum_DestinationSource(cntDestination);
-        }
+        log_write("Removed node with MambaNet address: %08lX", old_info->MambaNetAddr);
+      }
+      else
+      {
+        log_write("WARNING: node with MambaNet address: %08lX not removed!", old_info->MambaNetAddr);
       }
     }
-    log_write("Removed node with MambaNet address: %08lX", old_info->MambaNetAddr);
+    else
+    {
+      log_write("WARNING: We skipped the remove node with address 0x00000000");
+    }
   }
   else
   {
