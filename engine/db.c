@@ -55,6 +55,7 @@ struct sql_notify notifies[] = {
   { (char *)"address_user_level",                     db_event_address_user_level},
   { (char *)"login",                                  db_event_login},
   { (char *)"write",                                  db_event_write},
+  { (char *)"src_pool_changed",                       db_event_src_pool_changed},
 };
 
 double read_minmax(char *mambanet_minmax)
@@ -76,7 +77,7 @@ double read_minmax(char *mambanet_minmax)
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 23, notifies);
+  sql_open(dbstr, 24, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -3371,6 +3372,23 @@ void db_event_write(char myself, char *arg)
   unsigned int FunctionNrToSend = 0x04000000;
   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_USER_1+console));
   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_PASS_1+console));
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_src_pool_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned int number;
+
+  if (sscanf(arg, "%d", &number) != 1)
+  {
+    log_write("src_pool notify has wrong number of arguments");
+    LOG_DEBUG("[%s] leave with error", __func__);
+  }
+
+  db_get_matrix_sources();
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);

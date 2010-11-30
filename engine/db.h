@@ -68,6 +68,7 @@ void db_event_set_module_to_startup_state(char myself, char *arg);
 void db_event_address_user_level(char myself, char *arg);
 void db_event_login(char myself, char *arg);
 void db_event_write(char myself, char *arg);
+void db_event_src_pool_changed(char myself, char *arg);
 
 
 #endif

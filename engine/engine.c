@@ -14724,6 +14724,7 @@ int AdjustModuleSource(int CurrentSource, int Offset, unsigned char Pool)
 {
   char check_for_next_pos;
   int cntPos;
+  int StartPos;
   int CurrentPos;
   int PosBefore;
   int PosAfter;
@@ -14774,6 +14775,7 @@ int AdjustModuleSource(int CurrentSource, int Offset, unsigned char Pool)
   {
     while (Offset != 0)
     {
+      StartPos = CurrentPos;
       if (Offset>0)
       {
         check_for_next_pos = 1;
@@ -14816,6 +14818,11 @@ int AdjustModuleSource(int CurrentSource, int Offset, unsigned char Pool)
             {
               check_for_next_pos = 1;
             }
+          }
+
+          if (CurrentPos == StartPos)
+          { //Looped through all sources, no step found...
+            check_for_next_pos = 0;
           }
         }
         Offset--;
@@ -14862,6 +14869,11 @@ int AdjustModuleSource(int CurrentSource, int Offset, unsigned char Pool)
             {
               check_for_next_pos = 1;
             }
+          }
+
+          if (CurrentPos == StartPos)
+          { //Looped through all sources, no step found...
+            check_for_next_pos = 0;
           }
         }
         Offset++;
@@ -17156,6 +17168,7 @@ unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset, unsigned
   char check_for_next_pos;
 
   int cntPos;
+  int StartPos;
   int CurrentPos;
   int PosBefore;
   int PosAfter;
@@ -17206,6 +17219,7 @@ unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset, unsigned
   {
     while (Offset != 0)
     {
+      StartPos = CurrentPos;
       if (Offset>0)
       {
         check_for_next_pos = 1;
@@ -17233,6 +17247,11 @@ unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset, unsigned
             {
               check_for_next_pos = 1;
             }
+          }
+
+          if (CurrentPos == StartPos)
+          { //Looped through all sources, no step found...
+            check_for_next_pos = 0;
           }
         }
         Offset--;
@@ -17264,6 +17283,11 @@ unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset, unsigned
             {
               check_for_next_pos = 1;
             }
+          }
+
+          if (CurrentPos == StartPos)
+          { //Looped through all sources, no step found...
+            check_for_next_pos = 0;
           }
         }
         Offset++;
