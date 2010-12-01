@@ -3476,6 +3476,35 @@ int db_read_user(unsigned char console, char *user, char *pass)
   return user_level[console];
 }
 
+int db_update_username(unsigned char console, char *user)
+{
+  char str[1][33];
+  const char *params[1];
+  int cntParams;
+  char query[1024];
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<1; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+  strncpy(str[0], user, 32);
+
+  sprintf(query, "UPDATE global_config SET username%d=$1", console+1);
+  PGresult *qres = sql_exec(query, 0, 1, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
+}
+
 int db_read_template_count(unsigned short int man_id, unsigned short int prod_id, unsigned char firm_major)
 {
   char str[3][32];

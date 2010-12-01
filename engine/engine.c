@@ -4871,16 +4871,27 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                         else
                         { //Send user/pass idle
                           unsigned int FunctionNrToSend = 0x04000000;
+                          char name[33] = "";
                           memset(AxumData.Username, 0, 32);
                           memset(AxumData.Password, 0, 16);
                           OnlineNodeInformationElement->Account.UsernameReceived = 0;
                           OnlineNodeInformationElement->Account.PasswordReceived = 0;
                           memset(OnlineNodeInformationElement->Account.Username, 0, 32);
                           memset(OnlineNodeInformationElement->Account.Password, 0, 16);
+                          //Idle, source/preset pool A
+                          AxumData.UserLevel[ConsoleNr] = 0;
+                          AxumData.SourcePool[ConsoleNr] = 0;
+                          AxumData.PresetPool[ConsoleNr] = 0;
+
                           CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+ConsoleNr));
                           CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+ConsoleNr));
                           CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+ConsoleNr));
                           CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+ConsoleNr));
+
+
+                          db_lock(1);
+                          db_update_username(ConsoleNr, name);
+                          db_lock(0);
                         }
                       }
                     }
@@ -4938,10 +4949,19 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       strncpy(AxumData.Password[Console], OnlineNodeInformationElement->Account.Password, 16);
                       unsigned int FunctionNrToSend = 0x04000000;
                       CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
+                      CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
+
+                      db_lock(1);
+                      db_read_user(Console, AxumData.Username[Console], AxumData.Password[Console]);
+                      db_lock(0);
                     }
 
                     unsigned int FunctionNrToSend = 0x04000000;
                     CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
+
+                    db_lock(1);
+                    db_update_username(Console, AxumData.Username[Console]);
+                    db_lock(0);
                   }
                   break;
                   case GLOBAL_FUNCTION_CHIPCARD_PASS_1:
@@ -4959,8 +4979,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       strncpy(AxumData.Username[Console], OnlineNodeInformationElement->Account.Username, 32);
                       unsigned int FunctionNrToSend = 0x04000000;
                       CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
-                    }
+                      CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
 
+                      db_lock(1);
+                      db_read_user(Console, AxumData.Username[Console], AxumData.Password[Console]);
+                      db_lock(0);
+                    }
 
                     unsigned int FunctionNrToSend = 0x04000000;
                     CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+Console));
@@ -6446,9 +6470,12 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
                     db_read_user(Console, AxumData.Username[Console], AxumData.Password[Console]);
                     db_lock(0);
                   }
-
                   unsigned int FunctionNrToSend = 0x04000000;
                   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
+
+                  db_lock(1);
+                  db_update_username(Console, AxumData.Username[Console]);
+                  db_lock(0);
                 }
                 break;
                 case GLOBAL_FUNCTION_CHIPCARD_PASS_1:

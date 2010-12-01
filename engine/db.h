@@ -35,6 +35,7 @@ int db_delete_slot_config(unsigned char slot_nr);
 int db_update_slot_config_input_ch_cnt(unsigned long int addr, unsigned char cnt);
 int db_update_slot_config_output_ch_cnt(unsigned long int addr, unsigned char cnt);
 int db_empty_slot_config();
+int db_update_username(unsigned char console, char *user);
 
 void db_lock(int);
 void db_processnotifies();
