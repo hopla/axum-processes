@@ -3476,23 +3476,24 @@ int db_read_user(unsigned char console, char *user, char *pass)
   return user_level[console];
 }
 
-int db_update_username(unsigned char console, char *user)
+int db_update_account(unsigned char console, char *user, char *pass)
 {
-  char str[1][33];
-  const char *params[1];
+  char str[2][33];
+  const char *params[2];
   int cntParams;
   char query[1024];
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  for (cntParams=0; cntParams<1; cntParams++)
+  for (cntParams=0; cntParams<2; cntParams++)
   {
     params[cntParams] = (const char *)str[cntParams];
   }
   strncpy(str[0], user, 32);
+  strncpy(str[1], pass, 16);
 
-  sprintf(query, "UPDATE global_config SET username%d=$1", console+1);
-  PGresult *qres = sql_exec(query, 0, 1, params);
+  sprintf(query, "UPDATE global_config SET username%d=$1, password%d=$2", console+1, console+1);
+  PGresult *qres = sql_exec(query, 0, 2, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
