@@ -3406,7 +3406,6 @@ int db_read_user(unsigned char console, char *user, char *pass)
   int source_pool[4] = {0,0,0,0};
   int preset_pool[4] = {0,0,0,0};
 
-
   LOG_DEBUG("[%s] enter", __func__);
 
   for (cntParams=0; cntParams<2; cntParams++)
@@ -3464,11 +3463,11 @@ int db_read_user(unsigned char console, char *user, char *pass)
     {
       DoAxum_LoadConsolePreset(console_preset[console], 0, 0);
     }
-    log_write("On console %d, user '%s' logged on", console, user, pass);
+    log_write("User '%s' logged on at console %d", user, console+1);
   }
   else
   {
-    log_write("On console %d, user '%s' not found (pass: '%s')", console, user, pass);
+    log_write("User '%s' not found (pass: '%s', console %d)", user, pass, console+1);
   }
   PQclear(qres);
 
