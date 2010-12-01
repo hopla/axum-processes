@@ -636,9 +636,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
     if ((OnlineNodeInformationElement->UserLevelFromConsole>0) && (OnlineNodeInformationElement->UserLevelFromConsole<=4))
     {
       unsigned char ConsoleNr = OnlineNodeInformationElement->UserLevelFromConsole-1;
-      if (!SensorReceiveFunction->ActiveInUserLevel[AxumData.UserLevel[ConsoleNr]])
+      if (AxumData.UserLevel[ConsoleNr] < 6)
       {
-        SensorAllowed = 0;
+        if (!SensorReceiveFunction->ActiveInUserLevel[AxumData.UserLevel[ConsoleNr]])
+        {
+          SensorAllowed = 0;
+        }
       }
     }
 
@@ -696,7 +699,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 if (type == MBN_DATATYPE_SINT)
                 {
                   unsigned char Pool = 8;
-                  if (AxumData.SourcePool[ConsoleNr] < 3)
+                  if (AxumData.SourcePool[ConsoleNr] < 2)
                   {
                     Pool = (ConsoleNr*2)+AxumData.SourcePool[ConsoleNr];
                   }
@@ -987,7 +990,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   case MBN_DATATYPE_SINT:
                   {
                     unsigned char Pool = 8;
-                    if (AxumData.PresetPool[ConsoleNr] < 3)
+                    if (AxumData.PresetPool[ConsoleNr] < 2)
                     {
                       Pool = (ConsoleNr*2)+AxumData.PresetPool[ConsoleNr];
                     }
@@ -6469,7 +6472,6 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
                     db_read_user(Console, AxumData.Username[Console], AxumData.Password[Console]);
                     db_lock(0);
                   }
-
 
                   unsigned int FunctionNrToSend = 0x04000000;
                   CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+Console));
@@ -12383,7 +12385,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       {   //Source
         int CurrentSource = AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr];
         unsigned char Pool = 8;
-        if (AxumData.SourcePool[ControlNr] < 3)
+        if (AxumData.SourcePool[ControlNr] < 2)
         {
           Pool = (ControlNr*2)+AxumData.SourcePool[ControlNr];
         }
@@ -12403,7 +12405,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       {
         unsigned int CurrentPreset = AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr];
         unsigned char Pool = 8;
-        if (AxumData.PresetPool[ControlNr] < 3)
+        if (AxumData.PresetPool[ControlNr] < 2)
         {
           Pool = (ControlNr*2)+AxumData.PresetPool[ControlNr];
         }
