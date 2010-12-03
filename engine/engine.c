@@ -74,7 +74,7 @@ pthread_mutex_t axum_data_mutex;
 #define PCB_MINOR_VERSION        0
 
 #define FIRMWARE_MAJOR_VERSION   2
-#define FIRMWARE_MINOR_VERSION   0
+#define FIRMWARE_MINOR_VERSION   3
 
 #define MANUFACTURER_ID          0x0001 //D&R
 #define PRODUCT_ID               0x000E //Axum Engine
@@ -1550,9 +1550,16 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   if (data.State)
                   {
-                    if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency != AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Frequency)
+                    unsigned int Frequency = AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Frequency;
+                    int CurrentPreset = AxumData.ModuleData[ModuleNr].SelectedProcessingPreset;
+                    if (CurrentPreset > 0)
                     {
-                      AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency = AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Frequency;
+                      Frequency = AxumData.PresetData[CurrentPreset-1].EQBand[BandNr].Frequency;
+                    }
+
+                    if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency != Frequency)
+                    {
+                      AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency = Frequency;
 
                       SetAxum_EQ(ModuleNr, BandNr);
 
@@ -1578,9 +1585,16 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   if (data.State)
                   {
-                    if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth != AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Bandwidth)
+                    float Bandwidth = AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Bandwidth;
+                    int CurrentPreset = AxumData.ModuleData[ModuleNr].SelectedProcessingPreset;
+                    if (CurrentPreset > 0)
                     {
-                      AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Bandwidth;
+                      Bandwidth = AxumData.PresetData[CurrentPreset-1].EQBand[BandNr].Bandwidth;
+                    }
+
+                    if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth != Bandwidth)
+                    {
+                      AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = Bandwidth;
 
                       SetAxum_EQ(ModuleNr, BandNr);
 
@@ -13228,10 +13242,16 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         case MODULE_CONTROL_MODE_EQ_BAND_6_FREQUENCY:
         {   //EQ frequency
           int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY)/(MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY-MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY);
-
-          if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency != AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Frequency)
+          unsigned int Frequency = AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Frequency;
+          int CurrentPreset = AxumData.ModuleData[ModuleNr].SelectedProcessingPreset;
+          if (CurrentPreset > 0)
           {
-            AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency = AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Frequency;
+            Frequency = AxumData.PresetData[CurrentPreset-1].EQBand[BandNr].Frequency;
+          }
+
+          if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency != Frequency)
+          {
+            AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency = Frequency;
 
             SetAxum_EQ(ModuleNr, BandNr);
 
@@ -13250,10 +13270,16 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
         case MODULE_CONTROL_MODE_EQ_BAND_6_BANDWIDTH:
         {   //EQ bandwidth
           int BandNr = (ControlMode-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH)/(MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH-MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH);
-
-          if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth != AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Bandwidth)
+          float Bandwidth = AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Bandwidth;
+          int CurrentPreset = AxumData.ModuleData[ModuleNr].SelectedProcessingPreset;
+          if (CurrentPreset > 0)
           {
-            AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = AxumData.ModuleData[ModuleNr].Defaults.EQBand[BandNr].Bandwidth;
+            Bandwidth = AxumData.PresetData[CurrentPreset-1].EQBand[BandNr].Bandwidth;
+          }
+
+          if (AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth != Bandwidth)
+          {
+            AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth = Bandwidth;
             SetAxum_EQ(ModuleNr, BandNr);
 
             DoAxum_UpdateModuleControlMode(ModuleNr, ControlMode);
