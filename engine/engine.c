@@ -810,28 +810,23 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       if (CurrentSource != 0)
                       { //Source 'none', is no change
-                        if (CurrentSource == -1)
-                        { //Source 'mute', will be 'none'
-                          CurrentSource = 0;
-                        }
                         DoAxum_SetNewSource(ModuleNr, CurrentSource, AxumData.ModuleData[ModuleNr].OverruleActive);
                       }
-                      DoAxum_LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0, 0);
-                      DoAxum_LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 0, 0, 0);
+                      if (CurrentPreset != 0)
+                      { //Preset 'none', is no change
+                        DoAxum_LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0, 0);
+                      }
+                      if (CurrentRoutingPreset != 0)
+                      {
+                        DoAxum_LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 0, 0, 0);
+                      }
                     }
                   }
                   else
                   {
                     if (data.State)
                     {
-                      if (CurrentSource != 0)
-                      { //Source 'none', is no change
-                        if (CurrentSource == -1)
-                        { //Source 'mute', will be 'none'
-                          CurrentSource = 0;
-                        }
-                        AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
-                      }
+                      AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
                       AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
                       AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = CurrentRoutingPreset;
                     }
@@ -946,25 +941,20 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       {
                         if (CurrentSource != 0)
                         { //Source 'none', is no change
-                          if (CurrentSource == -1)
-                          { //Source 'mute', will be 'none'
-                            CurrentSource = 0;
-                          }
                           DoAxum_SetNewSource(ModuleNr, CurrentSource, AxumData.ModuleData[ModuleNr].OverruleActive);
                         }
-                        DoAxum_LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0, 0);
-                        DoAxum_LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 0, 0, 0);
+                        if (CurrentPreset != 0)
+                        { //Preset 'none', is no change
+                          DoAxum_LoadProcessingPreset(ModuleNr, CurrentPreset, 0, 0, 0);
+                        }
+                        if (CurrentRoutingPreset != 0)
+                        { //RoutingPreset 'none', is no change
+                          DoAxum_LoadRoutingPreset(ModuleNr, CurrentRoutingPreset, 0, 0, 0);
+                        }
                       }
                       else
                       {
-                        if (CurrentSource != 0)
-                        { //Source 'none', is no change
-                          if (CurrentSource == -1)
-                          { //Source 'mute', will be 'none'
-                            CurrentSource = 0;
-                          }
-                          AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
-                        }
+                        AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
                         AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
                         AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = CurrentRoutingPreset;
                       }
@@ -7123,9 +7113,9 @@ void Timer100HzDone(int Value)
           {
             if (AxumData.ModuleData[cntModule].Console == cntConsole)
             {
-              AxumData.ModuleData[cntModule].WaitingSource = -1;
-              AxumData.ModuleData[cntModule].WaitingProcessingPreset = -1;
-              AxumData.ModuleData[cntModule].WaitingRoutingPreset = -1;
+              AxumData.ModuleData[cntModule].WaitingSource = 0;
+              AxumData.ModuleData[cntModule].WaitingProcessingPreset = 0;
+              AxumData.ModuleData[cntModule].WaitingRoutingPreset = 0;
             }
           }
 
@@ -12441,7 +12431,7 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       break;
       case MODULE_CONTROL_MODE_MODULE_PRESET:
       {
-        unsigned int CurrentPreset = AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr];
+        int CurrentPreset = AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr];
         unsigned char Pool = 8;
         if (AxumData.PresetPool[ControlNr] < 2)
         {
@@ -14709,25 +14699,24 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule)
 
   if (!ModuleActive)
   {
-    if (AxumData.ModuleData[ModuleNr].WaitingSource != -1)
+    if (AxumData.ModuleData[ModuleNr].WaitingSource != 0)
     {
-      int SourceNr = AxumData.ModuleData[ModuleNr].WaitingSource&0xFFFF;
+      int SourceNr = AxumData.ModuleData[ModuleNr].WaitingSource;
       DoAxum_SetNewSource(ModuleNr, SourceNr, 0);
-      AxumData.ModuleData[ModuleNr].WaitingSource = -1;
+      AxumData.ModuleData[ModuleNr].WaitingSource = 0;
     }
-    if (AxumData.ModuleData[ModuleNr].WaitingProcessingPreset != -1)
+    if (AxumData.ModuleData[ModuleNr].WaitingProcessingPreset != 0)
     {
-      int PresetNr = AxumData.ModuleData[ModuleNr].WaitingProcessingPreset&0xFFFF;
-      bool UseModuleDefaults = (bool)(AxumData.ModuleData[ModuleNr].WaitingProcessingPreset&0x10000);
-      DoAxum_LoadProcessingPreset(ModuleNr, PresetNr, 0, UseModuleDefaults, 0);
-      AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = -1;
+      int PresetNr = AxumData.ModuleData[ModuleNr].WaitingProcessingPreset;
+
+      DoAxum_LoadProcessingPreset(ModuleNr, PresetNr, 0, 0, 0);
+      AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = 0;
     }
-    if (AxumData.ModuleData[ModuleNr].WaitingRoutingPreset != -1)
+    if (AxumData.ModuleData[ModuleNr].WaitingRoutingPreset != 0)
     {
-      int PresetNr = AxumData.ModuleData[ModuleNr].WaitingRoutingPreset&0xFFFF;
-      bool UseModuleDefaults = (bool)(AxumData.ModuleData[ModuleNr].WaitingRoutingPreset&0x10000);
-      DoAxum_LoadRoutingPreset(ModuleNr, PresetNr, 0, UseModuleDefaults, 0);
-      AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = -1;
+      int PresetNr = AxumData.ModuleData[ModuleNr].WaitingRoutingPreset;
+      DoAxum_LoadRoutingPreset(ModuleNr, PresetNr, 0, 0, 0);
+      AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = 0;
     }
   }
 }
@@ -14891,12 +14880,6 @@ int AdjustModuleSource(int CurrentSource, int Offset, unsigned char Pool)
             check_for_next_pos = 1;
           }
 
-          //'mute' not available in adjust function -> 'none' used if muted
-          if (CurrentSource == -1)
-          {
-            check_for_next_pos = 1;
-          }
-
           if (Pool<8)
           {
             if (!matrix_sources.pos[CurrentPos].pool[Pool])
@@ -14942,12 +14925,6 @@ int AdjustModuleSource(int CurrentSource, int Offset, unsigned char Pool)
             check_for_next_pos = 1;
           }
 
-          //'mute' not available in adjust function -> 'none' used if muted
-          if (CurrentSource == -1)
-          {
-            check_for_next_pos = 1;
-          }
-
           if (Pool<8)
           {
             if (!matrix_sources.pos[CurrentPos].pool[Pool])
@@ -14976,7 +14953,7 @@ bool DoAxum_SetNewSource(int ModuleNr, int NewSource, int Forced)
   unsigned char CurrentPresetState[8];
   unsigned char cntPreset;
 
-  if (NewSource != -1)
+  if (NewSource != 0)
   {
     for (cntPreset=0; cntPreset<8; cntPreset++)
     {
@@ -15822,9 +15799,9 @@ void initialize_axum_data_struct()
     AxumData.ModuleData[cntModule].ProcessingPreset4A = 0;
     AxumData.ModuleData[cntModule].ProcessingPreset4B = 0;
     AxumData.ModuleData[cntModule].OverruleActive = 0;
-    AxumData.ModuleData[cntModule].WaitingSource = -1;
-    AxumData.ModuleData[cntModule].WaitingProcessingPreset = -1;
-    AxumData.ModuleData[cntModule].WaitingRoutingPreset = -1;
+    AxumData.ModuleData[cntModule].WaitingSource = 0;
+    AxumData.ModuleData[cntModule].WaitingProcessingPreset = 0;
+    AxumData.ModuleData[cntModule].WaitingRoutingPreset = 0;
     AxumData.ModuleData[cntModule].InsertSource = 0;
     AxumData.ModuleData[cntModule].InsertOnOff = 0;
     AxumData.ModuleData[cntModule].Gain = 0;
@@ -16162,7 +16139,7 @@ ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)
   return FoundOnlineNodeInformationElement;
 }
 
-void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewProcessingPresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
+void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, int NewProcessingPresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
 {
   bool SetModuleProcessing = false;
   bool SetModuleControllers = false;
@@ -16188,9 +16165,14 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewProcess
   float FaderLevel = AxumData.ModuleData[ModuleNr].FaderLevel;
   bool ModuleState = AxumData.ModuleData[ModuleNr].On;
   int Panorama = AxumData.ModuleData[ModuleNr].Panorama;
-  unsigned char PresetNr = AxumData.ModuleData[ModuleNr].SelectedProcessingPreset;
+  int PresetNr = AxumData.ModuleData[ModuleNr].SelectedProcessingPreset;
   unsigned char CurrentPresetState[8];
   unsigned char cntPreset;
+
+  if (NewProcessingPresetNr == -1)
+  {
+    UseModuleDefaults = true;
+  }
 
   for (cntPreset=0; cntPreset<8; cntPreset++)
   {
@@ -16404,14 +16386,16 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewProcess
       ModuleState = AxumData.ModuleData[ModuleNr].Defaults.On;
     }
 
-    if ((AxumData.ModuleData[ModuleNr].Defaults.GainUsePreset) ||
+    if (((AxumData.ModuleData[ModuleNr].Defaults.GainUsePreset) ||
         (AxumData.ModuleData[ModuleNr].Defaults.FilterUsePreset) ||
         (AxumData.ModuleData[ModuleNr].Defaults.InsertUsePreset) ||
         (AxumData.ModuleData[ModuleNr].Defaults.PhaseUsePreset) ||
         (AxumData.ModuleData[ModuleNr].Defaults.MonoUsePreset) ||
         (AxumData.ModuleData[ModuleNr].Defaults.EQUsePreset) ||
         (AxumData.ModuleData[ModuleNr].Defaults.DynamicsUsePreset) ||
-        (AxumData.ModuleData[ModuleNr].Defaults.ModuleUsePreset) || (UseModuleDefaults))
+        (AxumData.ModuleData[ModuleNr].Defaults.ModuleUsePreset) || (UseModuleDefaults)) ||
+       (NewProcessingPresetNr == -1))
+
     {
       PresetNr = NewProcessingPresetNr;
     }
@@ -16766,7 +16750,7 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int NewProcess
   }
 }
 
-void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
+void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, int PresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects)
 {
   unsigned char cntBuss;
   bool BussChanged = false;
@@ -16777,6 +16761,11 @@ void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, un
   unsigned char CurrentExclusiveActive = 0;
   unsigned char CurrentPresetState[8];
   unsigned char cntPreset;
+
+  if (PresetNr == -1)
+  {
+    UseModuleDefaults = true;
+  }
 
   for (cntPreset=0; cntPreset<8; cntPreset++)
   {
@@ -16806,7 +16795,7 @@ void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, un
           NewExclusiveActive = 1;
         }
       }
-      else if ((AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].Use) && (OverrideAtSourceSelect))
+      else if ((AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].Use) && ((OverrideAtSourceSelect) || (UseModuleDefaults)))
       {
         if (AxumData.ModuleData[ModuleNr].Defaults.Buss[cntBuss].On)
         {
@@ -17136,25 +17125,20 @@ void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool D
           {
             if (CurrentSource != 0)
             { //if Source 'none', do nothing
-              if (CurrentSource == -1)
-              { //Source 'mute', will be 'none'
-                CurrentSource = 0;
-              }
               DoAxum_SetNewSource(cntModule, CurrentSource, DisableActiveCheck | AxumData.ModuleData[cntModule].OverruleActive);
             }
-            DoAxum_LoadProcessingPreset(cntModule, CurrentPreset, 0, 0, 0);
-            DoAxum_LoadRoutingPreset(cntModule, CurrentRoutingPreset, 0, 0, 0);
+            if (CurrentPreset != 0)
+            { //if Preset 'none', do nothing
+              DoAxum_LoadProcessingPreset(cntModule, CurrentPreset, 0, 0, 0);
+            }
+            if (CurrentRoutingPreset != 0)
+            { //if RoutingPreset 'none', do nothing
+              DoAxum_LoadRoutingPreset(cntModule, CurrentRoutingPreset, 0, 0, 0);
+            }
           }
           else
           {
-            if (CurrentSource != 0)
-            { //if Source 'none', do nothing
-              if (CurrentSource == -1)
-              { //Source 'mute', will be 'none'
-                CurrentSource = 0;
-              }
-              AxumData.ModuleData[cntModule].WaitingSource = CurrentSource;
-            }
+            AxumData.ModuleData[cntModule].WaitingSource = CurrentSource;
             AxumData.ModuleData[cntModule].WaitingProcessingPreset = CurrentPreset;
           }
 
@@ -17248,7 +17232,7 @@ unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck)
   return NumberOfObjects;
 }
 
-unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset, unsigned char Pool)
+int AdjustModulePreset(int CurrentPreset, int Offset, unsigned char Pool)
 {
   char check_for_next_pos;
 
@@ -17262,7 +17246,7 @@ unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset, unsigned
   CurrentPos = -1;
   PosBefore = -1;
   PosAfter = MAX_NR_OF_PRESETS;
-  for (cntPos=0; cntPos<MAX_NR_OF_PRESETS; cntPos++)
+  for (cntPos=0; cntPos<MAX_NR_OF_PRESETS+2; cntPos++)
   {
     if (presets.pos[cntPos].filled)
     {
@@ -17383,9 +17367,13 @@ unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset, unsigned
   return CurrentPreset;
 }
 
-void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength)
+void GetPresetLabel(int PresetNr, char *TextString, int MaxLength)
 {
-  if (PresetNr == 0)
+  if (PresetNr == -1)
+  {
+    strncpy(TextString, "Default", MaxLength);
+  }
+  else if (PresetNr == 0)
   {
     strncpy(TextString, "None", MaxLength);
   }
@@ -17646,13 +17634,13 @@ void DoAxum_UpdateMasterControlMode(int ControlMode)
 unsigned char ModulePresetActive(int ModuleNr, unsigned char PresetNr)
 {
   int ModulePresetSource = 0;
-  unsigned int ModulePresetPreset = 0;
+  int ModulePresetPreset = 0;
   unsigned char cntBuss;
   unsigned char SourceEqual = 0;
   unsigned char PresetEqual = 0;
   unsigned char RoutingEqual = 1;
   unsigned char Active = 0;
-  unsigned char RoutingPreset = 0;
+  int RoutingPreset = 0;
   AXUM_ROUTING_PRESET_DATA_STRUCT *SelectedRoutingPreset = NULL;
 
   if (PresetNr>0)

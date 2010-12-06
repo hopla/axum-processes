@@ -411,7 +411,7 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
   PQclear(qres);
 
   //get position/type list for presets
-  qres = sql_exec("SELECT number, pool1, pool2, pool3, pool4, pool5, pool6, pool7, pool8 FROM src_preset ORDER BY pos", 1, 0, NULL);
+  qres = sql_exec("SELECT number, pool1, pool2, pool3, pool4, pool5, pool6, pool7, pool8 FROM processing_presets ORDER BY pos", 1, 0, NULL);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -422,8 +422,6 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
   {
     presets.pos[cntPreset].filled = 0;
   }
-  presets.pos[0].number = 0;
-  presets.pos[0].filled = 1;
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     unsigned int number;
@@ -432,12 +430,12 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &number);
-    presets.pos[cntRow+1].number = number;
-    presets.pos[cntRow+1].filled = 1;
+    presets.pos[cntRow].number = number;
+    presets.pos[cntRow].filled = 1;
 
     for (cnt=0; cnt<8; cnt++)
     {
-      presets.pos[cntRow+1].pool[cnt] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+      presets.pos[cntRow].pool[cnt] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     }
   }
   PQclear(qres);

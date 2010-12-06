@@ -111,7 +111,7 @@ typedef struct
   char SourceName[32];
   AXUM_INPUT_DATA_STRUCT InputData[8];
 
-  unsigned int DefaultProcessingPreset;
+  int DefaultProcessingPreset;
 
   unsigned char StartTrigger;
   unsigned char StopTrigger;
@@ -229,9 +229,9 @@ typedef struct
   int TemporySourceLocal;
   int TemporySourceControlMode[4];
   int SelectedSource;
-  unsigned int TemporyPresetLocal;
-  unsigned int TemporyPresetControlMode[4];
-  unsigned int SelectedProcessingPreset;
+  int TemporyPresetLocal;
+  int TemporyPresetControlMode[4];
+  int SelectedProcessingPreset;
   unsigned int ModulePreset;
   int Source1A;
   int Source1B;
@@ -241,14 +241,14 @@ typedef struct
   int Source3B;
   int Source4A;
   int Source4B;
-  unsigned int ProcessingPreset1A;
-  unsigned int ProcessingPreset1B;
-  unsigned int ProcessingPreset2A;
-  unsigned int ProcessingPreset2B;
-  unsigned int ProcessingPreset3A;
-  unsigned int ProcessingPreset3B;
-  unsigned int ProcessingPreset4A;
-  unsigned int ProcessingPreset4B;
+  int ProcessingPreset1A;
+  int ProcessingPreset1B;
+  int ProcessingPreset2A;
+  int ProcessingPreset2B;
+  int ProcessingPreset3A;
+  int ProcessingPreset3B;
+  int ProcessingPreset4A;
+  int ProcessingPreset4B;
   bool OverruleActive;
   int WaitingSource;
   int WaitingProcessingPreset;
@@ -422,7 +422,7 @@ typedef struct
 
 typedef struct
 {
-  preset_list_struct pos[MAX_NR_OF_PRESETS];
+  preset_list_struct pos[2+MAX_NR_OF_PRESETS];
 } preset_pos_struct;
 
 //**************************************************************/
@@ -556,8 +556,8 @@ int MixMinusSourceUsed(int CurrentSource);
 void GetSourceLabel(int SourceNr, char *TextString, int MaxLength);
 #define AdjustDestinationSource AdjustModuleSource
 int AdjustModuleSource(int CurrentSource, int Offset, unsigned char Pool);
-unsigned int AdjustModulePreset(unsigned int CurrentPreset, int Offset, unsigned char Pool);
-void GetPresetLabel(unsigned int PresetNr, char *TextString, int MaxLength);
+int AdjustModulePreset(int CurrentPreset, int Offset, unsigned char Pool);
+void GetPresetLabel(int PresetNr, char *TextString, int MaxLength);
 void GetConsolePresetLabel(unsigned int ConsolePresetNr, char *TextString, int MaxLength);
 unsigned int GetFunctionNrFromControlMode(int ControlNr);
 int SourceActive(unsigned int InputSourceNr);
@@ -581,8 +581,8 @@ void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule);
 bool DoAxum_SetNewSource(int ModuleNr, int NewSource, int Forced);
 void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int UseInterlock);
 void DoAxum_SetCRMBussOnOff(int MonitorBussNr, int BussNr, unsigned char NewState, int PreventDoingInterlock);
-void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, unsigned int ProcessingPresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
-void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, unsigned char PresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
+void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, int ProcessingPresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
+void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, int PresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
 void DoAxum_LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
 void DoAxum_LoadMonitorBussPreset(unsigned char PresetNr, char *Console, bool SetAllObjects);
 void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool DisableActiveCheck);
