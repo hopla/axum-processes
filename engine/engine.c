@@ -16946,7 +16946,7 @@ void DoAxum_LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool Set
         On = AxumData.BussPresetData[PresetNr][cntBuss].On;
       }
 
-      unsigned int FunctionNrToSent = 0x01000000 | (((cntBuss-1)<<12)&0xFFF000);
+      unsigned int FunctionNrToSent = 0x01000000 | ((cntBuss<<12)&0xFFF000);
       if ((AxumData.BussMasterData[cntBuss].Level != Level) || SetAllObjects)
       {
         AxumData.BussMasterData[cntBuss].Level = Level;
@@ -17245,7 +17245,7 @@ int AdjustModulePreset(int CurrentPreset, int Offset, unsigned char Pool)
   //Determin the current position
   CurrentPos = -1;
   PosBefore = -1;
-  PosAfter = MAX_NR_OF_PRESETS;
+  PosAfter = MAX_NR_OF_PRESETS+2;
   for (cntPos=0; cntPos<MAX_NR_OF_PRESETS+2; cntPos++)
   {
     if (presets.pos[cntPos].filled)
@@ -17297,7 +17297,7 @@ int AdjustModulePreset(int CurrentPreset, int Offset, unsigned char Pool)
           check_for_next_pos = 0;
 
           CurrentPos++;
-          if (CurrentPos>=MAX_NR_OF_PRESETS)
+          if (CurrentPos>=MAX_NR_OF_PRESETS+2)
           {
             CurrentPos = 0;
           }
@@ -17335,7 +17335,7 @@ int AdjustModulePreset(int CurrentPreset, int Offset, unsigned char Pool)
           CurrentPos--;
           if (CurrentPos<0)
           {
-            CurrentPos = MAX_NR_OF_PRESETS-1;
+            CurrentPos = (MAX_NR_OF_PRESETS+2)-1;
           }
 
           CurrentPreset = presets.pos[CurrentPos].number;
