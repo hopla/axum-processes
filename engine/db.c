@@ -3361,8 +3361,8 @@ void db_event_write(char myself, char *arg)
     unsigned int cntField;
 
     cntField = 0;
-    strncpy(AxumData.UsernameToWrite[console], PQgetvalue(qres, cntRow, cntField++), 32);
-    strncpy(AxumData.PasswordToWrite[console], PQgetvalue(qres, cntRow, cntField++), 16);
+    strncpy(AxumData.ConsoleData[console].UsernameToWrite, PQgetvalue(qres, cntRow, cntField++), 32);
+    strncpy(AxumData.ConsoleData[console].PasswordToWrite, PQgetvalue(qres, cntRow, cntField++), 16);
   }
   PQclear(qres);
 
@@ -3444,11 +3444,11 @@ int db_read_user(unsigned int console, char *user, char *pass)
       sscanf(PQgetvalue(qres, 0, cntField++), "%d", &preset_pool[cntRow]);
     }
 
-    strncpy(AxumData.Username[console], user, 32);
-    strncpy(AxumData.Password[console], pass, 16);
-    AxumData.UserLevel[console] = user_level[console];
-    AxumData.SourcePool[console] = source_pool[console];
-    AxumData.PresetPool[console] = preset_pool[console];
+    strncpy(AxumData.ConsoleData[console].Username, user, 32);
+    strncpy(AxumData.ConsoleData[console].Password, pass, 16);
+    AxumData.ConsoleData[console].UserLevel = user_level[console];
+    AxumData.ConsoleData[console].SourcePool = source_pool[console];
+    AxumData.ConsoleData[console].PresetPool = preset_pool[console];
 
     unsigned int FunctionNrToSend = 0x03000000 | (console<<12);
     CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);

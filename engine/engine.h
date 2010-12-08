@@ -340,6 +340,26 @@ typedef struct
 
 typedef struct
 {
+  int ControlMode;
+  unsigned int ControlModeTimerValue;
+  int MasterControlMode;
+  char Username[33];
+  char Password[17];
+  char UsernameToWrite[33];
+  char PasswordToWrite[17];
+  unsigned char UserLevel;
+  unsigned char SourcePool;
+  unsigned char PresetPool;
+  unsigned int SelectedConsolePreset;
+  unsigned int SelectedModule;
+  unsigned int SelectedBuss;
+  unsigned int SelectedMonitorBuss;
+  unsigned int SelectedSource;
+  unsigned int SelectedDestination;
+} AXUM_CONSOLE_DATA;
+
+typedef struct
+{
   unsigned int RackOrganization[42];
   AXUM_SOURCE_DATA_STRUCT SourceData[1280];
   AXUM_DESTINATION_DATA_STRUCT DestinationData[1280];
@@ -349,17 +369,11 @@ typedef struct
   AXUM_BUSS_PRESET_DATA_STRUCT BussPresetData[1280][16];
   AXUM_MONITOR_BUSS_PRESET_DATA_STRUCT MonitorBussPresetData[1280][16];
   AXUM_CONSOLE_PRESET_DATA_STRUCT ConsolePresetData[32];
+  AXUM_MONITOR_OUTPUT_DATA_STRUCT Monitor[16];
+  AXUM_EXTERN_SOURCE_DATA_STRUCT ExternSource[4];
+  AXUM_TALKBACK_STRUCT Talkback[16];
 
-  int ControlMode[4];
-  unsigned int ControlModeTimerValue[4];
-  int MasterControlMode[4];
-  char Username[4][33];
-  char Password[4][17];
-  char UsernameToWrite[4][33];
-  char PasswordToWrite[4][17];
-  unsigned char UserLevel[4];
-  unsigned char SourcePool[4];
-  unsigned char PresetPool[4];
+  AXUM_CONSOLE_DATA ConsoleData[NUMBER_OF_CONSOLES];
 
   bool Redlight[8];
   unsigned int Samplerate;
@@ -368,17 +382,6 @@ typedef struct
   float LevelReserve;
   bool AutoMomentary;
   bool StartupState;
-
-  unsigned int SelectedConsolePreset[4];
-  unsigned int SelectedModule[4];
-  unsigned int SelectedBuss[4];
-  unsigned int SelectedMonitorBuss[4];
-  unsigned int SelectedSource[4];
-  unsigned int SelectedDestination[4];
-
-  AXUM_MONITOR_OUTPUT_DATA_STRUCT Monitor[16];
-  AXUM_EXTERN_SOURCE_DATA_STRUCT ExternSource[4];
-  AXUM_TALKBACK_STRUCT Talkback[16];
 } AXUM_DATA_STRUCT;
 
 //**************************************************************/

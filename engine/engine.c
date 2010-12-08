@@ -634,12 +634,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
   {
     SENSOR_RECEIVE_FUNCTION_STRUCT *SensorReceiveFunction = &OnlineNodeInformationElement->SensorReceiveFunction[object-1024];
     unsigned char SensorAllowed = 1;
-    if ((OnlineNodeInformationElement->UserLevelFromConsole>0) && (OnlineNodeInformationElement->UserLevelFromConsole<=4))
+    if ((OnlineNodeInformationElement->UserLevelFromConsole>0) && (OnlineNodeInformationElement->UserLevelFromConsole<=NUMBER_OF_CONSOLES))
     {
       unsigned char ConsoleNr = OnlineNodeInformationElement->UserLevelFromConsole-1;
-      if (AxumData.UserLevel[ConsoleNr] < 6)
+      if (AxumData.ConsoleData[ConsoleNr].UserLevel < 6)
       {
-        if (!SensorReceiveFunction->ActiveInUserLevel[AxumData.UserLevel[ConsoleNr]])
+        if (!SensorReceiveFunction->ActiveInUserLevel[AxumData.ConsoleData[ConsoleNr].UserLevel])
         {
           SensorAllowed = 0;
         }
@@ -672,9 +672,10 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
             unsigned char ConsoleNr = AxumData.ModuleData[ModuleNr].Console;
 
-            if ((ModuleNr >= NUMBER_OF_MODULES) && (ModuleNr<(NUMBER_OF_MODULES+4)))
+            if ((ModuleNr >= NUMBER_OF_MODULES) && (ModuleNr<(NUMBER_OF_MODULES+NUMBER_OF_CONSOLES)))
             {
-              ModuleNr = AxumData.SelectedModule[ModuleNr-NUMBER_OF_MODULES];
+              int ConsoleNr = ModuleNr-NUMBER_OF_MODULES;
+              ModuleNr = AxumData.ConsoleData[ConsoleNr].SelectedModule;
             }
 
             switch (FunctionNr)
@@ -700,9 +701,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 if (type == MBN_DATATYPE_SINT)
                 {
                   unsigned char Pool = 8;
-                  if (AxumData.SourcePool[ConsoleNr] < 2)
+                  if (AxumData.ConsoleData[ConsoleNr].SourcePool < 2)
                   {
-                    Pool = (ConsoleNr*2)+AxumData.SourcePool[ConsoleNr];
+                    Pool = (ConsoleNr*2)+AxumData.ConsoleData[ConsoleNr].SourcePool;
                   }
                   CurrentSource = AdjustModuleSource(CurrentSource, data.SInt, Pool);
                   AxumData.ModuleData[ModuleNr].TemporySourceLocal = CurrentSource;
@@ -981,9 +982,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   case MBN_DATATYPE_SINT:
                   {
                     unsigned char Pool = 8;
-                    if (AxumData.PresetPool[ConsoleNr] < 2)
+                    if (AxumData.ConsoleData[ConsoleNr].PresetPool < 2)
                     {
-                      Pool = (ConsoleNr*2)+AxumData.PresetPool[ConsoleNr];
+                      Pool = (ConsoleNr*2)+AxumData.ConsoleData[ConsoleNr].PresetPool;
                     }
                     AxumData.ModuleData[ModuleNr].TemporyPresetLocal = AdjustModulePreset(CurrentPreset, data.SInt, Pool);
                   }
@@ -2975,8 +2976,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               case MODULE_FUNCTION_SELECT_3:
               case MODULE_FUNCTION_SELECT_4:
               {
-                int SelectNr = FunctionNr-MODULE_FUNCTION_SELECT_1;
-                unsigned int NewSelectedModuleNr = AxumData.SelectedModule[SelectNr];
+                int ConsoleNr = FunctionNr-MODULE_FUNCTION_SELECT_1;
+                unsigned int NewSelectedModuleNr = AxumData.ConsoleData[ConsoleNr].SelectedModule;
 
                 switch (type)
                 {
@@ -2990,7 +2991,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   break;
                 }
 
-                SetSelectedModule(SelectNr, NewSelectedModuleNr);
+                SetSelectedModule(ConsoleNr, NewSelectedModuleNr);
               }
               break;
             }
@@ -3001,9 +3002,10 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             unsigned int BussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
             unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
-            if ((BussNr>=NUMBER_OF_BUSSES) && (BussNr<(NUMBER_OF_BUSSES+4)))
+            if ((BussNr>=NUMBER_OF_BUSSES) && (BussNr<(NUMBER_OF_BUSSES+NUMBER_OF_CONSOLES)))
             {
-              BussNr = AxumData.SelectedBuss[BussNr-NUMBER_OF_BUSSES];
+              int ConsoleNr = BussNr-NUMBER_OF_BUSSES;
+              BussNr = AxumData.ConsoleData[ConsoleNr].SelectedBuss;
             }
 
             switch (FunctionNr)
@@ -3181,8 +3183,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               case BUSS_FUNCTION_SELECT_3:
               case BUSS_FUNCTION_SELECT_4:
               {
-                int SelectNr = FunctionNr-BUSS_FUNCTION_SELECT_1;
-                unsigned int NewSelectedBussNr = AxumData.SelectedBuss[SelectNr];
+                int ConsoleNr = FunctionNr-BUSS_FUNCTION_SELECT_1;
+                unsigned int NewSelectedBussNr = AxumData.ConsoleData[ConsoleNr].SelectedBuss;
 
                 switch (type)
                 {
@@ -3196,7 +3198,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   break;
                 }
 
-                SetSelectedBuss(SelectNr, NewSelectedBussNr);
+                SetSelectedBuss(ConsoleNr, NewSelectedBussNr);
               }
               break;
               case BUSS_FUNCTION_RESET:
@@ -3226,9 +3228,10 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             int MonitorBussNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
             int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
-            if ((MonitorBussNr>=NUMBER_OF_MONITOR_BUSSES) && (MonitorBussNr<(NUMBER_OF_MONITOR_BUSSES+4)))
+            if ((MonitorBussNr>=NUMBER_OF_MONITOR_BUSSES) && (MonitorBussNr<(NUMBER_OF_MONITOR_BUSSES+NUMBER_OF_CONSOLES)))
             {
-              MonitorBussNr = AxumData.SelectedMonitorBuss[MonitorBussNr-NUMBER_OF_MONITOR_BUSSES];
+              int ConsoleNr = MonitorBussNr-NUMBER_OF_MONITOR_BUSSES;
+              MonitorBussNr = AxumData.ConsoleData[ConsoleNr].SelectedMonitorBuss;
             }
 
             if (type == MBN_DATATYPE_STATE)
@@ -3696,8 +3699,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               case MONITOR_BUSS_FUNCTION_SELECT_3:
               case MONITOR_BUSS_FUNCTION_SELECT_4:
               {
-                int SelectNr = FunctionNr-MONITOR_BUSS_FUNCTION_SELECT_1;
-                unsigned int NewSelectedMonitorBussNr = AxumData.SelectedMonitorBuss[SelectNr];
+                int ConsoleNr = FunctionNr-MONITOR_BUSS_FUNCTION_SELECT_1;
+                unsigned int NewSelectedMonitorBussNr = AxumData.ConsoleData[ConsoleNr].SelectedMonitorBuss;
 
                 switch (type)
                 {
@@ -3711,7 +3714,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   break;
                 }
 
-                SetSelectedMonitorBuss(SelectNr, NewSelectedMonitorBussNr);
+                SetSelectedMonitorBuss(ConsoleNr, NewSelectedMonitorBussNr);
               }
               break;
               default:
@@ -3807,7 +3810,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   int ReceivedControlMode = -2;
                   int NewControlMode = -2;
 
-                  AxumData.ControlModeTimerValue[ConsoleNr] = 0;
+                  AxumData.ConsoleData[ConsoleNr].ControlModeTimerValue = 0;
 
                   //Convert GLOBAL_FUNCTION_CONTROL_MODE to CONTROL_MODE number
                   ReceivedControlMode = GetControlModeFromConsoleFunctionNr(SensorReceiveFunctionNumber);
@@ -3824,9 +3827,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
                       {
-                        if (AxumData.ControlMode[ConsoleNr] == ReceivedControlMode)
+                        if (AxumData.ConsoleData[ConsoleNr].ControlMode == ReceivedControlMode)
                         {
-                          NewControlMode = AxumData.ControlMode[ConsoleNr];
+                          NewControlMode = AxumData.ConsoleData[ConsoleNr].ControlMode;
                         }
                       }
                     }
@@ -3834,16 +3837,16 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                   if (NewControlMode > -2)
                   {
-                    if (AxumData.ControlMode[ConsoleNr] == NewControlMode)
+                    if (AxumData.ConsoleData[ConsoleNr].ControlMode == NewControlMode)
                     {
-                      AxumData.ControlMode[ConsoleNr] = -1;
+                      AxumData.ConsoleData[ConsoleNr].ControlMode = -1;
                       unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                       CheckObjectsToSent(FunctionNrToSend | FunctionNr);
                     }
                     else
                     {
                       unsigned int OldFunctionNumber = GetConsoleFunctionNrFromControlMode(ConsoleNr);
-                      AxumData.ControlMode[ConsoleNr] = NewControlMode;
+                      AxumData.ConsoleData[ConsoleNr].ControlMode = NewControlMode;
                       CheckObjectsToSent(OldFunctionNumber);
                       unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                       CheckObjectsToSent(FunctionNrToSend | FunctionNr);
@@ -3915,22 +3918,22 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       NewBussNr = NewMasterControlMode;
                     }
 
-                    if (AxumData.MasterControlMode[ConsoleNr] != MASTER_CONTROL_MODE_NONE)
+                    if (AxumData.ConsoleData[ConsoleNr].MasterControlMode != MASTER_CONTROL_MODE_NONE)
                     {
-                      OldFunctionNumber = 0x03000000 | (ConsoleNr<<12) | (AxumData.MasterControlMode[ConsoleNr]+CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2);
-                      if (AxumData.MasterControlMode[ConsoleNr] < 16)
+                      OldFunctionNumber = 0x03000000 | (ConsoleNr<<12) | (AxumData.ConsoleData[ConsoleNr].MasterControlMode+CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2);
+                      if (AxumData.ConsoleData[ConsoleNr].MasterControlMode < 16)
                       {
-                        OldBussNr = AxumData.MasterControlMode[ConsoleNr];
+                        OldBussNr = AxumData.ConsoleData[ConsoleNr].MasterControlMode;
                       }
                     }
 
-                    if (AxumData.MasterControlMode[ConsoleNr] != NewMasterControlMode)
+                    if (AxumData.ConsoleData[ConsoleNr].MasterControlMode != NewMasterControlMode)
                     {
-                      AxumData.MasterControlMode[ConsoleNr] = NewMasterControlMode;
+                      AxumData.ConsoleData[ConsoleNr].MasterControlMode = NewMasterControlMode;
                     }
                     else
                     {
-                      AxumData.MasterControlMode[ConsoleNr] = MASTER_CONTROL_MODE_NONE;
+                      AxumData.ConsoleData[ConsoleNr].MasterControlMode = MASTER_CONTROL_MODE_NONE;
                     }
                     if (OldFunctionNumber != 0x00000000)
                     {
@@ -4001,23 +4004,23 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     bool TurnOff = false;
                     int NewControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
 
-                    AxumData.ControlModeTimerValue[ConsoleNr] = 0;
+                    AxumData.ConsoleData[ConsoleNr].ControlModeTimerValue = 0;
 
-                    if (AxumData.MasterControlMode[ConsoleNr] == NewMasterControlMode)
+                    if (AxumData.ConsoleData[ConsoleNr].MasterControlMode == NewMasterControlMode)
                     {
                       TurnOff = true;
                     }
 
-                    if (AxumData.MasterControlMode[ConsoleNr] != MASTER_CONTROL_MODE_NONE)
+                    if (AxumData.ConsoleData[ConsoleNr].MasterControlMode != MASTER_CONTROL_MODE_NONE)
                     {
-                      OldFunctionNumber = 0x03000000 | (ConsoleNr<<12) | (AxumData.MasterControlMode[ConsoleNr]+CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2);
+                      OldFunctionNumber = 0x03000000 | (ConsoleNr<<12) | (AxumData.ConsoleData[ConsoleNr].MasterControlMode+CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2);
                     }
 
                     for (int cntBuss=0; cntBuss<16; cntBuss++)
                     {
                       char MasterControlModeToCheck = cntBuss;
 
-                      if (AxumData.MasterControlMode[ConsoleNr] == MasterControlModeToCheck)
+                      if (AxumData.ConsoleData[ConsoleNr].MasterControlMode == MasterControlModeToCheck)
                       {
                         OldConsoleFunctionNr  = CONSOLE_FUNCTION_CONTROL_MODES_BUSS_1_2+cntBuss;
                       }
@@ -4025,17 +4028,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                     if (TurnOff)
                     {
-                      AxumData.MasterControlMode[ConsoleNr] = MASTER_CONTROL_MODE_NONE;
+                      AxumData.ConsoleData[ConsoleNr].MasterControlMode = MASTER_CONTROL_MODE_NONE;
                     }
                     else
                     {
-                      AxumData.MasterControlMode[ConsoleNr] = NewMasterControlMode;
+                      AxumData.ConsoleData[ConsoleNr].MasterControlMode = NewMasterControlMode;
                     }
                     if (OldFunctionNumber != 0x00000000)
                     {
                       CheckObjectsToSent(OldFunctionNumber);
                     }
-                    int NewFunctionNr = AxumData.MasterControlMode[ConsoleNr]+CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2;
+                    int NewFunctionNr = AxumData.ConsoleData[ConsoleNr].MasterControlMode+CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2;
                     unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                     CheckObjectsToSent(FunctionNrToSend | NewFunctionNr);
                     CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_MASTER_CONTROL);
@@ -4044,17 +4047,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     if (TurnOff)
                     {
                       int ModuleControlModeToCheck = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
-                      if (AxumData.ControlMode[ConsoleNr] == ModuleControlModeToCheck)
+                      if (AxumData.ConsoleData[ConsoleNr].ControlMode == ModuleControlModeToCheck)
                       {
                         unsigned int OldFunctionNr = GetConsoleFunctionNrFromControlMode(ConsoleNr);
-                        AxumData.ControlMode[ConsoleNr] = -1;
+                        AxumData.ConsoleData[ConsoleNr].ControlMode = -1;
                         CheckObjectsToSent(OldFunctionNr);
                       }
                     }
                     else
                     {
                       unsigned int OldFunctionNr = GetConsoleFunctionNrFromControlMode(ConsoleNr);
-                      AxumData.ControlMode[ConsoleNr] = NewControlMode;
+                      AxumData.ConsoleData[ConsoleNr].ControlMode = NewControlMode;
                       unsigned int NewFunctionNr = GetConsoleFunctionNrFromControlMode(ConsoleNr);
                       CheckObjectsToSent(OldFunctionNr);
                       CheckObjectsToSent(NewFunctionNr);
@@ -4121,7 +4124,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 //              case CONSOLE_FUNCTION_CONSOLE_PRESET:
               case CONSOLE_FUNCTION_MODULE_SELECT:
               {
-                unsigned int NewSelectedModuleNr = AxumData.SelectedModule[ConsoleNr];
+                unsigned int NewSelectedModuleNr = AxumData.ConsoleData[ConsoleNr].SelectedModule;
 
                 switch (type)
                 {
@@ -4148,7 +4151,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               case CONSOLE_FUNCTION_BUSS_SELECT:
               {
-                unsigned int NewSelectedBussNr = AxumData.SelectedBuss[ConsoleNr];
+                unsigned int NewSelectedBussNr = AxumData.ConsoleData[ConsoleNr].SelectedBuss;
 
                 switch (type)
                 {
@@ -4175,7 +4178,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               case CONSOLE_FUNCTION_MONITOR_BUSS_SELECT:
               {
-                unsigned int NewSelectedMonitorBussNr = AxumData.SelectedMonitorBuss[ConsoleNr];
+                unsigned int NewSelectedMonitorBussNr = AxumData.ConsoleData[ConsoleNr].SelectedMonitorBuss;
 
                 switch (type)
                 {
@@ -4202,7 +4205,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               case CONSOLE_FUNCTION_SOURCE_SELECT:
               {
-                unsigned int NewSelectedSourceNr = AxumData.SelectedSource[ConsoleNr];
+                unsigned int NewSelectedSourceNr = AxumData.ConsoleData[ConsoleNr].SelectedSource;
 
                 switch (type)
                 {
@@ -4229,7 +4232,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               case CONSOLE_FUNCTION_DESTINATION_SELECT:
               {
-                unsigned int NewSelectedDestinationNr = AxumData.SelectedDestination[ConsoleNr];
+                unsigned int NewSelectedDestinationNr = AxumData.ConsoleData[ConsoleNr].SelectedDestination;
 
                 switch (type)
                 {
@@ -4297,16 +4300,16 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                       char user[33] = "";
                       char pass[17] = "";
-                      memset(AxumData.Username, 0, 32);
-                      memset(AxumData.Password, 0, 16);
+                      memset(AxumData.ConsoleData[ConsoleNr].Username, 0, 32);
+                      memset(AxumData.ConsoleData[ConsoleNr].Password, 0, 16);
                       OnlineNodeInformationElement->Account.UsernameReceived = 0;
                       OnlineNodeInformationElement->Account.PasswordReceived = 0;
                       memset(OnlineNodeInformationElement->Account.Username, 0, 32);
                       memset(OnlineNodeInformationElement->Account.Password, 0, 16);
                       //Idle, source/preset pool A
-                      AxumData.UserLevel[ConsoleNr] = 0;
-                      AxumData.SourcePool[ConsoleNr] = 0;
-                      AxumData.PresetPool[ConsoleNr] = 0;
+                      AxumData.ConsoleData[ConsoleNr].UserLevel = 0;
+                      AxumData.ConsoleData[ConsoleNr].SourcePool = 0;
+                      AxumData.ConsoleData[ConsoleNr].PresetPool = 0;
 
                       CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER_PASS));
                       CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER));
@@ -4330,17 +4333,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     OnlineNodeInformationElement->Account.UsernameReceived = 1;
                     strncpy(OnlineNodeInformationElement->Account.Username, (char *)data.Octets, 32);
-                    strncpy(AxumData.Username[ConsoleNr], (char *)data.Octets, 32);
+                    strncpy(AxumData.ConsoleData[ConsoleNr].Username, (char *)data.Octets, 32);
                     if (OnlineNodeInformationElement->Account.PasswordReceived)
                     {
-                      strncpy(AxumData.Password[ConsoleNr], OnlineNodeInformationElement->Account.Password, 16);
+                      strncpy(AxumData.ConsoleData[ConsoleNr].Password, OnlineNodeInformationElement->Account.Password, 16);
                       unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                       CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);
                       CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
 
                       db_lock(1);
-                      db_read_user(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
-                      db_update_account(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                      db_read_user(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
+                      db_update_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
                       db_lock(0);
                     }
 
@@ -4359,17 +4362,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     OnlineNodeInformationElement->Account.PasswordReceived = 1;
                     strncpy(OnlineNodeInformationElement->Account.Password, (char *)data.Octets, 16);
-                    strncpy(AxumData.Password[ConsoleNr], (char *)data.Octets, 16);
+                    strncpy(AxumData.ConsoleData[ConsoleNr].Password, (char *)data.Octets, 16);
                     if (OnlineNodeInformationElement->Account.UsernameReceived)
                     {
-                      strncpy(AxumData.Username[ConsoleNr], OnlineNodeInformationElement->Account.Username, 32);
+                      strncpy(AxumData.ConsoleData[ConsoleNr].Username, OnlineNodeInformationElement->Account.Username, 32);
                       unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                       CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);
                       CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
 
                       db_lock(1);
-                      db_read_user(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
-                      db_update_account(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                      db_read_user(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
+                      db_update_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
                       db_lock(0);
                     }
 
@@ -4387,8 +4390,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   case MBN_DATATYPE_OCTETS:
                   {
                     char *DataString = (char *)data.Octets;
-                    strncpy(AxumData.UsernameToWrite[ConsoleNr], DataString, 32);
-                    strncpy(AxumData.PasswordToWrite[ConsoleNr], &DataString[32], 16);
+                    strncpy(AxumData.ConsoleData[ConsoleNr].UsernameToWrite, DataString, 32);
+                    strncpy(AxumData.ConsoleData[ConsoleNr].PasswordToWrite, &DataString[32], 16);
 
                     unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                     CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_CHIPCARD_USER);
@@ -4412,8 +4415,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     OnlineNodeInformationElement->Account.PasswordReceived = 1;
                     strncpy(OnlineNodeInformationElement->Account.Username, data_str, 32);
                     strncpy(OnlineNodeInformationElement->Account.Password, &(data_str[32]), 16);
-                    strncpy(AxumData.Username[ConsoleNr], data_str, 32);
-                    strncpy(AxumData.Password[ConsoleNr], &(data_str[32]), 16);
+                    strncpy(AxumData.ConsoleData[ConsoleNr].Username, data_str, 32);
+                    strncpy(AxumData.ConsoleData[ConsoleNr].Password, &(data_str[32]), 16);
 
                     unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                     CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER_PASS));
@@ -4427,10 +4430,17 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               break;
               case CONSOLE_FUNCTION_USER_LEVEL:
               {
-                AxumData.UserLevel[ConsoleNr] = data.State;
+                switch (type)
+                {
+                  case MBN_DATATYPE_STATE:
+                  {
+                    AxumData.ConsoleData[ConsoleNr].UserLevel = data.State;
 
-                unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
-                CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
+                  }
+                  break;
+                }
               }
               break;
             }
@@ -4535,7 +4545,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
             if ((SourceNr>=NUMBER_OF_SOURCES) && (SourceNr<(NUMBER_OF_SOURCES+4)))
             {
-              SourceNr = AxumData.SelectedSource[SourceNr-NUMBER_OF_SOURCES];
+              SourceNr = AxumData.ConsoleData[SourceNr-NUMBER_OF_SOURCES].SelectedSource;
             }
 
             switch (FunctionNr)
@@ -5212,7 +5222,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               case SOURCE_FUNCTION_SELECT_4:
               {
                 int SelectNr = FunctionNr-SOURCE_FUNCTION_SELECT_1;
-                unsigned int NewSelectedSourceNr = AxumData.SelectedSource[SelectNr];
+                unsigned int NewSelectedSourceNr = AxumData.ConsoleData[SelectNr].SelectedSource;
 
                 switch (type)
                 {
@@ -5239,7 +5249,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
             if ((DestinationNr>=NUMBER_OF_DESTINATIONS) && (DestinationNr<(NUMBER_OF_DESTINATIONS+4)))
             {
-              DestinationNr = AxumData.SelectedBuss[DestinationNr-NUMBER_OF_DESTINATIONS];
+              DestinationNr = AxumData.ConsoleData[DestinationNr-NUMBER_OF_DESTINATIONS].SelectedBuss;
             }
 
             switch (FunctionNr)
@@ -5552,7 +5562,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               case DESTINATION_FUNCTION_SELECT_4:
               {
                 int SelectNr = FunctionNr-DESTINATION_FUNCTION_SELECT_1;
-                unsigned int NewSelectedDestinationNr = AxumData.SelectedDestination[SelectNr];
+                unsigned int NewSelectedDestinationNr = AxumData.ConsoleData[SelectNr].SelectedDestination;
 
                 switch (type)
                 {
@@ -5907,7 +5917,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
             if ((ModuleNr >= NUMBER_OF_MODULES) && (ModuleNr<(NUMBER_OF_MODULES+4)))
             {
-              ModuleNr = AxumData.SelectedModule[ModuleNr-NUMBER_OF_MODULES];
+              ModuleNr = AxumData.ConsoleData[ModuleNr-NUMBER_OF_MODULES].SelectedModule;
             }
 
             switch (FunctionNr)
@@ -5922,7 +5932,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
             if ((BussNr>=NUMBER_OF_BUSSES) && (BussNr<(NUMBER_OF_BUSSES+4)))
             {
-              BussNr = AxumData.SelectedBuss[BussNr-NUMBER_OF_BUSSES];
+              BussNr = AxumData.ConsoleData[BussNr-NUMBER_OF_BUSSES].SelectedBuss;
             }
 
             switch (FunctionNr)
@@ -5937,7 +5947,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
             if ((MonitorBussNr>=NUMBER_OF_MONITOR_BUSSES) && (MonitorBussNr<(NUMBER_OF_MONITOR_BUSSES+4)))
             {
-              MonitorBussNr = AxumData.SelectedMonitorBuss[MonitorBussNr-NUMBER_OF_MONITOR_BUSSES];
+              MonitorBussNr = AxumData.ConsoleData[MonitorBussNr-NUMBER_OF_MONITOR_BUSSES].SelectedMonitorBuss;
             }
 
             switch (FunctionNr)
@@ -5956,17 +5966,17 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
               {
                 OnlineNodeInformationElement->Account.UsernameReceived = 1;
                 strncpy(OnlineNodeInformationElement->Account.Username, (char *)data.Octets, 32);
-                strncpy(AxumData.Username[ConsoleNr], (char *)data.Octets, 32);
+                strncpy(AxumData.ConsoleData[ConsoleNr].Username, (char *)data.Octets, 32);
                 if (OnlineNodeInformationElement->Account.PasswordReceived)
                 {
-                  strncpy(AxumData.Password[ConsoleNr], OnlineNodeInformationElement->Account.Password, 16);
+                  strncpy(AxumData.ConsoleData[ConsoleNr].Password, OnlineNodeInformationElement->Account.Password, 16);
                   unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                   CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);
                   CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
 
                   db_lock(1);
-                  db_read_user(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
-                  db_update_account(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                  db_read_user(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
+                  db_update_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
                   db_lock(0);
                 }
                 unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
@@ -5977,17 +5987,17 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
               {
                 OnlineNodeInformationElement->Account.PasswordReceived = 1;
                 strncpy(OnlineNodeInformationElement->Account.Password, (char *)data.Octets, 16);
-                strncpy(AxumData.Password[ConsoleNr], (char *)data.Octets, 16);
+                strncpy(AxumData.ConsoleData[ConsoleNr].Password, (char *)data.Octets, 16);
                 if (OnlineNodeInformationElement->Account.UsernameReceived)
                 {
-                  strncpy(AxumData.Username[ConsoleNr], OnlineNodeInformationElement->Account.Username, 32);
+                  strncpy(AxumData.ConsoleData[ConsoleNr].Username, OnlineNodeInformationElement->Account.Username, 32);
                   unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                   CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);
                   CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
 
                   db_lock(1);
-                  db_read_user(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
-                  db_update_account(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                  db_read_user(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
+                  db_update_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
                   db_lock(0);
                 }
 
@@ -6017,7 +6027,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
             if ((SourceNr>=NUMBER_OF_SOURCES) && (SourceNr<(NUMBER_OF_SOURCES+4)))
             {
-              SourceNr = AxumData.SelectedSource[SourceNr-NUMBER_OF_SOURCES];
+              SourceNr = AxumData.ConsoleData[SourceNr-NUMBER_OF_SOURCES].SelectedSource;
             }
 
             switch (FunctionNr)
@@ -6032,7 +6042,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
             if ((DestinationNr>=NUMBER_OF_DESTINATIONS) && (DestinationNr<(NUMBER_OF_DESTINATIONS+4)))
             {
-              DestinationNr = AxumData.SelectedBuss[DestinationNr-NUMBER_OF_DESTINATIONS];
+              DestinationNr = AxumData.ConsoleData[DestinationNr-NUMBER_OF_DESTINATIONS].SelectedBuss;
             }
 
             switch (FunctionNr)
@@ -6620,11 +6630,11 @@ void Timer100HzDone(int Value)
             }
           }
 
-          int OldConsolePreset = AxumData.SelectedConsolePreset[cntConsole];
+          int OldConsolePreset = AxumData.ConsoleData[cntConsole].SelectedConsolePreset;
           if (OldConsolePreset != 0)
           {
             unsigned int FunctionNrToSent = 0x04000000;
-            AxumData.SelectedConsolePreset[cntConsole] = 0;
+            AxumData.ConsoleData[cntConsole].SelectedConsolePreset = 0;
             CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldConsolePreset-1));
 
             FunctionNrToSent = 0x03000000 | (cntConsole<<12);
@@ -6639,13 +6649,13 @@ void Timer100HzDone(int Value)
   axum_data_lock(1);
   for (unsigned char cntConsole=0; cntConsole<4; cntConsole++)
   {
-    if (AxumData.ControlModeTimerValue[cntConsole]<10000)
+    if (AxumData.ConsoleData[cntConsole].ControlModeTimerValue<10000)
     {
-      AxumData.ControlModeTimerValue[cntConsole] += 10;
-      if (AxumData.ControlModeTimerValue[cntConsole] == 10000)
+      AxumData.ConsoleData[cntConsole].ControlModeTimerValue += 10;
+      if (AxumData.ConsoleData[cntConsole].ControlModeTimerValue == 10000)
       { //set control mode to none
         unsigned int OldFunctionNumber = GetConsoleFunctionNrFromControlMode(cntConsole);
-        AxumData.ControlMode[cntConsole] = -1;
+        AxumData.ConsoleData[cntConsole].ControlMode = -1;
         CheckObjectsToSent(OldFunctionNumber);
 
         for (int cntModule=0; cntModule<128; cntModule++)
@@ -6661,7 +6671,7 @@ void Timer100HzDone(int Value)
         CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_CONTROL_MODE_ACTIVE);
 
         OldFunctionNumber = GetConsoleFunctionNrFromControlMode(cntConsole);
-        AxumData.ControlMode[cntConsole] = -1;
+        AxumData.ConsoleData[cntConsole].ControlMode = -1;
         CheckObjectsToSent(OldFunctionNumber);
 
         for (int cntModule=0; cntModule<128; cntModule++)
@@ -8027,7 +8037,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       }
       else if (FunctionNumber<(NUMBER_OF_MODULES+4))
       {
-        FunctionNumber = AxumData.SelectedModule[FunctionNumber-NUMBER_OF_MODULES];
+        FunctionNumber = AxumData.ConsoleData[FunctionNumber-NUMBER_OF_MODULES].SelectedModule;
       }
     }
     break;
@@ -8039,7 +8049,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       }
       else if (FunctionNumber<(NUMBER_OF_BUSSES+4))
       {
-        FunctionNumber = AxumData.SelectedBuss[FunctionNumber-NUMBER_OF_BUSSES];
+        FunctionNumber = AxumData.ConsoleData[FunctionNumber-NUMBER_OF_BUSSES].SelectedBuss;
       }
     }
     break;
@@ -8051,7 +8061,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       }
       else if (FunctionNumber<(NUMBER_OF_MONITOR_BUSSES+4))
       {
-        FunctionNumber = AxumData.SelectedMonitorBuss[FunctionNumber-NUMBER_OF_MONITOR_BUSSES];
+        FunctionNumber = AxumData.ConsoleData[FunctionNumber-NUMBER_OF_MONITOR_BUSSES].SelectedMonitorBuss;
       }
     }
     break;
@@ -8076,7 +8086,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       }
       else if (FunctionNumber<(NUMBER_OF_SOURCES+4))
       {
-        FunctionNumber = AxumData.SelectedSource[FunctionNumber-NUMBER_OF_SOURCES];
+        FunctionNumber = AxumData.ConsoleData[FunctionNumber-NUMBER_OF_SOURCES].SelectedSource;
       }
     }
     break;
@@ -8088,7 +8098,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       }
       else if (FunctionNumber<(NUMBER_OF_DESTINATIONS+4))
       {
-        FunctionNumber = AxumData.SelectedDestination[FunctionNumber-NUMBER_OF_DESTINATIONS];
+        FunctionNumber = AxumData.ConsoleData[FunctionNumber-NUMBER_OF_DESTINATIONS].SelectedDestination;
       }
     }
     break;
@@ -8110,7 +8120,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
     {
       case MODULE_FUNCTIONS:
       {   //Module
-        if (FunctionNumber == AxumData.SelectedModule[cntConsole])
+        if (FunctionNumber == AxumData.ConsoleData[cntConsole].SelectedModule)
         {
           WalkAxumFunctionInformationStruct = ModuleFunctions[NUMBER_OF_MODULES+cntConsole][Function];
         }
@@ -8118,7 +8128,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       break;
       case BUSS_FUNCTIONS:
       {   //Buss
-        if (FunctionNumber == AxumData.SelectedBuss[cntConsole])
+        if (FunctionNumber == AxumData.ConsoleData[cntConsole].SelectedBuss)
         {
           WalkAxumFunctionInformationStruct = BussFunctions[NUMBER_OF_BUSSES+cntConsole][Function];
         }
@@ -8126,7 +8136,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       break;
       case MONITOR_BUSS_FUNCTIONS:
       {   //Monitor Buss
-        if (FunctionNumber == AxumData.SelectedMonitorBuss[cntConsole])
+        if (FunctionNumber == AxumData.ConsoleData[cntConsole].SelectedMonitorBuss)
         {
           WalkAxumFunctionInformationStruct = MonitorBussFunctions[NUMBER_OF_MONITOR_BUSSES+cntConsole][Function];
         }
@@ -8134,7 +8144,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       break;
       case SOURCE_FUNCTIONS:
       {   //Source
-        if (FunctionNumber == AxumData.SelectedSource[cntConsole])
+        if (FunctionNumber == AxumData.ConsoleData[cntConsole].SelectedSource)
         {
           WalkAxumFunctionInformationStruct = SourceFunctions[NUMBER_OF_SOURCES+cntConsole][Function];
         }
@@ -8142,7 +8152,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       break;
       case DESTINATION_FUNCTIONS:
       {   //Destination
-        if (FunctionNumber == AxumData.SelectedDestination[cntConsole])
+        if (FunctionNumber == AxumData.ConsoleData[cntConsole].SelectedDestination)
         {
           WalkAxumFunctionInformationStruct = DestinationFunctions[NUMBER_OF_DESTINATIONS+cntConsole][Function];
         }
@@ -8177,7 +8187,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
       if ((ModuleNr >= NUMBER_OF_MODULES) && (ModuleNr<(NUMBER_OF_MODULES+4)))
       {
-        ModuleNr = AxumData.SelectedModule[ModuleNr-NUMBER_OF_MODULES];
+        ModuleNr = AxumData.ConsoleData[ModuleNr-NUMBER_OF_MODULES].SelectedModule;
       }
 
       switch (FunctionNr)
@@ -9281,7 +9291,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             case MBN_DATATYPE_STATE:
             {
               data.State = 0;
-              if (ModuleNr == AxumData.SelectedModule[ConsoleNr])
+              if (ModuleNr == AxumData.ConsoleData[ConsoleNr].SelectedModule)
               {
                 data.State = 1;
               }
@@ -9519,7 +9529,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
       if ((BussNr >= NUMBER_OF_BUSSES) && (BussNr<(NUMBER_OF_BUSSES+4)))
       {
-        BussNr = AxumData.SelectedBuss[BussNr-NUMBER_OF_BUSSES];
+        BussNr = AxumData.ConsoleData[BussNr-NUMBER_OF_BUSSES].SelectedBuss;
       }
 
       switch (FunctionNr)
@@ -9679,7 +9689,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             case MBN_DATATYPE_STATE:
             {
               data.State = 0;
-              if (BussNr == AxumData.SelectedBuss[ConsoleNr])
+              if (BussNr == AxumData.ConsoleData[ConsoleNr].SelectedBuss)
               {
                 data.State = 1;
               }
@@ -9727,7 +9737,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
       if ((MonitorBussNr >= NUMBER_OF_MONITOR_BUSSES) && (MonitorBussNr<(NUMBER_OF_MONITOR_BUSSES+4)))
       {
-        MonitorBussNr = AxumData.SelectedMonitorBuss[MonitorBussNr-NUMBER_OF_MONITOR_BUSSES];
+        MonitorBussNr = AxumData.ConsoleData[MonitorBussNr-NUMBER_OF_MONITOR_BUSSES].SelectedMonitorBuss;
       }
 
       if (((FunctionNr>=MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF) && (FunctionNr<=MONITOR_BUSS_FUNCTION_EXT_8_ON_OFF)) ||
@@ -10092,7 +10102,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               case MBN_DATATYPE_STATE:
               {
                 data.State = 0;
-                if (MonitorBussNr == AxumData.SelectedMonitorBuss[ConsoleNr])
+                if (MonitorBussNr == AxumData.ConsoleData[ConsoleNr].SelectedMonitorBuss)
                 {
                   data.State = 1;
                 }
@@ -10132,7 +10142,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_STATE:
             {
-              if (AxumData.ControlMode[ConsoleNr] != MODULE_CONTROL_MODE_NONE)
+              if (AxumData.ConsoleData[ConsoleNr].ControlMode != MODULE_CONTROL_MODE_NONE)
               {
                 data.State = 1;
               }
@@ -10228,7 +10238,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
               int CorrespondingControlMode = GetControlModeFromConsoleFunctionNr(SensorReceiveFunctionNumber);
 
-              if (AxumData.ControlMode[ConsoleNr] == CorrespondingControlMode)
+              if (AxumData.ConsoleData[ConsoleNr].ControlMode == CorrespondingControlMode)
               {
                 Active = 1;
               }
@@ -10263,7 +10273,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             {
               unsigned char Active = 0;
               unsigned char CorrespondingControlMode = FunctionNr-CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2;
-              if (AxumData.MasterControlMode[ConsoleNr] == CorrespondingControlMode)
+              if (AxumData.ConsoleData[ConsoleNr].MasterControlMode == CorrespondingControlMode)
               {
                 Active = 1;
               }
@@ -10306,7 +10316,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               char NewMasterControlMode = BussNr;
               bool Active = false;
 
-              if (AxumData.MasterControlMode[ConsoleNr] == NewMasterControlMode)
+              if (AxumData.ConsoleData[ConsoleNr].MasterControlMode == NewMasterControlMode)
               {
                  Active = true;
               }
@@ -10323,7 +10333,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_OCTETS:
             {
-              GetConsolePresetLabel(AxumData.SelectedConsolePreset[ConsoleNr], LCDText, 8);
+              GetConsolePresetLabel(AxumData.ConsoleData[ConsoleNr].SelectedConsolePreset, LCDText, 8);
 
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
@@ -10338,23 +10348,23 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = AxumData.SelectedModule[ConsoleNr];
+              data.UInt = AxumData.ConsoleData[ConsoleNr].SelectedModule;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              if (AxumData.SelectedModule[ConsoleNr]<9)
+              if (AxumData.ConsoleData[ConsoleNr].SelectedModule<9)
               {
-                sprintf(LCDText, " Mod %d  ", AxumData.SelectedModule[ConsoleNr]+1);
+                sprintf(LCDText, " Mod %d  ", AxumData.ConsoleData[ConsoleNr].SelectedModule+1);
               }
-              else if (AxumData.SelectedModule[ConsoleNr]<99)
+              else if (AxumData.ConsoleData[ConsoleNr].SelectedModule<99)
               {
-                sprintf(LCDText, " Mod %d ", AxumData.SelectedModule[ConsoleNr]+1);
+                sprintf(LCDText, " Mod %d ", AxumData.ConsoleData[ConsoleNr].SelectedModule+1);
               }
               else
               {
-                sprintf(LCDText, "Mod %d ", AxumData.SelectedModule[ConsoleNr]+1);
+                sprintf(LCDText, "Mod %d ", AxumData.ConsoleData[ConsoleNr].SelectedModule+1);
               }
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
@@ -10369,13 +10379,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = AxumData.SelectedBuss[ConsoleNr];
+              data.UInt = AxumData.ConsoleData[ConsoleNr].SelectedBuss;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "Buss %d", AxumData.SelectedBuss[ConsoleNr]);
+              sprintf(LCDText, "Buss %d", AxumData.ConsoleData[ConsoleNr].SelectedBuss);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -10389,13 +10399,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = AxumData.SelectedMonitorBuss[ConsoleNr];
+              data.UInt = AxumData.ConsoleData[ConsoleNr].SelectedMonitorBuss;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "Mon %d", AxumData.SelectedMonitorBuss[ConsoleNr]);
+              sprintf(LCDText, "Mon %d", AxumData.ConsoleData[ConsoleNr].SelectedMonitorBuss);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -10409,13 +10419,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = AxumData.SelectedSource[ConsoleNr];
+              data.UInt = AxumData.ConsoleData[ConsoleNr].SelectedSource;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "Src %d", AxumData.SelectedSource[ConsoleNr]);
+              sprintf(LCDText, "Src %d", AxumData.ConsoleData[ConsoleNr].SelectedSource);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -10429,13 +10439,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = AxumData.SelectedDestination[ConsoleNr];
+              data.UInt = AxumData.ConsoleData[ConsoleNr].SelectedDestination;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "Src %d", AxumData.SelectedDestination[ConsoleNr]);
+              sprintf(LCDText, "Src %d", AxumData.ConsoleData[ConsoleNr].SelectedDestination);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -10451,7 +10461,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_OCTETS:
             {
-              strncpy(LCDText, AxumData.UsernameToWrite[ConsoleNr], 32);
+              strncpy(LCDText, AxumData.ConsoleData[ConsoleNr].UsernameToWrite, 32);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
             }
@@ -10465,7 +10475,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_OCTETS:
             {
-              strncpy(LCDText, AxumData.PasswordToWrite[ConsoleNr], 16);
+              strncpy(LCDText, AxumData.ConsoleData[ConsoleNr].PasswordToWrite, 16);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
             }
@@ -10483,7 +10493,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_OCTETS:
             {
-              strncpy(LCDText, AxumData.Username[ConsoleNr], 32);
+              strncpy(LCDText, AxumData.ConsoleData[ConsoleNr].Username, 32);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
             }
@@ -10497,7 +10507,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_OCTETS:
             {
-              strncpy(LCDText, AxumData.Password[ConsoleNr], 16);
+              strncpy(LCDText, AxumData.ConsoleData[ConsoleNr].Password, 16);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
             }
@@ -10511,8 +10521,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_OCTETS:
             {
-              memcpy(LCDText, AxumData.Username[ConsoleNr], 32);
-              memcpy(&LCDText[32], AxumData.Password[ConsoleNr], 16);
+              memcpy(LCDText, AxumData.ConsoleData[ConsoleNr].Username, 32);
+              memcpy(&LCDText[32], AxumData.ConsoleData[ConsoleNr].Password, 16);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 48, data, 1);
             }
@@ -10526,15 +10536,81 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_STATE:
             {
-              data.State = AxumData.UserLevel[ConsoleNr];
+              data.State = AxumData.ConsoleData[ConsoleNr].UserLevel;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               char UserLevelNames[7][21] = {"Idle", "Unknown user", "Operator 1", "Operator 2", "Supervisor 1", "Supervisor 2", "Administrator"};
-              data.Octets = (unsigned char *)UserLevelNames[AxumData.UserLevel[ConsoleNr]];
+              data.Octets = (unsigned char *)UserLevelNames[AxumData.ConsoleData[ConsoleNr].UserLevel];
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 13, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_DOT_COUNT_UPDOWN:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_PROGRAM_ENDTIME_ENABLE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_PROGRAM_ENDTIME:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_PROGRAM_ENDTIME_MINUTES:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_UINT:
+            {
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_PROGRAM_ENDTIME_SECONDS:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_UINT:
+            {
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_COUNT_DOWN_TIMER:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_FLOAT:
+            {
             }
             break;
           }
@@ -10619,7 +10695,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   {
                     ConsoleActiveBits |= 0x01<<cntConsole;
 
-                    if (AxumData.SelectedConsolePreset[cntConsole] == PresetNr)
+                    if (AxumData.ConsoleData[cntConsole].SelectedConsolePreset == PresetNr)
                     {
                       PresetActiveBits |= 0x01<<cntConsole;
                     }
@@ -10653,7 +10729,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
       if ((SourceNr >= NUMBER_OF_SOURCES) && (SourceNr<(NUMBER_OF_SOURCES+4)))
       {
-        SourceNr = AxumData.SelectedSource[SourceNr-NUMBER_OF_SOURCES];
+        SourceNr = AxumData.ConsoleData[SourceNr-NUMBER_OF_SOURCES].SelectedSource;
       }
 
       switch (FunctionNr)
@@ -10944,7 +11020,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             case MBN_DATATYPE_STATE:
             {
               data.State = 0;
-              if (SourceNr == (int)AxumData.SelectedSource[ConsoleNr])
+              if (SourceNr == (int)AxumData.ConsoleData[ConsoleNr].SelectedSource)
               {
                 data.State = 1;
               }
@@ -10978,7 +11054,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
 
       if ((DestinationNr >= NUMBER_OF_DESTINATIONS) && (DestinationNr<(NUMBER_OF_DESTINATIONS+4)))
       {
-        DestinationNr = AxumData.SelectedDestination[DestinationNr-NUMBER_OF_DESTINATIONS];
+        DestinationNr = AxumData.ConsoleData[DestinationNr-NUMBER_OF_DESTINATIONS].SelectedDestination;
       }
 
       switch (FunctionNr)
@@ -11453,7 +11529,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             case MBN_DATATYPE_STATE:
             {
               data.State = 0;
-              if (DestinationNr == AxumData.SelectedDestination[ConsoleNr])
+              if (DestinationNr == AxumData.ConsoleData[ConsoleNr].SelectedDestination)
               {
                 data.State = 1;
               }
@@ -11849,9 +11925,9 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
     ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1)/(MODULE_FUNCTION_CONTROL_2-MODULE_FUNCTION_CONTROL_1);
   }
 
-  AxumData.ControlModeTimerValue[ControlNr] = 0;
+  AxumData.ConsoleData[ControlNr].ControlModeTimerValue = 0;
 
-  ControlMode = AxumData.ControlMode[ControlNr];
+  ControlMode = AxumData.ConsoleData[ControlNr].ControlMode;
 
   if (type == MBN_DATATYPE_SINT)
   {
@@ -11861,9 +11937,9 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       {   //Source
         int CurrentSource = AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr];
         unsigned char Pool = 8;
-        if (AxumData.SourcePool[ControlNr] < 2)
+        if (AxumData.ConsoleData[ControlNr].SourcePool < 2)
         {
-          Pool = (ControlNr*2)+AxumData.SourcePool[ControlNr];
+          Pool = (ControlNr*2)+AxumData.ConsoleData[ControlNr].SourcePool;
         }
         AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr] = AdjustModuleSource(CurrentSource, data.SInt, Pool);
 
@@ -11881,9 +11957,9 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       {
         int CurrentPreset = AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr];
         unsigned char Pool = 8;
-        if (AxumData.PresetPool[ControlNr] < 2)
+        if (AxumData.ConsoleData[ControlNr].PresetPool < 2)
         {
-          Pool = (ControlNr*2)+AxumData.PresetPool[ControlNr];
+          Pool = (ControlNr*2)+AxumData.ConsoleData[ControlNr].PresetPool;
         }
         AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[ControlNr] = AdjustModulePreset(CurrentPreset, data.SInt, Pool);
 
@@ -12512,9 +12588,9 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
     ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1_RESET)/(MODULE_FUNCTION_CONTROL_2_RESET-MODULE_FUNCTION_CONTROL_1_RESET);
   }
 
-  AxumData.ControlModeTimerValue[ControlNr] = 0;
+  AxumData.ConsoleData[ControlNr].ControlModeTimerValue = 0;
 
-  ControlMode = AxumData.ControlMode[ControlNr];
+  ControlMode = AxumData.ConsoleData[ControlNr].ControlMode;
 
   if (type == MBN_DATATYPE_STATE)
   {
@@ -13032,7 +13108,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
     ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1)/(MODULE_FUNCTION_CONTROL_2-MODULE_FUNCTION_CONTROL_1);
   }
 
-  ControlMode = AxumData.ControlMode[ControlNr];
+  ControlMode = AxumData.ConsoleData[ControlNr].ControlMode;
 
   switch (ControlMode)
   {
@@ -13490,7 +13566,7 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
     ControlNr = (FunctionNr-MODULE_FUNCTION_CONTROL_1_LABEL)/(MODULE_FUNCTION_CONTROL_2_LABEL-MODULE_FUNCTION_CONTROL_1_LABEL);
   }
 
-  ControlMode = AxumData.ControlMode[ControlNr];
+  ControlMode = AxumData.ConsoleData[ControlNr].ControlMode;
 
   switch (ControlMode)
   {
@@ -13710,7 +13786,7 @@ void MasterModeControllerSensorChange(unsigned int ConsoleNr, unsigned char type
 {
   int MasterControlMode = -1;
 
-  MasterControlMode = AxumData.MasterControlMode[ConsoleNr];
+  MasterControlMode = AxumData.ConsoleData[ConsoleNr].MasterControlMode;
 
   if (type == MBN_DATATYPE_UINT)
   {
@@ -13814,7 +13890,7 @@ void MasterModeControllerResetSensorChange(unsigned int ConsoleNr, unsigned char
 {
   int MasterControlMode = -1;
 
-  MasterControlMode = AxumData.MasterControlMode[ConsoleNr];
+  MasterControlMode = AxumData.ConsoleData[ConsoleNr].MasterControlMode;
 
   if (type == MBN_DATATYPE_STATE)
   {
@@ -13872,7 +13948,7 @@ void MasterModeControllerSetData(unsigned int ConsoleNr, unsigned int MambaNetAd
   unsigned char Mask = 0x00;
   mbn_data data;
 
-  MasterControlMode = AxumData.MasterControlMode[ConsoleNr];
+  MasterControlMode = AxumData.ConsoleData[ConsoleNr].MasterControlMode;
 
   switch (MasterControlMode)
   {
@@ -14419,30 +14495,30 @@ bool DoAxum_SetNewSource(int ModuleNr, int NewSource, int Forced)
         SetAxum_ModuleMixMinus(ModuleNr, OldSource);
 
         unsigned int FunctionNrToSent = (ModuleNr<<12);
-        if ((AxumData.ControlMode[0] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_NONE))
+        if ((AxumData.ConsoleData[0].ControlMode == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ConsoleData[0].ControlMode == MODULE_CONTROL_MODE_NONE))
         {
-          if (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_SOURCE)
+          if (AxumData.ConsoleData[0].ControlMode == MODULE_CONTROL_MODE_SOURCE)
           {
             AxumData.ModuleData[ModuleNr].TemporySourceControlMode[0] = AxumData.ModuleData[ModuleNr].SelectedSource;
           }
         }
-        if ((AxumData.ControlMode[1] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_NONE))
+        if ((AxumData.ConsoleData[1].ControlMode  == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ConsoleData[1].ControlMode == MODULE_CONTROL_MODE_NONE))
         {
-          if (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_SOURCE)
+          if (AxumData.ConsoleData[1].ControlMode == MODULE_CONTROL_MODE_SOURCE)
           {
             AxumData.ModuleData[ModuleNr].TemporySourceControlMode[1] = AxumData.ModuleData[ModuleNr].SelectedSource;
           }
         }
-        if ((AxumData.ControlMode[2] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_NONE))
+        if ((AxumData.ConsoleData[2].ControlMode == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ConsoleData[2].ControlMode == MODULE_CONTROL_MODE_NONE))
         {
-          if (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_SOURCE)
+          if (AxumData.ConsoleData[2].ControlMode == MODULE_CONTROL_MODE_SOURCE)
           {
             AxumData.ModuleData[ModuleNr].TemporySourceControlMode[2] = AxumData.ModuleData[ModuleNr].SelectedSource;
           }
         }
-        if ((AxumData.ControlMode[3] == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_NONE))
+        if ((AxumData.ConsoleData[3].ControlMode == MODULE_CONTROL_MODE_SOURCE) || (AxumData.ConsoleData[3].ControlMode == MODULE_CONTROL_MODE_NONE))
         {
-          if (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_SOURCE)
+          if (AxumData.ConsoleData[3].ControlMode == MODULE_CONTROL_MODE_SOURCE)
           {
             AxumData.ModuleData[ModuleNr].TemporySourceControlMode[3] = AxumData.ModuleData[ModuleNr].SelectedSource;
           }
@@ -15417,18 +15493,18 @@ void initialize_axum_data_struct()
     }
   }
 
-  AxumData.ControlMode[0] = MODULE_CONTROL_MODE_NONE;
-  AxumData.ControlMode[1] = MODULE_CONTROL_MODE_NONE;
-  AxumData.ControlMode[2] = MODULE_CONTROL_MODE_NONE;
-  AxumData.ControlMode[3] = MODULE_CONTROL_MODE_NONE;
-  AxumData.MasterControlMode[0] = MASTER_CONTROL_MODE_NONE;
-  AxumData.MasterControlMode[1] = MASTER_CONTROL_MODE_NONE;
-  AxumData.MasterControlMode[2] = MASTER_CONTROL_MODE_NONE;
-  AxumData.MasterControlMode[3] = MASTER_CONTROL_MODE_NONE;
-  AxumData.ControlModeTimerValue[0] = 10000;
-  AxumData.ControlModeTimerValue[1] = 10000;
-  AxumData.ControlModeTimerValue[2] = 10000;
-  AxumData.ControlModeTimerValue[3] = 10000;
+  AxumData.ConsoleData[0].ControlMode = MODULE_CONTROL_MODE_NONE;
+  AxumData.ConsoleData[1].ControlMode = MODULE_CONTROL_MODE_NONE;
+  AxumData.ConsoleData[2].ControlMode = MODULE_CONTROL_MODE_NONE;
+  AxumData.ConsoleData[3].ControlMode = MODULE_CONTROL_MODE_NONE;
+  AxumData.ConsoleData[0].MasterControlMode = MASTER_CONTROL_MODE_NONE;
+  AxumData.ConsoleData[1].MasterControlMode = MASTER_CONTROL_MODE_NONE;
+  AxumData.ConsoleData[2].MasterControlMode = MASTER_CONTROL_MODE_NONE;
+  AxumData.ConsoleData[3].MasterControlMode = MASTER_CONTROL_MODE_NONE;
+  AxumData.ConsoleData[0].ControlModeTimerValue = 10000;
+  AxumData.ConsoleData[1].ControlModeTimerValue = 10000;
+  AxumData.ConsoleData[2].ControlModeTimerValue = 10000;
+  AxumData.ConsoleData[3].ControlModeTimerValue = 10000;
 
   for (int cntBuss=0; cntBuss<16; cntBuss++)
   {
@@ -15465,19 +15541,19 @@ void initialize_axum_data_struct()
   AxumData.StartupState = false;
   for (int cntConsole=0; cntConsole<4; cntConsole++)
   {
-    AxumData.SelectedConsolePreset[cntConsole] = 0;
-    AxumData.SelectedModule[cntConsole] = 0;
-    AxumData.SelectedBuss[cntConsole] = 0;
-    AxumData.SelectedMonitorBuss[cntConsole] = 0;
-    AxumData.SelectedSource[cntConsole] = 0;
-    AxumData.SelectedDestination[cntConsole] = 0;
-    memset(AxumData.Username[cntConsole], 0, 33);
-    memset(AxumData.Password[cntConsole], 0, 17);
-    AxumData.UsernameToWrite[cntConsole][0] = 0;
-    AxumData.PasswordToWrite[cntConsole][0] = 0;
-    AxumData.UserLevel[cntConsole] = 0;
-    AxumData.SourcePool[cntConsole] = 2;
-    AxumData.PresetPool[cntConsole] = 2;
+    AxumData.ConsoleData[cntConsole].SelectedConsolePreset = 0;
+    AxumData.ConsoleData[cntConsole].SelectedModule = 0;
+    AxumData.ConsoleData[cntConsole].SelectedBuss = 0;
+    AxumData.ConsoleData[cntConsole].SelectedMonitorBuss = 0;
+    AxumData.ConsoleData[cntConsole].SelectedSource = 0;
+    AxumData.ConsoleData[cntConsole].SelectedDestination = 0;
+    memset(AxumData.ConsoleData[cntConsole].Username, 0, 33);
+    memset(AxumData.ConsoleData[cntConsole].Password, 0, 17);
+    memset(AxumData.ConsoleData[cntConsole].UsernameToWrite, 0, 33);
+    memset(AxumData.ConsoleData[cntConsole].PasswordToWrite, 0, 17);
+    AxumData.ConsoleData[cntConsole].UserLevel = 0;
+    AxumData.ConsoleData[cntConsole].SourcePool = 2;
+    AxumData.ConsoleData[cntConsole].PresetPool = 2;
   }
 
   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
@@ -16137,25 +16213,25 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, int NewProcessingPreset
   {
     unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
 
-    if (AxumData.ControlMode[0] == MODULE_CONTROL_MODE_MODULE_PRESET)
+    if (AxumData.ConsoleData[0].ControlMode == MODULE_CONTROL_MODE_MODULE_PRESET)
     {
       AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[0] = PresetNr;
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1_LABEL);
     }
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
-    if (AxumData.ControlMode[1] == MODULE_CONTROL_MODE_MODULE_PRESET)
+    if (AxumData.ConsoleData[1].ControlMode == MODULE_CONTROL_MODE_MODULE_PRESET)
     {
       AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[1] = PresetNr;
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2_LABEL);
     }
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-    if (AxumData.ControlMode[2] == MODULE_CONTROL_MODE_MODULE_PRESET)
+    if (AxumData.ConsoleData[2].ControlMode == MODULE_CONTROL_MODE_MODULE_PRESET)
     {
       AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[2] = PresetNr;
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3_LABEL);
     }
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-    if (AxumData.ControlMode[3] == MODULE_CONTROL_MODE_MODULE_PRESET)
+    if (AxumData.ConsoleData[3].ControlMode == MODULE_CONTROL_MODE_MODULE_PRESET)
     {
       AxumData.ModuleData[ModuleNr].TemporyPresetControlMode[3] = PresetNr;
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4_LABEL);
@@ -16599,8 +16675,8 @@ void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool D
     {
       if (AxumData.ConsolePresetData[PresetNr-1].Console[cntConsole])
       {
-        int OldSelectedConsolePreset = AxumData.SelectedConsolePreset[cntConsole];
-        AxumData.SelectedConsolePreset[cntConsole] = PresetNr;
+        int OldSelectedConsolePreset = AxumData.ConsoleData[cntConsole].SelectedConsolePreset;
+        AxumData.ConsoleData[cntConsole].SelectedConsolePreset = PresetNr;
 
         if ((OldSelectedConsolePreset != 0) && (OldSelectedConsolePreset != PresetNr))
         {
@@ -17222,7 +17298,7 @@ unsigned int GetConsoleFunctionNrFromControlMode(unsigned int ConsoleNr)
 {
   unsigned int FunctionNr = 0x03000000 | (ConsoleNr<<12);
 
-  switch (AxumData.ControlMode[ConsoleNr])
+  switch (AxumData.ConsoleData[ConsoleNr].ControlMode)
   {
     case MODULE_CONTROL_MODE_NONE:
     {
@@ -17602,7 +17678,7 @@ void DoAxum_UpdateModuleControlModeLabel(unsigned char ModuleNr, int ControlMode
 {
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
 
-  if (AxumData.ControlMode[0] == ControlMode)
+  if (AxumData.ConsoleData[0].ControlMode == ControlMode)
   {
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1_LABEL);
     if(AxumData.ModuleData[ModuleNr].Console == 0)
@@ -17610,7 +17686,7 @@ void DoAxum_UpdateModuleControlModeLabel(unsigned char ModuleNr, int ControlMode
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
     }
   }
-  if (AxumData.ControlMode[1] == ControlMode)
+  if (AxumData.ConsoleData[1].ControlMode == ControlMode)
   {
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2_LABEL);
     if(AxumData.ModuleData[ModuleNr].Console == 1)
@@ -17618,7 +17694,7 @@ void DoAxum_UpdateModuleControlModeLabel(unsigned char ModuleNr, int ControlMode
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
     }
   }
-  if (AxumData.ControlMode[2] == ControlMode)
+  if (AxumData.ConsoleData[2].ControlMode == ControlMode)
   {
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3_LABEL);
     if(AxumData.ModuleData[ModuleNr].Console == 2)
@@ -17626,7 +17702,7 @@ void DoAxum_UpdateModuleControlModeLabel(unsigned char ModuleNr, int ControlMode
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
     }
   }
-  if (AxumData.ControlMode[3] == ControlMode)
+  if (AxumData.ConsoleData[3].ControlMode == ControlMode)
   {
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4_LABEL);
     if(AxumData.ModuleData[ModuleNr].Console == 3)
@@ -17640,7 +17716,7 @@ void DoAxum_UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode)
 {
   unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
 
-  if (AxumData.ControlMode[0] == ControlMode)
+  if (AxumData.ConsoleData[0].ControlMode == ControlMode)
   {
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_1);
     if(AxumData.ModuleData[ModuleNr].Console == 0)
@@ -17648,7 +17724,7 @@ void DoAxum_UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode)
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
     }
   }
-  if (AxumData.ControlMode[1] == ControlMode)
+  if (AxumData.ConsoleData[1].ControlMode == ControlMode)
   {
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
     if(AxumData.ModuleData[ModuleNr].Console == 1)
@@ -17656,7 +17732,7 @@ void DoAxum_UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode)
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
     }
   }
-  if (AxumData.ControlMode[2] == ControlMode)
+  if (AxumData.ConsoleData[2].ControlMode == ControlMode)
   {
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
     if(AxumData.ModuleData[ModuleNr].Console == 2)
@@ -17664,7 +17740,7 @@ void DoAxum_UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode)
       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
     }
   }
-  if (AxumData.ControlMode[3] == ControlMode)
+  if (AxumData.ConsoleData[3].ControlMode == ControlMode)
   {
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
     if(AxumData.ModuleData[ModuleNr].Console == 3)
@@ -17678,7 +17754,7 @@ void DoAxum_UpdateMasterControlMode(int ControlMode)
 {
   for (int cntConsole=0; cntConsole<4; cntConsole++)
   {
-    if (AxumData.MasterControlMode[cntConsole] == ControlMode)
+    if (AxumData.ConsoleData[cntConsole].MasterControlMode == ControlMode)
     {
       unsigned int FunctionNrToSent = 0x03000000 | (cntConsole<<12);
       CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MASTER_CONTROL);
@@ -18238,11 +18314,11 @@ void SetSelectedModule(unsigned char SelectNr, unsigned int NewModuleNr)
 {
   if ((SelectNr<4) && (NewModuleNr<128))
   {
-    unsigned int OldSelectedModuleNr = AxumData.SelectedModule[SelectNr];
+    unsigned int OldSelectedModuleNr = AxumData.ConsoleData[SelectNr].SelectedModule;
 
-    AxumData.SelectedModule[SelectNr] = NewModuleNr;
+    AxumData.ConsoleData[SelectNr].SelectedModule = NewModuleNr;
 
-    if (OldSelectedModuleNr != AxumData.SelectedModule[SelectNr])
+    if (OldSelectedModuleNr != AxumData.ConsoleData[SelectNr].SelectedModule)
     {
       unsigned int FunctionNrToSent = ((OldSelectedModuleNr)<<12);
       CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_SELECT_1+SelectNr));
@@ -18263,11 +18339,11 @@ void SetSelectedBuss(unsigned char SelectNr, unsigned int NewBussNr)
 {
   if ((SelectNr<4) && (NewBussNr<16))
   {
-    unsigned int OldSelectedBussNr = AxumData.SelectedBuss[SelectNr];
+    unsigned int OldSelectedBussNr = AxumData.ConsoleData[SelectNr].SelectedBuss;
 
-    AxumData.SelectedBuss[SelectNr] = NewBussNr;
+    AxumData.ConsoleData[SelectNr].SelectedBuss = NewBussNr;
 
-    if (OldSelectedBussNr != AxumData.SelectedBuss[SelectNr])
+    if (OldSelectedBussNr != AxumData.ConsoleData[SelectNr].SelectedBuss)
     {
       unsigned int FunctionNrToSent = 0x01000000 | ((OldSelectedBussNr)<<12);
       CheckObjectsToSent(FunctionNrToSent | (BUSS_FUNCTION_SELECT_1+SelectNr));
@@ -18288,11 +18364,11 @@ void SetSelectedMonitorBuss(unsigned char SelectNr, unsigned int NewMonitorBussN
 {
   if ((SelectNr<4) && (NewMonitorBussNr<16))
   {
-    unsigned int OldSelectedMonitorBussNr = AxumData.SelectedMonitorBuss[SelectNr];
+    unsigned int OldSelectedMonitorBussNr = AxumData.ConsoleData[SelectNr].SelectedMonitorBuss;
 
-    AxumData.SelectedMonitorBuss[SelectNr] = NewMonitorBussNr;
+    AxumData.ConsoleData[SelectNr].SelectedMonitorBuss = NewMonitorBussNr;
 
-    if (OldSelectedMonitorBussNr != AxumData.SelectedMonitorBuss[SelectNr])
+    if (OldSelectedMonitorBussNr != AxumData.ConsoleData[SelectNr].SelectedMonitorBuss)
     {
       unsigned int FunctionNrToSent = 0x02000000 | ((OldSelectedMonitorBussNr)<<12);
       CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_SELECT_1+SelectNr));
@@ -18313,11 +18389,11 @@ void SetSelectedSource(unsigned char SelectNr, unsigned int NewSourceNr)
 {
   if ((SelectNr<4) && (NewSourceNr<1279))
   {
-    unsigned int OldSelectedSourceNr = AxumData.SelectedSource[SelectNr];
+    unsigned int OldSelectedSourceNr = AxumData.ConsoleData[SelectNr].SelectedSource;
 
-    AxumData.SelectedSource[SelectNr] = NewSourceNr;
+    AxumData.ConsoleData[SelectNr].SelectedSource = NewSourceNr;
 
-    if (OldSelectedSourceNr != AxumData.SelectedSource[SelectNr])
+    if (OldSelectedSourceNr != AxumData.ConsoleData[SelectNr].SelectedSource)
     {
       unsigned int FunctionNrToSent = 0x05000000 | ((OldSelectedSourceNr)<<12);
       CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_SELECT_1+SelectNr));
@@ -18338,11 +18414,11 @@ void SetSelectedDestination(unsigned char SelectNr, unsigned int NewDestinationN
 {
   if ((SelectNr<4) && (NewDestinationNr<1279))
   {
-    unsigned int OldSelectedDestinationNr = AxumData.SelectedDestination[SelectNr];
+    unsigned int OldSelectedDestinationNr = AxumData.ConsoleData[SelectNr].SelectedDestination;
 
-    AxumData.SelectedDestination[SelectNr] = NewDestinationNr;
+    AxumData.ConsoleData[SelectNr].SelectedDestination = NewDestinationNr;
 
-    if (OldSelectedDestinationNr != AxumData.SelectedDestination[SelectNr])
+    if (OldSelectedDestinationNr != AxumData.ConsoleData[SelectNr].SelectedDestination)
     {
       unsigned int FunctionNrToSent = 0x06000000 | ((OldSelectedDestinationNr)<<12);
       CheckObjectsToSent(FunctionNrToSent | (DESTINATION_FUNCTION_SELECT_1+SelectNr));
