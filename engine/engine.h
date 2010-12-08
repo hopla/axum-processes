@@ -350,6 +350,13 @@ typedef struct
   unsigned char UserLevel;
   unsigned char SourcePool;
   unsigned char PresetPool;
+
+  unsigned char DotCountUpDown;
+  unsigned char ProgramEndTimeEnable;
+  unsigned char ProgramEndTimeMinutes;
+  unsigned char ProgramEndTimeSeconds;
+  float CountDownTimer;
+
   unsigned int SelectedConsolePreset;
   unsigned int SelectedModule;
   unsigned int SelectedBuss;

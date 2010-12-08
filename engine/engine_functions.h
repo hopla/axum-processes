@@ -655,8 +655,14 @@
 #define CONSOLE_FUNCTION_UPDATE_PASS                        120
 #define CONSOLE_FUNCTION_UPDATE_USER_PASS                   121
 #define CONSOLE_FUNCTION_USER_LEVEL                         122
+#define CONSOLE_FUNCTION_DOT_COUNT_UPDOWN                   123
+#define CONSOLE_FUNCTION_PROGRAM_ENDTIME_ENABLE             124
+#define CONSOLE_FUNCTION_PROGRAM_ENDTIME                    125
+#define CONSOLE_FUNCTION_PROGRAM_ENDTIME_MINUTES            126
+#define CONSOLE_FUNCTION_PROGRAM_ENDTIME_SECONDS            127
+#define CONSOLE_FUNCTION_COUNT_DOWN_TIMER                   128
 
-#define NUMBER_OF_CONSOLE_FUNCTIONS                         123
+#define NUMBER_OF_CONSOLE_FUNCTIONS                         129
 #define NUMBER_OF_CONSOLES                                  4
 
 #define GLOBAL_FUNCTION_REDLIGHT_1                    0

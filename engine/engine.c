@@ -4443,6 +4443,145 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 }
               }
               break;
+              case CONSOLE_FUNCTION_DOT_COUNT_UPDOWN:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_STATE:
+                  {
+                    if (data.State)
+                    {
+                      AxumData.ConsoleData[ConsoleNr].DotCountUpDown = !AxumData.ConsoleData[ConsoleNr].DotCountUpDown;
+
+                      unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_DOT_COUNT_UPDOWN);
+                    }
+                  }
+                  break;
+                  case MBN_DATATYPE_UINT:
+                  {
+                    AxumData.ConsoleData[ConsoleNr].DotCountUpDown = data.UInt;
+
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_DOT_COUNT_UPDOWN);
+                  }
+                  break;
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_PROGRAM_ENDTIME_ENABLE:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_STATE:
+                  {
+                    if (data.State)
+                    {
+                      AxumData.ConsoleData[ConsoleNr].ProgramEndTimeEnable = !AxumData.ConsoleData[ConsoleNr].ProgramEndTimeEnable;
+
+                      unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_ENABLE);
+                    }
+                  }
+                  break;
+                  case MBN_DATATYPE_UINT:
+                  {
+                    AxumData.ConsoleData[ConsoleNr].ProgramEndTimeEnable = data.UInt;
+
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_ENABLE);
+                  }
+                  break;
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_PROGRAM_ENDTIME:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_OCTETS:
+                  {
+                    unsigned char Minutes;
+                    unsigned char Seconds;
+
+                    if (sscanf((char *)data.Octets, "%02hhd:%02hhd", &Minutes, &Seconds) == 2)
+                    {
+                      AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes = Minutes;
+                      AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds = Seconds;
+
+                      unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_MINUTES);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_SECONDS);
+                    }
+                  }
+                  break;
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_PROGRAM_ENDTIME_MINUTES:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_UINT:
+                  {
+                    if (data.UInt<60)
+                    {
+                      AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes = data.UInt;
+
+                      unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_MINUTES);
+                    }
+                  }
+                  break;
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_PROGRAM_ENDTIME_SECONDS:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_UINT:
+                  {
+                    if (data.UInt<60)
+                    {
+                      AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds = data.UInt;
+
+                      unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_SECONDS);
+                    }
+                  }
+                  break;
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_COUNT_DOWN_TIMER:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_FLOAT:
+                  {
+                    float TimerValue = data.Float;
+
+                    if (TimerValue<0)
+                    {
+                      TimerValue = 0;
+                    }
+                    else if (TimerValue>60)
+                    {
+                      TimerValue = 60;
+                    }
+                    AxumData.ConsoleData[ConsoleNr].CountDownTimer = TimerValue;
+
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_COUNT_DOWN_TIMER);
+                  }
+                  break;
+                }
+              }
+              break;
             }
           }
           break;
@@ -10556,6 +10695,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_STATE:
             {
+              data.State = AxumData.ConsoleData[ConsoleNr].DotCountUpDown;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -10567,6 +10708,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_STATE:
             {
+              data.State = AxumData.ConsoleData[ConsoleNr].ProgramEndTimeEnable;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -10578,6 +10721,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_OCTETS:
             {
+              sprintf(LCDText, "%02d:%02d", AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes, AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds);
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 5, data, 1);
             }
             break;
           }
@@ -10589,6 +10734,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_UINT:
             {
+              data.UInt = AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
             }
             break;
           }
@@ -10600,6 +10747,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_UINT:
             {
+              data.UInt = AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
             }
             break;
           }
@@ -10611,6 +10760,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_FLOAT:
             {
+              data.Float = AxumData.ConsoleData[ConsoleNr].CountDownTimer;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
             }
             break;
           }
@@ -15554,6 +15705,11 @@ void initialize_axum_data_struct()
     AxumData.ConsoleData[cntConsole].UserLevel = 0;
     AxumData.ConsoleData[cntConsole].SourcePool = 2;
     AxumData.ConsoleData[cntConsole].PresetPool = 2;
+    AxumData.ConsoleData[cntConsole].DotCountUpDown = 0;
+    AxumData.ConsoleData[cntConsole].ProgramEndTimeEnable = 0;
+    AxumData.ConsoleData[cntConsole].ProgramEndTimeMinutes = 0;
+    AxumData.ConsoleData[cntConsole].ProgramEndTimeSeconds = 0;
+    AxumData.ConsoleData[cntConsole].CountDownTimer = 0;
   }
 
   for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
