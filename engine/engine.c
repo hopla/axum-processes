@@ -10722,6 +10722,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "%02d:%02d", AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes, AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds);
+              data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 5, data, 1);
             }
             break;
