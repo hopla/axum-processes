@@ -74,7 +74,7 @@ pthread_mutex_t axum_data_mutex;
 #define PCB_MINOR_VERSION        0
 
 #define FIRMWARE_MAJOR_VERSION   2
-#define FIRMWARE_MINOR_VERSION   3
+#define FIRMWARE_MINOR_VERSION   4
 
 #define MANUFACTURER_ID          0x0001 //D&R
 #define PRODUCT_ID               0x000E //Axum Engine
@@ -134,6 +134,7 @@ AXUM_FUNCTION_INFORMATION_STRUCT *BussFunctions[NUMBER_OF_BUSSES+4][NUMBER_OF_BU
 AXUM_FUNCTION_INFORMATION_STRUCT *MonitorBussFunctions[NUMBER_OF_MONITOR_BUSSES+4][NUMBER_OF_MONITOR_BUSS_FUNCTIONS];
 AXUM_FUNCTION_INFORMATION_STRUCT *DestinationFunctions[NUMBER_OF_DESTINATIONS+4][NUMBER_OF_DESTINATION_FUNCTIONS];
 AXUM_FUNCTION_INFORMATION_STRUCT *GlobalFunctions[NUMBER_OF_GLOBAL_FUNCTIONS];
+AXUM_FUNCTION_INFORMATION_STRUCT *ConsoleFunctions[NUMBER_OF_CONSOLES][NUMBER_OF_CONSOLE_FUNCTIONS];
 
 float Position2dB[1024];
 unsigned short int dB2Position[1500];
@@ -596,7 +597,7 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-//normally response on GetSensorData
+//normally response on a sensor change
 int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, short unsigned int object, unsigned char type, union mbn_data data)
 {
   axum_data_lock(1);
@@ -3198,6 +3199,21 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 SetSelectedBuss(SelectNr, NewSelectedBussNr);
               }
               break;
+              case BUSS_FUNCTION_RESET:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_STATE:
+                  {
+                    if (data.State)
+                    {
+                      DoAxum_BussReset(BussNr);
+                    }
+                  }
+                  break;
+                }
+              }
+              break;
               default:
               { //not implemented function
               }
@@ -3705,131 +3721,101 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
             }
           }
           break;
-          case GLOBAL_FUNCTIONS:
-          {   //Global
-            unsigned int GlobalNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
-            unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+          case CONSOLE_FUNCTIONS:
+          {
+            unsigned int ConsoleNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
+            int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
 
-            if (GlobalNr == 0)
+            switch (FunctionNr)
             {
-              if (((signed)FunctionNr>=GLOBAL_FUNCTION_REDLIGHT_1) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE))
-              { //all states
-                if (type == MBN_DATATYPE_STATE)
-                {
-                  switch (FunctionNr)
-                  {
-                    case GLOBAL_FUNCTION_REDLIGHT_1:
-                    case GLOBAL_FUNCTION_REDLIGHT_2:
-                    case GLOBAL_FUNCTION_REDLIGHT_3:
-                    case GLOBAL_FUNCTION_REDLIGHT_4:
-                    case GLOBAL_FUNCTION_REDLIGHT_5:
-                    case GLOBAL_FUNCTION_REDLIGHT_6:
-                    case GLOBAL_FUNCTION_REDLIGHT_7:
-                    case GLOBAL_FUNCTION_REDLIGHT_8:
-                    {
-                      int RedlightNr = FunctionNr-GLOBAL_FUNCTION_REDLIGHT_1;
-                      bool OldState = AxumData.Redlight[RedlightNr];
-
-                      if (data.State)
-                      {
-                        AxumData.Redlight[RedlightNr] = !AxumData.Redlight[RedlightNr];
-                      }
-                      else
-                      {
-                        int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                        if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                        {
-                          if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                          {
-                            AxumData.Redlight[RedlightNr] = !AxumData.Redlight[RedlightNr];
-                          }
-                        }
-                      }
-
-                      if (AxumData.Redlight[RedlightNr] != OldState)
-                      {
-                        unsigned int FunctionNrToSend = 0x04000000;
-                        CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-                      }
-                    }
-                    break;
-                    case GLOBAL_FUNCTION_BUSS_1_2_RESET:
-                    case GLOBAL_FUNCTION_BUSS_3_4_RESET:
-                    case GLOBAL_FUNCTION_BUSS_5_6_RESET:
-                    case GLOBAL_FUNCTION_BUSS_7_8_RESET:
-                    case GLOBAL_FUNCTION_BUSS_9_10_RESET:
-                    case GLOBAL_FUNCTION_BUSS_11_12_RESET:
-                    case GLOBAL_FUNCTION_BUSS_13_14_RESET:
-                    case GLOBAL_FUNCTION_BUSS_15_16_RESET:
-                    case GLOBAL_FUNCTION_BUSS_17_18_RESET:
-                    case GLOBAL_FUNCTION_BUSS_19_20_RESET:
-                    case GLOBAL_FUNCTION_BUSS_21_22_RESET:
-                    case GLOBAL_FUNCTION_BUSS_23_24_RESET:
-                    case GLOBAL_FUNCTION_BUSS_25_26_RESET:
-                    case GLOBAL_FUNCTION_BUSS_27_28_RESET:
-                    case GLOBAL_FUNCTION_BUSS_29_30_RESET:
-                    case GLOBAL_FUNCTION_BUSS_31_32_RESET:
-                    { //Do buss reset
-                      int BussNr = FunctionNr-GLOBAL_FUNCTION_BUSS_1_2_RESET;
-
-                      if (data.State)
-                      {
-                        DoAxum_BussReset(BussNr);
-                      }
-                    }
-                    break;
-                  }
-                }
-              }
-              else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE)) ||
-                       ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF)) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_INSERT_ON_OFF) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_DYNAMICS_ON_OFF))
-              { //Control 1 modes
+              case CONSOLE_FUNCTION_CONTROL_MODE_SOURCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_PROCESSING_PRESET:
+              case CONSOLE_FUNCTION_CONTROL_MODE_SOURCE_GAIN:
+              case CONSOLE_FUNCTION_CONTROL_MODE_PHANTOM_ON_OFF:
+              case CONSOLE_FUNCTION_CONTROL_MODE_PAD_ON_OFF:
+              case CONSOLE_FUNCTION_CONTROL_MODE_GAIN:
+              case CONSOLE_FUNCTION_CONTROL_MODE_PHASE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_LOW_CUT:
+              case CONSOLE_FUNCTION_CONTROL_MODE_INSERT_ON_OFF:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_LEVEL:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_FREQUENCY:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_BANDWIDTH:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_TYPE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_LEVEL:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_FREQUENCY:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_BANDWIDTH:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_TYPE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_LEVEL:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_FREQUENCY:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_BANDWIDTH:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_TYPE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_LEVEL:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_FREQUENCY:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_BANDWIDTH:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_TYPE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_LEVEL:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_FREQUENCY:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_BANDWIDTH:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_TYPE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_LEVEL:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_FREQUENCY:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_BANDWIDTH:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_TYPE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EQ_ON_OFF:
+              case CONSOLE_FUNCTION_CONTROL_MODE_EXP_THRESHOLD:
+              case CONSOLE_FUNCTION_CONTROL_MODE_AGC_THRESHOLD:
+              case CONSOLE_FUNCTION_CONTROL_MODE_AGC:
+              case CONSOLE_FUNCTION_CONTROL_MODE_DYNAMICS_ON_OFF:
+              case CONSOLE_FUNCTION_CONTROL_MODE_MONO:
+              case CONSOLE_FUNCTION_CONTROL_MODE_PAN:
+              case CONSOLE_FUNCTION_CONTROL_MODE_MODULE_LEVEL:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_1_2:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_1_2_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_3_4:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_3_4_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_5_6:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_5_6_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_7_8:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_7_8_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_9_10:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_9_10_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_11_12:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_11_12_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_13_14:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_13_14_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_15_16:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_15_16_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_17_18:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_17_18_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_19_20:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_19_20_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_21_22:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_21_22_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_23_24:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_23_24_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_25_26:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_25_26_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_27_28:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_27_28_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_29_30:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_29_30_BALANCE:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_31_32:
+              case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_31_32_BALANCE:
+              {
                 if (type == MBN_DATATYPE_STATE)
                 {
                   int ReceivedControlMode = -2;
-                  int NewControl1Mode = -2;
+                  int NewControlMode = -2;
 
-                  AxumData.ControlModeTimerValue[0] = 0;
+                  AxumData.ControlModeTimerValue[ConsoleNr] = 0;
 
                   //Convert GLOBAL_FUNCTION_CONTROL_MODE to CONTROL_MODE number
-                  if (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE)
-                  {
-                    ReceivedControlMode = FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE;
-                  }
-                  else if (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF);
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_INSERT_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_DYNAMICS_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
-                  }
+                  ReceivedControlMode = GetControlModeFromConsoleFunctionNr(SensorReceiveFunctionNumber);
 
                   //Set the new control mode number depending on the state
                   if (data.State)
                   {
-                    NewControl1Mode = ReceivedControlMode;
+                    NewControlMode = ReceivedControlMode;
                   }
                   else
                   {
@@ -3838,34 +3824,34 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     {
                       if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
                       {
-                        if (AxumData.ControlMode[0] == ReceivedControlMode)
+                        if (AxumData.ControlMode[ConsoleNr] == ReceivedControlMode)
                         {
-                          NewControl1Mode = AxumData.ControlMode[0];
+                          NewControlMode = AxumData.ControlMode[ConsoleNr];
                         }
                       }
                     }
                   }
 
-                  if (NewControl1Mode > -2)
+                  if (NewControlMode > -2)
                   {
-                    if (AxumData.ControlMode[0] == NewControl1Mode)
+                    if (AxumData.ControlMode[ConsoleNr] == NewControlMode)
                     {
-                      AxumData.ControlMode[0] = -1;
-                      unsigned int FunctionNrToSend = 0x04000000;
+                      AxumData.ControlMode[ConsoleNr] = -1;
+                      unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                       CheckObjectsToSent(FunctionNrToSend | FunctionNr);
                     }
                     else
                     {
-                      unsigned int OldFunctionNumber = GetFunctionNrFromControlMode(0);
-                      AxumData.ControlMode[0] = NewControl1Mode;
+                      unsigned int OldFunctionNumber = GetConsoleFunctionNrFromControlMode(ConsoleNr);
+                      AxumData.ControlMode[ConsoleNr] = NewControlMode;
                       CheckObjectsToSent(OldFunctionNumber);
-                      unsigned int FunctionNrToSend = 0x04000000;
+                      unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                       CheckObjectsToSent(FunctionNrToSend | FunctionNr);
                     }
 
                     for (int cntModule=0; cntModule<128; cntModule++)
                     {
-                      switch (NewControl1Mode)
+                      switch (NewControlMode)
                       {
                         case MODULE_CONTROL_MODE_SOURCE:
                         {
@@ -3886,578 +3872,123 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     }
                   }
 
-                  unsigned int FunctionNrToSent = 0x04000000;
-                  CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_CONTROL_1_MODE_ACTIVE);
+                  unsigned int FunctionNrToSent = 0x03000000 | (ConsoleNr<<12);
+                  CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_CONTROL_MODE_ACTIVE);
 
-                  //update Master & control mode 1
-                  FunctionNrToSent = 0x04000000;
+                  //update Master & control mode
+                  FunctionNrToSent = 0x03000000 | (ConsoleNr<<12);
                   for (int cntBuss=0; cntBuss<16; cntBuss++)
                   {
-                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2+cntBuss));
+                    CheckObjectsToSent(FunctionNrToSent | (CONSOLE_FUNCTION_CONTROL_MODES_BUSS_1_2+cntBuss));
                   }
                 }
               }
-              else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE)) ||
-                       ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF)) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_INSERT_ON_OFF) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF))
-              { //Control 2 modes
-                if (type == MBN_DATATYPE_STATE)
-                {
-                  int ReceivedControlMode = -2;
-                  int NewControl2Mode = -2;
-
-                  AxumData.ControlModeTimerValue[1] = 0;
-
-                  //Convert GLOBAL_FUNCTION_CONTROL_MODE to CONTROL_MODE number
-                  if (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE)
-                  {
-                    ReceivedControlMode = FunctionNr-GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE;
-                  }
-                  else if (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF);
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_INSERT_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
-                  }
-
-                  if (data.State)
-                  {
-                    NewControl2Mode = ReceivedControlMode;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                    {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                      {
-                        if (AxumData.ControlMode[1] == ReceivedControlMode)
-                        {
-                          NewControl2Mode = AxumData.ControlMode[1];
-                        }
-                      }
-                    }
-                  }
-
-
-                  if (NewControl2Mode > -2)
-                  {
-                    if (AxumData.ControlMode[1] == NewControl2Mode)
-                    {
-                      AxumData.ControlMode[1] = -1;
-                      unsigned int FunctionNrToSend = 0x04000000;
-                      CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-                    }
-                    else
-                    {
-                      unsigned int OldFunctionNumber = GetFunctionNrFromControlMode(1);
-                      AxumData.ControlMode[1] = NewControl2Mode;
-                      CheckObjectsToSent(OldFunctionNumber);
-                      unsigned int FunctionNrToSend = 0x04000000;
-                      CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-                    }
-
-                    for (int cntModule=0; cntModule<128; cntModule++)
-                    {
-                      switch (NewControl2Mode)
-                      {
-                        case MODULE_CONTROL_MODE_SOURCE:
-                        {
-                          AxumData.ModuleData[cntModule].TemporySourceControlMode[1] = AxumData.ModuleData[cntModule].SelectedSource;
-                        }
-                        break;
-                        case MODULE_CONTROL_MODE_MODULE_PRESET:
-                        {
-                          AxumData.ModuleData[cntModule].TemporyPresetControlMode[1] = AxumData.ModuleData[cntModule].SelectedProcessingPreset;
-                        }
-                        break;
-                      }
-                      unsigned int FunctionNrToSent = (cntModule<<12);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_2_LABEL);
-                    }
-                  }
-
-                  unsigned int FunctionNrToSent = 0x04000000;
-                  CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_CONTROL_2_MODE_ACTIVE);
-
-                  //update Master & control mode 2
-                  FunctionNrToSent = 0x04000000;
-                  for (int cntBuss=0; cntBuss<16; cntBuss++)
-                  {
-                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2+cntBuss));
-                  }
-                }
-              }
-              else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE)) ||
-                       ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF)) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_INSERT_ON_OFF) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF))
-              { //Control 3 modes
-                if (type == MBN_DATATYPE_STATE)
-                {
-                  int ReceivedControlMode = -2;
-                  int NewControl3Mode = -2;
-
-                  AxumData.ControlModeTimerValue[2] = 0;
-
-                  //Convert GLOBAL_FUNCTION_CONTROL_MODE to CONTROL_MODE number
-                  if (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE)
-                  {
-                    ReceivedControlMode = FunctionNr-GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE;
-                  }
-                  else if (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF);
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_INSERT_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
-                  }
-
-                  if (data.State)
-                  {
-                    NewControl3Mode = ReceivedControlMode;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                    {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                      {
-                        if (AxumData.ControlMode[2] == ReceivedControlMode)
-                        {
-                          NewControl3Mode = AxumData.ControlMode[2];
-                        }
-                      }
-                    }
-                  }
-
-                  if (NewControl3Mode > -2)
-                  {
-                    if (AxumData.ControlMode[2] == NewControl3Mode)
-                    {
-                      AxumData.ControlMode[2] = -1;
-                      unsigned int FunctionNrToSend = 0x04000000;
-                      CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-                    }
-                    else
-                    {
-                      unsigned int OldFunctionNumber = GetFunctionNrFromControlMode(2);
-                      AxumData.ControlMode[2] = NewControl3Mode;
-                      CheckObjectsToSent(OldFunctionNumber);
-                      unsigned int FunctionNrToSend = 0x04000000;
-                      CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-                    }
-
-                    for (int cntModule=0; cntModule<128; cntModule++)
-                    {
-                      switch (NewControl3Mode)
-                      {
-                        case MODULE_CONTROL_MODE_SOURCE:
-                        {
-                          AxumData.ModuleData[cntModule].TemporySourceControlMode[2] = AxumData.ModuleData[cntModule].SelectedSource;
-                        }
-                        break;
-                        case MODULE_CONTROL_MODE_MODULE_PRESET:
-                        {
-                          AxumData.ModuleData[cntModule].TemporyPresetControlMode[2] = AxumData.ModuleData[cntModule].SelectedProcessingPreset;
-                        }
-                        break;
-                      }
-                      unsigned int FunctionNrToSent = (cntModule<<12);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_3_LABEL);
-                    }
-                  }
-
-                  unsigned int FunctionNrToSent = 0x04000000;
-                  CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_CONTROL_3_MODE_ACTIVE);
-
-                  //update Master & control mode 3
-                  FunctionNrToSent = 0x04000000;
-                  for (int cntBuss=0; cntBuss<16; cntBuss++)
-                  {
-                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_3_MODES_BUSS_1_2+cntBuss));
-                  }
-                }
-              }
-              else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2)) ||
-                       ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_PAD_ON_OFF)) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_INSERT_ON_OFF) ||
-                        (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF))
-              { //control 4 modes
-                if (type == MBN_DATATYPE_STATE)
-                {
-                  int ReceivedControlMode = -2;
-                  int NewControl4Mode = -2;
-
-                  AxumData.ControlModeTimerValue[3] = 0;
-
-                  if (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2)
-                  {
-                    ReceivedControlMode = FunctionNr-GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE;
-                  }
-                  else if (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_PAD_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF);
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_INSERT_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
-                  }
-                  else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF)
-                  {
-                    ReceivedControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
-                  }
-
-                  if (data.State)
-                  {
-                    NewControl4Mode = ReceivedControlMode;
-                  }
-                  else
-                  {
-                    int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
-                    if (SensorReceiveFunction->TimeBeforeMomentary>=0)
-                    {
-                      if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
-                      {
-                        if (AxumData.ControlMode[3] == ReceivedControlMode)
-                        {
-                          NewControl4Mode = AxumData.ControlMode[3];
-                        }
-                      }
-                    }
-                  }
-
-                  if (NewControl4Mode > -2)
-                  {
-                    if (AxumData.ControlMode[3] == NewControl4Mode)
-                    {
-                      AxumData.ControlMode[3] = -1;
-                      unsigned int FunctionNrToSend = 0x04000000;
-                      CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-                    }
-                    else
-                    {
-                      unsigned int OldFunctionNumber = GetFunctionNrFromControlMode(3);
-                      AxumData.ControlMode[3] = NewControl4Mode;
-                      CheckObjectsToSent(OldFunctionNumber);
-                      unsigned int FunctionNrToSend = 0x04000000;
-                      CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-                    }
-
-                    for (int cntModule=0; cntModule<128; cntModule++)
-                    {
-                      switch (NewControl4Mode)
-                      {
-                        case MODULE_CONTROL_MODE_SOURCE:
-                        {
-                          AxumData.ModuleData[cntModule].TemporySourceControlMode[3] = AxumData.ModuleData[cntModule].SelectedSource;
-                        }
-                        break;
-                        case MODULE_CONTROL_MODE_MODULE_PRESET:
-                        {
-                          AxumData.ModuleData[cntModule].TemporyPresetControlMode[3] = AxumData.ModuleData[cntModule].SelectedProcessingPreset;
-                        }
-                        break;
-                      }
-                      unsigned int FunctionNrToSent = (cntModule<<12);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4);
-                      CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_4_LABEL);
-                    }
-                  }
-
-                  unsigned int FunctionNrToSent = 0x04000000;
-                  CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_CONTROL_4_MODE_ACTIVE);
-
-                  //update Master & control mode 4
-                  FunctionNrToSent = 0x04000000;
-                  for (int cntBuss=0; cntBuss<16; cntBuss++)
-                  {
-                    CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_1_2+cntBuss));
-                  }
-                }
-              }
-              else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2))
-              { //Master control 1 mode
-                if (type == MBN_DATATYPE_STATE)
-                {
-                  if (data.State)
-                  {
-                    char NewMasterControl1Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
-                    unsigned int OldFunctionNumber = 0x00000000;
-                    int OldBussNr = -1;
-                    int NewBussNr = -1;
-
-                    if (NewMasterControl1Mode<16)
-                    {
-                      NewBussNr = NewMasterControl1Mode;
-                    }
-
-                    if (AxumData.MasterControlMode[0] != MASTER_CONTROL_MODE_NONE)
-                    {
-                      OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[0]+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2);
-                      if (AxumData.MasterControlMode[0] < 16)
-                      {
-                        OldBussNr = AxumData.MasterControlMode[0];
-                      }
-                    }
-
-                    if (AxumData.MasterControlMode[0] != NewMasterControl1Mode)
-                    {
-                      AxumData.MasterControlMode[0] = NewMasterControl1Mode;
-                    }
-                    else
-                    {
-                      AxumData.MasterControlMode[0] = MASTER_CONTROL_MODE_NONE;
-                    }
-                    if (OldFunctionNumber != 0x00000000)
-                    {
-                      CheckObjectsToSent(OldFunctionNumber);
-                    }
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-
-                    unsigned int FunctionNrToSent = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
-                    if (OldBussNr != -1)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2+OldBussNr));
-                    }
-                    if (NewBussNr != -1)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2+NewBussNr));
-                    }
-                  }
-                }
-              }
-              else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2))
-              { //Master control 2 mode
-                if (type == MBN_DATATYPE_STATE)
-                {
-                  if (data.State)
-                  {
-                    char NewMasterControl2Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2;
-                    unsigned int OldFunctionNumber = 0x00000000;
-                    int OldBussNr = -1;
-                    int NewBussNr = -1;
-
-                    if (NewMasterControl2Mode<16)
-                    {
-                      NewBussNr = NewMasterControl2Mode;
-                    }
-
-                    if (AxumData.MasterControlMode[1] != MASTER_CONTROL_MODE_NONE)
-                    {
-                      OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[1]+GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2);
-                      if (AxumData.MasterControlMode[1] < 16)
-                      {
-                        OldBussNr = AxumData.MasterControlMode[1];
-                      }
-                    }
-
-                    if (AxumData.MasterControlMode[1] != NewMasterControl2Mode)
-                    {
-                      AxumData.MasterControlMode[1] = NewMasterControl2Mode;
-                    }
-                    else
-                    {
-                      AxumData.MasterControlMode[1] = MASTER_CONTROL_MODE_NONE;
-                    }
-                    if (OldFunctionNumber != 0x00000000)
-                    {
-                      CheckObjectsToSent(OldFunctionNumber);
-                    }
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-
-                    unsigned int FunctionNrToSent = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
-                    if (OldBussNr != -1)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2+OldBussNr));
-                    }
-                    if (NewBussNr != -1)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2+NewBussNr));
-                    }
-                  }
-                }
-              }
-              else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2))
-              { //Master control 3 mode
-                if (type == MBN_DATATYPE_STATE)
-                {
-                  if (data.State)
-                  {
-                    char NewMasterControl3Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2;
-                    unsigned int OldFunctionNumber = 0x00000000;
-                    int OldBussNr = -1;
-                    int NewBussNr = -1;
-
-                    if (NewMasterControl3Mode<16)
-                    {
-                      NewBussNr = NewMasterControl3Mode;
-                    }
-
-                    if (AxumData.MasterControlMode[2] != MASTER_CONTROL_MODE_NONE)
-                    {
-                      OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[2]+GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2);
-                      if (AxumData.MasterControlMode[2] < 16)
-                      {
-                        OldBussNr = AxumData.MasterControlMode[2];
-                      }
-                    }
-
-                    if (AxumData.MasterControlMode[2] != NewMasterControl3Mode)
-                    {
-                      AxumData.MasterControlMode[2] = NewMasterControl3Mode;
-                    }
-                    else
-                    {
-                      AxumData.MasterControlMode[2] = MASTER_CONTROL_MODE_NONE;
-                    }
-                    if (OldFunctionNumber != 0x00000000)
-                    {
-                      CheckObjectsToSent(OldFunctionNumber);
-                    }
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-
-                    unsigned int FunctionNrToSent = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
-                    if (OldBussNr != -1)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_3_MODES_BUSS_1_2+OldBussNr));
-                    }
-                    if (NewBussNr != -1)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_3_MODES_BUSS_1_2+NewBussNr));
-                    }
-                  }
-                }
-              }
-              else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1))
-              { //Master control 4 mode
-                if (type == MBN_DATATYPE_STATE)
-                {
-                  if (data.State)
-                  {
-                    char NewMasterControl4Mode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2;
-                    unsigned int OldFunctionNumber = 0x00000000;
-                    int OldBussNr = -1;
-                    int NewBussNr = -1;
-
-                    if (NewMasterControl4Mode<16)
-                    {
-                      NewBussNr = NewMasterControl4Mode;
-                    }
-
-                    if (AxumData.MasterControlMode[3] != MASTER_CONTROL_MODE_NONE)
-                    {
-                      OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[3]+GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2);
-                      if (AxumData.MasterControlMode[3] < 16)
-                      {
-                        OldBussNr = AxumData.MasterControlMode[3];
-                      }
-                    }
-
-                    if (AxumData.MasterControlMode[3] != NewMasterControl4Mode)
-                    {
-                      AxumData.MasterControlMode[3] = NewMasterControl4Mode;
-                    }
-                    else
-                    {
-                      AxumData.MasterControlMode[3] = MASTER_CONTROL_MODE_NONE;
-                    }
-                    if (OldFunctionNumber != 0x00000000)
-                    {
-                      CheckObjectsToSent(OldFunctionNumber);
-                    }
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
-
-                    unsigned int FunctionNrToSent = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
-                    if (OldBussNr != -1)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_1_2+OldBussNr));
-                    }
-                    if (NewBussNr != -1)
-                    {
-                      CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_1_2+NewBussNr));
-                    }
-                  }
-                }
-              }
-              else if ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_31_32))
+              break;
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_3_4:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_5_6:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_7_8:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_9_10:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_11_12:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_13_14:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_15_16:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_17_18:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_19_20:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_21_22:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_23_24:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_25_26:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_27_28:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_29_30:
+              case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_31_32:
               {
-                int ControlNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)/(GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
-                int BussNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)%(GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
+                if (type == MBN_DATATYPE_STATE)
+                {
+                  if (data.State)
+                  {
+                    char NewMasterControlMode = FunctionNr-CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2;
+                    unsigned int OldFunctionNumber = 0x00000000;
+                    int OldBussNr = -1;
+                    int NewBussNr = -1;
+
+                    if (NewMasterControlMode<16)
+                    {
+                      NewBussNr = NewMasterControlMode;
+                    }
+
+                    if (AxumData.MasterControlMode[ConsoleNr] != MASTER_CONTROL_MODE_NONE)
+                    {
+                      OldFunctionNumber = 0x03000000 | (ConsoleNr<<12) | (AxumData.MasterControlMode[ConsoleNr]+CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2);
+                      if (AxumData.MasterControlMode[ConsoleNr] < 16)
+                      {
+                        OldBussNr = AxumData.MasterControlMode[ConsoleNr];
+                      }
+                    }
+
+                    if (AxumData.MasterControlMode[ConsoleNr] != NewMasterControlMode)
+                    {
+                      AxumData.MasterControlMode[ConsoleNr] = NewMasterControlMode;
+                    }
+                    else
+                    {
+                      AxumData.MasterControlMode[ConsoleNr] = MASTER_CONTROL_MODE_NONE;
+                    }
+                    if (OldFunctionNumber != 0x00000000)
+                    {
+                      CheckObjectsToSent(OldFunctionNumber);
+                    }
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+
+                    unsigned int FunctionNrToSent = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MASTER_CONTROL);
+                    if (OldBussNr != -1)
+                    {
+                      CheckObjectsToSent(FunctionNrToSent | (CONSOLE_FUNCTION_CONTROL_MODES_BUSS_1_2+OldBussNr));
+                    }
+                    if (NewBussNr != -1)
+                    {
+                      CheckObjectsToSent(FunctionNrToSent | (CONSOLE_FUNCTION_CONTROL_MODES_BUSS_1_2+NewBussNr));
+                    }
+                  }
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_MASTER_CONTROL:
+              {
+                MasterModeControllerSensorChange(ConsoleNr, type, data, DataType, DataSize, DataMinimal, DataMaximal);
+              }
+              break;
+              case CONSOLE_FUNCTION_MASTER_CONTROL_RESET:
+              {
+                MasterModeControllerResetSensorChange(ConsoleNr, type, data, DataType, DataSize, DataMinimal, DataMaximal);
+              }
+              break;
+              case CONSOLE_FUNCTION_CONSOLE_TO_PROGRAMMED_DEFAULTS:
+              {
+                if (type == MBN_DATATYPE_STATE)
+                {
+                  ProgrammedDefaultSwitch[ConsoleNr].State = data.State;
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_1_2:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_3_4:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_5_6:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_7_8:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_9_10:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_11_12:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_13_14:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_15_16:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_17_18:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_19_20:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_21_22:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_23_24:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_25_26:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_27_28:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_29_30:
+              case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_31_32:
+              {
+                int BussNr = FunctionNr-CONSOLE_FUNCTION_CONTROL_MODES_BUSS_1_2;
 
                 if (type == MBN_DATATYPE_STATE)
                 {
@@ -4466,86 +3997,65 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     //First set master control mode
                     char NewMasterControlMode = BussNr;
                     unsigned int OldFunctionNumber = 0x00000000;
-                    unsigned int OldGlobalFunctionNr = 0x00000000;
+                    unsigned int OldConsoleFunctionNr = 0x00000000;
                     bool TurnOff = false;
                     int NewControlMode = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
 
-                    AxumData.ControlModeTimerValue[ControlNr] = 0;
+                    AxumData.ControlModeTimerValue[ConsoleNr] = 0;
 
-                    if (AxumData.MasterControlMode[ControlNr] == NewMasterControlMode)
+                    if (AxumData.MasterControlMode[ConsoleNr] == NewMasterControlMode)
                     {
                       TurnOff = true;
                     }
 
-                    if (AxumData.MasterControlMode[ControlNr] != MASTER_CONTROL_MODE_NONE)
+                    if (AxumData.MasterControlMode[ConsoleNr] != MASTER_CONTROL_MODE_NONE)
                     {
-                      OldFunctionNumber = 0x04000000 | (AxumData.MasterControlMode[ControlNr]+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2);
+                      OldFunctionNumber = 0x03000000 | (ConsoleNr<<12) | (AxumData.MasterControlMode[ConsoleNr]+CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2);
                     }
 
                     for (int cntBuss=0; cntBuss<16; cntBuss++)
                     {
                       char MasterControlModeToCheck = cntBuss;
 
-                      if (AxumData.MasterControlMode[ControlNr] == MasterControlModeToCheck)
+                      if (AxumData.MasterControlMode[ConsoleNr] == MasterControlModeToCheck)
                       {
-                        OldGlobalFunctionNr  = GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2+(ControlNr*16)+cntBuss;
+                        OldConsoleFunctionNr  = CONSOLE_FUNCTION_CONTROL_MODES_BUSS_1_2+cntBuss;
                       }
                     }
 
                     if (TurnOff)
                     {
-                      AxumData.MasterControlMode[ControlNr] = MASTER_CONTROL_MODE_NONE;
+                      AxumData.MasterControlMode[ConsoleNr] = MASTER_CONTROL_MODE_NONE;
                     }
                     else
                     {
-                      AxumData.MasterControlMode[ControlNr] = NewMasterControlMode;
+                      AxumData.MasterControlMode[ConsoleNr] = NewMasterControlMode;
                     }
                     if (OldFunctionNumber != 0x00000000)
                     {
                       CheckObjectsToSent(OldFunctionNumber);
                     }
-                    int NewFunctionNr = AxumData.MasterControlMode[ControlNr]+(ControlNr*16)+GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
-                    CheckObjectsToSent(0x04000000 | NewFunctionNr);
-                    switch (ControlNr)
-                    {
-                      case 0:
-                      {
-                        CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_1);
-                      }
-                      break;
-                      case 1:
-                      {
-                        CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_2);
-                      }
-                      break;
-                      case 2:
-                      {
-                        CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_3);
-                      }
-                      break;
-                      case 3:
-                      {
-                        CheckObjectsToSent(0x04000000 | GLOBAL_FUNCTION_MASTER_CONTROL_4);
-                      }
-                      break;
-                    }
+                    int NewFunctionNr = AxumData.MasterControlMode[ConsoleNr]+CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2;
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | NewFunctionNr);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_MASTER_CONTROL);
 
                     //Set control mode
                     if (TurnOff)
                     {
                       int ModuleControlModeToCheck = MODULE_CONTROL_MODE_BUSS_1_2+(BussNr*(MODULE_CONTROL_MODE_BUSS_3_4-MODULE_CONTROL_MODE_BUSS_1_2));
-                      if (AxumData.ControlMode[ControlNr] == ModuleControlModeToCheck)
+                      if (AxumData.ControlMode[ConsoleNr] == ModuleControlModeToCheck)
                       {
-                        unsigned int OldFunctionNr = GetFunctionNrFromControlMode(ControlNr);
-                        AxumData.ControlMode[ControlNr] = -1;
+                        unsigned int OldFunctionNr = GetConsoleFunctionNrFromControlMode(ConsoleNr);
+                        AxumData.ControlMode[ConsoleNr] = -1;
                         CheckObjectsToSent(OldFunctionNr);
                       }
                     }
                     else
                     {
-                      unsigned int OldFunctionNr = GetFunctionNrFromControlMode(ControlNr);
-                      AxumData.ControlMode[ControlNr] = NewControlMode;
-                      unsigned int NewFunctionNr = GetFunctionNrFromControlMode(ControlNr);
+                      unsigned int OldFunctionNr = GetConsoleFunctionNrFromControlMode(ConsoleNr);
+                      AxumData.ControlMode[ConsoleNr] = NewControlMode;
+                      unsigned int NewFunctionNr = GetConsoleFunctionNrFromControlMode(ConsoleNr);
                       CheckObjectsToSent(OldFunctionNr);
                       CheckObjectsToSent(NewFunctionNr);
                     }
@@ -4556,19 +4066,19 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       {
                         case MODULE_CONTROL_MODE_SOURCE:
                         {
-                          AxumData.ModuleData[cntModule].TemporySourceControlMode[ControlNr] = AxumData.ModuleData[cntModule].SelectedSource;
+                          AxumData.ModuleData[cntModule].TemporySourceControlMode[ConsoleNr] = AxumData.ModuleData[cntModule].SelectedSource;
                         }
                         break;
                         case MODULE_CONTROL_MODE_MODULE_PRESET:
                         {
-                          AxumData.ModuleData[cntModule].TemporyPresetControlMode[ControlNr] = AxumData.ModuleData[cntModule].SelectedProcessingPreset;
+                          AxumData.ModuleData[cntModule].TemporyPresetControlMode[ConsoleNr] = AxumData.ModuleData[cntModule].SelectedProcessingPreset;
                         }
                         break;
                       }
                       unsigned int FunctionNrToSent = (cntModule<<12);
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL);
                       CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_CONTROL_LABEL);
-                      switch (ControlNr)
+                      switch (ConsoleNr)
                       {
                         case 0:
                         {
@@ -4597,431 +4107,423 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       }
                     }
 
-                    unsigned int FunctionNrToSent = 0x04000000;
+                    unsigned int FunctionNrToSent = 0x03000000 | (ConsoleNr<<12);
                     CheckObjectsToSent(FunctionNrToSent | FunctionNr);
 
-                    if (OldGlobalFunctionNr)
+                    if (OldConsoleFunctionNr)
                     {
-                      CheckObjectsToSent(0x04000000 | OldGlobalFunctionNr);
+                      CheckObjectsToSent(FunctionNrToSent | OldConsoleFunctionNr);
                     }
                   }
                 }
               }
-              else
+              break;
+//              case CONSOLE_FUNCTION_CONSOLE_PRESET:
+              case CONSOLE_FUNCTION_MODULE_SELECT:
               {
-                switch (FunctionNr)
+                unsigned int NewSelectedModuleNr = AxumData.SelectedModule[ConsoleNr];
+
+                switch (type)
                 {
-                  case GLOBAL_FUNCTION_MASTER_CONTROL_1:
-                  case GLOBAL_FUNCTION_MASTER_CONTROL_2:
-                  case GLOBAL_FUNCTION_MASTER_CONTROL_3:
-                  case GLOBAL_FUNCTION_MASTER_CONTROL_4:
+                  case MBN_DATATYPE_UINT:
                   {
-                    MasterModeControllerSensorChange(0x04000000 | FunctionNr, type, data, DataType, DataSize, DataMinimal, DataMaximal);
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET:
-                  case GLOBAL_FUNCTION_MASTER_CONTROL_2_RESET:
-                  case GLOBAL_FUNCTION_MASTER_CONTROL_3_RESET:
-                  case GLOBAL_FUNCTION_MASTER_CONTROL_4_RESET:
-                  {
-                    MasterModeControllerResetSensorChange(0x04000000 | FunctionNr, type, data, DataType, DataSize, DataMinimal, DataMaximal);
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_CONSOLE_1_TO_PROGRAMMED_DEFAULTS:
-                  case GLOBAL_FUNCTION_CONSOLE_2_TO_PROGRAMMED_DEFAULTS:
-                  case GLOBAL_FUNCTION_CONSOLE_3_TO_PROGRAMMED_DEFAULTS:
-                  case GLOBAL_FUNCTION_CONSOLE_4_TO_PROGRAMMED_DEFAULTS:
-                  {
-                    unsigned char ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_1_TO_PROGRAMMED_DEFAULTS;
-                    ProgrammedDefaultSwitch[ConsoleNr].State = data.State;
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_1:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_2:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_3:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_4:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_5:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_6:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_7:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_8:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_9:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_10:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_11:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_12:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_13:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_14:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_15:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_16:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_17:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_18:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_19:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_20:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_21:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_22:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_23:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_24:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_25:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_26:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_27:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_28:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_29:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_30:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_31:
-                  case GLOBAL_FUNCTION_CONSOLE_PRESET_32:
-                  {
-                    int PresetNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_PRESET_1;
-
-                    ConsolePresetSwitch[PresetNr].State = data.State;
-                  }
-                  break;
-                  default:
-                  { //not implemented function
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_MODULE_SELECT_1:
-                  case GLOBAL_FUNCTION_MODULE_SELECT_2:
-                  case GLOBAL_FUNCTION_MODULE_SELECT_3:
-                  case GLOBAL_FUNCTION_MODULE_SELECT_4:
-                  {
-                    int SelectNr = FunctionNr-GLOBAL_FUNCTION_MODULE_SELECT_1;
-                    unsigned int NewSelectedModuleNr = AxumData.SelectedModule[SelectNr];
-
-                    switch (type)
+                    if (data.UInt<128)
                     {
-                      case MBN_DATATYPE_UINT:
-                      {
-                        if (data.UInt<128)
-                        {
-                          NewSelectedModuleNr = data.UInt;
-                        }
-                      }
-                      break;
-                      case MBN_DATATYPE_SINT:
-                      {
-                        NewSelectedModuleNr += data.SInt;
-                        NewSelectedModuleNr %= 128;
-                      }
-                      break;
+                      NewSelectedModuleNr = data.UInt;
                     }
-
-                    SetSelectedModule(SelectNr, NewSelectedModuleNr);
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
                   }
                   break;
-                  case GLOBAL_FUNCTION_BUSS_SELECT_1:
-                  case GLOBAL_FUNCTION_BUSS_SELECT_2:
-                  case GLOBAL_FUNCTION_BUSS_SELECT_3:
-                  case GLOBAL_FUNCTION_BUSS_SELECT_4:
+                  case MBN_DATATYPE_SINT:
                   {
-                    int SelectNr = FunctionNr-GLOBAL_FUNCTION_BUSS_SELECT_1;
-                    unsigned int NewSelectedBussNr = AxumData.SelectedBuss[SelectNr];
+                    NewSelectedModuleNr += data.SInt;
+                    NewSelectedModuleNr %= 128;
+                  }
+                  break;
+                }
 
-                    switch (type)
+                SetSelectedModule(ConsoleNr, NewSelectedModuleNr);
+                unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+              }
+              break;
+              case CONSOLE_FUNCTION_BUSS_SELECT:
+              {
+                unsigned int NewSelectedBussNr = AxumData.SelectedBuss[ConsoleNr];
+
+                switch (type)
+                {
+                  case MBN_DATATYPE_UINT:
+                  {
+                    if (data.UInt<128)
                     {
-                      case MBN_DATATYPE_UINT:
-                      {
-                        if (data.UInt<128)
-                        {
-                          NewSelectedBussNr = data.UInt;
-                        }
-                      }
-                      break;
-                      case MBN_DATATYPE_SINT:
-                      {
-                        NewSelectedBussNr += data.SInt;
-                        NewSelectedBussNr %= 128;
-                      }
-                      break;
+                      NewSelectedBussNr = data.UInt;
                     }
-
-                    SetSelectedBuss(SelectNr, NewSelectedBussNr);
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
                   }
                   break;
-                  case GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_1:
-                  case GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_2:
-                  case GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_3:
-                  case GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_4:
+                  case MBN_DATATYPE_SINT:
                   {
-                    int SelectNr = FunctionNr-GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_1;
-                    unsigned int NewSelectedMonitorBussNr = AxumData.SelectedMonitorBuss[SelectNr];
+                    NewSelectedBussNr += data.SInt;
+                    NewSelectedBussNr %= 128;
+                  }
+                  break;
+                }
 
-                    switch (type)
+                SetSelectedBuss(ConsoleNr, NewSelectedBussNr);
+                unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+              }
+              break;
+              case CONSOLE_FUNCTION_MONITOR_BUSS_SELECT:
+              {
+                unsigned int NewSelectedMonitorBussNr = AxumData.SelectedMonitorBuss[ConsoleNr];
+
+                switch (type)
+                {
+                  case MBN_DATATYPE_UINT:
+                  {
+                    if (data.UInt<128)
                     {
-                      case MBN_DATATYPE_UINT:
-                      {
-                        if (data.UInt<128)
-                        {
-                          NewSelectedMonitorBussNr = data.UInt;
-                        }
-                      }
-                      break;
-                      case MBN_DATATYPE_SINT:
-                      {
-                        NewSelectedMonitorBussNr += data.SInt;
-                        NewSelectedMonitorBussNr %= 128;
-                      }
-                      break;
+                      NewSelectedMonitorBussNr = data.UInt;
                     }
-
-                    SetSelectedMonitorBuss(SelectNr, NewSelectedMonitorBussNr);
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
                   }
                   break;
-                  case GLOBAL_FUNCTION_SOURCE_SELECT_1:
-                  case GLOBAL_FUNCTION_SOURCE_SELECT_2:
-                  case GLOBAL_FUNCTION_SOURCE_SELECT_3:
-                  case GLOBAL_FUNCTION_SOURCE_SELECT_4:
+                  case MBN_DATATYPE_SINT:
                   {
-                    int SelectNr = FunctionNr-GLOBAL_FUNCTION_SOURCE_SELECT_1;
-                    unsigned int NewSelectedSourceNr = AxumData.SelectedSource[SelectNr];
+                    NewSelectedMonitorBussNr += data.SInt;
+                    NewSelectedMonitorBussNr %= 128;
+                  }
+                  break;
+                }
 
-                    switch (type)
+                SetSelectedMonitorBuss(ConsoleNr, NewSelectedMonitorBussNr);
+                unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+              }
+              break;
+              case CONSOLE_FUNCTION_SOURCE_SELECT:
+              {
+                unsigned int NewSelectedSourceNr = AxumData.SelectedSource[ConsoleNr];
+
+                switch (type)
+                {
+                  case MBN_DATATYPE_UINT:
+                  {
+                    if (data.UInt<128)
                     {
-                      case MBN_DATATYPE_UINT:
-                      {
-                        if (data.UInt<128)
-                        {
-                          NewSelectedSourceNr = data.UInt;
-                        }
-                      }
-                      break;
-                      case MBN_DATATYPE_SINT:
-                      {
-                        NewSelectedSourceNr += data.SInt;
-                        NewSelectedSourceNr %= 128;
-                      }
-                      break;
+                      NewSelectedSourceNr = data.UInt;
                     }
-
-                    SetSelectedSource(SelectNr, NewSelectedSourceNr);
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
                   }
                   break;
-                  case GLOBAL_FUNCTION_DESTINATION_SELECT_1:
-                  case GLOBAL_FUNCTION_DESTINATION_SELECT_2:
-                  case GLOBAL_FUNCTION_DESTINATION_SELECT_3:
-                  case GLOBAL_FUNCTION_DESTINATION_SELECT_4:
+                  case MBN_DATATYPE_SINT:
                   {
-                    int SelectNr = FunctionNr-GLOBAL_FUNCTION_DESTINATION_SELECT_1;
-                    unsigned int NewSelectedDestinationNr = AxumData.SelectedDestination[SelectNr];
+                    NewSelectedSourceNr += data.SInt;
+                    NewSelectedSourceNr %= 128;
+                  }
+                  break;
+                }
 
-                    switch (type)
+                SetSelectedSource(ConsoleNr, NewSelectedSourceNr);
+                unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+              }
+              break;
+              case CONSOLE_FUNCTION_DESTINATION_SELECT:
+              {
+                unsigned int NewSelectedDestinationNr = AxumData.SelectedDestination[ConsoleNr];
+
+                switch (type)
+                {
+                  case MBN_DATATYPE_UINT:
+                  {
+                    if (data.UInt<128)
                     {
-                      case MBN_DATATYPE_UINT:
-                      {
-                        if (data.UInt<128)
-                        {
-                          NewSelectedDestinationNr = data.UInt;
-                        }
-                      }
-                      break;
-                      case MBN_DATATYPE_SINT:
-                      {
-                        NewSelectedDestinationNr += data.SInt;
-                        NewSelectedDestinationNr %= 128;
-                      }
-                      break;
+                      NewSelectedDestinationNr = data.UInt;
                     }
-
-                    SetSelectedDestination(SelectNr, NewSelectedDestinationNr);
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
                   }
                   break;
-                  case GLOBAL_FUNCTION_CHIPCARD_ACTIVE_1:
-                  case GLOBAL_FUNCTION_CHIPCARD_ACTIVE_2:
-                  case GLOBAL_FUNCTION_CHIPCARD_ACTIVE_3:
-                  case GLOBAL_FUNCTION_CHIPCARD_ACTIVE_4:
+                  case MBN_DATATYPE_SINT:
                   {
-                    int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_ACTIVE_1;
-                    switch (type)
-                    {
-                      case MBN_DATATYPE_STATE:
-                      {
-                        if (data.State)
-                        {
-                          OnlineNodeInformationElement->Account.UsernameReceived = 0;
-                          OnlineNodeInformationElement->Account.PasswordReceived = 0;
+                    NewSelectedDestinationNr += data.SInt;
+                    NewSelectedDestinationNr %= 128;
+                  }
+                  break;
+                }
 
-                          for (int cntObject=1024; cntObject<OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024; cntObject++)
+                SetSelectedDestination(ConsoleNr, NewSelectedDestinationNr);
+                unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+              }
+              break;
+              case CONSOLE_FUNCTION_CHIPCARD_CHANGE:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_STATE:
+                  {
+                    if (data.State)
+                    {
+                      OnlineNodeInformationElement->Account.UsernameReceived = 0;
+                      OnlineNodeInformationElement->Account.PasswordReceived = 0;
+
+                      for (int cntObject=1024; cntObject<OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024; cntObject++)
+                      {
+                        SENSOR_RECEIVE_FUNCTION_STRUCT *ConnectedEngineFunction = &OnlineNodeInformationElement->SensorReceiveFunction[cntObject-1024];
+
+                        if ((int)ConnectedEngineFunction->FunctionNr != -1)
+                        {
+                          unsigned int EngineFunctionType = (ConnectedEngineFunction->FunctionNr>>24)&0xFF;
+                          unsigned int EngineFunctionSeqNr = (ConnectedEngineFunction->FunctionNr>>12)&0xFFF;
+                          unsigned int EngineFunctionNr = ConnectedEngineFunction->FunctionNr&0xFFF;
+
+                          if (EngineFunctionSeqNr == ConsoleNr)
                           {
-                            SENSOR_RECEIVE_FUNCTION_STRUCT *ConnectedEngineFunction = &OnlineNodeInformationElement->SensorReceiveFunction[cntObject-1024];
-
-                            if ((int)ConnectedEngineFunction->FunctionNr != -1)
+                            if (EngineFunctionType == CONSOLE_FUNCTIONS)
                             {
-                              unsigned int EngineFunctionType = (ConnectedEngineFunction->FunctionNr>>24)&0xFF;
-                              unsigned int EngineFunctionSeqNr = (ConnectedEngineFunction->FunctionNr>>12)&0xFFF;
-                              unsigned int EngineFunctionNr = ConnectedEngineFunction->FunctionNr&0xFFF;
-
-                              if ((EngineFunctionType == GLOBAL_FUNCTIONS) && (EngineFunctionSeqNr == 0))
+                              if (EngineFunctionNr==((unsigned int)CONSOLE_FUNCTION_CHIPCARD_USER))
                               {
-                                if (EngineFunctionNr>=((unsigned int)GLOBAL_FUNCTION_CHIPCARD_USER_1+ConsoleNr))
-                                {
-                                  mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
-                                }
-                                else if (EngineFunctionNr>=((unsigned int)GLOBAL_FUNCTION_CHIPCARD_PASS_1+ConsoleNr))
-                                {
-                                  mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
-                                }
+                                mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
+                              }
+                              else if (EngineFunctionNr==((unsigned int)CONSOLE_FUNCTION_CHIPCARD_PASS))
+                              {
+                                mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
                               }
                             }
                           }
                         }
-                        else
-                        { //Send user/pass idle
-                          unsigned int FunctionNrToSend = 0x04000000;
-                          char user[33] = "";
-                          char pass[17] = "";
-                          memset(AxumData.Username, 0, 32);
-                          memset(AxumData.Password, 0, 16);
-                          OnlineNodeInformationElement->Account.UsernameReceived = 0;
-                          OnlineNodeInformationElement->Account.PasswordReceived = 0;
-                          memset(OnlineNodeInformationElement->Account.Username, 0, 32);
-                          memset(OnlineNodeInformationElement->Account.Password, 0, 16);
-                          //Idle, source/preset pool A
-                          AxumData.UserLevel[ConsoleNr] = 0;
-                          AxumData.SourcePool[ConsoleNr] = 0;
-                          AxumData.PresetPool[ConsoleNr] = 0;
-
-                          CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+ConsoleNr));
-                          CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+ConsoleNr));
-                          CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+ConsoleNr));
-                          CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+ConsoleNr));
-
-
-                          db_lock(1);
-                          db_update_account(ConsoleNr, user, pass);
-                          db_lock(0);
-                        }
                       }
                     }
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_UPDATE_USER_1:
-                  case GLOBAL_FUNCTION_UPDATE_USER_2:
-                  case GLOBAL_FUNCTION_UPDATE_USER_3:
-                  case GLOBAL_FUNCTION_UPDATE_USER_4:
-                  { //Only atomic update allowed
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_UPDATE_PASS_1:
-                  case GLOBAL_FUNCTION_UPDATE_PASS_2:
-                  case GLOBAL_FUNCTION_UPDATE_PASS_3:
-                  case GLOBAL_FUNCTION_UPDATE_PASS_4:
-                  { //Only atomic update allowed
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_UPDATE_USER_PASS_1:
-                  case GLOBAL_FUNCTION_UPDATE_USER_PASS_2:
-                  case GLOBAL_FUNCTION_UPDATE_USER_PASS_3:
-                  case GLOBAL_FUNCTION_UPDATE_USER_PASS_4:
-                  {
-                    int Console = FunctionNr-GLOBAL_FUNCTION_UPDATE_USER_PASS_1;
+                    else
+                    { //Send user/pass idle
+                      unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                      char user[33] = "";
+                      char pass[17] = "";
+                      memset(AxumData.Username, 0, 32);
+                      memset(AxumData.Password, 0, 16);
+                      OnlineNodeInformationElement->Account.UsernameReceived = 0;
+                      OnlineNodeInformationElement->Account.PasswordReceived = 0;
+                      memset(OnlineNodeInformationElement->Account.Username, 0, 32);
+                      memset(OnlineNodeInformationElement->Account.Password, 0, 16);
+                      //Idle, source/preset pool A
+                      AxumData.UserLevel[ConsoleNr] = 0;
+                      AxumData.SourcePool[ConsoleNr] = 0;
+                      AxumData.PresetPool[ConsoleNr] = 0;
 
+                      CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER_PASS));
+                      CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER));
+                      CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_PASS));
+                      CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_USER_LEVEL));
+
+
+                      db_lock(1);
+                      db_update_account(ConsoleNr, user, pass);
+                      db_lock(0);
+                    }
+                  }
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_CHIPCARD_USER:
+              { //Maybe not allowed, only atomic sensor changes on user/pass?
+                switch (type)
+                {
+                  case MBN_DATATYPE_OCTETS:
+                  {
+                    OnlineNodeInformationElement->Account.UsernameReceived = 1;
+                    strncpy(OnlineNodeInformationElement->Account.Username, (char *)data.Octets, 32);
+                    strncpy(AxumData.Username[ConsoleNr], (char *)data.Octets, 32);
+                    if (OnlineNodeInformationElement->Account.PasswordReceived)
+                    {
+                      strncpy(AxumData.Password[ConsoleNr], OnlineNodeInformationElement->Account.Password, 16);
+                      unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
+
+                      db_lock(1);
+                      db_read_user(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                      db_update_account(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                      db_lock(0);
+                    }
+
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER);
+                  }
+                  break;
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_CHIPCARD_PASS:
+              { //Maybe not allowed, only atomic sensor changes on user/pass?
+                switch (type)
+                {
+                  case MBN_DATATYPE_OCTETS:
+                  {
+                    OnlineNodeInformationElement->Account.PasswordReceived = 1;
+                    strncpy(OnlineNodeInformationElement->Account.Password, (char *)data.Octets, 16);
+                    strncpy(AxumData.Password[ConsoleNr], (char *)data.Octets, 16);
+                    if (OnlineNodeInformationElement->Account.UsernameReceived)
+                    {
+                      strncpy(AxumData.Username[ConsoleNr], OnlineNodeInformationElement->Account.Username, 32);
+                      unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
+
+                      db_lock(1);
+                      db_read_user(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                      db_update_account(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                      db_lock(0);
+                    }
+
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_PASS);
+                  }
+                  break;
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_WRITE_CHIPCARD_USER_PASS:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_OCTETS:
+                  {
+                    char *DataString = (char *)data.Octets;
+                    strncpy(AxumData.UsernameToWrite[ConsoleNr], DataString, 32);
+                    strncpy(AxumData.PasswordToWrite[ConsoleNr], &DataString[32], 16);
+
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_CHIPCARD_USER);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_CHIPCARD_PASS);
+                  }
+                  break;
+                }
+              }
+              break;
+//              case CONSOLE_FUNCTION_UPDATE_USER: //Only atomic update allowed
+//              case CONSOLE_FUNCTION_UPDATE_PASS: //Only atomic update allowed
+              case CONSOLE_FUNCTION_UPDATE_USER_PASS:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_OCTETS:
+                  {
                     char *data_str = (char *)data.Octets;
 
                     OnlineNodeInformationElement->Account.UsernameReceived = 1;
                     OnlineNodeInformationElement->Account.PasswordReceived = 1;
                     strncpy(OnlineNodeInformationElement->Account.Username, data_str, 32);
                     strncpy(OnlineNodeInformationElement->Account.Password, &(data_str[32]), 16);
-                    strncpy(AxumData.Username[Console], data_str, 32);
-                    strncpy(AxumData.Password[Console], &(data_str[32]), 16);
+                    strncpy(AxumData.Username[ConsoleNr], data_str, 32);
+                    strncpy(AxumData.Password[ConsoleNr], &(data_str[32]), 16);
 
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+Console));
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_CHIPCARD_USER_1:
-                  case GLOBAL_FUNCTION_CHIPCARD_USER_2:
-                  case GLOBAL_FUNCTION_CHIPCARD_USER_3:
-                  case GLOBAL_FUNCTION_CHIPCARD_USER_4:
-                  { //Maybe not allowed, only atomic sensor changes on user/pass?
-                    int Console = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_USER_1;
-
-                    OnlineNodeInformationElement->Account.UsernameReceived = 1;
-                    strncpy(OnlineNodeInformationElement->Account.Username, (char *)data.Octets, 32);
-                    strncpy(AxumData.Username[Console], (char *)data.Octets, 32);
-                    if (OnlineNodeInformationElement->Account.PasswordReceived)
-                    {
-                      strncpy(AxumData.Password[Console], OnlineNodeInformationElement->Account.Password, 16);
-                      unsigned int FunctionNrToSend = 0x04000000;
-                      CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
-                      CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
-
-                      db_lock(1);
-                      db_read_user(Console, AxumData.Username[Console], AxumData.Password[Console]);
-                      db_update_account(Console, AxumData.Username[Console], AxumData.Password[Console]);
-                      db_lock(0);
-                    }
-
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_CHIPCARD_PASS_1:
-                  case GLOBAL_FUNCTION_CHIPCARD_PASS_2:
-                  case GLOBAL_FUNCTION_CHIPCARD_PASS_3:
-                  case GLOBAL_FUNCTION_CHIPCARD_PASS_4:
-                  { //Maybe not allowed, only atomic sensor changes on user/pass?
-                    int Console = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_PASS_1;
-
-                    OnlineNodeInformationElement->Account.PasswordReceived = 1;
-                    strncpy(OnlineNodeInformationElement->Account.Password, (char *)data.Octets, 16);
-                    strncpy(AxumData.Password[Console], (char *)data.Octets, 16);
-                    if (OnlineNodeInformationElement->Account.UsernameReceived)
-                    {
-                      strncpy(AxumData.Username[Console], OnlineNodeInformationElement->Account.Username, 32);
-                      unsigned int FunctionNrToSend = 0x04000000;
-                      CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
-                      CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
-
-                      db_lock(1);
-                      db_read_user(Console, AxumData.Username[Console], AxumData.Password[Console]);
-                      db_update_account(Console, AxumData.Username[Console], AxumData.Password[Console]);
-                      db_lock(0);
-                    }
-
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+Console));
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_1:
-                  case GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_2:
-                  case GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_3:
-                  case GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_4:
-                  {
-                    int Console = FunctionNr-GLOBAL_FUNCTION_WRITE_CHIPCARD_USER_PASS_1;
-                    char *DataString = (char *)data.Octets;
-                    strncpy(AxumData.UsernameToWrite[Console], DataString, 32);
-                    strncpy(AxumData.PasswordToWrite[Console], &DataString[32], 16);
-
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_USER_1+Console));
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_PASS_1+Console));
-                  }
-                  break;
-                  case GLOBAL_FUNCTION_USER_LEVEL_1:
-                  case GLOBAL_FUNCTION_USER_LEVEL_2:
-                  case GLOBAL_FUNCTION_USER_LEVEL_3:
-                  case GLOBAL_FUNCTION_USER_LEVEL_4:
-                  {
-                    int Console = FunctionNr-GLOBAL_FUNCTION_USER_LEVEL_1;
-
-                    AxumData.UserLevel[Console] = data.State;
-
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER_PASS));
+                    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER));
+                    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_PASS));
+                    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_USER_LEVEL));
                   }
                   break;
                 }
+              }
+              break;
+              case CONSOLE_FUNCTION_USER_LEVEL:
+              {
+                AxumData.UserLevel[ConsoleNr] = data.State;
+
+                unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
+              }
+              break;
+            }
+          }
+          break;
+          case GLOBAL_FUNCTIONS:
+          {   //Global
+            unsigned int GlobalNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
+            unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+
+            if (GlobalNr == 0)
+            {
+              switch (FunctionNr)
+              {
+                case GLOBAL_FUNCTION_REDLIGHT_1:
+                case GLOBAL_FUNCTION_REDLIGHT_2:
+                case GLOBAL_FUNCTION_REDLIGHT_3:
+                case GLOBAL_FUNCTION_REDLIGHT_4:
+                case GLOBAL_FUNCTION_REDLIGHT_5:
+                case GLOBAL_FUNCTION_REDLIGHT_6:
+                case GLOBAL_FUNCTION_REDLIGHT_7:
+                case GLOBAL_FUNCTION_REDLIGHT_8:
+                {
+                  int RedlightNr = FunctionNr-GLOBAL_FUNCTION_REDLIGHT_1;
+                  bool OldState = AxumData.Redlight[RedlightNr];
+
+                  if (type == MBN_DATATYPE_STATE)
+                  {
+                    if (data.State)
+                    {
+                      AxumData.Redlight[RedlightNr] = !AxumData.Redlight[RedlightNr];
+                    }
+                    else
+                    {
+                      int delay_time = (SensorReceiveFunction->LastChangedTime-SensorReceiveFunction->PreviousLastChangedTime)*10;
+                      if (SensorReceiveFunction->TimeBeforeMomentary>=0)
+                      {
+                        if (delay_time>=SensorReceiveFunction->TimeBeforeMomentary)
+                        {
+                          AxumData.Redlight[RedlightNr] = !AxumData.Redlight[RedlightNr];
+                        }
+                      }
+                    }
+
+                    if (AxumData.Redlight[RedlightNr] != OldState)
+                    {
+                      unsigned int FunctionNrToSend = 0x04000000;
+                      CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+                    }
+                  }
+                }
+                break;
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_1:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_2:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_3:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_4:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_5:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_6:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_7:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_8:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_9:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_10:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_11:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_12:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_13:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_14:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_15:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_16:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_17:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_18:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_19:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_20:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_21:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_22:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_23:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_24:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_25:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_26:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_27:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_28:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_29:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_30:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_31:
+                case GLOBAL_FUNCTION_CONSOLE_PRESET_32:
+                {
+                  int PresetNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_PRESET_1;
+
+                  if (type == MBN_DATATYPE_STATE)
+                  {
+                    ConsolePresetSwitch[PresetNr].State = data.State;
+                  }
+                }
+                break;
               }
             }
           }
@@ -6443,6 +5945,58 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             }
           }
           break;
+          case CONSOLE_FUNCTIONS:
+          {
+            unsigned int ConsoleNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
+            unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+
+            switch (FunctionNr)
+            {
+              case CONSOLE_FUNCTION_CHIPCARD_USER:
+              {
+                OnlineNodeInformationElement->Account.UsernameReceived = 1;
+                strncpy(OnlineNodeInformationElement->Account.Username, (char *)data.Octets, 32);
+                strncpy(AxumData.Username[ConsoleNr], (char *)data.Octets, 32);
+                if (OnlineNodeInformationElement->Account.PasswordReceived)
+                {
+                  strncpy(AxumData.Password[ConsoleNr], OnlineNodeInformationElement->Account.Password, 16);
+                  unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                  CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);
+                  CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
+
+                  db_lock(1);
+                  db_read_user(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                  db_update_account(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                  db_lock(0);
+                }
+                unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER);
+              }
+              break;
+              case CONSOLE_FUNCTION_CHIPCARD_PASS:
+              {
+                OnlineNodeInformationElement->Account.PasswordReceived = 1;
+                strncpy(OnlineNodeInformationElement->Account.Password, (char *)data.Octets, 16);
+                strncpy(AxumData.Password[ConsoleNr], (char *)data.Octets, 16);
+                if (OnlineNodeInformationElement->Account.UsernameReceived)
+                {
+                  strncpy(AxumData.Username[ConsoleNr], OnlineNodeInformationElement->Account.Username, 32);
+                  unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                  CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);
+                  CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
+
+                  db_lock(1);
+                  db_read_user(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                  db_update_account(ConsoleNr, AxumData.Username[ConsoleNr], AxumData.Password[ConsoleNr]);
+                  db_lock(0);
+                }
+
+                unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_PASS);
+              }
+              break;
+            }
+          }
           case GLOBAL_FUNCTIONS:
           {   //Global
             unsigned int GlobalNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
@@ -6452,59 +6006,6 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
             {
               switch (FunctionNr)
               {
-                case GLOBAL_FUNCTION_CHIPCARD_USER_1:
-                case GLOBAL_FUNCTION_CHIPCARD_USER_2:
-                case GLOBAL_FUNCTION_CHIPCARD_USER_3:
-                case GLOBAL_FUNCTION_CHIPCARD_USER_4:
-                {
-                  int Console = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_USER_1;
-
-                  OnlineNodeInformationElement->Account.UsernameReceived = 1;
-                  strncpy(OnlineNodeInformationElement->Account.Username, (char *)data.Octets, 32);
-                  strncpy(AxumData.Username[Console], (char *)data.Octets, 32);
-                  if (OnlineNodeInformationElement->Account.PasswordReceived)
-                  {
-                    strncpy(AxumData.Password[Console], OnlineNodeInformationElement->Account.Password, 16);
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
-
-                    db_lock(1);
-                    db_read_user(Console, AxumData.Username[Console], AxumData.Password[Console]);
-                    db_update_account(Console, AxumData.Username[Console], AxumData.Password[Console]);
-                    db_lock(0);
-                  }
-                  unsigned int FunctionNrToSend = 0x04000000;
-                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+Console));
-                }
-                break;
-                case GLOBAL_FUNCTION_CHIPCARD_PASS_1:
-                case GLOBAL_FUNCTION_CHIPCARD_PASS_2:
-                case GLOBAL_FUNCTION_CHIPCARD_PASS_3:
-                case GLOBAL_FUNCTION_CHIPCARD_PASS_4:
-                {
-                  int Console = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_PASS_1;
-
-                  OnlineNodeInformationElement->Account.PasswordReceived = 1;
-                  strncpy(OnlineNodeInformationElement->Account.Password, (char *)data.Octets, 16);
-                  strncpy(AxumData.Password[Console], (char *)data.Octets, 16);
-                  if (OnlineNodeInformationElement->Account.UsernameReceived)
-                  {
-                    strncpy(AxumData.Username[Console], OnlineNodeInformationElement->Account.Username, 32);
-                    unsigned int FunctionNrToSend = 0x04000000;
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+Console));
-                    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+Console));
-
-                    db_lock(1);
-                    db_read_user(Console, AxumData.Username[Console], AxumData.Password[Console]);
-                    db_update_account(Console, AxumData.Username[Console], AxumData.Password[Console]);
-                    db_lock(0);
-                  }
-
-                  unsigned int FunctionNrToSend = 0x04000000;
-                  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+Console));
-                }
-                break;
               }
             }
           }
@@ -7126,7 +6627,8 @@ void Timer100HzDone(int Value)
             AxumData.SelectedConsolePreset[cntConsole] = 0;
             CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldConsolePreset-1));
 
-            CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_1_PRESET+cntConsole));
+            FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+            CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_CONSOLE_PRESET);
           }
         }
       }
@@ -7142,7 +6644,7 @@ void Timer100HzDone(int Value)
       AxumData.ControlModeTimerValue[cntConsole] += 10;
       if (AxumData.ControlModeTimerValue[cntConsole] == 10000)
       { //set control mode to none
-        unsigned int OldFunctionNumber = GetFunctionNrFromControlMode(cntConsole);
+        unsigned int OldFunctionNumber = GetConsoleFunctionNrFromControlMode(cntConsole);
         AxumData.ControlMode[cntConsole] = -1;
         CheckObjectsToSent(OldFunctionNumber);
 
@@ -7154,8 +6656,24 @@ void Timer100HzDone(int Value)
             DoAxum_UpdateModuleControlModeLabel(cntModule, MODULE_CONTROL_MODE_NONE);
           }
         }
-        unsigned int FunctionNrToSent = 0x04000000;
-        CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONTROL_1_MODE_ACTIVE + cntConsole));
+
+        unsigned int FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+        CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_CONTROL_MODE_ACTIVE);
+
+        OldFunctionNumber = GetConsoleFunctionNrFromControlMode(cntConsole);
+        AxumData.ControlMode[cntConsole] = -1;
+        CheckObjectsToSent(OldFunctionNumber);
+
+        for (int cntModule=0; cntModule<128; cntModule++)
+        {
+          if (AxumData.ModuleData[cntModule].Console == cntConsole)
+          {
+            DoAxum_UpdateModuleControlMode(cntModule, MODULE_CONTROL_MODE_NONE);
+            DoAxum_UpdateModuleControlModeLabel(cntModule, MODULE_CONTROL_MODE_NONE);
+          }
+        }
+        FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+        CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_CONTROL_MODE_ACTIVE);
       }
     }
   }
@@ -8534,6 +8052,14 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       else if (FunctionNumber<(NUMBER_OF_MONITOR_BUSSES+4))
       {
         FunctionNumber = AxumData.SelectedMonitorBuss[FunctionNumber-NUMBER_OF_MONITOR_BUSSES];
+      }
+    }
+    break;
+    case CONSOLE_FUNCTIONS:
+    {
+      if (FunctionNumber<NUMBER_OF_CONSOLES)
+      {
+        WalkAxumFunctionInformationStruct = ConsoleFunctions[FunctionNumber][Function];
       }
     }
     break;
@@ -10176,6 +9702,20 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           }
         }
         break;
+        case BUSS_FUNCTION_RESET:
+        {
+          unsigned char Active = 0;
+          for (int cntModule=0; cntModule<128; cntModule++)
+          {
+            if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
+            {
+              Active = 1;
+            }
+          }
+          data.State = Active;
+          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+        }
+        break;
       }
     }
     break;
@@ -10579,316 +10119,459 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       }
     }
     break;
+    case CONSOLE_FUNCTIONS:
+    {
+      int ConsoleNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
+      int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
+
+      switch (FunctionNr)
+      {
+        case CONSOLE_FUNCTION_CONTROL_MODE_ACTIVE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              if (AxumData.ControlMode[ConsoleNr] != MODULE_CONTROL_MODE_NONE)
+              {
+                data.State = 1;
+              }
+              else
+              {
+                data.State = 0;
+              }
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_CONTROL_MODE_SOURCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_PROCESSING_PRESET:
+        case CONSOLE_FUNCTION_CONTROL_MODE_SOURCE_GAIN:
+        case CONSOLE_FUNCTION_CONTROL_MODE_PHANTOM_ON_OFF:
+        case CONSOLE_FUNCTION_CONTROL_MODE_PAD_ON_OFF:
+        case CONSOLE_FUNCTION_CONTROL_MODE_GAIN:
+        case CONSOLE_FUNCTION_CONTROL_MODE_PHASE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_LOW_CUT:
+        case CONSOLE_FUNCTION_CONTROL_MODE_INSERT_ON_OFF:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_LEVEL:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_FREQUENCY:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_BANDWIDTH:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_TYPE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_LEVEL:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_FREQUENCY:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_BANDWIDTH:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_TYPE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_LEVEL:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_FREQUENCY:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_BANDWIDTH:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_TYPE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_LEVEL:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_FREQUENCY:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_BANDWIDTH:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_TYPE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_LEVEL:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_FREQUENCY:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_BANDWIDTH:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_TYPE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_LEVEL:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_FREQUENCY:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_BANDWIDTH:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_TYPE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EQ_ON_OFF:
+        case CONSOLE_FUNCTION_CONTROL_MODE_EXP_THRESHOLD:
+        case CONSOLE_FUNCTION_CONTROL_MODE_AGC_THRESHOLD:
+        case CONSOLE_FUNCTION_CONTROL_MODE_AGC:
+        case CONSOLE_FUNCTION_CONTROL_MODE_DYNAMICS_ON_OFF:
+        case CONSOLE_FUNCTION_CONTROL_MODE_MONO:
+        case CONSOLE_FUNCTION_CONTROL_MODE_PAN:
+        case CONSOLE_FUNCTION_CONTROL_MODE_MODULE_LEVEL:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_1_2:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_1_2_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_3_4:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_3_4_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_5_6:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_5_6_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_7_8:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_7_8_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_9_10:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_9_10_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_11_12:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_11_12_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_13_14:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_13_14_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_15_16:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_15_16_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_17_18:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_17_18_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_19_20:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_19_20_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_21_22:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_21_22_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_23_24:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_23_24_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_25_26:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_25_26_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_27_28:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_27_28_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_29_30:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_29_30_BALANCE:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_31_32:
+        case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_31_32_BALANCE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              unsigned char Active = 0;
+
+              int CorrespondingControlMode = GetControlModeFromConsoleFunctionNr(SensorReceiveFunctionNumber);
+
+              if (AxumData.ControlMode[ConsoleNr] == CorrespondingControlMode)
+              {
+                Active = 1;
+              }
+
+              data.State = Active;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_3_4:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_5_6:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_7_8:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_9_10:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_11_12:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_13_14:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_15_16:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_17_18:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_19_20:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_21_22:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_23_24:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_25_26:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_27_28:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_29_30:
+        case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_31_32:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              unsigned char Active = 0;
+              unsigned char CorrespondingControlMode = FunctionNr-CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_1_2;
+              if (AxumData.MasterControlMode[ConsoleNr] == CorrespondingControlMode)
+              {
+                Active = 1;
+              }
+
+              data.State = Active;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_MASTER_CONTROL:
+        {
+          MasterModeControllerSetData(ConsoleNr, MambaNetAddress, ObjectNr, DataType, DataSize, DataMinimal, DataMaximal);
+        }
+        break;
+//        case CONSOLE_FUNCTION_CONSOLE_TO_PROGRAMMED_DEFAULTS:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_1_2:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_3_4:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_5_6:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_7_8:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_9_10:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_11_12:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_13_14:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_15_16:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_17_18:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_19_20:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_21_22:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_23_24:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_25_26:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_27_28:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_29_30:
+        case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_31_32:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              int BussNr = FunctionNr-CONSOLE_FUNCTION_CONTROL_MODES_BUSS_1_2;
+              char NewMasterControlMode = BussNr;
+              bool Active = false;
+
+              if (AxumData.MasterControlMode[ConsoleNr] == NewMasterControlMode)
+              {
+                 Active = true;
+              }
+              data.State = Active;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_CONSOLE_PRESET:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+              GetConsolePresetLabel(AxumData.SelectedConsolePreset[ConsoleNr], LCDText, 8);
+
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_MODULE_SELECT:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = AxumData.SelectedModule[ConsoleNr];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
+            case MBN_DATATYPE_OCTETS:
+            {
+              if (AxumData.SelectedModule[ConsoleNr]<9)
+              {
+                sprintf(LCDText, " Mod %d  ", AxumData.SelectedModule[ConsoleNr]+1);
+              }
+              else if (AxumData.SelectedModule[ConsoleNr]<99)
+              {
+                sprintf(LCDText, " Mod %d ", AxumData.SelectedModule[ConsoleNr]+1);
+              }
+              else
+              {
+                sprintf(LCDText, "Mod %d ", AxumData.SelectedModule[ConsoleNr]+1);
+              }
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_BUSS_SELECT:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = AxumData.SelectedBuss[ConsoleNr];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
+            case MBN_DATATYPE_OCTETS:
+            {
+              sprintf(LCDText, "Buss %d", AxumData.SelectedBuss[ConsoleNr]);
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_MONITOR_BUSS_SELECT:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = AxumData.SelectedMonitorBuss[ConsoleNr];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
+            case MBN_DATATYPE_OCTETS:
+            {
+              sprintf(LCDText, "Mon %d", AxumData.SelectedMonitorBuss[ConsoleNr]);
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_SOURCE_SELECT:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = AxumData.SelectedSource[ConsoleNr];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
+            case MBN_DATATYPE_OCTETS:
+            {
+              sprintf(LCDText, "Src %d", AxumData.SelectedSource[ConsoleNr]);
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_DESTINATION_SELECT:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = AxumData.SelectedDestination[ConsoleNr];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+            }
+            break;
+            case MBN_DATATYPE_OCTETS:
+            {
+              sprintf(LCDText, "Src %d", AxumData.SelectedDestination[ConsoleNr]);
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+//        case CONSOLE_FUNCTION_CHIPCARD_CHANGE:
+        break;
+        case CONSOLE_FUNCTION_CHIPCARD_USER:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+              strncpy(LCDText, AxumData.UsernameToWrite[ConsoleNr], 32);
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_CHIPCARD_PASS:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+              strncpy(LCDText, AxumData.PasswordToWrite[ConsoleNr], 16);
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_WRITE_CHIPCARD_USER_PASS:
+        {
+        }
+        break;
+        case CONSOLE_FUNCTION_UPDATE_USER:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+              strncpy(LCDText, AxumData.Username[ConsoleNr], 32);
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_UPDATE_PASS:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+              strncpy(LCDText, AxumData.Password[ConsoleNr], 16);
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_UPDATE_USER_PASS:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_OCTETS:
+            {
+              memcpy(LCDText, AxumData.Username[ConsoleNr], 32);
+              memcpy(&LCDText[32], AxumData.Password[ConsoleNr], 16);
+              data.Octets = (unsigned char *)LCDText;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 48, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_USER_LEVEL:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              data.State = AxumData.UserLevel[ConsoleNr];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+            case MBN_DATATYPE_OCTETS:
+            {
+              char UserLevelNames[7][21] = {"Idle", "Unknown user", "Operator 1", "Operator 2", "Supervisor 1", "Supervisor 2", "Administrator"};
+              data.Octets = (unsigned char *)UserLevelNames[AxumData.UserLevel[ConsoleNr]];
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 13, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+      }
+    }
+    break;
     case GLOBAL_FUNCTIONS:
     {   //Global
       unsigned int GlobalNr = (SensorReceiveFunctionNumber>>12)&0xFFF;
       unsigned int FunctionNr = SensorReceiveFunctionNumber&0xFFF;
-      unsigned char Active = 0;
-
 
       if (GlobalNr == 0)
       {
-        if ((((signed int)FunctionNr)>=GLOBAL_FUNCTION_REDLIGHT_1) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE))
-        { //all states
-          switch (FunctionNr)
-          {
-            case GLOBAL_FUNCTION_REDLIGHT_1:
-            case GLOBAL_FUNCTION_REDLIGHT_2:
-            case GLOBAL_FUNCTION_REDLIGHT_3:
-            case GLOBAL_FUNCTION_REDLIGHT_4:
-            case GLOBAL_FUNCTION_REDLIGHT_5:
-            case GLOBAL_FUNCTION_REDLIGHT_6:
-            case GLOBAL_FUNCTION_REDLIGHT_7:
-            case GLOBAL_FUNCTION_REDLIGHT_8:
-            {
-              Active = AxumData.Redlight[FunctionNr-GLOBAL_FUNCTION_REDLIGHT_1];
-            }
-            break;
-            case GLOBAL_FUNCTION_BUSS_1_2_RESET:
-            case GLOBAL_FUNCTION_BUSS_3_4_RESET:
-            case GLOBAL_FUNCTION_BUSS_5_6_RESET:
-            case GLOBAL_FUNCTION_BUSS_7_8_RESET:
-            case GLOBAL_FUNCTION_BUSS_9_10_RESET:
-            case GLOBAL_FUNCTION_BUSS_11_12_RESET:
-            case GLOBAL_FUNCTION_BUSS_13_14_RESET:
-            case GLOBAL_FUNCTION_BUSS_15_16_RESET:
-            case GLOBAL_FUNCTION_BUSS_17_18_RESET:
-            case GLOBAL_FUNCTION_BUSS_19_20_RESET:
-            case GLOBAL_FUNCTION_BUSS_21_22_RESET:
-            case GLOBAL_FUNCTION_BUSS_23_24_RESET:
-            case GLOBAL_FUNCTION_BUSS_25_26_RESET:
-            case GLOBAL_FUNCTION_BUSS_27_28_RESET:
-            case GLOBAL_FUNCTION_BUSS_29_30_RESET:
-            case GLOBAL_FUNCTION_BUSS_31_32_RESET:
-            {
-              int BussNr = (FunctionNr-GLOBAL_FUNCTION_BUSS_1_2_RESET)/(GLOBAL_FUNCTION_BUSS_3_4_RESET-GLOBAL_FUNCTION_BUSS_1_2_RESET);
-
-              for (int cntModule=0; cntModule<128; cntModule++)
-              {
-                if (AxumData.ModuleData[cntModule].Buss[BussNr].On)
-                {
-                  Active = 1;
-                }
-              }
-            }
-            break;
-          }
-
-          data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-        }
-        else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF)) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_INSERT_ON_OFF) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_1_MODE_DYNAMICS_ON_OFF))
-        { //Control 1 mode
-          unsigned char CorrespondingControlMode;
-          if (FunctionNr < GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE)
-          {
-            CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE;
-          }
-          else if (FunctionNr<GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF);
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_INSERT_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_1_MODE_DYNAMICS_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
-          }
-
-          if (AxumData.ControlMode[0] == CorrespondingControlMode)
-          {
-            Active = 1;
-          }
-
-          data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-        }
-        else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF)) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_INSERT_ON_OFF) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF))
-        { //Control 2 mode
-          unsigned char CorrespondingControlMode;
-          if (FunctionNr < GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE)
-          {
-            CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE;
-          }
-          else if (FunctionNr<GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF);
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_INSERT_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
-          }
-
-          if (AxumData.ControlMode[1] == CorrespondingControlMode)
-          {
-            Active = 1;
-          }
-
-          data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-        }
-        else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF) && (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF)) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_INSERT_ON_OFF) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF))
-        { //Control 3 mode
-          unsigned char CorrespondingControlMode;
-          if (FunctionNr < GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE)
-          {
-            CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE;
-          }
-          else if (FunctionNr<GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF);
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_INSERT_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
-          }
-
-          if (AxumData.ControlMode[2] == CorrespondingControlMode)
-          {
-            Active = 1;
-          }
-
-          data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-        }
-        else if (((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2)) ||
-                 ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_PAD_ON_OFF)) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_INSERT_ON_OFF) ||
-                  (FunctionNr==GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF))
-        { //Control 4 mode
-          unsigned char CorrespondingControlMode;
-          if (FunctionNr < GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2)
-          {
-            CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE;
-          }
-          else if (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODE_PAD_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF+(FunctionNr-GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF);
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_INSERT_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
-          }
-          else if (FunctionNr == GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF)
-          {
-            CorrespondingControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
-          }
-
-          if (AxumData.ControlMode[3] == CorrespondingControlMode)
-          {
-            Active = 1;
-          }
-
-          data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-        }
-        else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2))
-        { //Master control 1 mode
-          unsigned char CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_MODE_BUSS_1_2;
-          if (AxumData.MasterControlMode[0] == CorrespondingControlMode)
-          {
-            Active = 1;
-          }
-
-          data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-        }
-        else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2))
-        { //Master control 2 mode
-          unsigned char CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_2_MODE_BUSS_1_2;
-          if (AxumData.MasterControlMode[1] == CorrespondingControlMode)
-          {
-            Active = 1;
-          }
-
-          data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-        }
-        else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2))
-        { //Master control 3 mode
-          unsigned char CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_3_MODE_BUSS_1_2;
-          if (AxumData.MasterControlMode[2] == CorrespondingControlMode)
-          {
-            Active = 1;
-          }
-
-          data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-        }
-        else if ((FunctionNr>=GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2) && (FunctionNr<GLOBAL_FUNCTION_MASTER_CONTROL_1))
-        { //Master control 1 mode
-          unsigned char CorrespondingControlMode = FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_4_MODE_BUSS_1_2;
-          if (AxumData.MasterControlMode[3] == CorrespondingControlMode)
-          {
-            Active = 1;
-          }
-
-          data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-        }
-        else if ((FunctionNr==GLOBAL_FUNCTION_MASTER_CONTROL_1) ||
-                 (FunctionNr==GLOBAL_FUNCTION_MASTER_CONTROL_2) ||
-                 (FunctionNr==GLOBAL_FUNCTION_MASTER_CONTROL_3) ||
-                 (FunctionNr==GLOBAL_FUNCTION_MASTER_CONTROL_4))
-        { //Master control 1-4
-          MasterModeControllerSetData(SensorReceiveFunctionNumber, MambaNetAddress, ObjectNr, DataType, DataSize, DataMinimal, DataMaximal);
-        }
-        else if ((FunctionNr>=GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2) && (FunctionNr<=GLOBAL_FUNCTION_CONTROL_4_MODES_BUSS_31_32))
-        {
-          int ControlNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)/(GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
-          int BussNr = (FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2)%(GLOBAL_FUNCTION_CONTROL_2_MODES_BUSS_1_2-GLOBAL_FUNCTION_CONTROL_1_MODES_BUSS_1_2);
-          char NewMasterControlMode = BussNr;
-          bool Active = false;
-
-          if (AxumData.MasterControlMode[ControlNr] == NewMasterControlMode)
-          {
-             Active = true;
-          }
-          data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-        }
-
         switch (FunctionNr)
         {
+          case GLOBAL_FUNCTION_REDLIGHT_1:
+          case GLOBAL_FUNCTION_REDLIGHT_2:
+          case GLOBAL_FUNCTION_REDLIGHT_3:
+          case GLOBAL_FUNCTION_REDLIGHT_4:
+          case GLOBAL_FUNCTION_REDLIGHT_5:
+          case GLOBAL_FUNCTION_REDLIGHT_6:
+          case GLOBAL_FUNCTION_REDLIGHT_7:
+          case GLOBAL_FUNCTION_REDLIGHT_8:
+          {
+            switch (DataType)
+            {
+              case MBN_DATATYPE_STATE:
+              {
+                data.State = AxumData.Redlight[FunctionNr-GLOBAL_FUNCTION_REDLIGHT_1];
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              }
+              break;
+            }
+          }
+          break;
           case GLOBAL_FUNCTION_CONSOLE_PRESET_1:
           case GLOBAL_FUNCTION_CONSOLE_PRESET_2:
           case GLOBAL_FUNCTION_CONSOLE_PRESET_3:
@@ -10926,301 +10609,24 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             unsigned char ConsoleActiveBits = 0;
             unsigned char PresetActiveBits = 0;
 
-            for (int cntConsole=0; cntConsole<4; cntConsole++)
-            {
-              if (AxumData.ConsolePresetData[PresetNr-1].Console[cntConsole])
-              {
-                ConsoleActiveBits |= 0x01<<cntConsole;
-
-                if (AxumData.SelectedConsolePreset[cntConsole] == PresetNr)
-                {
-                  PresetActiveBits |= 0x01<<cntConsole;
-                }
-              }
-            }
-
-            if (ConsoleActiveBits == PresetActiveBits)
-            {
-              data.State = 1;
-            }
-            else
-            {
-              data.State = 0;
-            }
-
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-          }
-          break;
-          case GLOBAL_FUNCTION_CONSOLE_1_PRESET:
-          case GLOBAL_FUNCTION_CONSOLE_2_PRESET:
-          case GLOBAL_FUNCTION_CONSOLE_3_PRESET:
-          case GLOBAL_FUNCTION_CONSOLE_4_PRESET:
-          {
-            unsigned int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CONSOLE_1_PRESET;
-            GetConsolePresetLabel(AxumData.SelectedConsolePreset[ConsoleNr], LCDText, 8);
-
-            data.Octets = (unsigned char *)LCDText;
-            mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
-          }
-          break;
-          case GLOBAL_FUNCTION_MODULE_SELECT_1:
-          case GLOBAL_FUNCTION_MODULE_SELECT_2:
-          case GLOBAL_FUNCTION_MODULE_SELECT_3:
-          case GLOBAL_FUNCTION_MODULE_SELECT_4:
-          {
-            int SelectNr = FunctionNr-GLOBAL_FUNCTION_MODULE_SELECT_1;
-            switch (DataType)
-            {
-              case MBN_DATATYPE_UINT:
-              {
-                data.UInt = AxumData.SelectedModule[SelectNr];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
-              }
-              break;
-              case MBN_DATATYPE_OCTETS:
-              {
-                if (AxumData.SelectedModule[SelectNr]<9)
-                {
-                  sprintf(LCDText, " Mod %d  ", AxumData.SelectedModule[SelectNr]+1);
-                }
-                else if (AxumData.SelectedModule[SelectNr]<99)
-                {
-                  sprintf(LCDText, " Mod %d ", AxumData.SelectedModule[SelectNr]+1);
-                }
-                else
-                {
-                  sprintf(LCDText, "Mod %d ", AxumData.SelectedModule[SelectNr]+1);
-                }
-                data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_BUSS_SELECT_1:
-          case GLOBAL_FUNCTION_BUSS_SELECT_2:
-          case GLOBAL_FUNCTION_BUSS_SELECT_3:
-          case GLOBAL_FUNCTION_BUSS_SELECT_4:
-          {
-            int SelectNr = FunctionNr-GLOBAL_FUNCTION_BUSS_SELECT_1;
-            switch (DataType)
-            {
-              case MBN_DATATYPE_UINT:
-              {
-                data.UInt = AxumData.SelectedBuss[SelectNr];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
-              }
-              break;
-              case MBN_DATATYPE_OCTETS:
-              {
-                sprintf(LCDText, "Buss %d", AxumData.SelectedBuss[SelectNr]);
-                data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_1:
-          case GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_2:
-          case GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_3:
-          case GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_4:
-          {
-            int SelectNr = FunctionNr-GLOBAL_FUNCTION_MONITOR_BUSS_SELECT_1;
-            switch (DataType)
-            {
-              case MBN_DATATYPE_UINT:
-              {
-                data.UInt = AxumData.SelectedMonitorBuss[SelectNr];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
-              }
-              break;
-              case MBN_DATATYPE_OCTETS:
-              {
-                sprintf(LCDText, "Mon %d", AxumData.SelectedMonitorBuss[SelectNr]);
-                data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_SOURCE_SELECT_1:
-          case GLOBAL_FUNCTION_SOURCE_SELECT_2:
-          case GLOBAL_FUNCTION_SOURCE_SELECT_3:
-          case GLOBAL_FUNCTION_SOURCE_SELECT_4:
-          {
-            int SelectNr = FunctionNr-GLOBAL_FUNCTION_SOURCE_SELECT_1;
-            switch (DataType)
-            {
-              case MBN_DATATYPE_UINT:
-              {
-                data.UInt = AxumData.SelectedSource[SelectNr];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
-              }
-              break;
-              case MBN_DATATYPE_OCTETS:
-              {
-                sprintf(LCDText, "Src %d", AxumData.SelectedSource[SelectNr]);
-                data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_DESTINATION_SELECT_1:
-          case GLOBAL_FUNCTION_DESTINATION_SELECT_2:
-          case GLOBAL_FUNCTION_DESTINATION_SELECT_3:
-          case GLOBAL_FUNCTION_DESTINATION_SELECT_4:
-          {
-            int SelectNr = FunctionNr-GLOBAL_FUNCTION_DESTINATION_SELECT_1;
-            switch (DataType)
-            {
-              case MBN_DATATYPE_UINT:
-              {
-                data.UInt = AxumData.SelectedDestination[SelectNr];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
-              }
-              break;
-              case MBN_DATATYPE_OCTETS:
-              {
-                sprintf(LCDText, "Src %d", AxumData.SelectedDestination[SelectNr]);
-                data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_CHIPCARD_USER_1:
-          case GLOBAL_FUNCTION_CHIPCARD_USER_2:
-          case GLOBAL_FUNCTION_CHIPCARD_USER_3:
-          case GLOBAL_FUNCTION_CHIPCARD_USER_4:
-          {
-            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_USER_1;
-            switch (DataType)
-            {
-              case MBN_DATATYPE_OCTETS:
-              {
-                strncpy(LCDText, AxumData.UsernameToWrite[ConsoleNr], 32);
-                data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_CHIPCARD_PASS_1:
-          case GLOBAL_FUNCTION_CHIPCARD_PASS_2:
-          case GLOBAL_FUNCTION_CHIPCARD_PASS_3:
-          case GLOBAL_FUNCTION_CHIPCARD_PASS_4:
-          {
-            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_CHIPCARD_PASS_1;
-            switch (DataType)
-            {
-              case MBN_DATATYPE_OCTETS:
-              {
-                strncpy(LCDText, AxumData.PasswordToWrite[ConsoleNr], 16);
-                data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_UPDATE_USER_1:
-          case GLOBAL_FUNCTION_UPDATE_USER_2:
-          case GLOBAL_FUNCTION_UPDATE_USER_3:
-          case GLOBAL_FUNCTION_UPDATE_USER_4:
-          {
-            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_UPDATE_USER_1;
-            switch (DataType)
-            {
-              case MBN_DATATYPE_OCTETS:
-              {
-                strncpy(LCDText, AxumData.Username[ConsoleNr], 32);
-                data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_UPDATE_PASS_1:
-          case GLOBAL_FUNCTION_UPDATE_PASS_2:
-          case GLOBAL_FUNCTION_UPDATE_PASS_3:
-          case GLOBAL_FUNCTION_UPDATE_PASS_4:
-          {
-            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_UPDATE_PASS_1;
-            switch (DataType)
-            {
-              case MBN_DATATYPE_OCTETS:
-              {
-                strncpy(LCDText, AxumData.Password[ConsoleNr], 16);
-                data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_UPDATE_USER_PASS_1:
-          case GLOBAL_FUNCTION_UPDATE_USER_PASS_2:
-          case GLOBAL_FUNCTION_UPDATE_USER_PASS_3:
-          case GLOBAL_FUNCTION_UPDATE_USER_PASS_4:
-          {
-            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_UPDATE_USER_PASS_1;
-            switch (DataType)
-            {
-              case MBN_DATATYPE_OCTETS:
-              {
-                memcpy(LCDText, AxumData.Username[ConsoleNr], 32);
-                memcpy(&LCDText[32], AxumData.Password[ConsoleNr], 16);
-                data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 48, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_USER_LEVEL_1:
-          case GLOBAL_FUNCTION_USER_LEVEL_2:
-          case GLOBAL_FUNCTION_USER_LEVEL_3:
-          case GLOBAL_FUNCTION_USER_LEVEL_4:
-          {
-            int ConsoleNr = FunctionNr-GLOBAL_FUNCTION_USER_LEVEL_1;
             switch (DataType)
             {
               case MBN_DATATYPE_STATE:
               {
-                data.State = AxumData.UserLevel[ConsoleNr];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
-              }
-              break;
-              case MBN_DATATYPE_OCTETS:
-              {
-                char UserLevelNames[7][21] = {"Idle", "Unknown user", "Operator 1", "Operator 2", "Supervisor 1", "Supervisor 2", "Administrator"};
-                data.Octets = (unsigned char *)UserLevelNames[AxumData.UserLevel[ConsoleNr]];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 13, data, 1);
-              }
-              break;
-            }
-          }
-          break;
-          case GLOBAL_FUNCTION_CONTROL_1_MODE_ACTIVE:
-          case GLOBAL_FUNCTION_CONTROL_2_MODE_ACTIVE:
-          case GLOBAL_FUNCTION_CONTROL_3_MODE_ACTIVE:
-          case GLOBAL_FUNCTION_CONTROL_4_MODE_ACTIVE:
-          {
-            unsigned char ControlNr = FunctionNr-GLOBAL_FUNCTION_CONTROL_1_MODE_ACTIVE;
+                for (int cntConsole=0; cntConsole<4; cntConsole++)
+                {
+                  if (AxumData.ConsolePresetData[PresetNr-1].Console[cntConsole])
+                  {
+                    ConsoleActiveBits |= 0x01<<cntConsole;
 
-            switch (DataType)
-            {
-              case MBN_DATATYPE_STATE:
-              {
-                if (AxumData.ControlMode[ControlNr] != MODULE_CONTROL_MODE_NONE)
+                    if (AxumData.SelectedConsolePreset[cntConsole] == PresetNr)
+                    {
+                      PresetActiveBits |= 0x01<<cntConsole;
+                    }
+                  }
+                }
+
+                if (ConsoleActiveBits == PresetActiveBits)
                 {
                   data.State = 1;
                 }
@@ -11228,6 +10634,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   data.State = 0;
                 }
+
                 mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
@@ -12096,6 +11503,15 @@ void InitalizeAllObjectListPerFunction()
     }
   }
 
+  //Console
+  for (int cntConsole=0; cntConsole<NUMBER_OF_CONSOLES; cntConsole++)
+  {
+    for (int cntFunction=0; cntFunction<NUMBER_OF_MONITOR_BUSS_FUNCTIONS; cntFunction++)
+    {
+      ConsoleFunctions[cntConsole][cntFunction] = NULL;
+    }
+  }
+
   //Global
   for (int cntFunction=0; cntFunction<NUMBER_OF_GLOBAL_FUNCTIONS; cntFunction++)
   {
@@ -12150,6 +11566,11 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
       MonitorBussFunctions[FunctionNumber][Function] = NULL;
     }
     break;
+    case CONSOLE_FUNCTIONS:
+    {   //Console
+      WalkAxumFunctionInformationStruct = ConsoleFunctions[FunctionNumber][Function];
+      ConsoleFunctions[FunctionNumber][Function] = NULL;
+    }
     case GLOBAL_FUNCTIONS:
     {   //Global
       WalkAxumFunctionInformationStruct = GlobalFunctions[Function];
@@ -12216,6 +11637,11 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
                   MonitorBussFunctions[FunctionNumber][Function] = AxumFunctionInformationStructToAdd;
                 }
                 break;
+                case CONSOLE_FUNCTIONS:
+                {   //Console
+                  ConsoleFunctions[FunctionNumber][Function] = AxumFunctionInformationStructToAdd;
+                }
+                break;
                 case GLOBAL_FUNCTIONS:
                 {   //Global
                   GlobalFunctions[Function] = AxumFunctionInformationStructToAdd;
@@ -12258,6 +11684,11 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
     case MONITOR_BUSS_FUNCTIONS:
     {   //Monitor Buss
       WalkAxumFunctionInformationStruct = MonitorBussFunctions[FunctionNumber][Function];
+    }
+    break;
+    case CONSOLE_FUNCTIONS:
+    {   //Console
+      WalkAxumFunctionInformationStruct = ConsoleFunctions[FunctionNumber][Function];
     }
     break;
     case GLOBAL_FUNCTIONS:
@@ -12326,6 +11757,23 @@ void DeleteAllObjectListPerFunction()
     {
       AXUM_FUNCTION_INFORMATION_STRUCT *WalkAxumFunctionInformationStruct = MonitorBussFunctions[cntBuss][cntFunction];
       MonitorBussFunctions[cntBuss][cntFunction] = NULL;
+
+      while (WalkAxumFunctionInformationStruct != NULL)
+      {
+        AXUM_FUNCTION_INFORMATION_STRUCT *AxumFunctionInformationStructToDelete = WalkAxumFunctionInformationStruct;
+        WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+        delete AxumFunctionInformationStructToDelete;
+      }
+    }
+  }
+
+  //Console
+  for (int cntConsole=0; cntConsole<NUMBER_OF_CONSOLES; cntConsole++)
+  {
+    for (int cntFunction=0; cntFunction<NUMBER_OF_GLOBAL_FUNCTIONS; cntFunction++)
+    {
+      AXUM_FUNCTION_INFORMATION_STRUCT *WalkAxumFunctionInformationStruct = ConsoleFunctions[cntConsole][cntFunction];
+      ConsoleFunctions[cntConsole][cntFunction] = NULL;
 
       while (WalkAxumFunctionInformationStruct != NULL)
       {
@@ -14258,13 +13706,11 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
   DataMaximal = 0;
 }
 
-void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
+void MasterModeControllerSensorChange(unsigned int ConsoleNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
 {
-  int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   int MasterControlMode = -1;
-  int ControlNr = (FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1)/(GLOBAL_FUNCTION_MASTER_CONTROL_2-GLOBAL_FUNCTION_MASTER_CONTROL_1);
 
-  MasterControlMode = AxumData.MasterControlMode[ControlNr];
+  MasterControlMode = AxumData.MasterControlMode[ConsoleNr];
 
   if (type == MBN_DATATYPE_UINT)
   {
@@ -14356,7 +13802,6 @@ void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsi
       break;
     }
   }
-  SensorReceiveFunctionNr = 0;
   type = 0;
   data.State = 0;
   DataType = 0;
@@ -14365,13 +13810,11 @@ void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsi
   DataMaximal = 0;
 }
 
-void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
+void MasterModeControllerResetSensorChange(unsigned int ConsoleNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
 {
-  int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   int MasterControlMode = -1;
-  int ControlNr = (FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET)/(GLOBAL_FUNCTION_MASTER_CONTROL_2_RESET-GLOBAL_FUNCTION_MASTER_CONTROL_1_RESET);
 
-  MasterControlMode = AxumData.MasterControlMode[ControlNr];
+  MasterControlMode = AxumData.MasterControlMode[ConsoleNr];
 
   if (type == MBN_DATATYPE_STATE)
   {
@@ -14413,7 +13856,6 @@ void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr,
       }
     }
   }
-  SensorReceiveFunctionNr = 0;
   type = 0;
   data.State = 0;
   DataType = 0;
@@ -14423,16 +13865,14 @@ void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr,
 }
 
 
-void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
+void MasterModeControllerSetData(unsigned int ConsoleNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
 {
-  int FunctionNr = SensorReceiveFunctionNr&0xFFF;
   int MasterControlMode = -1;
   float MasterLevel = -140;
   unsigned char Mask = 0x00;
   mbn_data data;
-  int ControlNr = (FunctionNr-GLOBAL_FUNCTION_MASTER_CONTROL_1)/(GLOBAL_FUNCTION_MASTER_CONTROL_2-GLOBAL_FUNCTION_MASTER_CONTROL_1);
 
-  MasterControlMode = AxumData.MasterControlMode[ControlNr];
+  MasterControlMode = AxumData.MasterControlMode[ConsoleNr];
 
   switch (MasterControlMode)
   {
@@ -15442,9 +14882,8 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
       if (NewBussActive[cntBuss] != BussActive[cntBuss])
       {
         //Check buss reset
-        FunctionNrToSent = 0x04000000;
-        CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_BUSS_1_2_RESET+(cntBuss*(GLOBAL_FUNCTION_BUSS_3_4_RESET-GLOBAL_FUNCTION_BUSS_1_2_RESET))));
-
+        FunctionNrToSent = 0x01000000 | ((cntBuss<<12)&0xFFF000);
+        CheckObjectsToSent(FunctionNrToSent | BUSS_FUNCTION_RESET);
 
         //Set buss default if not active
         for (int cntMonitorBuss=0; cntMonitorBuss<16; cntMonitorBuss++)
@@ -16962,11 +16401,8 @@ void DoAxum_LoadBussMasterPreset(unsigned char PresetNr, char *Console, bool Set
 
       SetAxum_BussMasterLevels();
 
-      FunctionNrToSent = 0x04000000;
-      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
-      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
-      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
-      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
+      FunctionNrToSent = 0x03000000 | (AxumData.BussMasterData[cntBuss].Console<<12);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MASTER_CONTROL);
     }
   }
 }
@@ -17172,8 +16608,8 @@ void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool D
           CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+OldSelectedConsolePreset-1));
         }
 
-        unsigned int FunctionNrToSent = 0x04000000;
-        CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_1_PRESET+cntConsole));
+        unsigned int FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+        CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_CONSOLE_PRESET);
       }
     }
     unsigned int FunctionNrToSent = 0x04000000;
@@ -17206,6 +16642,11 @@ unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck)
     case MONITOR_BUSS_FUNCTIONS:
     {   //Monitor Buss
       WalkAxumFunctionInformationStruct = MonitorBussFunctions[FunctionNumber][Function];
+    }
+    break;
+    case CONSOLE_FUNCTIONS:
+    {   //Console
+      WalkAxumFunctionInformationStruct = ConsoleFunctions[FunctionNumber][Function];
     }
     break;
     case GLOBAL_FUNCTIONS:
@@ -17395,141 +16836,765 @@ void GetConsolePresetLabel(unsigned int ConsolePresetNr, char *TextString, int M
   }
 }
 
-unsigned int GetFunctionNrFromControlMode(int ControlNr)
+int GetControlModeFromConsoleFunctionNr(unsigned int CheckFunctionNr)
 {
-  unsigned int FunctionNr = 0x04000000;
+  unsigned int ControlMode = -1;
+  unsigned int FunctionType = (CheckFunctionNr>>24)&0xFF;
+  unsigned int FunctionNr = CheckFunctionNr&0xFFF;
 
-  switch (ControlNr)
+  if (FunctionType == 3)
   {
-    case 0:
+
+    switch (FunctionNr)
     {
-      if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_EQ_ON_OFF)
+      case CONSOLE_FUNCTION_CONTROL_MODE_SOURCE:
       {
-        FunctionNr |= (AxumData.ControlMode[ControlNr]+GLOBAL_FUNCTION_CONTROL_1_MODE_SOURCE);
+        ControlMode = MODULE_CONTROL_MODE_SOURCE;
       }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_AGC_THRESHOLD)
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_SOURCE_GAIN:
       {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EQ_ON_OFF)+GLOBAL_FUNCTION_CONTROL_1_MODE_EQ_ON_OFF);
+        ControlMode = MODULE_CONTROL_MODE_SOURCE_GAIN;
       }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_GAIN:
       {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_AGC_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_1_MODE_AGC_THRESHOLD);
+        ControlMode = MODULE_CONTROL_MODE_GAIN;
       }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_MODULE_PRESET)
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_PHASE:
       {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_1_MODE_EXP_THRESHOLD);
+        ControlMode = MODULE_CONTROL_MODE_PHASE;
       }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_INSERT_ON_OFF)
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_LOW_CUT:
       {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_1_MODE_MOD_PRESET);
+        ControlMode = MODULE_CONTROL_MODE_LOW_CUT;
       }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_LEVEL:
       {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_INSERT_ON_OFF)+GLOBAL_FUNCTION_CONTROL_1_MODE_INSERT_ON_OFF);
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL;
       }
-      else
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_FREQUENCY:
       {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)+GLOBAL_FUNCTION_CONTROL_1_MODE_DYNAMICS_ON_OFF);
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY;
       }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_BANDWIDTH:
+      {
+       ControlMode = MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_TYPE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_1_TYPE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_LEVEL:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_FREQUENCY:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_BANDWIDTH:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_TYPE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_2_TYPE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_LEVEL:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_3_LEVEL;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_FREQUENCY:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_3_FREQUENCY;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_BANDWIDTH:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_3_BANDWIDTH;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_TYPE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_3_TYPE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_LEVEL:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_4_LEVEL;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_FREQUENCY:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_4_FREQUENCY;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_BANDWIDTH:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_4_BANDWIDTH;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_TYPE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_4_TYPE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_LEVEL:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_5_LEVEL;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_FREQUENCY:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_5_FREQUENCY;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_BANDWIDTH:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_5_BANDWIDTH;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_TYPE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_5_TYPE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_LEVEL:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_6_LEVEL;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_FREQUENCY:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_6_FREQUENCY;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_BANDWIDTH:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_6_BANDWIDTH;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_TYPE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_BAND_6_TYPE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_AGC:
+      {
+        ControlMode = MODULE_CONTROL_MODE_AGC;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_MONO:
+      {
+        ControlMode = MODULE_CONTROL_MODE_MONO;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_PAN:
+      {
+        ControlMode = MODULE_CONTROL_MODE_PAN;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_MODULE_LEVEL:
+      {
+        ControlMode = MODULE_CONTROL_MODE_MODULE_LEVEL;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_1_2:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_1_2;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_1_2_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_1_2_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_3_4:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_3_4;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_3_4_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_3_4_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_5_6:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_5_6;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_5_6_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_5_6_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_7_8:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_7_8;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_7_8_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_7_8_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_9_10:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_9_10;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_9_10_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_9_10_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_11_12:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_11_12;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_11_12_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_11_12_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_13_14:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_13_14;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_13_14_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_13_14_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_15_16:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_15_16;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_15_16_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_15_16_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_17_18:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_17_18;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_17_18_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_17_18_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_19_20:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_19_20;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_19_20_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_19_20_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_21_22:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_21_22;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_21_22_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_21_22_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_23_24:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_23_24;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_23_24_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_23_24_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_25_26:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_25_26;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_25_26_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_25_26_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_27_28:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_27_28;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_27_28_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_27_28_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_29_30:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_29_30;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_29_30_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_29_30_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_31_32:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_31_32;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_31_32_BALANCE:
+      {
+        ControlMode = MODULE_CONTROL_MODE_BUSS_31_32_BALANCE;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EQ_ON_OFF:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EQ_ON_OFF;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_PHANTOM_ON_OFF:
+      {
+        ControlMode = MODULE_CONTROL_MODE_PHANTOM_ON_OFF;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_PAD_ON_OFF:
+      {
+        ControlMode = MODULE_CONTROL_MODE_PAD_ON_OFF;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_AGC_THRESHOLD:
+      {
+        ControlMode = MODULE_CONTROL_MODE_AGC_THRESHOLD;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_EXP_THRESHOLD:
+      {
+        ControlMode = MODULE_CONTROL_MODE_EXPANDER_THRESHOLD;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_PROCESSING_PRESET:
+      {
+        ControlMode = MODULE_CONTROL_MODE_MODULE_PRESET;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_INSERT_ON_OFF:
+      {
+        ControlMode = MODULE_CONTROL_MODE_INSERT_ON_OFF;
+      }
+      break;
+      case CONSOLE_FUNCTION_CONTROL_MODE_DYNAMICS_ON_OFF:
+      {
+        ControlMode = MODULE_CONTROL_MODE_DYNAMICS_ON_OFF;
+      }
+      break;
+    }
+  }
+
+  return ControlMode;
+}
+
+unsigned int GetConsoleFunctionNrFromControlMode(unsigned int ConsoleNr)
+{
+  unsigned int FunctionNr = 0x03000000 | (ConsoleNr<<12);
+
+  switch (AxumData.ControlMode[ConsoleNr])
+  {
+    case MODULE_CONTROL_MODE_NONE:
+    {
     }
     break;
-    case 1:
+    case MODULE_CONTROL_MODE_SOURCE:
     {
-      if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_EQ_ON_OFF)
-      {
-        FunctionNr |= (AxumData.ControlMode[ControlNr]+GLOBAL_FUNCTION_CONTROL_2_MODE_SOURCE);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_AGC_THRESHOLD)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EQ_ON_OFF)+GLOBAL_FUNCTION_CONTROL_2_MODE_EQ_ON_OFF);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_AGC_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_2_MODE_AGC_THRESHOLD);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_MODULE_PRESET)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_2_MODE_EXP_THRESHOLD);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_INSERT_ON_OFF)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_2_MODE_MOD_PRESET);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_INSERT_ON_OFF)+GLOBAL_FUNCTION_CONTROL_2_MODE_INSERT_ON_OFF);
-      }
-      else
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)+GLOBAL_FUNCTION_CONTROL_2_MODE_DYNAMICS_ON_OFF);
-      }
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_SOURCE;
     }
     break;
-    case 2:
+    case MODULE_CONTROL_MODE_SOURCE_GAIN:
     {
-      if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_EQ_ON_OFF)
-      {
-        FunctionNr |= (AxumData.ControlMode[ControlNr]+GLOBAL_FUNCTION_CONTROL_3_MODE_SOURCE);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_AGC_THRESHOLD)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EQ_ON_OFF)+GLOBAL_FUNCTION_CONTROL_3_MODE_EQ_ON_OFF);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_AGC_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_3_MODE_AGC_THRESHOLD);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_MODULE_PRESET)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_3_MODE_EXP_THRESHOLD);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_INSERT_ON_OFF)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_3_MODE_MOD_PRESET);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_INSERT_ON_OFF)+GLOBAL_FUNCTION_CONTROL_3_MODE_INSERT_ON_OFF);
-      }
-      else
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)+GLOBAL_FUNCTION_CONTROL_3_MODE_DYNAMICS_ON_OFF);
-      }
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_SOURCE_GAIN;
     }
     break;
-    case 3:
+    case MODULE_CONTROL_MODE_GAIN:
     {
-      if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_EQ_ON_OFF)
-      {
-        FunctionNr |= (AxumData.ControlMode[ControlNr]+GLOBAL_FUNCTION_CONTROL_4_MODE_SOURCE);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_AGC_THRESHOLD)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EQ_ON_OFF)+GLOBAL_FUNCTION_CONTROL_4_MODE_EQ_ON_OFF);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_AGC_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_4_MODE_AGC_THRESHOLD);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_MODULE_PRESET)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_EXPANDER_THRESHOLD)+GLOBAL_FUNCTION_CONTROL_4_MODE_EXP_THRESHOLD);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_INSERT_ON_OFF)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_MODULE_PRESET)+GLOBAL_FUNCTION_CONTROL_4_MODE_MOD_PRESET);
-      }
-      else if (AxumData.ControlMode[ControlNr]<MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_INSERT_ON_OFF)+GLOBAL_FUNCTION_CONTROL_4_MODE_INSERT_ON_OFF);
-      }
-      else
-      {
-        FunctionNr |= ((AxumData.ControlMode[ControlNr]-MODULE_CONTROL_MODE_DYNAMICS_ON_OFF)+GLOBAL_FUNCTION_CONTROL_4_MODE_DYNAMICS_ON_OFF);
-      }
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_GAIN;
+    }
+    break;
+    case MODULE_CONTROL_MODE_PHASE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_PHASE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_LOW_CUT:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_LOW_CUT;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_1_LEVEL:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_LEVEL;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_1_FREQUENCY:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_FREQUENCY;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_1_BANDWIDTH:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_BANDWIDTH;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_1_TYPE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_1_TYPE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_2_LEVEL:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_LEVEL;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_2_FREQUENCY:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_FREQUENCY;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_2_BANDWIDTH:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_BANDWIDTH;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_2_TYPE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_2_TYPE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_3_LEVEL:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_LEVEL;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_3_FREQUENCY:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_FREQUENCY;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_3_BANDWIDTH:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_BANDWIDTH;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_3_TYPE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_3_TYPE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_4_LEVEL:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_LEVEL;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_4_FREQUENCY:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_FREQUENCY;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_4_BANDWIDTH:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_BANDWIDTH;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_4_TYPE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_4_TYPE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_5_LEVEL:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_LEVEL;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_5_FREQUENCY:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_FREQUENCY;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_5_BANDWIDTH:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_BANDWIDTH;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_5_TYPE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_5_TYPE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_6_LEVEL:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_LEVEL;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_6_FREQUENCY:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_FREQUENCY;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_6_BANDWIDTH:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_BANDWIDTH;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_BAND_6_TYPE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_BAND_6_TYPE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_AGC:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_AGC;
+    }
+    break;
+    case MODULE_CONTROL_MODE_MONO:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_MONO;
+    }
+    break;
+    case MODULE_CONTROL_MODE_PAN:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_PAN;
+    }
+    break;
+    case MODULE_CONTROL_MODE_MODULE_LEVEL:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_MODULE_LEVEL;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_1_2:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_1_2;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_1_2_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_1_2_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_3_4:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_3_4;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_3_4_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_3_4_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_5_6:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_5_6;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_5_6_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_5_6_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_7_8:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_7_8;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_7_8_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_7_8_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_9_10:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_9_10;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_9_10_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_9_10_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_11_12:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_11_12;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_11_12_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_11_12_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_13_14:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_13_14;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_13_14_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_13_14_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_15_16:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_15_16;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_15_16_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_15_16_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_17_18:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_17_18;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_17_18_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_17_18_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_19_20:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_19_20;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_19_20_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_19_20_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_21_22:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_21_22;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_21_22_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_21_22_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_23_24:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_23_24;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_23_24_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_23_24_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_25_26:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_25_26;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_25_26_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_25_26_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_27_28:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_27_28;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_27_28_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_27_28_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_29_30:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_29_30;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_29_30_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_29_30_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_31_32:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_31_32;
+    }
+    break;
+    case MODULE_CONTROL_MODE_BUSS_31_32_BALANCE:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_BUSS_31_32_BALANCE;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EQ_ON_OFF:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EQ_ON_OFF;
+    }
+    break;
+    case MODULE_CONTROL_MODE_PHANTOM_ON_OFF:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_PHANTOM_ON_OFF;
+    }
+    break;
+    case MODULE_CONTROL_MODE_PAD_ON_OFF:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_PAD_ON_OFF;
+    }
+    break;
+    case MODULE_CONTROL_MODE_AGC_THRESHOLD:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_AGC_THRESHOLD;
+    }
+    break;
+    case MODULE_CONTROL_MODE_EXPANDER_THRESHOLD:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_EXP_THRESHOLD;
+    }
+    break;
+    case MODULE_CONTROL_MODE_MODULE_PRESET:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_PROCESSING_PRESET;
+    }
+    break;
+    case MODULE_CONTROL_MODE_INSERT_ON_OFF:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_INSERT_ON_OFF;
+    }
+    break;
+    case MODULE_CONTROL_MODE_DYNAMICS_ON_OFF:
+    {
+      FunctionNr |= CONSOLE_FUNCTION_CONTROL_MODE_DYNAMICS_ON_OFF;
     }
     break;
   }
+
   return FunctionNr;
 }
 
@@ -17611,23 +17676,13 @@ void DoAxum_UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode)
 
 void DoAxum_UpdateMasterControlMode(int ControlMode)
 {
-  unsigned int FunctionNrToSent = 0x04000000;
-
-  if (AxumData.MasterControlMode[0] == ControlMode)
+  for (int cntConsole=0; cntConsole<4; cntConsole++)
   {
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
-  }
-  if (AxumData.MasterControlMode[1] == ControlMode)
-  {
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
-  }
-  if (AxumData.MasterControlMode[2] == ControlMode)
-  {
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
-  }
-  if (AxumData.MasterControlMode[3] == ControlMode)
-  {
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
+    if (AxumData.MasterControlMode[cntConsole] == ControlMode)
+    {
+      unsigned int FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MASTER_CONTROL);
+    }
   }
 }
 

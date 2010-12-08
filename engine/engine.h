@@ -559,7 +559,8 @@ int AdjustModuleSource(int CurrentSource, int Offset, unsigned char Pool);
 int AdjustModulePreset(int CurrentPreset, int Offset, unsigned char Pool);
 void GetPresetLabel(int PresetNr, char *TextString, int MaxLength);
 void GetConsolePresetLabel(unsigned int ConsolePresetNr, char *TextString, int MaxLength);
-unsigned int GetFunctionNrFromControlMode(int ControlNr);
+int GetControlModeFromConsoleFunctionNr(unsigned int CheckFunctionNr);
+unsigned int GetConsoleFunctionNrFromControlMode(unsigned int ConsoleNr);
 int SourceActive(unsigned int InputSourceNr);
 unsigned char ModulePresetActive(int ModuleNr, unsigned char PresetNr);
 unsigned char GetPresetNrFromFunctionNr(unsigned int FunctionNr);
@@ -573,7 +574,7 @@ void ModeControllerSetLabel(unsigned int SensorReceiveFunctionNr, unsigned int M
 //Master mode controller implementtion functions
 void MasterModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
 void MasterModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsigned char type, mbn_data data, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
-void MasterModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void MasterModeControllerSetData(unsigned int ConsoleNr, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
 
 //The DoAxum functions also may sent MambaNet data
 void DoAxum_BussReset(int BussNr);

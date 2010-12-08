@@ -599,7 +599,7 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
   return 1;
 }
 
-int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsigned char console, unsigned char take_source_a)
+int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsigned int console, unsigned char take_source_a)
 {
   char str[4][32];
   const char *params[4];
@@ -1159,7 +1159,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
   return 1;
 }
 
-int db_read_buss_config(unsigned char first_buss, unsigned char last_buss, unsigned char console)
+int db_read_buss_config(unsigned char first_buss, unsigned char last_buss, unsigned int console)
 {
   char str[4][32];
   const char *params[4];
@@ -1222,11 +1222,11 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss, unsig
 
       SetAxum_BussMasterLevels();
 
-      FunctionNrToSent = 0x04000000;
-      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
-      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
-      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
-      CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
+      for (int cntConsole=0; cntConsole<4; cntConsole++)
+      {
+        FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+        CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MASTER_CONTROL);
+      }
 
       for (int cntModule=0; cntModule<128; cntModule++)
       {
@@ -1250,7 +1250,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss, unsig
   return 1;
 }
 
-int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last_mon_buss, unsigned char console)
+int db_read_monitor_buss_config(unsigned char first_mon_buss, unsigned char last_mon_buss, unsigned int console)
 {
   char str[4][32];
   const char *params[4];
@@ -1565,12 +1565,11 @@ int db_read_global_config(unsigned char startup)
       CheckObjectsToSent(FunctionNrToSent | DESTINATION_FUNCTION_LEVEL);
     }
 
-    unsigned int FunctionNrToSent = 0x04000000;
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_1);
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_2);
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_3);
-    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_MASTER_CONTROL_4);
-
+    for (int cntConsole=0; cntConsole<4; cntConsole++)
+    {
+      unsigned int FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MASTER_CONTROL);
+    }
   }
   PQclear(qres);
 
@@ -3275,7 +3274,7 @@ void db_event_address_user_level(char myself, char *arg)
 void db_event_login(char myself, char *arg)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  unsigned char console;
+  unsigned int console;
   unsigned int user;
   char str[1][32];
   const char *params[1];
@@ -3287,7 +3286,7 @@ void db_event_login(char myself, char *arg)
   memset(Username, 0, 33);
   memset(Password, 0, 17);
 
-  if (sscanf(arg, "%hhd %d", &console, &user) != 2)
+  if (sscanf(arg, "%d %d", &console, &user) != 2)
   {
     log_write("login notify has wrong number of arguments");
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -3328,14 +3327,14 @@ void db_event_login(char myself, char *arg)
 void db_event_write(char myself, char *arg)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  unsigned char console;
+  unsigned int console;
   unsigned int user;
   char str[1][32];
   const char *params[1];
   int cntParams;
   int cntRow;
 
-  if (sscanf(arg, "%hhd %d", &console, &user) != 2)
+  if (sscanf(arg, "%d %d", &console, &user) != 2)
   {
     log_write("write notify has wrong number of arguments");
     LOG_DEBUG("[%s] leave with error", __func__);
@@ -3367,9 +3366,9 @@ void db_event_write(char myself, char *arg)
   }
   PQclear(qres);
 
-  unsigned int FunctionNrToSend = 0x04000000;
-  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_USER_1+console));
-  CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_CHIPCARD_PASS_1+console));
+  unsigned int FunctionNrToSend = 0x03000000 | (console<<12);
+  CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_CHIPCARD_USER);
+  CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_CHIPCARD_PASS);
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
@@ -3392,7 +3391,7 @@ void db_event_src_pool_changed(char myself, char *arg)
   LOG_DEBUG("[%s] leave", __func__);
 }
 
-int db_read_user(unsigned char console, char *user, char *pass)
+int db_read_user(unsigned int console, char *user, char *pass)
 {
   char str[3][33];
   const char *params[3];
@@ -3451,11 +3450,11 @@ int db_read_user(unsigned char console, char *user, char *pass)
     AxumData.SourcePool[console] = source_pool[console];
     AxumData.PresetPool[console] = preset_pool[console];
 
-    unsigned int FunctionNrToSend = 0x04000000;
-    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_PASS_1+console));
-    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_USER_1+console));
-    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_UPDATE_PASS_1+console));
-    CheckObjectsToSent(FunctionNrToSend | (GLOBAL_FUNCTION_USER_LEVEL_1+console));
+    unsigned int FunctionNrToSend = 0x03000000 | (console<<12);
+    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);
+    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER);
+    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_PASS);
+    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
 
     if (console_preset[console])
     {
@@ -3474,7 +3473,7 @@ int db_read_user(unsigned char console, char *user, char *pass)
   return user_level[console];
 }
 
-int db_update_account(unsigned char console, char *user, char *pass)
+int db_update_account(unsigned int console, char *user, char *pass)
 {
   char str[2][33];
   const char *params[2];
