@@ -3465,8 +3465,8 @@ int db_read_user(unsigned int console, char *user, char *pass)
 
     if (active_user)
     {
-      strncpy(AxumData.ConsoleData[console].Username, user, 32);
-      strncpy(AxumData.ConsoleData[console].Password, pass, 16);
+      strncpy(AxumData.ConsoleData[console].ActiveUsername, user, 32);
+      strncpy(AxumData.ConsoleData[console].ActivePassword, pass, 16);
       AxumData.ConsoleData[console].UserLevel = user_level[console];
       AxumData.ConsoleData[console].SourcePool = source_pool[console];
       AxumData.ConsoleData[console].PresetPool = preset_pool[console];
@@ -3474,6 +3474,7 @@ int db_read_user(unsigned int console, char *user, char *pass)
       AxumData.ConsoleData[console].ConsolePreset = console_preset[console];
 
       db_update_account(console, user, pass);
+
       log_write("User '%s' logged on at console %d", user, console+1);
 
       if ((console_preset[console]) && (console_preset_load[console]))

@@ -4297,37 +4297,41 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     }
                     else
                     { //Send user/pass idle
-                      char user[33] = "";
-                      char pass[17] = "";
-
                       if (AxumData.ConsoleData[ConsoleNr].LogoutToIdle)
                       {
-                        unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
-                        memset(AxumData.ConsoleData[ConsoleNr].Username, 0, 32);
-                        memset(AxumData.ConsoleData[ConsoleNr].Password, 0, 16);
-                        OnlineNodeInformationElement->Account.UsernameReceived = 0;
-                        OnlineNodeInformationElement->Account.PasswordReceived = 0;
-                        memset(OnlineNodeInformationElement->Account.Username, 0, 32);
-                        memset(OnlineNodeInformationElement->Account.Password, 0, 16);
-                        //Idle, source/preset pool A
-                        AxumData.ConsoleData[ConsoleNr].UserLevel = 0;
-                        AxumData.ConsoleData[ConsoleNr].SourcePool = 0;
-                        AxumData.ConsoleData[ConsoleNr].PresetPool = 0;
-                        AxumData.ConsoleData[ConsoleNr].LogoutToIdle = 0;
-                        AxumData.ConsoleData[ConsoleNr].ConsolePreset = 0;
+                        if ((strncmp(AxumData.ConsoleData[ConsoleNr].ActiveUsername, OnlineNodeInformationElement->Account.Username, 32) == 0) &&
+                            (strncmp(AxumData.ConsoleData[ConsoleNr].ActivePassword, OnlineNodeInformationElement->Account.Password, 32) == 0))
+                        {
+                          unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                          memset(AxumData.ConsoleData[ConsoleNr].Username, 0, 32);
+                          memset(AxumData.ConsoleData[ConsoleNr].Password, 0, 16);
+                          memset(AxumData.ConsoleData[ConsoleNr].ActiveUsername, 0, 32);
+                          memset(AxumData.ConsoleData[ConsoleNr].ActivePassword, 0, 16);
+                          //Idle, source/preset pool A
+                          AxumData.ConsoleData[ConsoleNr].UserLevel = 0;
+                          AxumData.ConsoleData[ConsoleNr].SourcePool = 0;
+                          AxumData.ConsoleData[ConsoleNr].PresetPool = 0;
+                          AxumData.ConsoleData[ConsoleNr].LogoutToIdle = 0;
+                          AxumData.ConsoleData[ConsoleNr].ConsolePreset = 0;
 
-                        CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER_PASS));
-                        CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER));
-                        CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_PASS));
-                        CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_USER_LEVEL));
+                          CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER_PASS));
+                          CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER));
+                          CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_PASS));
+                          CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_USER_LEVEL));
 
 
-                        db_lock(1);
-                        db_update_account(ConsoleNr, user, pass);
-                        db_lock(0);
+                          db_lock(1);
+                          db_update_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].ActiveUsername, AxumData.ConsoleData[ConsoleNr].ActivePassword);
+                          db_lock(0);
+                        }
                       }
+                      OnlineNodeInformationElement->Account.UsernameReceived = 0;
+                      OnlineNodeInformationElement->Account.PasswordReceived = 0;
+                      memset(OnlineNodeInformationElement->Account.Username, 0, 32);
+                      memset(OnlineNodeInformationElement->Account.Password, 0, 16);
+
                       db_lock(1);
-                      db_update_chipcard_account(ConsoleNr, user, pass);
+                      db_update_chipcard_account(ConsoleNr, OnlineNodeInformationElement->Account.Username, OnlineNodeInformationElement->Account.Password);
                       db_lock(0);
                     }
                   }
@@ -4352,7 +4356,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                       db_lock(1);
                       db_read_user(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
-                      db_update_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
+                      db_update_chipcard_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
                       db_lock(0);
                     }
 
@@ -4381,7 +4385,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                       db_lock(1);
                       db_read_user(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
-                      db_update_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
+                      db_update_chipcard_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
                       db_lock(0);
                     }
 
@@ -4432,6 +4436,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER));
                     CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_PASS));
                     CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_USER_LEVEL));
+
+                    db_read_user(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
                   }
                   break;
                 }
@@ -6124,7 +6130,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
                   db_lock(1);
                   db_read_user(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
-                  db_update_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
+                  db_update_chipcard_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
                   db_lock(0);
                 }
                 unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
@@ -6145,7 +6151,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
                   db_lock(1);
                   db_read_user(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
-                  db_update_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
+                  db_update_chipcard_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].Username, AxumData.ConsoleData[ConsoleNr].Password);
                   db_lock(0);
                 }
 
@@ -15710,6 +15716,8 @@ void initialize_axum_data_struct()
     AxumData.ConsoleData[cntConsole].SelectedDestination = 0;
     memset(AxumData.ConsoleData[cntConsole].Username, 0, 33);
     memset(AxumData.ConsoleData[cntConsole].Password, 0, 17);
+    memset(AxumData.ConsoleData[cntConsole].ActiveUsername, 0, 33);
+    memset(AxumData.ConsoleData[cntConsole].ActivePassword, 0, 17);
     memset(AxumData.ConsoleData[cntConsole].UsernameToWrite, 0, 33);
     memset(AxumData.ConsoleData[cntConsole].PasswordToWrite, 0, 17);
     AxumData.ConsoleData[cntConsole].UserLevel = 0;

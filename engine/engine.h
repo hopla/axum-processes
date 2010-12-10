@@ -345,6 +345,8 @@ typedef struct
   int MasterControlMode;
   char Username[33];
   char Password[17];
+  char ActiveUsername[33];
+  char ActivePassword[17];
   char UsernameToWrite[33];
   char PasswordToWrite[17];
   unsigned char UserLevel;
