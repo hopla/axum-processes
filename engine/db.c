@@ -2289,7 +2289,13 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
           sensor_rcv_func->PreviousLastChangedTime = 0;
           sensor_rcv_func->TimeBeforeMomentary = DEFAULT_TIME_BEFORE_MOMENTARY;
           MakeObjectListPerFunction(sensor_rcv_func->FunctionNr);
-          CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
+
+          if (((sensor_rcv_func->FunctionNr&0xFF000FFF) != (0x03000000 | CONSOLE_FUNCTION_CHIPCARD_USER)) &&
+              ((sensor_rcv_func->FunctionNr&0xFF000FFF) != (0x03000000 | CONSOLE_FUNCTION_CHIPCARD_PASS))
+             )
+          {
+            CheckObjectsToSent(sensor_rcv_func->FunctionNr, node_info->MambaNetAddress);
+          }
 
           if (((sensor_rcv_func->FunctionNr&0xFF000FFF) == (0x02000000 | MONITOR_BUSS_FUNCTION_SPEAKER_LEVEL)) ||
               ((sensor_rcv_func->FunctionNr&0xFF000FFF) == (0x02000000 | MONITOR_BUSS_FUNCTION_PHONES_LEVEL)))
