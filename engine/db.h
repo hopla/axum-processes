@@ -36,6 +36,7 @@ int db_update_slot_config_input_ch_cnt(unsigned long int addr, unsigned char cnt
 int db_update_slot_config_output_ch_cnt(unsigned long int addr, unsigned char cnt);
 int db_empty_slot_config();
 int db_update_account(unsigned int console, char *user, char *pass);
+int db_update_chipcard_account(unsigned int console, char *user, char *pass);
 
 void db_lock(int);
 void db_processnotifies();

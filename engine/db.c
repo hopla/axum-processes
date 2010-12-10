@@ -3398,10 +3398,14 @@ int db_read_user(unsigned int console, char *user, char *pass)
   int cntParams;
   int cntRow;
   int cntField;
+  char active_user;
+  char logout_to_idle;
   char user_level[4] = {0,0,0,0};
   int console_preset[4] = {0,0,0,0};
   int source_pool[4] = {0,0,0,0};
   int preset_pool[4] = {0,0,0,0};
+  char console_preset_load[4] = {0,0,0,0};
+  int ReturnValue = -1;
 
   LOG_DEBUG("[%s] enter", __func__);
 
@@ -3413,10 +3417,12 @@ int db_read_user(unsigned int console, char *user, char *pass)
   strncpy(str[0], user, 32);
   strncpy(str[1], pass, 16);
 
-  PGresult *qres = sql_exec("SELECT console1_user_level, console2_user_level, console3_user_level, console4_user_level, \
-                                    console1_preset, console2_preset, console3_preset, console4_preset,                 \
-                                    console1_sourcepool, console2_sourcepool, console3_sourcepool, console4_sourcepool, \
-                                    console1_presetpool, console2_presetpool, console3_presetpool, console4_presetpool  \
+  PGresult *qres = sql_exec("SELECT active, logout_to_idle,                                                                         \
+                                    console1_user_level, console2_user_level, console3_user_level, console4_user_level,     \
+                                    console1_preset, console2_preset, console3_preset, console4_preset,                     \
+                                    console1_preset_load, console2_preset_load, console3_preset_load, console4_preset_load, \
+                                    console1_sourcepool, console2_sourcepool, console3_sourcepool, console4_sourcepool,     \
+                                    console1_presetpool, console2_presetpool, console3_presetpool, console4_presetpool      \
                              FROM users WHERE username=$1 AND password=$2", 1, 2, params);
   if (qres == NULL)
   {
@@ -3427,6 +3433,9 @@ int db_read_user(unsigned int console, char *user, char *pass)
   if (PQntuples(qres) == 1)
   {
     cntField = 0;
+    active_user = strcmp(PQgetvalue(qres, 0, cntField++), "f");
+    logout_to_idle = strcmp(PQgetvalue(qres, 0, cntField++), "f");
+
     for (cntRow=0; cntRow<4; cntRow++)
     {
       sscanf(PQgetvalue(qres, 0, cntField++), "%hhd", &user_level[cntRow]);
@@ -3437,6 +3446,10 @@ int db_read_user(unsigned int console, char *user, char *pass)
     }
     for (cntRow=0; cntRow<4; cntRow++)
     {
+      console_preset_load[cntRow] = strcmp(PQgetvalue(qres, 0, cntField++), "f");
+    }
+    for (cntRow=0; cntRow<4; cntRow++)
+    {
       sscanf(PQgetvalue(qres, 0, cntField++), "%d", &source_pool[cntRow]);
     }
     for (cntRow=0; cntRow<4; cntRow++)
@@ -3444,53 +3457,91 @@ int db_read_user(unsigned int console, char *user, char *pass)
       sscanf(PQgetvalue(qres, 0, cntField++), "%d", &preset_pool[cntRow]);
     }
 
-    strncpy(AxumData.ConsoleData[console].Username, user, 32);
-    strncpy(AxumData.ConsoleData[console].Password, pass, 16);
-    AxumData.ConsoleData[console].UserLevel = user_level[console];
-    AxumData.ConsoleData[console].SourcePool = source_pool[console];
-    AxumData.ConsoleData[console].PresetPool = preset_pool[console];
-
-    unsigned int FunctionNrToSend = 0x03000000 | (console<<12);
-    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER_PASS);
-    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_USER);
-    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_UPDATE_PASS);
-    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_USER_LEVEL);
-
-    if (console_preset[console])
+    if (active_user)
     {
-      DoAxum_LoadConsolePreset(console_preset[console], 0, 0);
+      strncpy(AxumData.ConsoleData[console].Username, user, 32);
+      strncpy(AxumData.ConsoleData[console].Password, pass, 16);
+      AxumData.ConsoleData[console].UserLevel = user_level[console];
+      AxumData.ConsoleData[console].SourcePool = source_pool[console];
+      AxumData.ConsoleData[console].PresetPool = preset_pool[console];
+      AxumData.ConsoleData[console].LogoutToIdle = logout_to_idle;
+      AxumData.ConsoleData[console].ConsolePreset = console_preset[console];
+
+      db_update_account(console, user, pass);
+      log_write("User '%s' logged on at console %d", user, console+1);
+
+      if ((console_preset[console]) && (console_preset_load[console]))
+      {
+        DoAxum_LoadConsolePreset(console_preset[console], 0, 0);
+        log_write("Load console preset %d", console_preset[console]);
+      }
+
+      ReturnValue = 1;
     }
-    log_write("User '%s' logged on at console %d", user, console+1);
+    else
+    {
+      log_write("User '%s' tried to on at console %d but isn't active", user, console+1);
+      ReturnValue = 0;
+    }
   }
   else
   {
     log_write("User '%s' not found (pass: '%s', console %d)", user, pass, console+1);
+    ReturnValue = 0;
   }
   PQclear(qres);
 
   LOG_DEBUG("[%s] leave", __func__);
 
-  return user_level[console];
+  return ReturnValue;
 }
 
 int db_update_account(unsigned int console, char *user, char *pass)
 {
-  char str[2][33];
-  const char *params[2];
+  char str[3][33];
+  const char *params[3];
   int cntParams;
-  char query[1024];
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  for (cntParams=0; cntParams<2; cntParams++)
+  for (cntParams=0; cntParams<3; cntParams++)
   {
     params[cntParams] = (const char *)str[cntParams];
   }
   strncpy(str[0], user, 32);
   strncpy(str[1], pass, 16);
+  sprintf(str[2], "%d", console+1);
 
-  sprintf(query, "UPDATE global_config SET username%d=$1, password%d=$2", console+1, console+1);
-  PGresult *qres = sql_exec(query, 0, 2, params);
+  PGresult *qres = sql_exec("UPDATE console_config SET username=$1, password=$2 WHERE number=$3", 0, 3, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
+}
+
+int db_update_chipcard_account(unsigned int console, char *user, char *pass)
+{
+  char str[3][33];
+  const char *params[3];
+  int cntParams;
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<3; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+  strncpy(str[0], user, 32);
+  strncpy(str[1], pass, 16);
+  sprintf(str[2], "%d", console+1);
+
+  PGresult *qres = sql_exec("UPDATE console_config SET chipcard_username=$1, chipcard_password=$2 WHERE number=$3", 0, 3, params);
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);

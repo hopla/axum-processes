@@ -350,6 +350,8 @@ typedef struct
   unsigned char UserLevel;
   unsigned char SourcePool;
   unsigned char PresetPool;
+  unsigned char LogoutToIdle;
+  unsigned char ConsolePreset;
 
   unsigned char DotCountUpDown;
   unsigned char ProgramEndTimeEnable;
