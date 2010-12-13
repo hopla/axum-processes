@@ -56,6 +56,7 @@ struct sql_notify notifies[] = {
   { (char *)"login",                                  db_event_login},
   { (char *)"write",                                  db_event_write},
   { (char *)"src_pool_changed",                       db_event_src_pool_changed},
+  { (char *)"console_config_changed",                 db_event_console_config_changed},
 };
 
 double read_minmax(char *mambanet_minmax)
@@ -77,7 +78,7 @@ double read_minmax(char *mambanet_minmax)
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 24, notifies);
+  sql_open(dbstr, 25, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -3421,6 +3422,94 @@ void db_event_src_pool_changed(char myself, char *arg)
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_console_config_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned int number;
+
+  if (sscanf(arg, "%d", &number) != 1)
+  {
+    log_write("console_config notify has wrong number of arguments");
+    LOG_DEBUG("[%s] leave with error", __func__);
+  }
+
+  db_read_console_config(number);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+int db_read_console_config(unsigned int console)
+{
+  char str[1][32];
+  const char *params[1];
+  int cntParams;
+  int PETEnable = 0;
+  int cntField = 0;
+  int hours, minutes, seconds;
+  unsigned int FunctionNrToSent = 0x03000000 | ((console-1)<<12);
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<1; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%d", console);
+
+  PGresult *qres = sql_exec("SELECT program_end_time_enable, program_end_time FROM console_config WHERE number=$1", 1, 1, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+
+  cntField = 0;
+  PETEnable = strcmp(PQgetvalue(qres, 0, cntField++), "f");
+  if (AxumData.ConsoleData[console-1].ProgramEndTimeEnable != PETEnable)
+  {
+    AxumData.ConsoleData[console-1].ProgramEndTimeEnable = PETEnable;
+    CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME_ENABLE);
+  }
+
+  char *PETString = PQgetvalue(qres, 0, cntField++);
+
+  if (sscanf(PETString, "%02d:%02d:%02d", &hours, &minutes, &seconds) == 3)
+  {
+    if (AxumData.ConsoleData[console-1].ProgramEndTimeHours != hours)
+    {
+      AxumData.ConsoleData[console-1].ProgramEndTimeHours = hours;
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME_HOURS);
+    }
+    if (AxumData.ConsoleData[console-1].ProgramEndTimeMinutes != minutes)
+    {
+      AxumData.ConsoleData[console-1].ProgramEndTimeMinutes = minutes;
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME_MINUTES);
+    }
+    if (AxumData.ConsoleData[console-1].ProgramEndTimeSeconds != seconds)
+    {
+      AxumData.ConsoleData[console-1].ProgramEndTimeSeconds = seconds;
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME_SECONDS);
+    }
+  }
+  else
+  {
+    log_write("Program end time '%s' in database (console_config) as wrong format!", PETString);
+    PQclear(qres);
+    return 0;
+  }
+
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
 }
 
 int db_read_user(unsigned int console, char *user, char *pass)
