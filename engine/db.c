@@ -3286,11 +3286,6 @@ void db_event_login(char myself, char *arg)
   const char *params[1];
   int cntParams;
   int cntRow;
-  char Username[33];
-  char Password[17];
-
-  memset(Username, 0, 33);
-  memset(Password, 0, 17);
 
   if (sscanf(arg, "%d %d", &console, &user) != 2)
   {
@@ -3299,33 +3294,64 @@ void db_event_login(char myself, char *arg)
   }
   console--;
 
-  for (cntParams=0; cntParams<1; cntParams++)
-  {
-    params[cntParams] = (const char *)str[cntParams];
+  if (user == 0)
+  { //logout
+    log_write("Logout via webserver on console %d", console+1);
+
+    unsigned int FunctionNrToSend = 0x03000000 | (console<<12);
+    memset(AxumData.ConsoleData[console].Username, 0, 32);
+    memset(AxumData.ConsoleData[console].Password, 0, 16);
+    memset(AxumData.ConsoleData[console].ActiveUsername, 0, 32);
+    memset(AxumData.ConsoleData[console].ActivePassword, 0, 16);
+    //Idle, source/preset pool A
+    AxumData.ConsoleData[console].UserLevel = 0;
+    AxumData.ConsoleData[console].SourcePool = 0;
+    AxumData.ConsoleData[console].PresetPool = 0;
+    AxumData.ConsoleData[console].LogoutToIdle = 0;
+    AxumData.ConsoleData[console].ConsolePreset = 0;
+
+    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER_PASS));
+    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER));
+    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_PASS));
+    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_USER_LEVEL));
+
+    db_update_account(console, AxumData.ConsoleData[console].ActiveUsername, AxumData.ConsoleData[console].ActivePassword);
   }
+  else
+  { //login
+    for (cntParams=0; cntParams<1; cntParams++)
+    {
+      params[cntParams] = (const char *)str[cntParams];
+    }
 
-  sprintf(str[0], "%d", user);
+    sprintf(str[0], "%d", user);
 
-  PGresult *qres = sql_exec("SELECT username, password  \
-                                    FROM users          \
-                                    WHERE number=$1", 1, 1, params);
-  if (qres == NULL)
-  {
-    LOG_DEBUG("[%s] leave with error", __func__);
-    return;
+    PGresult *qres = sql_exec("SELECT username, password  \
+                                      FROM users          \
+                                      WHERE number=$1", 1, 1, params);
+    if (qres == NULL)
+    {
+      LOG_DEBUG("[%s] leave with error", __func__);
+      return;
+    }
+    for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+    {
+      unsigned int cntField;
+
+      cntField = 0;
+      strncpy(AxumData.ConsoleData[console].Username, PQgetvalue(qres, cntRow, cntField++), 32);
+      strncpy(AxumData.ConsoleData[console].Password, PQgetvalue(qres, cntRow, cntField++), 16);
+    }
+    PQclear(qres);
+
+    db_read_user(console, AxumData.ConsoleData[console].Username, AxumData.ConsoleData[console].Password);
+
+    unsigned int FunctionNrToSend = 0x03000000 | (console<<12);
+    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER_PASS));
+    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER));
+    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_PASS));
+    CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_USER_LEVEL));
   }
-  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
-  {
-    unsigned int cntField;
-
-    cntField = 0;
-    strncpy(Username, PQgetvalue(qres, cntRow, cntField++), 32);
-    strncpy(Password, PQgetvalue(qres, cntRow, cntField++), 16);
-  }
-  PQclear(qres);
-
-  db_read_user(console, Username, Password);
-
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
 }
