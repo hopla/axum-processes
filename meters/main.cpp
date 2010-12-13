@@ -191,7 +191,7 @@ void init(int argc, char *argv[])
                                   MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 2");
   objects[cntObject++] = MBN_OBJ( (char *)"Main/Clock Label",
                                   MBN_DATATYPE_NODATA,
-                                  MBN_DATATYPE_OCTETS, 8, 0, 127, 20, "Mon. 2");
+                                  MBN_DATATYPE_OCTETS, 32, 0, 127, 20, "Mon. 2");
   objects[cntObject++] = MBN_OBJ( (char *)"Redlight 1",
                                   MBN_DATATYPE_NODATA,
                                   MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
@@ -486,8 +486,8 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
 		break;
 		case 1040:
 		{
-      strncpy(browser->Label[6], (char *)in.Octets, 8);
-      browser->Label[6][8] = 0;
+      strncpy(browser->Label[6], (char *)in.Octets, 32);
+      browser->Label[6][32] = 0;
 		}
 		break;
 		case 1041:

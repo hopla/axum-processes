@@ -56,8 +56,8 @@ public:
 
 	 double MeterData[10];
    double PhaseMeterData[2];
-   char Label[7][9];
-   char CurrentLabel[7][9];
+   char Label[7][33];
+   char CurrentLabel[7][33];
    bool OnAirState;
    bool CurrentOnAirState;
    bool RedlightState[8];
