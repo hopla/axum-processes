@@ -3482,19 +3482,16 @@ int db_read_console_config(unsigned int console)
     if (AxumData.ConsoleData[console-1].ProgramEndTimeHours != hours)
     {
       AxumData.ConsoleData[console-1].ProgramEndTimeHours = hours;
-      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
       CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME_HOURS);
     }
     if (AxumData.ConsoleData[console-1].ProgramEndTimeMinutes != minutes)
     {
       AxumData.ConsoleData[console-1].ProgramEndTimeMinutes = minutes;
-      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
       CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME_MINUTES);
     }
     if (AxumData.ConsoleData[console-1].ProgramEndTimeSeconds != seconds)
     {
       AxumData.ConsoleData[console-1].ProgramEndTimeSeconds = seconds;
-      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
       CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME_SECONDS);
     }
   }
@@ -3504,6 +3501,7 @@ int db_read_console_config(unsigned int console)
     PQclear(qres);
     return 0;
   }
+  CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
 
   PQclear(qres);
 

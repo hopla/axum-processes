@@ -4496,6 +4496,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                       unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                       CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_ENABLE);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
                     }
                   }
                   break;
@@ -4505,6 +4506,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                     unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                     CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_ENABLE);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
                   }
                   break;
                 }
@@ -10770,8 +10772,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 sprintf(LCDText, "xx:%02d:%02d", AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes, AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds);
               }
+              if (!AxumData.ConsoleData[ConsoleNr].ProgramEndTimeEnable)
+              {
+                sprintf(LCDText, "No end time!");
+              }
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, strlen(LCDText), data, 1);
             }
             break;
           }
