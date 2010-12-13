@@ -129,11 +129,13 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
     int EndTimeInSeconds = FEndTimeMinute*60 + FEndTimeSecond;
     if (FEndTimeHour<24)
     { //fixed our.
+      TimeInSeconds += FHour*3600;
       EndTimeInSeconds += FEndTimeHour*3600;
     }
 
     int TimeToEnd = EndTimeInSeconds-TimeInSeconds;
 
+    //Check zero crossings...
     if (FEndTimeHour>=24)
     { //Hourly
       if (TimeToEnd<=(15-3600))
@@ -141,22 +143,28 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
         TimeToEnd += 3600;
       }
     }
-
-    painter.save();
-    painter.rotate(6.0 * (FEndTimeMinute + FEndTimeSecond / 60.0));
-    painter.setPen(QPen(FEndTimeColor, FEndTimeWidth));
-
-    painter.drawLine(0, -100+FEndTimeWidth/2, 0, -100+FEndTimeLength);
-
-    if ((TimeToEnd>0) && (TimeToEnd<=15))
-    {
-      painter.drawArc(-100+FEndTimeWidth/2,-100+FEndTimeWidth/2, 200-FEndTimeWidth*2, 200-FEndTimeWidth*2, 90*16, (90*16*TimeToEnd)/15);
+    else
+    { //Fixed our
+      if (TimeToEnd<=(15-86400))
+      {
+        TimeToEnd += 86400;
+      }
     }
-    painter.restore();
 
-    if ((FEndTimeHour<24) && (TimeToEnd<0))
+    //If not endtime passed or hourly do paint...
+    if (!((FEndTimeHour<24) && (TimeToEnd<0)))
     {
-      FEndTime = false;
+      painter.save();
+      painter.rotate(6.0 * (FEndTimeMinute + FEndTimeSecond / 60.0));
+      painter.setPen(QPen(FEndTimeColor, FEndTimeWidth));
+
+      painter.drawLine(0, -100+FEndTimeWidth/2, 0, -100+FEndTimeLength);
+
+      if ((TimeToEnd>0) && (TimeToEnd<=15))
+      {
+        painter.drawArc(-100+FEndTimeWidth/2,-100+FEndTimeWidth/2, 200-FEndTimeWidth*2, 200-FEndTimeWidth*2, 90*16, (90*16*TimeToEnd)/15);
+      }
+      painter.restore();
     }
   }
 
