@@ -2215,7 +2215,7 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
                              JOIN templates t ON (a.id).man = t.man_id AND (a.id).prod = t.prod_id AND a.firm_major = t.firm_major                                                         \
                              LEFT JOIN node_config n ON t.number = n.object AND a.addr=n.addr                                                                                              \
                              LEFT JOIN functions f ON (n.func).type = (f.func).type AND (n.func).func = (f.func).func AND ((f.rcv_type = t.sensor_type) OR (f.xmt_type = t.actuator_type)) \
-                             WHERE a.addr=$1 AND n.object>=$2 AND n.object<=$3 AND n.firm_major=$4", 1, 4, params);
+                             WHERE a.addr=$1 AND n.object>=$2 AND n.object<$3 AND n.firm_major=$4", 1, 4, params);
   if (qres == NULL)
   {
     delete[] OldFunctions;
