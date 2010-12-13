@@ -74,6 +74,8 @@ public:
 
    bool ProgramEndTimeEnabled;
    bool CurrentProgramEndTimeEnabled;
+   unsigned char ProgramEndHour;
+   unsigned char CurrentProgramEndHour;
    unsigned char ProgramEndMinute;
    unsigned char CurrentProgramEndMinute;
    unsigned char ProgramEndSecond;

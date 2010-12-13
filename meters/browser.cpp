@@ -129,6 +129,8 @@ Browser::Browser(QWidget *parent)
 
   ProgramEndTimeEnabled = false;
   CurrentProgramEndTimeEnabled = false;
+  ProgramEndHour = 0;
+  CurrentProgramEndHour = 0;
   ProgramEndMinute = 0;
   CurrentProgramEndMinute = 0;
   ProgramEndSecond = 0;
@@ -586,6 +588,12 @@ void Browser::MeterRelease()
   {
     NewDNRAnalogClock->setSecondDotsCountDown(CountDown);
     CurrentCountDown = CountDown;
+  }
+
+  if (ProgramEndHour != CurrentProgramEndHour)
+  {
+    NewDNRAnalogClock->setEndTimeHour(ProgramEndHour);
+    CurrentProgramEndHour = ProgramEndHour;
   }
 
   if (ProgramEndMinute != CurrentProgramEndMinute)
