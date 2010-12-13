@@ -357,6 +357,7 @@ typedef struct
 
   unsigned char DotCountUpDown;
   unsigned char ProgramEndTimeEnable;
+  unsigned char ProgramEndTimeHours;
   unsigned char ProgramEndTimeMinutes;
   unsigned char ProgramEndTimeSeconds;
   float CountDownTimer;

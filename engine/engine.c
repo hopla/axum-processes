@@ -4516,19 +4516,45 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 {
                   case MBN_DATATYPE_OCTETS:
                   {
+                    unsigned char Hours;
                     unsigned char Minutes;
                     unsigned char Seconds;
 
-                    if (sscanf((char *)data.Octets, "%02hhd:%02hhd", &Minutes, &Seconds) == 2)
+                    if (sscanf((char *)data.Octets, "%02hhd:%02hhd:%02hhd", &Hours, &Minutes, &Seconds) == 2)
                     {
+                      AxumData.ConsoleData[ConsoleNr].ProgramEndTimeHours = Hours;
                       AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes = Minutes;
                       AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds = Seconds;
 
                       unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
                       CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
+                      CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_HOURS);
                       CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_MINUTES);
                       CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_SECONDS);
                     }
+                  }
+                  break;
+                }
+              }
+              break;
+              case CONSOLE_FUNCTION_PROGRAM_ENDTIME_HOURS:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_UINT:
+                  {
+                    if (data.UInt<23)
+                    {
+                      AxumData.ConsoleData[ConsoleNr].ProgramEndTimeHours = data.UInt;
+                    }
+                    else
+                    {
+                      AxumData.ConsoleData[ConsoleNr].ProgramEndTimeHours = 99;
+                    }
+
+                    unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME);
+                    CheckObjectsToSent(FunctionNrToSend | CONSOLE_FUNCTION_PROGRAM_ENDTIME_HOURS);
                   }
                   break;
                 }
@@ -10736,9 +10762,29 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "%02d:%02d", AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes, AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds);
+              if (AxumData.ConsoleData[ConsoleNr].ProgramEndTimeHours<24)
+              {
+                sprintf(LCDText, "%02d:%02d:%02d", AxumData.ConsoleData[ConsoleNr].ProgramEndTimeHours, AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes, AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds);
+              }
+              else
+              {
+                sprintf(LCDText, "xx:%02d:%02d", AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes, AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds);
+              }
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 5, data, 1);
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_PROGRAM_ENDTIME_HOURS:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_UINT:
+            {
+              data.UInt = AxumData.ConsoleData[ConsoleNr].ProgramEndTimeHours;
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
             }
             break;
           }
@@ -15727,6 +15773,7 @@ void initialize_axum_data_struct()
     AxumData.ConsoleData[cntConsole].ConsolePreset = 0;
     AxumData.ConsoleData[cntConsole].DotCountUpDown = 0;
     AxumData.ConsoleData[cntConsole].ProgramEndTimeEnable = 0;
+    AxumData.ConsoleData[cntConsole].ProgramEndTimeHours = 0;
     AxumData.ConsoleData[cntConsole].ProgramEndTimeMinutes = 0;
     AxumData.ConsoleData[cntConsole].ProgramEndTimeSeconds = 0;
     AxumData.ConsoleData[cntConsole].CountDownTimer = 0;

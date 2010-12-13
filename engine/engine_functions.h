@@ -661,8 +661,9 @@
 #define CONSOLE_FUNCTION_PROGRAM_ENDTIME_MINUTES            126
 #define CONSOLE_FUNCTION_PROGRAM_ENDTIME_SECONDS            127
 #define CONSOLE_FUNCTION_COUNT_DOWN_TIMER                   128
+#define CONSOLE_FUNCTION_PROGRAM_ENDTIME_HOURS              129
 
-#define NUMBER_OF_CONSOLE_FUNCTIONS                         129
+#define NUMBER_OF_CONSOLE_FUNCTIONS                         130
 #define NUMBER_OF_CONSOLES                                  4
 
 #define GLOBAL_FUNCTION_REDLIGHT_1                    0
