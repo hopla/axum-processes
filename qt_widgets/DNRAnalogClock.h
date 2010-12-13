@@ -33,11 +33,11 @@ class QDESIGNER_WIDGET_EXPORT DNRAnalogClock : public QWidget
     Q_PROPERTY(bool HourLines READ getHourLines WRITE setHourLines);
     Q_PROPERTY(int HourLinesLength READ getHourLinesLength WRITE setHourLinesLength);
     Q_PROPERTY(int HourLinesWidth READ getHourLinesWidth WRITE setHourLinesWidth);
-    Q_PROPERTY(QColor HourLinesColor READ getHourLinesColor WRITE setHourLinesColor);    
+    Q_PROPERTY(QColor HourLinesColor READ getHourLinesColor WRITE setHourLinesColor);
     Q_PROPERTY(bool MinuteLines READ getMinuteLines WRITE setMinuteLines);
     Q_PROPERTY(int MinuteLinesLength READ getMinuteLinesLength WRITE setMinuteLinesLength);
     Q_PROPERTY(int MinuteLinesWidth READ getMinuteLinesWidth WRITE setMinuteLinesWidth);
-    Q_PROPERTY(QColor MinuteLinesColor READ getMinuteLinesColor WRITE setMinuteLinesColor);    
+    Q_PROPERTY(QColor MinuteLinesColor READ getMinuteLinesColor WRITE setMinuteLinesColor);
     Q_PROPERTY(bool SecondDots READ getSecondDots WRITE setSecondDots);
     Q_PROPERTY(bool SecondDotsCountDown READ getSecondDotsCountDown WRITE setSecondDotsCountDown);
     Q_PROPERTY(int DotSize READ getDotSize WRITE setDotSize);
@@ -54,6 +54,7 @@ class QDESIGNER_WIDGET_EXPORT DNRAnalogClock : public QWidget
     Q_PROPERTY(bool EndTime READ getEndTime WRITE setEndTime);
     Q_PROPERTY(int EndTimeLength READ getEndTimeLength WRITE setEndTimeLength);
     Q_PROPERTY(int EndTimeWidth READ getEndTimeWidth WRITE setEndTimeWidth);
+    Q_PROPERTY(int EndTimeHour READ getEndTimeHour WRITE setEndTimeHour);
     Q_PROPERTY(int EndTimeMinute READ getEndTimeMinute WRITE setEndTimeMinute);
     Q_PROPERTY(int EndTimeSecond READ getEndTimeSecond WRITE setEndTimeSecond);
     Q_PROPERTY(QColor EndTimeColor READ getEndTimeColor WRITE setEndTimeColor);
@@ -64,28 +65,28 @@ class QDESIGNER_WIDGET_EXPORT DNRAnalogClock : public QWidget
 
 public:
     DNRAnalogClock(QWidget *parent = 0);
-    
+
     bool FHourLines;
     int FHourLinesLength;
     int FHourLinesWidth;
     QColor FHourLinesColor;
-    
+
     bool FMinuteLines;
     int FMinuteLinesLength;
     int FMinuteLinesWidth;
     QColor FMinuteLinesColor;
-    
+
     bool FSecondDots;
     bool FSecondDotsCountDown;
     int FDotSize;
     QColor FDotColor;
-    
+
     bool FHands;
     QColor FHourHandColor;
     int FHourHandBorder;
     int FHourHandLength;
     int FHourHandWidth;
-    
+
     QColor FMinuteHandColor;
     int FMinuteHandBorder;
     int FMinuteHandLength;
@@ -93,10 +94,10 @@ public:
 
     void setHourLines(bool NewHourLines);
     bool getHourLines();
-    
+
     void setHourLinesLength(int NewHourLinesLength);
     int getHourLinesLength();
-    
+
     void setHourLinesWidth(int NewHourLinesWidth);
     int getHourLinesWidth();
 
@@ -105,10 +106,10 @@ public:
 
     void setMinuteLines(bool NewMinuteLines);
     bool getMinuteLines();
-    
+
     void setMinuteLinesLength(int NewMinuteLinesLength);
     int getMinuteLinesLength();
-    
+
     void setMinuteLinesWidth(int NewMinuteLinesWidth);
     int getMinuteLinesWidth();
 
@@ -117,25 +118,25 @@ public:
 
     void setSecondDots(bool NewSecondDots);
     bool getSecondDots();
-    
+
     void setSecondDotsCountDown(bool NewSecondDotsCountDown);
     bool getSecondDotsCountDown();
 
     void setDotSize(int NewDotSize);
     int getDotSize();
-    
+
     void setDotColor(QColor NewDotColor);
     QColor getDotColor();
-    
+
     void setHands(bool NewHands);
     bool getHands();
-      
+
     void setHourHandColor(QColor NewHourHandColor);
     QColor getHourHandColor();
-    
+
     void setHourHandBorder(int NewHourHandBorder);
     int getHourHandBorder();
-    
+
     void setHourHandLength(int NewHourHandLength);
     int getHourHandLength();
 
@@ -153,22 +154,25 @@ public:
 
     void setMinuteHandWidth(int NewMinuteHandWidth);
     int getMinuteHandWidth();
-    
+
     void setEndTime(bool NewEndTime);
     bool getEndTime();
-    
+
     void setEndTimeLength(int NewEndTimeLength);
     int getEndTimeLength();
-    
+
     void setEndTimeWidth(int NewEndTimeWidth);
     int getEndTimeWidth();
-    
+
+    void setEndTimeHour(int NewEndTimeHour);
+    int getEndTimeHour();
+
     void setEndTimeMinute(int NewEndTimeMinute);
     int getEndTimeMinute();
-    
+
     void setEndTimeSecond(int NewEndTimeSecond);
     int getEndTimeSecond();
-    
+
     void setEndTimeColor(QColor NewEndTimeColor);
     QColor getEndTimeColor();
 
@@ -192,6 +196,7 @@ protected:
     bool FEndTime;
     int FEndTimeLength;
     int FEndTimeWidth;
+    int FEndTimeHour;
     int FEndTimeMinute;
     int FEndTimeSecond;
     QColor FEndTimeColor;

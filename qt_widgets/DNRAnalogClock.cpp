@@ -40,6 +40,7 @@ DNRAnalogClock::DNRAnalogClock(QWidget *parent)
     FEndTime = false;
     FEndTimeLength = 8;
     FEndTimeWidth = 2;
+    FEndTimeHour = 0;
     FEndTimeMinute = 0;
     FEndTimeSecond = 0;
     FEndTimeColor = QColor(255,0,0);
@@ -126,10 +127,19 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
   {
     int TimeInSeconds = FMinute*60+FSecond;
     int EndTimeInSeconds = FEndTimeMinute*60 + FEndTimeSecond;
+    if (FEndTimeHour<24)
+    { //fixed our.
+      EndTimeInSeconds += FEndTimeHour*3600;
+    }
+
     int TimeToEnd = EndTimeInSeconds-TimeInSeconds;
-    if (TimeToEnd<=(15-3600))
-    {
-      TimeToEnd += 3600;
+
+    if (FEndTimeHour>=24)
+    { //Hourly
+      if (TimeToEnd<=(15-3600))
+      {
+        TimeToEnd += 3600;
+      }
     }
 
     painter.save();
@@ -143,6 +153,11 @@ void DNRAnalogClock::paintEvent(QPaintEvent *)
       painter.drawArc(-100+FEndTimeWidth/2,-100+FEndTimeWidth/2, 200-FEndTimeWidth*2, 200-FEndTimeWidth*2, 90*16, (90*16*TimeToEnd)/15);
     }
     painter.restore();
+
+    if ((FEndTimeHour<24) && (TimeToEnd<0))
+    {
+      FEndTime = false;
+    }
   }
 
   if (FCountDownTime)
@@ -530,6 +545,20 @@ void DNRAnalogClock::setEndTimeWidth(int NewEndTimeWidth)
 int DNRAnalogClock::getEndTimeWidth()
 {
   return FEndTimeWidth;
+}
+
+void DNRAnalogClock::setEndTimeHour(int NewEndTimeHour)
+{
+  if (FEndTimeHour != NewEndTimeHour)
+  {
+    FEndTimeHour = NewEndTimeHour;
+    update();
+  }
+}
+
+int DNRAnalogClock::getEndTimeHour()
+{
+  return FEndTimeHour;
 }
 
 void DNRAnalogClock::setEndTimeMinute(int NewEndTimeMinute)
