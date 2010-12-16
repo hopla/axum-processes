@@ -10567,7 +10567,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "Buss %d", AxumData.ConsoleData[ConsoleNr].SelectedBuss);
+              sprintf(LCDText, "Buss %d", AxumData.ConsoleData[ConsoleNr].SelectedBuss+1);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -10587,7 +10587,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "Mon %d", AxumData.ConsoleData[ConsoleNr].SelectedMonitorBuss);
+              sprintf(LCDText, "Mon %d", AxumData.ConsoleData[ConsoleNr].SelectedMonitorBuss+1);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -10607,7 +10607,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "Src %d", AxumData.ConsoleData[ConsoleNr].SelectedSource);
+              sprintf(LCDText, "Src %d", AxumData.ConsoleData[ConsoleNr].SelectedSource+1);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -10627,7 +10627,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "Src %d", AxumData.ConsoleData[ConsoleNr].SelectedDestination);
+              sprintf(LCDText, "Src %d", AxumData.ConsoleData[ConsoleNr].SelectedDestination+1);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -18560,6 +18560,9 @@ void SetSelectedModule(unsigned char SelectNr, unsigned int NewModuleNr)
 
       FunctionNrToSent = ((NewModuleNr)<<12);
       CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_SELECT_1+SelectNr));
+
+      FunctionNrToSent = 0x03000000 | (SelectNr<<12);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MODULE_SELECT);
     }
   }
 }
@@ -18585,6 +18588,9 @@ void SetSelectedBuss(unsigned char SelectNr, unsigned int NewBussNr)
 
       FunctionNrToSent = 0x01000000 | ((NewBussNr)<<12);
       CheckObjectsToSent(FunctionNrToSent | (BUSS_FUNCTION_SELECT_1+SelectNr));
+
+      FunctionNrToSent = 0x03000000 | (SelectNr<<12);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_BUSS_SELECT);
     }
   }
 }
@@ -18610,6 +18616,9 @@ void SetSelectedMonitorBuss(unsigned char SelectNr, unsigned int NewMonitorBussN
 
       FunctionNrToSent = 0x02000000 | ((NewMonitorBussNr)<<12);
       CheckObjectsToSent(FunctionNrToSent | (MONITOR_BUSS_FUNCTION_SELECT_1+SelectNr));
+
+      FunctionNrToSent = 0x03000000 | (SelectNr<<12);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MONITOR_BUSS_SELECT);
     }
   }
 }
@@ -18635,6 +18644,9 @@ void SetSelectedSource(unsigned char SelectNr, unsigned int NewSourceNr)
 
       FunctionNrToSent = 0x05000000 | ((NewSourceNr)<<12);
       CheckObjectsToSent(FunctionNrToSent | (SOURCE_FUNCTION_SELECT_1+SelectNr));
+
+      FunctionNrToSent = 0x03000000 | (SelectNr<<12);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_SOURCE_SELECT);
     }
   }
 }
@@ -18660,6 +18672,9 @@ void SetSelectedDestination(unsigned char SelectNr, unsigned int NewDestinationN
 
       FunctionNrToSent = 0x06000000 | ((NewDestinationNr)<<12);
       CheckObjectsToSent(FunctionNrToSent | (DESTINATION_FUNCTION_SELECT_1+SelectNr));
+
+      FunctionNrToSent = 0x03000000 | (SelectNr<<12);
+      CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_DESTINATION_SELECT);
     }
   }
 }
