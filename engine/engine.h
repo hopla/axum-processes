@@ -477,6 +477,7 @@ typedef struct
   unsigned long PreviousLastChangedTime;
   int TimeBeforeMomentary;
   unsigned char ActiveInUserLevel[6];
+  unsigned char ChangedWhileSensorNotAllowed;
 } SENSOR_RECEIVE_FUNCTION_STRUCT;
 
 struct ONLINE_NODE_INFORMATION_STRUCT

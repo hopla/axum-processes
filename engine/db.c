@@ -37,6 +37,8 @@ extern AXUM_FUNCTION_INFORMATION_STRUCT *DestinationFunctions[NUMBER_OF_DESTINAT
 extern AXUM_FUNCTION_INFORMATION_STRUCT *GlobalFunctions[NUMBER_OF_GLOBAL_FUNCTIONS];
 extern AXUM_FUNCTION_INFORMATION_STRUCT *ConsoleFunctions[NUMBER_OF_CONSOLES][NUMBER_OF_CONSOLE_FUNCTIONS];
 
+extern ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationList;
+
 extern PGconn *sql_conn;
 
 struct sql_notify notifies[] = {
@@ -1828,6 +1830,7 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
       node_info->SensorReceiveFunction[cntObject].ActiveInUserLevel[3] = true;
       node_info->SensorReceiveFunction[cntObject].ActiveInUserLevel[4] = true;
       node_info->SensorReceiveFunction[cntObject].ActiveInUserLevel[5] = true;
+      node_info->SensorReceiveFunction[cntObject].ChangedWhileSensorNotAllowed = 0;
     }
   }
   PQclear(qres);
@@ -2160,8 +2163,6 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
   unsigned int *OldFunctions;
 
   LOG_DEBUG("[%s] enter", __func__);
-
-  log_write("node_config: %08X, %d-%d", node_info->MambaNetAddress, first_obj, last_obj);
 
   if (first_obj>last_obj)
   {
@@ -3778,6 +3779,23 @@ int db_read_user(unsigned int console, char *user, char *pass)
       db_update_account(console, user, pass);
 
       log_write("User '%s' logged on at console %d", user, console+1);
+
+      //Check all changed sensors which where not allowed
+      ONLINE_NODE_INFORMATION_STRUCT *node_info = OnlineNodeInformationList;
+      while (node_info != NULL)
+      {
+        for (int cntObject=0; cntObject<node_info->UsedNumberOfCustomObjects; cntObject++)
+        {
+          if (node_info->SensorReceiveFunction[cntObject].ChangedWhileSensorNotAllowed)
+          {
+            log_write("SensorChange while not allowed on node: 0x%08X, obj: %d, resend to actuator", node_info->MambaNetAddress, cntObject+1024);
+            CheckObjectsToSent(node_info->SensorReceiveFunction[cntObject].FunctionNr, node_info->MambaNetAddress);
+            node_info->SensorReceiveFunction[cntObject].ChangedWhileSensorNotAllowed = 0;
+          }
+        }
+        node_info = node_info->Next;
+      }
+
 
       if ((console_preset[console]) && (console_preset_load[console]))
       {

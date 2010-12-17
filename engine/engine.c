@@ -642,6 +642,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
         if (!SensorReceiveFunction->ActiveInUserLevel[AxumData.ConsoleData[ConsoleNr].UserLevel])
         {
           SensorAllowed = 0;
+          SensorReceiveFunction->ChangedWhileSensorNotAllowed = 1;
         }
       }
     }
@@ -17001,7 +17002,6 @@ void DoAxum_LoadConsolePreset(unsigned char PresetNr, bool SetAllObjects, bool D
     unsigned int FunctionNrToSent = 0x04000000;
     CheckObjectsToSent(FunctionNrToSent | (GLOBAL_FUNCTION_CONSOLE_PRESET_1+PresetNr-1));
   }
-
 }
 
 unsigned int NrOfObjectsAttachedToFunction(unsigned int FunctionNumberToCheck)
