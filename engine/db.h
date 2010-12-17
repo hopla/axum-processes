@@ -73,6 +73,7 @@ void db_event_login(char myself, char *arg);
 void db_event_write(char myself, char *arg);
 void db_event_src_pool_changed(char myself, char *arg);
 void db_event_console_config_changed(char myself, char *arg);
+void db_event_functions_changed(char myself, char *arg);
 
 
 #endif

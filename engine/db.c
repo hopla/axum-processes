@@ -29,6 +29,14 @@ extern DSP_HANDLER_STRUCT *dsp_handler;
 extern matrix_sources_struct matrix_sources;
 extern preset_pos_struct presets;
 
+extern AXUM_FUNCTION_INFORMATION_STRUCT *SourceFunctions[NUMBER_OF_SOURCES+4][NUMBER_OF_SOURCE_FUNCTIONS];
+extern AXUM_FUNCTION_INFORMATION_STRUCT *ModuleFunctions[NUMBER_OF_MODULES+4][NUMBER_OF_MODULE_FUNCTIONS];
+extern AXUM_FUNCTION_INFORMATION_STRUCT *BussFunctions[NUMBER_OF_BUSSES+4][NUMBER_OF_BUSS_FUNCTIONS];
+extern AXUM_FUNCTION_INFORMATION_STRUCT *MonitorBussFunctions[NUMBER_OF_MONITOR_BUSSES+4][NUMBER_OF_MONITOR_BUSS_FUNCTIONS];
+extern AXUM_FUNCTION_INFORMATION_STRUCT *DestinationFunctions[NUMBER_OF_DESTINATIONS+4][NUMBER_OF_DESTINATION_FUNCTIONS];
+extern AXUM_FUNCTION_INFORMATION_STRUCT *GlobalFunctions[NUMBER_OF_GLOBAL_FUNCTIONS];
+extern AXUM_FUNCTION_INFORMATION_STRUCT *ConsoleFunctions[NUMBER_OF_CONSOLES][NUMBER_OF_CONSOLE_FUNCTIONS];
+
 extern PGconn *sql_conn;
 
 struct sql_notify notifies[] = {
@@ -57,6 +65,7 @@ struct sql_notify notifies[] = {
   { (char *)"write",                                  db_event_write},
   { (char *)"src_pool_changed",                       db_event_src_pool_changed},
   { (char *)"console_config_changed",                 db_event_console_config_changed},
+  { (char *)"functions_changed",                      db_event_functions_changed},
 };
 
 double read_minmax(char *mambanet_minmax)
@@ -78,7 +87,7 @@ double read_minmax(char *mambanet_minmax)
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 25, notifies);
+  sql_open(dbstr, 26, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -3129,7 +3138,7 @@ void db_event_node_config_changed(char myself, char *arg)
   ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(addr);
   if (node_info == NULL)
   {
-    log_write("No node information for address: %08lX", addr);
+    log_write("[%s] No node information for address: %08lX", __func__, addr);
     LOG_DEBUG("[%s] leave with error", __func__);
     return;
   }
@@ -3155,7 +3164,7 @@ void db_event_defaults_changed(char myself, char *arg)
   ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(addr);
   if (node_info == NULL)
   {
-    log_write("No node information for address: %08lX", addr);
+    log_write("[%s] No node information for address: %08lX", __func__, addr);
     LOG_DEBUG("[%s] leave with error", __func__);
     return;
   }
@@ -3278,7 +3287,7 @@ void db_event_address_user_level(char myself, char *arg)
   ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(addr);
   if (node_info == NULL)
   {
-    log_write("No node information for address: %08lX", addr);
+    log_write("[%s] No node information for address: %08lX", __func__, addr);
     LOG_DEBUG("[%s] leave with error", __func__);
     return;
   }
@@ -3443,9 +3452,179 @@ void db_event_console_config_changed(char myself, char *arg)
   {
     log_write("console_config notify has wrong number of arguments");
     LOG_DEBUG("[%s] leave with error", __func__);
+    return;
   }
 
   db_read_console_config(number);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_functions_changed(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned int FunctionType;
+  unsigned int FunctionSeqNumber;
+  unsigned int Function;
+
+  if (sscanf(arg, "(%d,,%d)", &FunctionType, &Function) != 2)
+  {
+    log_write("console_config notify has wrong number of arguments");
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return;
+  }
+
+  //step through all objects and seqnumbers of this function
+  AXUM_FUNCTION_INFORMATION_STRUCT *WalkAxumFunctionInformationStruct = NULL;
+
+  switch (FunctionType)
+  {
+    case MODULE_FUNCTIONS:
+    {   //Module
+      for (FunctionSeqNumber=0; FunctionSeqNumber<NUMBER_OF_MODULES+4; FunctionSeqNumber++)
+      {
+        WalkAxumFunctionInformationStruct = ModuleFunctions[FunctionSeqNumber][Function];
+        while (WalkAxumFunctionInformationStruct != NULL)
+        {
+          ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(WalkAxumFunctionInformationStruct->MambaNetAddress);
+          if (node_info == NULL)
+          {
+            log_write("[%s] No node information for address: %08lX", __func__, WalkAxumFunctionInformationStruct->MambaNetAddress);
+          }
+          else
+          {
+            db_read_node_config(node_info, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ObjectNr);
+          }
+          WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+        }
+      }
+    }
+    break;
+    case BUSS_FUNCTIONS:
+    {   //Buss
+      for (FunctionSeqNumber=0; FunctionSeqNumber<NUMBER_OF_BUSSES+4; FunctionSeqNumber++)
+      {
+        WalkAxumFunctionInformationStruct = BussFunctions[FunctionSeqNumber][Function];
+        while (WalkAxumFunctionInformationStruct != NULL)
+        {
+          ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(WalkAxumFunctionInformationStruct->MambaNetAddress);
+          if (node_info == NULL)
+          {
+            log_write("[%s] No node information for address: %08lX", __func__, WalkAxumFunctionInformationStruct->MambaNetAddress);
+          }
+          else
+          {
+            db_read_node_config(node_info, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ObjectNr);
+          }
+          WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+        }
+      }
+    }
+    break;
+    case MONITOR_BUSS_FUNCTIONS:
+    {   //Monitor Buss
+      for (FunctionSeqNumber=0; FunctionSeqNumber<NUMBER_OF_MONITOR_BUSSES+4; FunctionSeqNumber++)
+      {
+        WalkAxumFunctionInformationStruct = MonitorBussFunctions[FunctionSeqNumber][Function];
+        while (WalkAxumFunctionInformationStruct != NULL)
+        {
+          ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(WalkAxumFunctionInformationStruct->MambaNetAddress);
+          if (node_info == NULL)
+          {
+            log_write("[%s] No node information for address: %08lX", __func__, WalkAxumFunctionInformationStruct->MambaNetAddress);
+          }
+          else
+          {
+            db_read_node_config(node_info, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ObjectNr);
+          }
+          WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+        }
+      }
+    }
+    break;
+    case CONSOLE_FUNCTIONS:
+    {
+      for (FunctionSeqNumber=0; FunctionSeqNumber<NUMBER_OF_CONSOLES; FunctionSeqNumber++)
+      {
+        WalkAxumFunctionInformationStruct = ConsoleFunctions[FunctionSeqNumber][Function];
+        while (WalkAxumFunctionInformationStruct != NULL)
+        {
+          ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(WalkAxumFunctionInformationStruct->MambaNetAddress);
+          if (node_info == NULL)
+          {
+            log_write("[%s] No node information for address: %08lX", __func__, WalkAxumFunctionInformationStruct->MambaNetAddress);
+          }
+          else
+          {
+            db_read_node_config(node_info, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ObjectNr);
+          }
+          WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+        }
+      }
+    }
+    break;
+    case GLOBAL_FUNCTIONS:
+    {   //Global
+      WalkAxumFunctionInformationStruct = GlobalFunctions[Function];
+      while (WalkAxumFunctionInformationStruct != NULL)
+      {
+        ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(WalkAxumFunctionInformationStruct->MambaNetAddress);
+        if (node_info == NULL)
+        {
+          log_write("[%s] No node information for address: %08lX", __func__, WalkAxumFunctionInformationStruct->MambaNetAddress);
+        }
+        else
+        {
+          db_read_node_config(node_info, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ObjectNr);
+        }
+        WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+      }
+    }
+    break;
+    case SOURCE_FUNCTIONS:
+    {   //Source
+      for (FunctionSeqNumber=0; FunctionSeqNumber<NUMBER_OF_SOURCES+4; FunctionSeqNumber++)
+      {
+        WalkAxumFunctionInformationStruct = SourceFunctions[FunctionSeqNumber][Function];
+        while (WalkAxumFunctionInformationStruct != NULL)
+        {
+          ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(WalkAxumFunctionInformationStruct->MambaNetAddress);
+          if (node_info == NULL)
+          {
+            log_write("[%s] No node information for address: %08lX", __func__, WalkAxumFunctionInformationStruct->MambaNetAddress);
+          }
+          else
+          {
+            db_read_node_config(node_info, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ObjectNr);
+          }
+          WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+        }
+      }
+    }
+    break;
+    case DESTINATION_FUNCTIONS:
+    {   //Destination
+      for (FunctionSeqNumber=0; FunctionSeqNumber<NUMBER_OF_DESTINATIONS+4; FunctionSeqNumber++)
+      {
+        WalkAxumFunctionInformationStruct = DestinationFunctions[FunctionSeqNumber][Function];
+        while (WalkAxumFunctionInformationStruct != NULL)
+        {
+          ONLINE_NODE_INFORMATION_STRUCT *node_info = GetOnlineNodeInformation(WalkAxumFunctionInformationStruct->MambaNetAddress);
+          if (node_info == NULL)
+          {
+            log_write("[%s] No node information for address: %08lX", __func__, WalkAxumFunctionInformationStruct->MambaNetAddress);
+          }
+          else
+          {
+            db_read_node_config(node_info, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ObjectNr);
+          }
+          WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+        }
+      }
+    }
+    break;
+  }
 
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
