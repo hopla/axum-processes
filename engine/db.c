@@ -2309,6 +2309,16 @@ int db_read_node_config(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned shor
               }
             }
           }
+          else if ((sensor_rcv_func->FunctionNr&0xFF000FFF) != (0x03000000 | CONSOLE_FUNCTION_CHIPCARD_CHANGE))
+          {
+            if (NrOfObjectsAttachedToFunction(sensor_rcv_func->FunctionNr) <= 1)
+            {
+              if (node_info->ObjectInformation[cntObject-1024].SensorDataType != MBN_DATATYPE_NODATA)
+              {
+                mbnGetSensorData(mbn, node_info->MambaNetAddress, cntObject, 1);
+              }
+            }
+          }
         }
         else
         { //Configuration turned off

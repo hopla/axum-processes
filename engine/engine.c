@@ -6144,6 +6144,87 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
             switch (FunctionNr)
             {
+              case CONSOLE_FUNCTION_CHIPCARD_CHANGE:
+              {
+                switch (type)
+                {
+                  case MBN_DATATYPE_STATE:
+                  {
+                    if (data.State)
+                    {
+                      OnlineNodeInformationElement->Account.UsernameReceived = 0;
+                      OnlineNodeInformationElement->Account.PasswordReceived = 0;
+
+                      for (int cntObject=1024; cntObject<OnlineNodeInformationElement->UsedNumberOfCustomObjects+1024; cntObject++)
+                      {
+                        SENSOR_RECEIVE_FUNCTION_STRUCT *ConnectedEngineFunction = &OnlineNodeInformationElement->SensorReceiveFunction[cntObject-1024];
+
+                        if ((int)ConnectedEngineFunction->FunctionNr != -1)
+                        {
+                          unsigned int EngineFunctionType = (ConnectedEngineFunction->FunctionNr>>24)&0xFF;
+                          unsigned int EngineFunctionSeqNr = (ConnectedEngineFunction->FunctionNr>>12)&0xFFF;
+                          unsigned int EngineFunctionNr = ConnectedEngineFunction->FunctionNr&0xFFF;
+
+                          if (EngineFunctionSeqNr == ConsoleNr)
+                          {
+                            if (EngineFunctionType == CONSOLE_FUNCTIONS)
+                            {
+                              if (EngineFunctionNr==((unsigned int)CONSOLE_FUNCTION_CHIPCARD_USER))
+                              {
+                                mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
+                              }
+                              else if (EngineFunctionNr==((unsigned int)CONSOLE_FUNCTION_CHIPCARD_PASS))
+                              {
+                                mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, cntObject, 1);
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    else
+                    { //Send user/pass idle
+                      if (AxumData.ConsoleData[ConsoleNr].LogoutToIdle)
+                      {
+                        if ((strncmp(AxumData.ConsoleData[ConsoleNr].ActiveUsername, OnlineNodeInformationElement->Account.Username, 32) == 0) &&
+                            (strncmp(AxumData.ConsoleData[ConsoleNr].ActivePassword, OnlineNodeInformationElement->Account.Password, 32) == 0))
+                        {
+                          unsigned int FunctionNrToSend = 0x03000000 | (ConsoleNr<<12);
+                          memset(AxumData.ConsoleData[ConsoleNr].Username, 0, 32);
+                          memset(AxumData.ConsoleData[ConsoleNr].Password, 0, 16);
+                          memset(AxumData.ConsoleData[ConsoleNr].ActiveUsername, 0, 32);
+                          memset(AxumData.ConsoleData[ConsoleNr].ActivePassword, 0, 16);
+                          //Idle, source/preset pool A
+                          AxumData.ConsoleData[ConsoleNr].UserLevel = 0;
+                          AxumData.ConsoleData[ConsoleNr].SourcePool = 0;
+                          AxumData.ConsoleData[ConsoleNr].PresetPool = 0;
+                          AxumData.ConsoleData[ConsoleNr].LogoutToIdle = 0;
+                          AxumData.ConsoleData[ConsoleNr].ConsolePreset = 0;
+
+                          CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER_PASS));
+                          CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_USER));
+                          CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_UPDATE_PASS));
+                          CheckObjectsToSent(FunctionNrToSend | (CONSOLE_FUNCTION_USER_LEVEL));
+
+
+                          db_lock(1);
+                          db_update_account(ConsoleNr, AxumData.ConsoleData[ConsoleNr].ActiveUsername, AxumData.ConsoleData[ConsoleNr].ActivePassword);
+                          db_lock(0);
+                        }
+                      }
+                      OnlineNodeInformationElement->Account.UsernameReceived = 0;
+                      OnlineNodeInformationElement->Account.PasswordReceived = 0;
+                      memset(OnlineNodeInformationElement->Account.Username, 0, 32);
+                      memset(OnlineNodeInformationElement->Account.Password, 0, 16);
+
+                      db_lock(1);
+                      db_update_chipcard_account(ConsoleNr, OnlineNodeInformationElement->Account.Username, OnlineNodeInformationElement->Account.Password);
+                      db_lock(0);
+                    }
+                  }
+                }
+              }
+              break;
               case CONSOLE_FUNCTION_CHIPCARD_USER:
               {
                 OnlineNodeInformationElement->Account.UsernameReceived = 1;
