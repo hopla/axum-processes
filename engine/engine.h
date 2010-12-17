@@ -363,11 +363,21 @@ typedef struct
   float CountDownTimer;
 
   unsigned int SelectedConsolePreset;
+
   unsigned int SelectedModule;
+  int SelectedModuleTimeout;
+
   unsigned int SelectedBuss;
+  int SelectedBussTimeout;
+
   unsigned int SelectedMonitorBuss;
+  int SelectedMonitorBussTimeout;
+
   unsigned int SelectedSource;
+  int SelectedSourceTimeout;
+
   unsigned int SelectedDestination;
+  int SelectedDestinationTimeout;
 } AXUM_CONSOLE_DATA;
 
 typedef struct

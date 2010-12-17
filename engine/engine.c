@@ -82,6 +82,8 @@ pthread_mutex_t axum_data_mutex;
 #define NR_OF_STATIC_OBJECTS    (1023-1023)
 #define NR_OF_OBJECTS            NR_OF_STATIC_OBJECTS
 
+#define SELECT_TIMEOUT          10000
+
 /********************************/
 /* global declarations          */
 /********************************/
@@ -6950,6 +6952,61 @@ void Timer100HzDone(int Value)
         CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_CONTROL_MODE_ACTIVE);
       }
     }
+    if (AxumData.ConsoleData[cntConsole].SelectedModuleTimeout>0)
+    {
+      AxumData.ConsoleData[cntConsole].SelectedModuleTimeout -= 10;
+      if (AxumData.ConsoleData[cntConsole].SelectedModuleTimeout <= 0)
+      {
+        AxumData.ConsoleData[cntConsole].SelectedModuleTimeout = 0;
+
+        unsigned int FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+        CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MODULE_SELECT_ACTIVE);
+      }
+    }
+    if (AxumData.ConsoleData[cntConsole].SelectedBussTimeout>0)
+    {
+      AxumData.ConsoleData[cntConsole].SelectedBussTimeout -= 10;
+      if (AxumData.ConsoleData[cntConsole].SelectedBussTimeout <= 0)
+      {
+        AxumData.ConsoleData[cntConsole].SelectedBussTimeout = 0;
+
+        unsigned int FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+        CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_BUSS_SELECT_ACTIVE);
+      }
+    }
+    if (AxumData.ConsoleData[cntConsole].SelectedMonitorBussTimeout>0)
+    {
+      AxumData.ConsoleData[cntConsole].SelectedMonitorBussTimeout -= 10;
+      if (AxumData.ConsoleData[cntConsole].SelectedMonitorBussTimeout <= 0)
+      {
+        AxumData.ConsoleData[cntConsole].SelectedMonitorBussTimeout = 0;
+
+        unsigned int FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+        CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MONITOR_BUSS_SELECT_ACTIVE);
+      }
+    }
+    if (AxumData.ConsoleData[cntConsole].SelectedSourceTimeout>0)
+    {
+      AxumData.ConsoleData[cntConsole].SelectedSourceTimeout -= 10;
+      if (AxumData.ConsoleData[cntConsole].SelectedSourceTimeout <= 0)
+      {
+        AxumData.ConsoleData[cntConsole].SelectedSourceTimeout = 0;
+
+        unsigned int FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+        CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_SOURCE_SELECT_ACTIVE);
+      }
+    }
+    if (AxumData.ConsoleData[cntConsole].SelectedDestinationTimeout>0)
+    {
+      AxumData.ConsoleData[cntConsole].SelectedDestinationTimeout -= 10;
+      if (AxumData.ConsoleData[cntConsole].SelectedDestinationTimeout <= 0)
+      {
+        AxumData.ConsoleData[cntConsole].SelectedDestinationTimeout = 0;
+
+        unsigned int FunctionNrToSent = 0x03000000 | (cntConsole<<12);
+        CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_DESTINATION_SELECT_ACTIVE);
+      }
+    }
   }
   axum_data_lock(0);
 
@@ -10912,6 +10969,106 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             {
               data.Float = AxumData.ConsoleData[ConsoleNr].CountDownTimer;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_MODULE_SELECT_ACTIVE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              if (AxumData.ConsoleData[ConsoleNr].SelectedModuleTimeout)
+              {
+                data.State = 1;
+              }
+              else
+              {
+                data.State = 0;
+              }
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_BUSS_SELECT_ACTIVE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              if (AxumData.ConsoleData[ConsoleNr].SelectedBussTimeout)
+              {
+                data.State = 1;
+              }
+              else
+              {
+                data.State = 0;
+              }
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_MONITOR_BUSS_SELECT_ACTIVE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              if (AxumData.ConsoleData[ConsoleNr].SelectedMonitorBussTimeout)
+              {
+                data.State = 1;
+              }
+              else
+              {
+                data.State = 0;
+              }
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_SOURCE_SELECT_ACTIVE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              if (AxumData.ConsoleData[ConsoleNr].SelectedSourceTimeout)
+              {
+                data.State = 1;
+              }
+              else
+              {
+                data.State = 0;
+              }
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+            }
+            break;
+          }
+        }
+        break;
+        case CONSOLE_FUNCTION_DESTINATION_SELECT_ACTIVE:
+        {
+          switch (DataType)
+          {
+            case MBN_DATATYPE_STATE:
+            {
+              if (AxumData.ConsoleData[ConsoleNr].SelectedDestinationTimeout)
+              {
+                data.State = 1;
+              }
+              else
+              {
+                data.State = 0;
+              }
+              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -15844,10 +16001,15 @@ void initialize_axum_data_struct()
   {
     AxumData.ConsoleData[cntConsole].SelectedConsolePreset = 0;
     AxumData.ConsoleData[cntConsole].SelectedModule = 0;
+    AxumData.ConsoleData[cntConsole].SelectedModuleTimeout = 0;
     AxumData.ConsoleData[cntConsole].SelectedBuss = 0;
+    AxumData.ConsoleData[cntConsole].SelectedBussTimeout = 0;
     AxumData.ConsoleData[cntConsole].SelectedMonitorBuss = 0;
+    AxumData.ConsoleData[cntConsole].SelectedMonitorBussTimeout = 0;
     AxumData.ConsoleData[cntConsole].SelectedSource = 0;
+    AxumData.ConsoleData[cntConsole].SelectedSourceTimeout = 0;
     AxumData.ConsoleData[cntConsole].SelectedDestination = 0;
+    AxumData.ConsoleData[cntConsole].SelectedDestinationTimeout = 0;
     memset(AxumData.ConsoleData[cntConsole].Username, 0, 33);
     memset(AxumData.ConsoleData[cntConsole].Password, 0, 17);
     memset(AxumData.ConsoleData[cntConsole].ActiveUsername, 0, 33);
@@ -18627,6 +18789,9 @@ void SetSelectedModule(unsigned char SelectNr, unsigned int NewModuleNr)
     unsigned int OldSelectedModuleNr = AxumData.ConsoleData[SelectNr].SelectedModule;
 
     AxumData.ConsoleData[SelectNr].SelectedModule = NewModuleNr;
+    AxumData.ConsoleData[SelectNr].SelectedModuleTimeout = SELECT_TIMEOUT;
+    unsigned int FunctionNrToSent = 0x03000000 | (SelectNr<<12);
+    CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MODULE_SELECT_ACTIVE);
 
     if (OldSelectedModuleNr != AxumData.ConsoleData[SelectNr].SelectedModule)
     {
@@ -18655,6 +18820,9 @@ void SetSelectedBuss(unsigned char SelectNr, unsigned int NewBussNr)
     unsigned int OldSelectedBussNr = AxumData.ConsoleData[SelectNr].SelectedBuss;
 
     AxumData.ConsoleData[SelectNr].SelectedBuss = NewBussNr;
+    AxumData.ConsoleData[SelectNr].SelectedBussTimeout = SELECT_TIMEOUT;
+    unsigned int FunctionNrToSent = 0x03000000 | (SelectNr<<12);
+    CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_BUSS_SELECT_ACTIVE);
 
     if (OldSelectedBussNr != AxumData.ConsoleData[SelectNr].SelectedBuss)
     {
@@ -18683,6 +18851,9 @@ void SetSelectedMonitorBuss(unsigned char SelectNr, unsigned int NewMonitorBussN
     unsigned int OldSelectedMonitorBussNr = AxumData.ConsoleData[SelectNr].SelectedMonitorBuss;
 
     AxumData.ConsoleData[SelectNr].SelectedMonitorBuss = NewMonitorBussNr;
+    AxumData.ConsoleData[SelectNr].SelectedMonitorBussTimeout = SELECT_TIMEOUT;
+    unsigned int FunctionNrToSent = 0x03000000 | (SelectNr<<12);
+    CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_MONITOR_BUSS_SELECT_ACTIVE);
 
     if (OldSelectedMonitorBussNr != AxumData.ConsoleData[SelectNr].SelectedMonitorBuss)
     {
@@ -18711,6 +18882,9 @@ void SetSelectedSource(unsigned char SelectNr, unsigned int NewSourceNr)
     unsigned int OldSelectedSourceNr = AxumData.ConsoleData[SelectNr].SelectedSource;
 
     AxumData.ConsoleData[SelectNr].SelectedSource = NewSourceNr;
+    AxumData.ConsoleData[SelectNr].SelectedSourceTimeout = SELECT_TIMEOUT;
+    unsigned int FunctionNrToSent = 0x03000000 | (SelectNr<<12);
+    CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_SOURCE_SELECT_ACTIVE);
 
     if (OldSelectedSourceNr != AxumData.ConsoleData[SelectNr].SelectedSource)
     {
@@ -18739,6 +18913,9 @@ void SetSelectedDestination(unsigned char SelectNr, unsigned int NewDestinationN
     unsigned int OldSelectedDestinationNr = AxumData.ConsoleData[SelectNr].SelectedDestination;
 
     AxumData.ConsoleData[SelectNr].SelectedDestination = NewDestinationNr;
+    AxumData.ConsoleData[SelectNr].SelectedDestinationTimeout = SELECT_TIMEOUT;
+    unsigned int FunctionNrToSent = 0x03000000 | (SelectNr<<12);
+    CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_DESTINATION_SELECT_ACTIVE);
 
     if (OldSelectedDestinationNr != AxumData.ConsoleData[SelectNr].SelectedDestination)
     {
