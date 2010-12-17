@@ -3858,12 +3858,12 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       {
                         case MODULE_CONTROL_MODE_SOURCE:
                         {
-                          AxumData.ModuleData[cntModule].TemporySourceControlMode[0] = AxumData.ModuleData[cntModule].SelectedSource;
+                          AxumData.ModuleData[cntModule].TemporySourceControlMode[ConsoleNr] = AxumData.ModuleData[cntModule].SelectedSource;
                         }
                         break;
                         case MODULE_CONTROL_MODE_MODULE_PRESET:
                         {
-                          AxumData.ModuleData[cntModule].TemporyPresetControlMode[0] = AxumData.ModuleData[cntModule].SelectedProcessingPreset;
+                          AxumData.ModuleData[cntModule].TemporyPresetControlMode[ConsoleNr] = AxumData.ModuleData[cntModule].SelectedProcessingPreset;
                         }
                         break;
                       }
