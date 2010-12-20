@@ -558,8 +558,9 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     }
     if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->RelatedDest) <= 0)
     {
-      SourceData->RelatedDest = -1;
+      SourceData->RelatedDest = 0;
     }
+    SourceData->RelatedDest--;
 
     SourceData->Redlight[0] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Redlight[1] = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
