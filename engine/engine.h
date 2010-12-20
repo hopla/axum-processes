@@ -331,7 +331,7 @@ typedef struct
   bool Mono;
 
   bool Interlock;
-  bool Exclusive;
+  unsigned char Exclusive;
   bool GlobalBussReset;
 } AXUM_BUSS_MASTER_DATA_STRUCT;
 

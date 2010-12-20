@@ -15233,8 +15233,11 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
           ModuleActive = 1;
         }
       }
+
       //TODO: Check if others already or still in exlusive mode...
-      if (!ModuleActive)
+
+      //If not active dump allowed, communication is always allowed
+      if ((!ModuleActive) || (AxumData.BussMasterData[BussNr].Exclusive == 2))
       {
         if (!AxumData.ModuleData[ModuleNr].Buss[BussNr].On)
         {  //return to normal routing

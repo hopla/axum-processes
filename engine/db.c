@@ -1227,7 +1227,7 @@ int db_read_buss_config(unsigned char first_buss, unsigned char last_buss, unsig
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &BussMasterData->Level);
     BussMasterData->On = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     BussMasterData->Interlock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    BussMasterData->Exclusive = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &BussMasterData->Exclusive);
     BussMasterData->GlobalBussReset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     if (AxumApplicationAndDSPInitialized)
