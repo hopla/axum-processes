@@ -2918,13 +2918,18 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 if (type == MBN_DATATYPE_STATE)
                 {
                   int cntDestination=0;
-                  int CurrentSource = AxumData.ModuleData[ModuleNr].SelectedSource;
+                  int SelectedSource = AxumData.ModuleData[ModuleNr].SelectedSource;
                   bool MixMinusInUse = false;
                   bool UpdateDestinations = false;
+                  int SourceNr = -1;
+                  if ((SelectedSource >= matrix_sources.src_offset.min.source) && (SelectedSource <= matrix_sources.src_offset.max.source))
+                  {
+                    SourceNr = SelectedSource-matrix_sources.src_offset.min.source;
+                  }
 
                   while (cntDestination<1280)
                   {
-                    if ((CurrentSource != 0) && (AxumData.DestinationData[cntDestination].MixMinusSource == CurrentSource))
+                    if ((SelectedSource != 0) && (AxumData.DestinationData[cntDestination].MixMinusSource == SelectedSource))
                     {
                       MixMinusInUse = true;
                     }
@@ -2941,6 +2946,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = false;
                     UpdateDestinations = true;
                   }
+                  else
+                  { //Find related destination
+                    if (SourceNr != -1)
+                    {
+                      AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = data.State;
+                      UpdateDestinations = true;
+                    }
+                  }
 
                   if (UpdateDestinations)
                   {
@@ -2949,7 +2962,8 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                     cntDestination=0;
                     while (cntDestination<1280)
                     {
-                      if ((CurrentSource != 0) && (AxumData.DestinationData[cntDestination].MixMinusSource == CurrentSource))
+                      if (((CurrentSource != 0) && (AxumData.DestinationData[cntDestination].MixMinusSource == CurrentSource)) ||
+                          (cntDestination == AxumData.SourceData[SourceNr].RelatedDest))
                       {
                         AxumData.DestinationData[cntDestination].Talkback[TalkbackNr] = AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr];
 
@@ -15590,6 +15604,7 @@ void initialize_axum_data_struct()
     AxumData.SourceData[cntSource].DefaultProcessingPreset = 0;
     AxumData.SourceData[cntSource].StartTrigger = 0;
     AxumData.SourceData[cntSource].StopTrigger = 0;
+    AxumData.SourceData[cntSource].RelatedDest = -1;
 
     for (int cntRedlight=0; cntRedlight<8; cntRedlight++)
     {

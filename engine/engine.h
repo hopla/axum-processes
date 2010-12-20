@@ -116,6 +116,8 @@ typedef struct
   unsigned char StartTrigger;
   unsigned char StopTrigger;
 
+  int RelatedDest;
+
   bool Redlight[8];
   bool MonitorMute[16];
   char Active;
