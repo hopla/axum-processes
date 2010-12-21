@@ -7681,11 +7681,16 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
           }
           if (!AxumData.BussMasterData[cntBuss].PreModuleOn)
           {
-            if ((!AxumData.ModuleData[ModuleNr].On) || (AxumData.ModuleData[ModuleNr].Cough))
+            if (!AxumData.ModuleData[ModuleNr].On)
             {
               dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
               dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
             }
+          }
+          if (AxumData.ModuleData[ModuleNr].Cough)
+          {
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+0].On = 0;
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+1].On = 0;
           }
         }
         else
@@ -7706,10 +7711,14 @@ void SetAxum_BussLevels(unsigned int ModuleNr)
 
           if (!AxumData.BussMasterData[cntBuss].PreModuleOn)
           {
-            if ((!AxumData.ModuleData[ModuleNr].On) || (AxumData.ModuleData[ModuleNr].Cough))
+            if (!AxumData.ModuleData[ModuleNr].On)
             {
               dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].On = 0;
             }
+          }
+          if (AxumData.ModuleData[ModuleNr].Cough)
+          {
+            dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Buss[(cntBuss*2)+cntChannel].On = 0;
           }
         }
       }
