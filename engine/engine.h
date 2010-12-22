@@ -128,6 +128,8 @@ typedef struct
   float Gain;
   char Alert;
 
+  char CoughComm[2];
+
 } AXUM_SOURCE_DATA_STRUCT;
 
 typedef struct
@@ -169,7 +171,7 @@ typedef struct
 {
   float Level;
   unsigned char On;
-  unsigned char PreviousOn;
+  unsigned char PreviousOn[16];
   int Balance;
   unsigned char PreModuleLevel;
 
@@ -608,7 +610,7 @@ void MasterModeControllerSetData(unsigned int ConsoleNr, unsigned int MambaNetAd
 void DoAxum_BussReset(int BussNr);
 void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule);
 bool DoAxum_SetNewSource(int ModuleNr, int NewSource, int Forced);
-void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int UseInterlock);
+void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int LoadPreset, unsigned char SetByCoughComm);
 void DoAxum_SetCRMBussOnOff(int MonitorBussNr, int BussNr, unsigned char NewState, int PreventDoingInterlock);
 void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, int ProcessingPresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
 void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, int PresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects);

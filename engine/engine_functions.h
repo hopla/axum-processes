@@ -76,9 +76,10 @@
 #define SOURCE_FUNCTION_SELECT_3                              67
 #define SOURCE_FUNCTION_SELECT_4                              68
 #define SOURCE_FUNCTION_LABEL                                 69
+#define SOURCE_FUNCTION_COUGH_COMM_1                          70
+#define SOURCE_FUNCTION_COUGH_COMM_2                          71
 
-
-#define NUMBER_OF_SOURCE_FUNCTIONS              70
+#define NUMBER_OF_SOURCE_FUNCTIONS              72
 #define  NUMBER_OF_SOURCES                    1280
 
 #define MODULE_FUNCTION_LABEL               0
