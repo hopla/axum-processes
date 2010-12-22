@@ -525,7 +525,7 @@ int scan_read(struct can_frame *frame, struct mbn_interface *itf) {
     }
   }
   else {
-    if (((n = read(dat->sock, &frame, sizeof(struct can_frame))) < 0) && (n != (int)sizeof(struct can_frame))) {
+    if (((n = read(dat->sock, frame, sizeof(struct can_frame))) < 0) && (n != (int)sizeof(struct can_frame))) {
       n=-1;
     }
   }
@@ -551,7 +551,7 @@ void scan_write(struct can_frame *frame, struct mbn_interface *itf) {
       fprintf(stderr, "TTY send: %s", strerror(errno));
   }
   else {
-    if(write(dat->sock, (void *)&frame, sizeof(struct can_frame)) < (int)sizeof(struct can_frame))
+    if(write(dat->sock, (void *)frame, sizeof(struct can_frame)) < (int)sizeof(struct can_frame))
       fprintf(stderr, "CAN send: %s", strerror(errno));
   }
 }
@@ -574,7 +574,7 @@ void scan_write_parent(struct can_frame *frame, struct mbn_interface *itf) {
       fprintf(stderr, "TTY send parent: %s", strerror(errno));
   }
   else {
-    if(write(dat->sock, (void *)&frame, sizeof(struct can_frame)) < (int)sizeof(struct can_frame))
+    if(write(dat->sock, (void *)frame, sizeof(struct can_frame)) < (int)sizeof(struct can_frame))
       fprintf(stderr, "CAN send parent: %s", strerror(errno));
   }
 }
