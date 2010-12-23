@@ -2897,24 +2897,24 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 }
               }
               break;
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_1:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_2:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_3:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_4:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_5:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_6:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_7:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_8:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_9:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_10:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_11:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_12:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_13:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_14:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_15:
-              case MODULE_FUNCTION_MIXMINUS_TALKBACK_16:
+              case MODULE_FUNCTION_TALKBACK_1_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_2_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_3_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_4_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_5_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_6_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_7_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_8_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_9_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_10_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_11_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_12_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_13_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_14_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_15_TO_REL_DEST:
+              case MODULE_FUNCTION_TALKBACK_16_TO_REL_DEST:
               {
-                int TalkbackNr = FunctionNr-MODULE_FUNCTION_MIXMINUS_TALKBACK_1;
+                int TalkbackNr = FunctionNr-MODULE_FUNCTION_TALKBACK_1_TO_REL_DEST;
                 if (type == MBN_DATATYPE_STATE)
                 {
                   int cntDestination=0;
@@ -2983,7 +2983,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       cntDestination++;
                     }
                     unsigned int FunctionNrToSent = ((ModuleNr)<<12);
-                    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_MIXMINUS_TALKBACK_1+TalkbackNr));
+                    CheckObjectsToSent(FunctionNrToSent | (MODULE_FUNCTION_TALKBACK_1_TO_REL_DEST+TalkbackNr));
                   }
                 }
               }
@@ -9690,7 +9690,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       }
       if (((FunctionNr>=MODULE_FUNCTION_SOURCE_START) && (FunctionNr<MODULE_FUNCTION_CONTROL_1)) ||
           ((FunctionNr>=MODULE_FUNCTION_FADER_AND_ON_ACTIVE) && (FunctionNr<=MODULE_FUNCTION_FADER_ON_OFF)) ||
-          ((FunctionNr>=MODULE_FUNCTION_MIXMINUS_TALKBACK_1) && (FunctionNr<=MODULE_FUNCTION_MIXMINUS_TALKBACK_16)))
+          ((FunctionNr>=MODULE_FUNCTION_TALKBACK_1_TO_REL_DEST) && (FunctionNr<=MODULE_FUNCTION_TALKBACK_16_TO_REL_DEST)))
       { //all state functions
         bool Active;
 
