@@ -282,7 +282,7 @@ typedef struct
 
   bool Signal;
   bool Peak;
-  bool TalkbackToMixMinus[16];
+  bool TalkbackToRelatedDestination[16];
 
   AXUM_BUSS_DATA_STRUCT Buss[16];
 

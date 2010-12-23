@@ -2938,19 +2938,19 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                   if (MixMinusInUse)
                   {
-                    AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = data.State;
+                    AxumData.ModuleData[ModuleNr].TalkbackToRelatedDestination[TalkbackNr] = data.State;
                     UpdateDestinations = true;
                   }
-                  else if (AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr])
+                  else if (AxumData.ModuleData[ModuleNr].TalkbackToRelatedDestination[TalkbackNr])
                   {
-                    AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = false;
+                    AxumData.ModuleData[ModuleNr].TalkbackToRelatedDestination[TalkbackNr] = false;
                     UpdateDestinations = true;
                   }
                   else
                   { //Find related destination
                     if (SourceNr != -1)
                     {
-                      AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr] = data.State;
+                      AxumData.ModuleData[ModuleNr].TalkbackToRelatedDestination[TalkbackNr] = data.State;
                       UpdateDestinations = true;
                     }
                   }
@@ -2965,7 +2965,7 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       if (((CurrentSource != 0) && (AxumData.DestinationData[cntDestination].MixMinusSource == CurrentSource)) ||
                           (cntDestination == AxumData.SourceData[SourceNr].RelatedDest))
                       {
-                        AxumData.DestinationData[cntDestination].Talkback[TalkbackNr] = AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr];
+                        AxumData.DestinationData[cntDestination].Talkback[TalkbackNr] = AxumData.ModuleData[ModuleNr].TalkbackToRelatedDestination[TalkbackNr];
 
                         int TalkbackActive = 0;
                         for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
@@ -9792,7 +9792,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             int TalkbackNr = FunctionNr-MODULE_FUNCTION_MIXMINUS_TALKBACK_1;
 
-            Active = AxumData.ModuleData[ModuleNr].TalkbackToMixMinus[TalkbackNr];
+            Active = AxumData.ModuleData[ModuleNr].TalkbackToRelatedDestination[TalkbackNr];
           }
           break;
         }
@@ -15964,7 +15964,7 @@ void initialize_axum_data_struct()
 
     for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
     {
-      AxumData.ModuleData[cntModule].TalkbackToMixMinus[cntTalkback] = 0;
+      AxumData.ModuleData[cntModule].TalkbackToRelatedDestination[cntTalkback] = 0;
     }
 
     for (int cntBuss=0; cntBuss<16; cntBuss++)
