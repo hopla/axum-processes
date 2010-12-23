@@ -68,6 +68,7 @@ struct sql_notify notifies[] = {
   { (char *)"src_pool_changed",                       db_event_src_pool_changed},
   { (char *)"console_config_changed",                 db_event_console_config_changed},
   { (char *)"functions_changed",                      db_event_functions_changed},
+  { (char *)"set_module_pre_level",                   db_event_set_module_pre_level},
 };
 
 double read_minmax(char *mambanet_minmax)
@@ -89,7 +90,7 @@ double read_minmax(char *mambanet_minmax)
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 26, notifies);
+  sql_open(dbstr, 27, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -1168,6 +1169,84 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
           DoAxum_ModuleStatusChanged(ModuleNr, 1);
         }
       }*/
+    }
+  }
+  PQclear(qres);
+
+  LOG_DEBUG("[%s] leave", __func__);
+
+  return 1;
+}
+
+int db_read_module_pre_level(unsigned char first_mod, unsigned char last_mod, unsigned char buss)
+{
+  char str[2][32];
+  const char *params[2];
+  int cntParams;
+  int cntRow;
+
+  LOG_DEBUG("[%s] enter", __func__);
+
+  for (cntParams=0; cntParams<2; cntParams++)
+  {
+    params[cntParams] = (const char *)str[cntParams];
+  }
+
+  sprintf(str[0], "%hd", first_mod);
+  sprintf(str[1], "%hd", last_mod);
+
+  PGresult *qres = sql_exec("SELECT number,                 \
+                                    buss_1_2_pre_post,      \
+                                    buss_3_4_pre_post,      \
+                                    buss_5_6_pre_post,      \
+                                    buss_7_8_pre_post,      \
+                                    buss_9_10_pre_post,     \
+                                    buss_11_12_pre_post,    \
+                                    buss_13_14_pre_post,    \
+                                    buss_15_16_pre_post,    \
+                                    buss_17_18_pre_post,    \
+                                    buss_19_20_pre_post,    \
+                                    buss_21_22_pre_post,    \
+                                    buss_23_24_pre_post,    \
+                                    buss_25_26_pre_post,    \
+                                    buss_27_28_pre_post,    \
+                                    buss_29_30_pre_post,    \
+                                    buss_31_32_pre_post     \
+                                    FROM module_config      \
+                                    WHERE number>=$1 AND number<=$2", 1, 2, params);
+  if (qres == NULL)
+  {
+    LOG_DEBUG("[%s] leave with error", __func__);
+    return 0;
+  }
+  for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
+  {
+    short int number;
+    unsigned int cntField;
+
+    cntField = 0;
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hd", &number);
+
+    if (((number>0) && (number<128)) &&
+        ((buss>0) && (buss<16)))
+    {
+      int ModuleNr = number-1;
+      int BussNr = buss-1;
+
+      AXUM_MODULE_DATA_STRUCT *ModuleData = &AxumData.ModuleData[ModuleNr];
+      AXUM_DEFAULT_MODULE_DATA_STRUCT *DefaultModuleData = &ModuleData->Defaults;
+
+      DefaultModuleData->Buss[BussNr].PreModuleLevel = strcmp(PQgetvalue(qres, cntRow, cntField+BussNr), "f");
+
+      if (ModuleData->Buss[BussNr].PreModuleLevel != DefaultModuleData->Buss[BussNr].PreModuleLevel)
+      {
+        ModuleData->Buss[BussNr].PreModuleLevel = DefaultModuleData->Buss[BussNr].PreModuleLevel;
+        SetAxum_BussLevels(ModuleNr);
+
+        unsigned int FunctionNrToSend = ModuleNr<<12;
+        unsigned int FunctionNr = MODULE_FUNCTION_BUSS_1_2_PRE + (BussNr*(MODULE_FUNCTION_BUSS_3_4_PRE-MODULE_FUNCTION_BUSS_1_2_PRE));
+        CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+      }
     }
   }
   PQclear(qres);
@@ -3279,6 +3358,21 @@ void db_event_set_module_to_startup_state(char myself, char *arg)
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
 }
+
+void db_event_set_module_pre_level(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+  unsigned short int number;
+  unsigned short int buss;
+
+  sscanf(arg, "%hd %hd", &number, &buss);
+
+  db_read_module_pre_level(number, number, buss);
+
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
 
 void db_event_address_user_level(char myself, char *arg)
 {
