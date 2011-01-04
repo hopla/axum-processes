@@ -335,6 +335,8 @@ typedef struct
   bool Interlock;
   unsigned char Exclusive;
   bool GlobalBussReset;
+
+  unsigned char Talkback[16];
 } AXUM_BUSS_MASTER_DATA_STRUCT;
 
 typedef struct

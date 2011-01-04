@@ -369,8 +369,24 @@
 #define BUSS_FUNCTION_SELECT_4                  10
 #define BUSS_FUNCTION_AUDIO_PHASE               11
 #define BUSS_FUNCTION_RESET                     12
+#define BUSS_FUNCTION_TALKBACK_1                13
+#define BUSS_FUNCTION_TALKBACK_2                14
+#define BUSS_FUNCTION_TALKBACK_3                15
+#define BUSS_FUNCTION_TALKBACK_4                16
+#define BUSS_FUNCTION_TALKBACK_5                17
+#define BUSS_FUNCTION_TALKBACK_6                18
+#define BUSS_FUNCTION_TALKBACK_7                19
+#define BUSS_FUNCTION_TALKBACK_8                20
+#define BUSS_FUNCTION_TALKBACK_9                21
+#define BUSS_FUNCTION_TALKBACK_10               22
+#define BUSS_FUNCTION_TALKBACK_11               23
+#define BUSS_FUNCTION_TALKBACK_12               24
+#define BUSS_FUNCTION_TALKBACK_13               25
+#define BUSS_FUNCTION_TALKBACK_14               26
+#define BUSS_FUNCTION_TALKBACK_15               27
+#define BUSS_FUNCTION_TALKBACK_16               28
 
-#define NUMBER_OF_BUSS_FUNCTIONS                13
+#define NUMBER_OF_BUSS_FUNCTIONS                29
 #define  NUMBER_OF_BUSSES                       16
 
 #define MONITOR_BUSS_FUNCTION_BUSS_1_2_ON_OFF     0

@@ -3233,6 +3233,61 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                 }
               }
               break;
+              case BUSS_FUNCTION_TALKBACK_1:
+              case BUSS_FUNCTION_TALKBACK_2:
+              case BUSS_FUNCTION_TALKBACK_3:
+              case BUSS_FUNCTION_TALKBACK_4:
+              case BUSS_FUNCTION_TALKBACK_5:
+              case BUSS_FUNCTION_TALKBACK_6:
+              case BUSS_FUNCTION_TALKBACK_7:
+              case BUSS_FUNCTION_TALKBACK_8:
+              case BUSS_FUNCTION_TALKBACK_9:
+              case BUSS_FUNCTION_TALKBACK_10:
+              case BUSS_FUNCTION_TALKBACK_11:
+              case BUSS_FUNCTION_TALKBACK_12:
+              case BUSS_FUNCTION_TALKBACK_13:
+              case BUSS_FUNCTION_TALKBACK_14:
+              case BUSS_FUNCTION_TALKBACK_15:
+              case BUSS_FUNCTION_TALKBACK_16:
+              {
+                int TalkbackNr = FunctionNr-MONITOR_BUSS_FUNCTION_TALKBACK_1;
+                if (type == MBN_DATATYPE_STATE)
+                {
+                  bool OldTalkbackActive = 0;
+                  bool OldTalkback = AxumData.BussMasterData[BussNr].Talkback[TalkbackNr];
+                  for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+                  {
+                    OldTalkbackActive |= AxumData.BussMasterData[BussNr].Talkback[cntTalkback];
+                  }
+
+                  AxumData.BussMasterData[BussNr].Talkback[TalkbackNr] = data.State;
+
+                  if (AxumData.BussMasterData[BussNr].Talkback[TalkbackNr] != OldTalkback)
+                  {
+                    //Check talkbacks, if dim is required
+                    int NewTalkbackActive = 0;
+                    for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+                    {
+                      NewTalkbackActive |= AxumData.BussMasterData[BussNr].Talkback[cntTalkback];
+                    }
+
+                    unsigned int FunctionNrToSend = 0x01000000 | (BussNr<<12);
+                    CheckObjectsToSent(FunctionNrToSend | FunctionNr);
+
+                    for (int cntDestination=0; cntDestination<1280; cntDestination++)
+                    {
+                      if (AxumData.DestinationData[cntDestination].Source == (int)(matrix_sources.src_offset.min.buss+BussNr))
+                      {
+                        unsigned int DisplayFunctionNr = 0x06000000 | (cntDestination<<12);
+
+                        CheckObjectsToSent(DisplayFunctionNr | (DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1 + ((DESTINATION_FUNCTION_TALKBACK_2_AND_MONITOR_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1)*TalkbackNr)));
+                        CheckObjectsToSent(DisplayFunctionNr | DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM);
+                      }
+                    }
+                  }
+                }
+              }
+              break;
               default:
               { //not implemented function
               }
@@ -12002,6 +12057,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   Active = 1;
                 }
               }
+              if ((AxumData.DestinationData[DestinationNr].Source>=matrix_sources.src_offset.min.buss) && (AxumData.DestinationData[DestinationNr].Source<=matrix_sources.src_offset.max.buss))
+              {
+                int BussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.buss;
+                if (AxumData.BussMasterData[BussNr].Talkback[TalkbackNr])
+                {
+                  Active = 1;
+                }
+              }
 
               data.State = Active;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
@@ -16101,6 +16164,11 @@ void initialize_axum_data_struct()
     AxumData.BussMasterData[cntBuss].Interlock = 0;
     AxumData.BussMasterData[cntBuss].Exclusive = 0;
     AxumData.BussMasterData[cntBuss].GlobalBussReset = 0;
+
+    for (int cntTalkback=0; cntTalkback<16; cntTalkback++)
+    {
+      AxumData.BussMasterData[cntBuss].Talkback[cntTalkback] = 0;
+    }
   }
 
   AxumData.Redlight[0] = 0;
