@@ -155,6 +155,9 @@ typedef struct
   int MixMinusSource;
   unsigned char MixMinusActive;
 
+  int CommBuss;
+  unsigned char CommActive;
+
 } AXUM_DESTINATION_DATA_STRUCT;
 
 typedef struct
@@ -337,6 +340,7 @@ typedef struct
   bool GlobalBussReset;
 
   unsigned char Talkback[16];
+  unsigned char Dim;
 } AXUM_BUSS_MASTER_DATA_STRUCT;
 
 typedef struct
@@ -612,7 +616,7 @@ void MasterModeControllerSetData(unsigned int ConsoleNr, unsigned int MambaNetAd
 void DoAxum_BussReset(int BussNr);
 void DoAxum_ModuleStatusChanged(int ModuleNr, int ByModule);
 bool DoAxum_SetNewSource(int ModuleNr, int NewSource, int Forced);
-void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int LoadPreset, unsigned char SetByCoughComm);
+void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int LoadPreset);
 void DoAxum_SetCRMBussOnOff(int MonitorBussNr, int BussNr, unsigned char NewState, int PreventDoingInterlock);
 void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, int ProcessingPresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
 void DoAxum_LoadRoutingPreset(unsigned char ModuleNr, int PresetNr, unsigned char OverrideAtSourceSelect, unsigned char UseModuleDefaults, unsigned char SetAllObjects);
@@ -623,6 +627,9 @@ void DoAxum_UpdateModuleControlModeLabel(unsigned char ModuleNr, int ControlMode
 void DoAxum_UpdateModuleControlMode(unsigned char ModuleNr, int ControlMode);
 void DoAxum_UpdateMasterControlMode(int ControlMode);
 void DoAxum_StartStopTrigger(unsigned int ModuleNr, float CurrentLevel, float NewLevel, unsigned char CurrentOn, unsigned char NewOn);
+void DoAxum_TalkbackToRelatedDestination(unsigned char ModuleNr, unsigned char TalkbackNr, unsigned char NewState, unsigned char Dimming);
+void DoAxum_SetCough(int SourceNr, unsigned char NewState);
+void DoAxum_SetComm(int SourceNr, unsigned char CommNr, unsigned char NewState);
 
 //select functions
 void SetSelectedModule(unsigned char SelectNr, unsigned int NewModuleNr);
