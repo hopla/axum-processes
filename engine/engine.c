@@ -28,6 +28,7 @@
 #include <string.h>         //for memcpy/strncpy
 #include <termios.h>            //for termios
 #include <sys/ioctl.h>          //for ioctl
+#include <float.h>
 #include "engine_functions.h"
 
 #include <arpa/inet.h>      //for AF_PACKET/SOCK_DGRAM/htons/ntohs/socket/bind/sendto
@@ -1088,21 +1089,24 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                   if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
                   {
+                    float min, max, def;
+                    CheckObjectRange(FunctionNrToSent | SOURCE_FUNCTION_GAIN, &min, &max, &def);
+
                     if (type == MBN_DATATYPE_UINT)
                     {
-                      AxumData.SourceData[SourceNr].Gain = (((float)55*(data.UInt-DataMinimal))/(DataMaximal-DataMinimal))+20;
+                      AxumData.SourceData[SourceNr].Gain = (((float)(max-min)*(data.UInt-DataMinimal))/(DataMaximal-DataMinimal))+min;
 
                     }
                     else if (type == MBN_DATATYPE_SINT)
                     {
                       AxumData.SourceData[SourceNr].Gain += (float)data.SInt/10;
-                      if (AxumData.SourceData[SourceNr].Gain<20)
+                      if (AxumData.SourceData[SourceNr].Gain<min)
                       {
-                        AxumData.SourceData[SourceNr].Gain = 20;
+                        AxumData.SourceData[SourceNr].Gain = min;
                       }
-                      else if (AxumData.SourceData[SourceNr].Gain>75)
+                      else if (AxumData.SourceData[SourceNr].Gain>max)
                       {
-                        AxumData.SourceData[SourceNr].Gain = 75;
+                        AxumData.SourceData[SourceNr].Gain = max;
                       }
                     }
 
@@ -1132,11 +1136,14 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                     if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
                     {
+                      float min, max, def;
+                      CheckObjectRange(FunctionNrToSent | SOURCE_FUNCTION_GAIN, &min, &max, &def);
+
                       if (data.State)
                       {
-                        if (AxumData.SourceData[SourceNr].Gain != 30)
+                        if (AxumData.SourceData[SourceNr].Gain != def)
                         {
-                          AxumData.SourceData[SourceNr].Gain = 30;
+                          AxumData.SourceData[SourceNr].Gain = def;
                           CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_GAIN);
 
                           for (int cntModule=0; cntModule<128; cntModule++)
@@ -5329,20 +5336,24 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               {
                 unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
-                if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_PHANTOM))
+                if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
                 {
+                  float min, max, def;
+                  CheckObjectRange(FunctionNrToSent | SOURCE_FUNCTION_GAIN, &min, &max, &def);
+
+
                   if (type == MBN_DATATYPE_SINT)
                   {
                     float OldLevel = AxumData.SourceData[SourceNr].Gain;
 
                     AxumData.SourceData[SourceNr].Gain += (float)data.SInt/10;
-                    if (AxumData.SourceData[SourceNr].Gain < 20)
+                    if (AxumData.SourceData[SourceNr].Gain < min)
                     {
-                      AxumData.SourceData[SourceNr].Gain = 20;
+                      AxumData.SourceData[SourceNr].Gain = min;
                     }
-                    else if (AxumData.SourceData[SourceNr].Gain > 75)
+                    else if (AxumData.SourceData[SourceNr].Gain > max)
                     {
-                      AxumData.SourceData[SourceNr].Gain = 75;
+                      AxumData.SourceData[SourceNr].Gain = max;
                     }
 
                     if (AxumData.SourceData[SourceNr].Gain != OldLevel)
@@ -8694,7 +8705,10 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
                 {
-                  int Position = (((AxumData.SourceData[SourceNr].Gain-20)*(DataMaximal-DataMinimal))/55)+DataMinimal;
+                  float min, max, def;
+                  CheckObjectRange(FunctionNrToSent | SOURCE_FUNCTION_GAIN, &min, &max, &def);
+
+                  int Position = (((AxumData.SourceData[SourceNr].Gain-min)*(DataMaximal-DataMinimal))/(max-min))+DataMinimal;
                   data.UInt = Position;
                 }
                 else
@@ -12223,6 +12237,7 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
               AxumFunctionInformationStructToAdd->ActuatorDataSize = OnlineNodeInformationElement->ObjectInformation[cntObject].ActuatorDataSize;
               AxumFunctionInformationStructToAdd->ActuatorDataMinimal = OnlineNodeInformationElement->ObjectInformation[cntObject].ActuatorDataMinimal;
               AxumFunctionInformationStructToAdd->ActuatorDataMaximal = OnlineNodeInformationElement->ObjectInformation[cntObject].ActuatorDataMaximal;
+              AxumFunctionInformationStructToAdd->ActuatorDataDefault = OnlineNodeInformationElement->ObjectInformation[cntObject].ActuatorDataDefault;
               AxumFunctionInformationStructToAdd->Next = (void *)WalkAxumFunctionInformationStruct;
 
               switch (FunctionType)
@@ -12511,16 +12526,20 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
 
           if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
           {
+            float min, max, def;
+            CheckObjectRange(FunctionNrToSent | SOURCE_FUNCTION_GAIN, &min, &max, &def);
+            log_write("min: %f, max: %f, def: %f", min, max, def);
+
             float OldLevel = AxumData.SourceData[SourceNr].Gain;
 
             AxumData.SourceData[SourceNr].Gain += (float)data.SInt/10;
-            if (AxumData.SourceData[SourceNr].Gain < 20)
+            if (AxumData.SourceData[SourceNr].Gain < min)
             {
-              AxumData.SourceData[SourceNr].Gain = 20;
+              AxumData.SourceData[SourceNr].Gain = min;
             }
-            else if (AxumData.SourceData[SourceNr].Gain > 75)
+            else if (AxumData.SourceData[SourceNr].Gain > max)
             {
-              AxumData.SourceData[SourceNr].Gain = 75;
+              AxumData.SourceData[SourceNr].Gain = max;
             }
 
             if (AxumData.SourceData[SourceNr].Gain != OldLevel)
@@ -13186,9 +13205,13 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
 
             if (NrOfObjectsAttachedToFunction(FunctionNrToSent | SOURCE_FUNCTION_GAIN))
             {
-              if (AxumData.SourceData[SourceNr].Gain != 30)
+              float min, max, def;
+              CheckObjectRange(FunctionNrToSent | SOURCE_FUNCTION_GAIN, &min, &max, &def);
+              log_write("min: %f, max: %f, def: %f", min, max, def);
+
+              if (AxumData.SourceData[SourceNr].Gain != def)
               {
-                AxumData.SourceData[SourceNr].Gain = 30;
+                AxumData.SourceData[SourceNr].Gain = def;
 
                 DoAxum_UpdateModuleControlMode(ModuleNr, ControlMode);
 
@@ -19258,3 +19281,173 @@ void DoAxum_SetComm(int SourceNr, unsigned char CommNr, unsigned char NewState)
     CheckObjectsToSent(FunctionNrToSend | (SOURCE_FUNCTION_COUGH_COMM_1+CommNr));
   }
 }
+
+void CheckObjectRange(unsigned int SensorReceiveFunctionNumber, float *min, float *max, float *def, unsigned int MambaNetAddress)
+{
+  unsigned int FunctionType = (SensorReceiveFunctionNumber>>24)&0xFF;
+  unsigned int FunctionNumber = (SensorReceiveFunctionNumber>>12)&0xFFF;
+  unsigned int Function = SensorReceiveFunctionNumber&0xFFF;
+  AXUM_FUNCTION_INFORMATION_STRUCT *WalkAxumFunctionInformationStruct = NULL;
+
+  *min = FLT_MAX;
+  *max = FLT_MIN;
+  *def = 0;
+
+  switch (FunctionType)
+  {
+    case MODULE_FUNCTIONS:
+    {   //Module
+      if (FunctionNumber<NUMBER_OF_MODULES)
+      {
+        WalkAxumFunctionInformationStruct = ModuleFunctions[FunctionNumber][Function];
+      }
+      else if (FunctionNumber<(NUMBER_OF_MODULES+4))
+      {
+        FunctionNumber = AxumData.ConsoleData[FunctionNumber-NUMBER_OF_MODULES].SelectedModule;
+      }
+    }
+    break;
+    case BUSS_FUNCTIONS:
+    {   //Buss
+      if (FunctionNumber<NUMBER_OF_BUSSES)
+      {
+        WalkAxumFunctionInformationStruct = BussFunctions[FunctionNumber][Function];
+      }
+      else if (FunctionNumber<(NUMBER_OF_BUSSES+4))
+      {
+        FunctionNumber = AxumData.ConsoleData[FunctionNumber-NUMBER_OF_BUSSES].SelectedBuss;
+      }
+    }
+    break;
+    case MONITOR_BUSS_FUNCTIONS:
+    {   //Monitor Buss
+      if (FunctionNumber<NUMBER_OF_MONITOR_BUSSES)
+      {
+        WalkAxumFunctionInformationStruct = MonitorBussFunctions[FunctionNumber][Function];
+      }
+      else if (FunctionNumber<(NUMBER_OF_MONITOR_BUSSES+4))
+      {
+        FunctionNumber = AxumData.ConsoleData[FunctionNumber-NUMBER_OF_MONITOR_BUSSES].SelectedMonitorBuss;
+      }
+    }
+    break;
+    case CONSOLE_FUNCTIONS:
+    {
+      if (FunctionNumber<NUMBER_OF_CONSOLES)
+      {
+        WalkAxumFunctionInformationStruct = ConsoleFunctions[FunctionNumber][Function];
+      }
+    }
+    break;
+    case GLOBAL_FUNCTIONS:
+    {   //Global
+      WalkAxumFunctionInformationStruct = GlobalFunctions[Function];
+    }
+    break;
+    case SOURCE_FUNCTIONS:
+    {   //Source
+      if (FunctionNumber<NUMBER_OF_SOURCES)
+      {
+        WalkAxumFunctionInformationStruct = SourceFunctions[FunctionNumber][Function];
+      }
+      else if (FunctionNumber<(NUMBER_OF_SOURCES+4))
+      {
+        FunctionNumber = AxumData.ConsoleData[FunctionNumber-NUMBER_OF_SOURCES].SelectedSource;
+      }
+    }
+    break;
+    case DESTINATION_FUNCTIONS:
+    {   //Destination
+      if (FunctionNumber<NUMBER_OF_DESTINATIONS)
+      {
+        WalkAxumFunctionInformationStruct = DestinationFunctions[FunctionNumber][Function];
+      }
+      else if (FunctionNumber<(NUMBER_OF_DESTINATIONS+4))
+      {
+        FunctionNumber = AxumData.ConsoleData[FunctionNumber-NUMBER_OF_DESTINATIONS].SelectedDestination;
+      }
+    }
+    break;
+  }
+  while (WalkAxumFunctionInformationStruct != NULL)
+  {
+    if ((MambaNetAddress == 0x00000000) || (MambaNetAddress == WalkAxumFunctionInformationStruct->MambaNetAddress))
+    {
+      if (WalkAxumFunctionInformationStruct->ActuatorDataMaximal>*max)
+      {
+        *max = WalkAxumFunctionInformationStruct->ActuatorDataMaximal;
+      }
+      if (WalkAxumFunctionInformationStruct->ActuatorDataMinimal<*min)
+      {
+        *min = WalkAxumFunctionInformationStruct->ActuatorDataMinimal;
+      }
+      *def = WalkAxumFunctionInformationStruct->ActuatorDataDefault;
+    }
+    WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+  }
+
+  //And check the select functions as well
+  for (int cntConsole=0; cntConsole<4; cntConsole++)
+  {
+    switch (FunctionType)
+    {
+      case MODULE_FUNCTIONS:
+      {   //Module
+        if (FunctionNumber == AxumData.ConsoleData[cntConsole].SelectedModule)
+        {
+          WalkAxumFunctionInformationStruct = ModuleFunctions[NUMBER_OF_MODULES+cntConsole][Function];
+        }
+      }
+      break;
+      case BUSS_FUNCTIONS:
+      {   //Buss
+        if (FunctionNumber == AxumData.ConsoleData[cntConsole].SelectedBuss)
+        {
+          WalkAxumFunctionInformationStruct = BussFunctions[NUMBER_OF_BUSSES+cntConsole][Function];
+        }
+      }
+      break;
+      case MONITOR_BUSS_FUNCTIONS:
+      {   //Monitor Buss
+        if (FunctionNumber == AxumData.ConsoleData[cntConsole].SelectedMonitorBuss)
+        {
+          WalkAxumFunctionInformationStruct = MonitorBussFunctions[NUMBER_OF_MONITOR_BUSSES+cntConsole][Function];
+        }
+      }
+      break;
+      case SOURCE_FUNCTIONS:
+      {   //Source
+        if (FunctionNumber == AxumData.ConsoleData[cntConsole].SelectedSource)
+        {
+          WalkAxumFunctionInformationStruct = SourceFunctions[NUMBER_OF_SOURCES+cntConsole][Function];
+        }
+      }
+      break;
+      case DESTINATION_FUNCTIONS:
+      {   //Destination
+        if (FunctionNumber == AxumData.ConsoleData[cntConsole].SelectedDestination)
+        {
+          WalkAxumFunctionInformationStruct = DestinationFunctions[NUMBER_OF_DESTINATIONS+cntConsole][Function];
+        }
+      }
+      break;
+    }
+    while (WalkAxumFunctionInformationStruct != NULL)
+    {
+      if ((MambaNetAddress == 0x00000000) || (MambaNetAddress == WalkAxumFunctionInformationStruct->MambaNetAddress))
+      {
+        if (WalkAxumFunctionInformationStruct->ActuatorDataMaximal>*max)
+        {
+          *max = WalkAxumFunctionInformationStruct->ActuatorDataMaximal;
+        }
+        if (WalkAxumFunctionInformationStruct->ActuatorDataMinimal<*min)
+        {
+          *min = WalkAxumFunctionInformationStruct->ActuatorDataMinimal;
+        }
+        *def = WalkAxumFunctionInformationStruct->ActuatorDataDefault;
+      }
+      WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
+    }
+  }
+}
+
