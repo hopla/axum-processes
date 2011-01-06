@@ -12528,7 +12528,6 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
           {
             float min, max, def;
             CheckObjectRange(FunctionNrToSent | SOURCE_FUNCTION_GAIN, &min, &max, &def);
-            log_write("min: %f, max: %f, def: %f", min, max, def);
 
             float OldLevel = AxumData.SourceData[SourceNr].Gain;
 
@@ -13207,7 +13206,6 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
             {
               float min, max, def;
               CheckObjectRange(FunctionNrToSent | SOURCE_FUNCTION_GAIN, &min, &max, &def);
-              log_write("min: %f, max: %f, def: %f", min, max, def);
 
               if (AxumData.SourceData[SourceNr].Gain != def)
               {
