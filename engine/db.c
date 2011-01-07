@@ -544,7 +544,8 @@ int db_read_src_config(unsigned short int first_src, unsigned short int last_src
     SourceData->InputData[1].SubChannel--;
     SourceData->Phantom = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
     SourceData->Pad = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->Gain);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &SourceData->DefaultGain);
+    SourceData->Gain = SourceData->DefaultGain;
     if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &SourceData->DefaultProcessingPreset) <= 0)
     {
       SourceData->DefaultProcessingPreset = 0;

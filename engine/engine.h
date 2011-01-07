@@ -126,6 +126,7 @@ typedef struct
   bool Phantom;
   bool Pad;
   float Gain;
+  float DefaultGain;
   char Alert;
 
   char CoughComm[2];

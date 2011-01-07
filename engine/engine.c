@@ -1141,9 +1141,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
 
                       if (data.State)
                       {
-                        if (AxumData.SourceData[SourceNr].Gain != def)
+                        if (AxumData.SourceData[SourceNr].Gain != AxumData.SourceData[SourceNr].DefaultGain)
                         {
-                          AxumData.SourceData[SourceNr].Gain = def;
+                          AxumData.SourceData[SourceNr].Gain = AxumData.SourceData[SourceNr].DefaultGain;
                           CheckObjectsToSent(FunctionNrToSent | SOURCE_FUNCTION_GAIN);
 
                           for (int cntModule=0; cntModule<128; cntModule++)
@@ -13207,9 +13207,9 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
               float min, max, def;
               CheckObjectRange(FunctionNrToSent | SOURCE_FUNCTION_GAIN, &min, &max, &def);
 
-              if (AxumData.SourceData[SourceNr].Gain != def)
+              if (AxumData.SourceData[SourceNr].Gain != AxumData.SourceData[SourceNr].DefaultGain)
               {
-                AxumData.SourceData[SourceNr].Gain = def;
+                AxumData.SourceData[SourceNr].Gain = AxumData.SourceData[SourceNr].DefaultGain;
 
                 DoAxum_UpdateModuleControlMode(ModuleNr, ControlMode);
 
@@ -15802,6 +15802,7 @@ void initialize_axum_data_struct()
     AxumData.SourceData[cntSource].Phantom = 0;
     AxumData.SourceData[cntSource].Pad = 0;
     AxumData.SourceData[cntSource].Gain = 30;
+    AxumData.SourceData[cntSource].DefaultGain = 30;
     AxumData.SourceData[cntSource].Alert = 0;
 
     AxumData.SourceData[cntSource].CoughComm[0] = 0;
