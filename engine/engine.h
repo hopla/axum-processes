@@ -72,7 +72,7 @@ typedef struct {
   bool EQOnOff;
 
   bool UseDynamics;
-  char AGCAmount;
+  float AGCRatio;
   float AGCThreshold;
   bool DynamicsOnOff;
   float DownwardExpanderThreshold;
@@ -217,7 +217,7 @@ typedef struct
   bool EQOnOff;
 
   bool DynamicsUsePreset;
-  char AGCAmount;
+  float AGCRatio;
   float AGCThreshold;
   bool DynamicsOnOff;
   float DownwardExpanderThreshold;
@@ -271,7 +271,7 @@ typedef struct
   AXUM_EQ_BAND_DATA_STRUCT EQBand[6];
   bool EQOnOff;
 
-  char AGCAmount;
+  float AGCRatio;
   float AGCThreshold;
   bool DynamicsOnOff;
   float DownwardExpanderThreshold;

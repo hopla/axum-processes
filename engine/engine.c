@@ -1727,18 +1727,18 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
               { //Dynamics amount
                 if (type == MBN_DATATYPE_UINT)
                 {
-                  AxumData.ModuleData[ModuleNr].AGCAmount = (100*data.UInt)/(DataMaximal-DataMinimal);
+                  AxumData.ModuleData[ModuleNr].AGCRatio = (19*data.UInt)/(DataMaximal-DataMinimal)+1;
                 }
                 else if (type == MBN_DATATYPE_SINT)
                 {
-                  AxumData.ModuleData[ModuleNr].AGCAmount += data.SInt;
-                  if (AxumData.ModuleData[ModuleNr].AGCAmount < 0)
+                  AxumData.ModuleData[ModuleNr].AGCRatio += ((float)data.SInt)/10;
+                  if (AxumData.ModuleData[ModuleNr].AGCRatio < 1)
                   {
-                    AxumData.ModuleData[ModuleNr].AGCAmount = 0;
+                    AxumData.ModuleData[ModuleNr].AGCRatio = 1;
                   }
-                  else if (AxumData.ModuleData[ModuleNr].AGCAmount > 100)
+                  else if (AxumData.ModuleData[ModuleNr].AGCRatio > 20)
                   {
-                    AxumData.ModuleData[ModuleNr].AGCAmount = 100;
+                    AxumData.ModuleData[ModuleNr].AGCRatio = 20;
                   }
                 }
 
@@ -7556,7 +7556,9 @@ void SetAxum_ModuleProcessing(unsigned int ModuleNr)
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.Slope = AxumData.ModuleData[ModuleNr].Filter.Slope;
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Filter.Type = AxumData.ModuleData[ModuleNr].Filter.Type;
 
-    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Percent = AxumData.ModuleData[ModuleNr].AGCAmount;
+
+
+    dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Percent = 100-(100/pow(2.715, (log(AxumData.ModuleData[ModuleNr].AGCRatio)/log(2))));
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.On = AxumData.ModuleData[ModuleNr].DynamicsOnOff;
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.Threshold = AxumData.ModuleData[ModuleNr].AGCThreshold;
     dspcard->data.ChannelData[DSPCardChannelNr+cntChannel].Dynamics.DownwardExpanderThreshold = AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold;
@@ -9073,13 +9075,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = ((AxumData.ModuleData[ModuleNr].AGCAmount*(DataMaximal-DataMinimal))/100)+DataMinimal;
+              data.UInt = (((AxumData.ModuleData[ModuleNr].AGCRatio-1)*(DataMaximal-DataMinimal))/19)+DataMinimal;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
-              sprintf(LCDText, "  %3d%%  ", AxumData.ModuleData[ModuleNr].AGCAmount);
+              sprintf(LCDText, " 1:%1.1f ", AxumData.ModuleData[ModuleNr].AGCRatio);
               data.Octets = (unsigned char *)LCDText;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
@@ -12816,19 +12818,19 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
       break;
       case MODULE_CONTROL_MODE_AGC:
       {   //AGC
-        int OldAmount = AxumData.ModuleData[ModuleNr].AGCAmount;
+        float OldAmount = AxumData.ModuleData[ModuleNr].AGCRatio;
 
-        AxumData.ModuleData[ModuleNr].AGCAmount += data.SInt;
-        if (AxumData.ModuleData[ModuleNr].AGCAmount < 0)
+        AxumData.ModuleData[ModuleNr].AGCRatio += ((float)data.SInt)/10;
+        if (AxumData.ModuleData[ModuleNr].AGCRatio < 1)
         {
-          AxumData.ModuleData[ModuleNr].AGCAmount = 0;
+          AxumData.ModuleData[ModuleNr].AGCRatio = 1;
         }
-        else if (AxumData.ModuleData[ModuleNr].AGCAmount > 100)
+        else if (AxumData.ModuleData[ModuleNr].AGCRatio > 20)
         {
-          AxumData.ModuleData[ModuleNr].AGCAmount = 100;
+          AxumData.ModuleData[ModuleNr].AGCRatio = 20;
         }
 
-        if (AxumData.ModuleData[ModuleNr].AGCAmount != OldAmount)
+        if (AxumData.ModuleData[ModuleNr].AGCRatio != OldAmount)
         {
           SetAxum_ModuleProcessing(ModuleNr);
 
@@ -13843,7 +13845,7 @@ void ModeControllerSetData(unsigned int SensorReceiveFunctionNr, unsigned int Ma
     break;
     case MODULE_CONTROL_MODE_AGC:
     {
-      sprintf(LCDText, "  %3d%%  ", AxumData.ModuleData[ModuleNr].AGCAmount);
+      sprintf(LCDText, " 1:%1.1f ", AxumData.ModuleData[ModuleNr].AGCRatio);
     }
     break;
     case MODULE_CONTROL_MODE_EXPANDER_THRESHOLD:
@@ -15879,7 +15881,7 @@ void initialize_axum_data_struct()
     AxumData.PresetData[cntPreset].EQOnOff = false;
 
     AxumData.PresetData[cntPreset].UseDynamics = false;
-    AxumData.PresetData[cntPreset].AGCAmount = 0;
+    AxumData.PresetData[cntPreset].AGCRatio = 1;
     AxumData.PresetData[cntPreset].AGCThreshold = -20;
     AxumData.PresetData[cntPreset].DynamicsOnOff = false;
     AxumData.PresetData[cntPreset].DownwardExpanderThreshold = -30;
@@ -16033,7 +16035,7 @@ void initialize_axum_data_struct()
 
     AxumData.ModuleData[cntModule].EQOnOff = 1;
 
-    AxumData.ModuleData[cntModule].AGCAmount = 0;
+    AxumData.ModuleData[cntModule].AGCRatio = 1;
     AxumData.ModuleData[cntModule].AGCThreshold = -20;
     AxumData.ModuleData[cntModule].DynamicsOnOff = 0;
     AxumData.ModuleData[cntModule].DownwardExpanderThreshold = -30;
@@ -16141,7 +16143,7 @@ void initialize_axum_data_struct()
 
     AxumData.ModuleData[cntModule].Defaults.DynamicsUsePreset = 0;
     AxumData.ModuleData[cntModule].Defaults.DownwardExpanderThreshold = -20;
-    AxumData.ModuleData[cntModule].Defaults.AGCAmount = 0;
+    AxumData.ModuleData[cntModule].Defaults.AGCRatio = 1;
     AxumData.ModuleData[cntModule].Defaults.AGCThreshold = -20;
     AxumData.ModuleData[cntModule].Defaults.DynamicsOnOff = 0;
 
@@ -16361,7 +16363,7 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, int NewProcessingPreset
 
   bool EQOnOff = AxumData.ModuleData[ModuleNr].EQOnOff;
   AXUM_EQ_BAND_PRESET_STRUCT EQBand[6];
-  int AGCAmount = AxumData.ModuleData[ModuleNr].AGCAmount;
+  float AGCRatio = AxumData.ModuleData[ModuleNr].AGCRatio;
   float AGCThreshold = AxumData.ModuleData[ModuleNr].AGCThreshold;
   bool DynamicsOnOff = AxumData.ModuleData[ModuleNr].DynamicsOnOff;
   float DownwardExpanderThreshold = AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold;
@@ -16497,15 +16499,15 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, int NewProcessingPreset
     {
       if (PresetData->UseDynamics)
       {
-        AGCAmount = PresetData->AGCAmount;
+        AGCRatio = PresetData->AGCRatio;
         AGCThreshold = PresetData->AGCThreshold;
         DynamicsOnOff = PresetData->DynamicsOnOff;
         DownwardExpanderThreshold = PresetData->DownwardExpanderThreshold;
       }
       else if ((OverrideAtSourceSelect) || (UseModuleDefaults))
       {
-        AGCAmount = AxumData.ModuleData[ModuleNr].Defaults.AGCAmount;
-        AGCThreshold = AxumData.ModuleData[ModuleNr].Defaults.AGCAmount;
+        AGCRatio = AxumData.ModuleData[ModuleNr].Defaults.AGCRatio;
+        AGCThreshold = AxumData.ModuleData[ModuleNr].Defaults.AGCThreshold;
         DynamicsOnOff = AxumData.ModuleData[ModuleNr].Defaults.DynamicsOnOff;
         DownwardExpanderThreshold = AxumData.ModuleData[ModuleNr].Defaults.DownwardExpanderThreshold;
       }
@@ -16577,7 +16579,7 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, int NewProcessingPreset
     if ((AxumData.ModuleData[ModuleNr].Defaults.DynamicsUsePreset) || (UseModuleDefaults))
     {
       DownwardExpanderThreshold = AxumData.ModuleData[ModuleNr].Defaults.DownwardExpanderThreshold;
-      AGCAmount = AxumData.ModuleData[ModuleNr].Defaults.AGCAmount;
+      AGCRatio = AxumData.ModuleData[ModuleNr].Defaults.AGCRatio;
       AGCThreshold = AxumData.ModuleData[ModuleNr].Defaults.AGCThreshold;
       DynamicsOnOff = AxumData.ModuleData[ModuleNr].Defaults.DynamicsOnOff;
     }
@@ -16769,9 +16771,9 @@ void DoAxum_LoadProcessingPreset(unsigned char ModuleNr, int NewProcessingPreset
       SetModuleControllers = true;
     }
   }
-  if ((AxumData.ModuleData[ModuleNr].AGCAmount != AGCAmount) || (SetAllObjects))
+  if ((AxumData.ModuleData[ModuleNr].AGCRatio != AGCRatio) || (SetAllObjects))
   {
-    AxumData.ModuleData[ModuleNr].AGCAmount = AGCAmount;
+    AxumData.ModuleData[ModuleNr].AGCRatio = AGCRatio;
     unsigned int FunctionNrToSent = ((ModuleNr<<12)&0xFFF000);
     CheckObjectsToSent(FunctionNrToSent | MODULE_FUNCTION_AGC_AMOUNT);
     SetModuleProcessing = true;
