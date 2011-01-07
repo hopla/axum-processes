@@ -15247,6 +15247,8 @@ bool DoAxum_SetNewSource(int ModuleNr, int NewSource, int Forced)
         }
       }
     }
+    DoAxum_UpdateModuleControlMode(ModuleNr, MODULE_CONTROL_MODE_SOURCE);
+    DoAxum_UpdateModuleControlModeLabel(ModuleNr, MODULE_CONTROL_MODE_SOURCE);
   }
   return ((!OldSourceActive) || (Forced));
 }
