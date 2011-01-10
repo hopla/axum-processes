@@ -353,7 +353,7 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
                                     use_dyn_preset,       \
                                     d_exp_threshold,      \
                                     agc_threshold,        \
-                                    agc_amount,           \
+                                    agc_ratio,            \
                                     dyn_on_off,           \
                                     use_mod_preset,       \
                                     mod_pan,              \
@@ -413,7 +413,7 @@ int db_read_src_preset(unsigned short int first_preset, unsigned short int last_
 
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->DownwardExpanderThreshold);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->AGCThreshold);
-    sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &PresetData->AGCAmount);
+    sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &PresetData->AGCRatio);
     PresetData->DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
 
     PresetData->UseModule = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -719,7 +719,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
                                     use_dyn_preset,       \
                                     d_exp_threshold,      \
                                     agc_threshold,        \
-                                    agc_amount,           \
+                                    agc_ratio,            \
                                     dyn_on_off,           \
                                     use_mod_preset,       \
                                     mod_level,            \
@@ -920,7 +920,7 @@ int db_read_module_config(unsigned char first_mod, unsigned char last_mod, unsig
       DefaultModuleData->DynamicsUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->DownwardExpanderThreshold);
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->AGCThreshold);
-      sscanf(PQgetvalue(qres, cntRow, cntField++), "%hhd", &DefaultModuleData->AGCAmount);
+      sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->AGCRatio);
       DefaultModuleData->DynamicsOnOff = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       DefaultModuleData->ModuleUsePreset = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
       sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &DefaultModuleData->FaderLevel);

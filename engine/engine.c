@@ -1736,9 +1736,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     AxumData.ModuleData[ModuleNr].AGCRatio = 1;
                   }
-                  else if (AxumData.ModuleData[ModuleNr].AGCRatio > 20)
+                  else if (AxumData.ModuleData[ModuleNr].AGCRatio > 25)
                   {
-                    AxumData.ModuleData[ModuleNr].AGCRatio = 20;
+                    AxumData.ModuleData[ModuleNr].AGCRatio = 25;
                   }
                 }
 
@@ -12825,9 +12825,9 @@ void ModeControllerSensorChange(unsigned int SensorReceiveFunctionNr, unsigned c
         {
           AxumData.ModuleData[ModuleNr].AGCRatio = 1;
         }
-        else if (AxumData.ModuleData[ModuleNr].AGCRatio > 20)
+        else if (AxumData.ModuleData[ModuleNr].AGCRatio > 25)
         {
-          AxumData.ModuleData[ModuleNr].AGCRatio = 20;
+          AxumData.ModuleData[ModuleNr].AGCRatio = 25;
         }
 
         if (AxumData.ModuleData[ModuleNr].AGCRatio != OldAmount)
