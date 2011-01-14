@@ -202,6 +202,7 @@ ONLINE_NODE_INFORMATION_STRUCT *OnlineNodeInformationList = NULL;
 //sqlite3 *node_templates_db;
 
 int CallbackNodeIndex = -1;
+unsigned char use_eth = 0;
 
 void node_info_lock(int l)
 {
@@ -238,7 +239,8 @@ void init(int argc, char **argv)
   char oem_name[32];
   char cmdline[1024];
   char socket_path[UNIX_PATH_MAX];
-  unsigned char use_eth = 0;
+
+  use_eth = 0;
 
   pthread_mutexattr_init(&mattr);
   //pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
@@ -7058,13 +7060,16 @@ void Timer100HzDone(int Value)
   }
   axum_data_lock(0);
 
-  if ((LinkStatus = mbnEthernetMIILinkStatus(mbn->itf, error)) == -1)
+  if (use_eth)
   {
-  }
-  else if (CurrentLinkStatus != LinkStatus)
-  {
-    log_write("Link %s", LinkStatus ? "up" : "down");
-    CurrentLinkStatus = LinkStatus;
+    if ((LinkStatus = mbnEthernetMIILinkStatus(mbn->itf, error)) == -1)
+    {
+    }
+    else if (CurrentLinkStatus != LinkStatus)
+    {
+      log_write("Link %s", LinkStatus ? "up" : "down");
+      CurrentLinkStatus = LinkStatus;
+    }
   }
 
   Value = 0;
