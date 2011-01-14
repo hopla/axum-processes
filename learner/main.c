@@ -15,11 +15,15 @@
 #define GET_NUM 5 /* maxumum number of concurrent requests */
 #define DEBUG 0
 
-#define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
+#define DEFAULT_UNIX_MAMBANET_PATH "/tmp/axum-gateway.socket"
+#define DEFAULT_UNIX_HWPARENT_PATH "/tmp/hwparent.socket"
 #define DEFAULT_ETH_DEV   "eth0"
 #define DEFAULT_DB_STR    "dbname='axum' user='axum'"
 #define DEFAULT_LOG_FILE  "/var/log/axum-learner.log"
 
+#ifndef UNIX_PATH_MAX
+# define UNIX_PATH_MAX 108
+#endif
 
 struct mbn_node_info this_node = {
   0, 0,
@@ -370,6 +374,11 @@ void mObjectError(struct mbn_handler *m, struct mbn_message *msg, unsigned short
   m++;
 }
 
+void mWriteLogMessage(struct mbn_handler *mbn, char *msg) {
+  log_write(msg);
+  return;
+  mbn = NULL;
+}
 
 void template_removed(char myself, char *arg) {
   struct mbn_address_node *a;
@@ -394,6 +403,8 @@ void init(int argc, char *argv[]) {
   char oem_name[32];
   char cmdline[1024];
   int cnt;
+  char socket_path[UNIX_PATH_MAX];
+  unsigned char use_eth = 0;
 
   pthread_mutexattr_init(&mattr);
   pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
@@ -406,7 +417,8 @@ void init(int argc, char *argv[]) {
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbstr, DEFAULT_DB_STR);
   strcpy(log_file, DEFAULT_LOG_FILE);
-  strcpy(hwparent_path, DEFAULT_GTW_PATH);
+  strcpy(hwparent_path, DEFAULT_UNIX_HWPARENT_PATH);
+  strcpy(socket_path, DEFAULT_UNIX_MAMBANET_PATH);
 
   while((c = getopt(argc, argv, "e:d:l:g:i:")) != -1) {
     switch(c) {
@@ -416,6 +428,7 @@ void init(int argc, char *argv[]) {
           exit(1);
         }
         strcpy(ethdev, optarg);
+        use_eth = 1;
         break;
       case 'd':
         if(strlen(optarg) > 256) {
@@ -462,11 +475,20 @@ void init(int argc, char *argv[]) {
   hwparent(&this_node);
   sql_open(dbstr, 1, notifies);
 
-  if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
-    fprintf(stderr, "Opening %s: %s\n", ethdev, err);
-    sql_close();
-    log_close();
-    exit(1);
+  if (!use_eth) {
+    if((itf = mbnUnixOpen(socket_path, NULL, err)) == NULL) {
+      fprintf(stderr, "Opening %s: %s\n", socket_path, err);
+      sql_close();
+      log_close();
+      exit(1);
+    }
+  } else {
+    if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
+      fprintf(stderr, "Opening %s: %s\n", ethdev, err);
+      sql_close();
+      log_close();
+      exit(1);
+    }
   }
   if((mbn = mbnInit(&this_node, NULL, itf, err)) == NULL) {
     fprintf(stderr, "mbnInit: %s\n", err);
@@ -480,6 +502,7 @@ void init(int argc, char *argv[]) {
   mbnSetObjectInformationResponseCallback(mbn, mObjectInformationResponse);
   mbnSetObjectErrorCallback(mbn, mObjectError);
   mbnSetOnlineStatusCallback(mbn, mOnlineStatus);
+  mbnSetWriteLogMessageCallback(mbn, mWriteLogMessage);
 
   //start interface for the mbn-handler
   mbnStartInterface(itf, err);

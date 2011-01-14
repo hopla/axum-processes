@@ -65,11 +65,16 @@ pthread_mutex_t axum_data_mutex;
   #define LOG_DEBUG(...)
 #endif
 
-#define DEFAULT_GTW_PATH    "/tmp/axum-gateway"
-#define DEFAULT_ETH_DEV     "eth0"
-#define DEFAULT_DB_STR      "dbname='axum' user='axum'"
-#define DEFAULT_LOG_FILE    "/var/log/axum-engine.log"
-#define DEFAULT_BACKUP_FILE "/var/lib/axum/.backup"
+#define DEFAULT_UNIX_HWPARENT_PATH "/tmp/hwparent.socket"
+#define DEFAULT_UNIX_MAMBANET_PATH "/tmp/axum-gateway.socket"
+#define DEFAULT_ETH_DEV            "eth0"
+#define DEFAULT_DB_STR             "dbname='axum' user='axum'"
+#define DEFAULT_LOG_FILE           "/var/log/axum-engine.log"
+#define DEFAULT_BACKUP_FILE        "/var/lib/axum/.backup"
+
+#ifndef UNIX_PATH_MAX
+# define UNIX_PATH_MAX 108
+#endif
 
 #define PCB_MAJOR_VERSION        1
 #define PCB_MINOR_VERSION        0
@@ -232,6 +237,8 @@ void init(int argc, char **argv)
   int c;
   char oem_name[32];
   char cmdline[1024];
+  char socket_path[UNIX_PATH_MAX];
+  unsigned char use_eth = 0;
 
   pthread_mutexattr_init(&mattr);
   //pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
@@ -240,7 +247,8 @@ void init(int argc, char **argv)
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbstr, DEFAULT_DB_STR);
   strcpy(log_file, DEFAULT_LOG_FILE);
-  strcpy(hwparent_path, DEFAULT_GTW_PATH);
+  strcpy(hwparent_path, DEFAULT_UNIX_HWPARENT_PATH);
+  strcpy(socket_path, DEFAULT_UNIX_MAMBANET_PATH);
   strcpy(backup_file, DEFAULT_BACKUP_FILE);
 
   /* parse options */
@@ -252,6 +260,7 @@ void init(int argc, char **argv)
           exit(1);
         }
         strcpy(ethdev, optarg);
+        use_eth = 1;
         break;
       case 'i':
         if(sscanf(optarg, "%hd", &(this_node.UniqueIDPerProduct)) != 1) {
@@ -356,13 +365,28 @@ void init(int argc, char **argv)
     exit(1);
   }
 
-  if ((itf=mbnEthernetOpen(ethdev, error)) == NULL)
+
+  if (!use_eth)
   {
-    fprintf(stderr, "Error opening ethernet device: %s", error);
-    dsp_close(dsp_handler);
-    db_close();
-    log_close();
-    exit(1);
+    if ((itf=mbnUnixOpen(socket_path, NULL, error)) == NULL)
+    {
+      fprintf(stderr, "Error opening unix socket: %s", error);
+      dsp_close(dsp_handler);
+      db_close();
+      log_close();
+      exit(1);
+    }
+  }
+  else
+  {
+    if ((itf=mbnEthernetOpen(ethdev, error)) == NULL)
+    {
+      fprintf(stderr, "Error opening ethernet device: %s", error);
+      dsp_close(dsp_handler);
+      db_close();
+      log_close();
+      exit(1);
+    }
   }
 
 
@@ -398,6 +422,19 @@ void *timer_thread_loop(void *arg)
   }
   return NULL;
   arg = NULL;
+}
+
+void mWriteLogMessage(struct mbn_handler *mbn, char *msg) {
+  log_write(msg);
+  return;
+  mbn = NULL;
+}
+
+void mOnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid)
+{
+  log_write("OnlineStatus on %08lX %s", addr, valid ? "validated" : "invalid");
+  return;
+  mbn = NULL;
 }
 
 int main(int argc, char *argv[])
@@ -472,11 +509,6 @@ int main(int argc, char *argv[])
   { //Backup loaded, clear rack-config and set processing data
     if (AxumData.StartupState)
     {
-      for (unsigned char cntSlot=0; cntSlot<42; cntSlot++)
-      {
-        AxumData.RackOrganization[cntSlot] = 0x00000000;
-      }
-
       for (int cntModule=0; cntModule<128; cntModule++)
       {
         for (int cntBand=0; cntBand<6; cntBand++)
@@ -493,6 +525,10 @@ int main(int argc, char *argv[])
         SetAxum_MonitorBuss(cntBuss);
       }
     }
+  }
+  for (unsigned char cntSlot=0; cntSlot<42; cntSlot++)
+  {
+    AxumData.RackOrganization[cntSlot] = 0x00000000;
   }
   axum_data_lock(0);
 
@@ -511,6 +547,8 @@ int main(int argc, char *argv[])
   mbnSetErrorCallback(mbn, mError);
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
   mbnSetAcknowledgeReplyCallback(mbn, mAcknowledgeReply);
+  mbnSetWriteLogMessageCallback(mbn, mWriteLogMessage);
+  mbnSetOnlineStatusCallback(mbn, mOnlineStatus);
 
   //start interface for the mbn-handler
   mbnStartInterface(itf, error);
@@ -5900,6 +5938,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
             if (OnlineNodeInformationElement->SlotNumberObjectNr != -1)
             {
+              log_write("Get slot from 0x%08X", OnlineNodeInformationElement->MambaNetAddress);
               mbnGetSensorData(mbn, OnlineNodeInformationElement->MambaNetAddress, OnlineNodeInformationElement->SlotNumberObjectNr, 1);
             }
 
@@ -7021,7 +7060,6 @@ void Timer100HzDone(int Value)
 
   if ((LinkStatus = mbnEthernetMIILinkStatus(mbn->itf, error)) == -1)
   {
-    log_write("mbnEthernetMIILinkStatus error: %d", error);
   }
   else if (CurrentLinkStatus != LinkStatus)
   {

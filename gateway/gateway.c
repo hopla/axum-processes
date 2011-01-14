@@ -36,15 +36,15 @@
 #include <mbn.h>
 #include <pthread.h>
 
-#define DEFAULT_UNIX_PATH "/tmp/axum-gateway"
-#define DEFAULT_DATA_PATH "/etc/conf.d/ip"
-#define DEFAULT_LOG_FILE  "/var/log/axum-gateway.log"
+#define DEFAULT_UNIX_HWPARENT_PATH "/tmp/hwparent.socket"
+#define DEFAULT_DATA_PATH          "/etc/conf.d/ip"
+#define DEFAULT_LOG_FILE           "/var/log/axum-gateway.log"
 
 #ifndef UNIX_PATH_MAX
 # define UNIX_PATH_MAX 108
 #endif
 
-#define nodestr(n) (n == eth) ? "eth" : ((n == can) ? "can" : ((n == tcp) ? "tcp" : "udp"))
+#define nodestr(n) (n == unx) ? "unx" : ((n == eth) ? "eth" : ((n == can) ? "can" : ((n == tcp) ? "tcp" : "udp")))
 
 #define OBJ_IPADDR   0
 #define OBJ_IPNET    1
@@ -53,10 +53,12 @@
 #define OBJ_ETHNODES 4
 #define OBJ_TCPNODES 5
 #define OBJ_UDPNODES 6
+#define OBJ_UNXNODES 7
 
-#define NR_OF_OBJECTS 7
+#define NR_OF_OBJECTS 8
 //Major version 3 = 6 objects
 //Major version 4 = 7 objects, added UDP
+//Major version 5 = 8 objects, added unix sockets
 
 struct mbn_node_info this_node = {
   0x00000000, 0x00, /* MambaNet Addr + Services */
@@ -64,7 +66,7 @@ struct mbn_node_info this_node = {
   "Axum MambaNet Gateway",
   0x0001, 0x000D, 0x0001,   /* UniqueMediaAccessId */
   0, 0,           /* Hardware revision */
-  4, 1,           /* Firmware revision */
+  5, 0,           /* Firmware revision */
   0, 0,           /* FPGAFirmware revision */
   NR_OF_OBJECTS,  /* NumberOfObjects */
   0,              /* DefaultEngineAddr */
@@ -72,7 +74,7 @@ struct mbn_node_info this_node = {
   0               /* Service request */
 };
 
-struct mbn_handler *eth, *can, *tcp, *udp;
+struct mbn_handler *unx, *eth, *can, *tcp, *udp;
 int verbose;
 char ieth[50], data_path[1000];
 unsigned int net_ip, net_mask, net_gw;
@@ -151,7 +153,7 @@ void SynchroniseDateTime(struct mbn_handler *mbn, time_t time) {
 
 int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_data dat) {
   object -= 1024;
-  if(mbn != eth || object > OBJ_IPGW)
+  if(mbn != unx || object > OBJ_IPGW)
     return 1;
   net_read();
   if(object == OBJ_IPADDR) net_ip   = dat.UInt;
@@ -160,16 +162,19 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
   net_write();
 
   dat.UInt = net_ip;
+  if(unx != NULL) mbnUpdateActuatorData(unx, OBJ_IPADDR+1024, dat);
   if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPADDR+1024, dat);
   if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPADDR+1024, dat);
   if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPADDR+1024, dat);
   if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPADDR+1024, dat);
   dat.UInt = net_mask;
+  if(unx != NULL) mbnUpdateActuatorData(unx, OBJ_IPNET+1024, dat);
   if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPNET+1024, dat);
   if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPNET+1024, dat);
   if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPNET+1024, dat);
   if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPNET+1024, dat);
   dat.UInt = net_gw;
+  if(unx != NULL) mbnUpdateActuatorData(unx, OBJ_IPGW+1024, dat);
   if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPGW+1024, dat);
   if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPGW+1024, dat);
   if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPGW+1024, dat);
@@ -193,6 +198,7 @@ void OnlineStatus(struct mbn_handler *mbn, unsigned long addr, char valid) {
     printf("OnlineStatus on %s: %08lX %s\n", nodestr(mbn), addr, valid ? "validated" : "invalid");
   if(valid) {
     if(can != NULL && mbn != can) mbnForceAddress(can, addr);
+    if(unx != NULL && mbn != unx) mbnForceAddress(unx, addr);
     if(eth != NULL && mbn != eth) mbnForceAddress(eth, addr);
     if(tcp != NULL && mbn != tcp) mbnForceAddress(tcp, addr);
     if(udp != NULL && mbn != udp) mbnForceAddress(udp, addr);
@@ -230,9 +236,11 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
       dest = tcp;
     else if(udp != NULL && mbnNodeStatus(udp, msg->AddressTo) != NULL)
       dest = udp;
+    else if(unx != NULL && mbnNodeStatus(unx, msg->AddressTo) != NULL)
+      dest = unx;
 
-    /* don't forward if the destination is on the same network */
-    if(dest == mbn)
+    /* don't forward if the destination is on the same network, except for unx (unix sockets and tcp?) */
+    if((dest == mbn) && (dest != unx))
       return 0;
   }
 
@@ -258,6 +266,7 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
       if(!(dest == NULL && msg->MessageType == MBN_MSGTYPE_ADDRESS && msg->Message.Address.Action == MBN_ADDR_ACTION_INFO))
         fwd(can);
     }
+    if(unx != NULL && mbn != unx) fwd(unx);
   }
 #undef fwd
   return 0;
@@ -276,9 +285,10 @@ void AddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old, s
   while((n = mbnNextNode(mbn, n)) != NULL)
     count.UInt++;
 
-  obj = (mbn == can) ? OBJ_CANNODES : ((mbn == eth) ? OBJ_ETHNODES : ((mbn == tcp) ? OBJ_TCPNODES : OBJ_UDPNODES));
+  obj = (mbn == unx) ? OBJ_UNXNODES : ((mbn == can) ? OBJ_CANNODES : ((mbn == eth) ? OBJ_ETHNODES : ((mbn == tcp) ? OBJ_TCPNODES : OBJ_UDPNODES)));
   obj += 1024;
   if(can != NULL) mbnUpdateSensorData(can, obj, count);
+  if(unx != NULL) mbnUpdateSensorData(unx, obj, count);
   if(eth != NULL) mbnUpdateSensorData(eth, obj, count);
   if(tcp != NULL) mbnUpdateSensorData(tcp, obj, count);
   if(udp != NULL) mbnUpdateSensorData(udp, obj, count);
@@ -335,7 +345,7 @@ void setcallbacks(struct mbn_handler *mbn) {
 void init(int argc, char **argv, char *upath) {
   struct mbn_interface *itf = NULL;
   struct mbn_object obj[NR_OF_OBJECTS];
-  char err[MBN_ERRSIZE], ican[50], tport[10], uport[10];
+  char err[MBN_ERRSIZE], ican[50], tport[10], uport[10], iunix[UNIX_PATH_MAX];
   char u_remotehost[50], u_remoteport[10];
   char t_remotehost[50], t_remoteport[10];
   int c, itfcount = 0;
@@ -345,14 +355,14 @@ void init(int argc, char **argv, char *upath) {
   char *url_found;
   char *port_found;
 
-  strcpy(upath, DEFAULT_UNIX_PATH);
+  strcpy(upath, DEFAULT_UNIX_HWPARENT_PATH);
   strcpy(data_path, DEFAULT_DATA_PATH);
   strcpy(log_file, DEFAULT_LOG_FILE);
   ican[0] = ieth[0] = tport[0] = uport[0] = u_remotehost[0] = u_remoteport[0] = t_remotehost[0] = t_remoteport[0] = 0;
-  can = eth = tcp = udp = NULL;
+  unx = can = eth = tcp = udp = NULL;
   verbose = 0;
 
-  while((c = getopt(argc, argv, "c:e:u:t:s:h:r:d:i:p:l:v")) != -1) {
+  while((c = getopt(argc, argv, "c:e:u:m:t:s:h:r:d:i:p:l:v")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
@@ -421,13 +431,21 @@ void init(int argc, char **argv, char *upath) {
         }
         itfcount++;
         break;
-      /* UNIX socket */
+      /* UNIX socket for hw parent*/
       case 'u':
         if(strlen(optarg) > UNIX_PATH_MAX) {
           fprintf(stderr, "Too long path to UNIX socket!\n");
           exit(1);
         }
         strcpy(upath, optarg);
+        break;
+      /* UNIX socket for MambaNet */
+      case 'm':
+        if(strlen(optarg) > UNIX_PATH_MAX) {
+          fprintf(stderr, "Too long path to UNIX socket!\n");
+          exit(1);
+        }
+        strcpy(iunix, optarg);
         break;
       /* data path */
       case 'd':
@@ -466,15 +484,16 @@ void init(int argc, char **argv, char *upath) {
         break;
       /* wrong option */
       default:
-        fprintf(stderr, "Usage: %s [-v] [-c dev] [-e dev] [-t port] [-s port] [-h hostname:port] [-r hostname:port] [-u path] [-d path] [-i id] [-p id]\n", argv[0]);
-        fprintf(stderr, "  -v           Print verbose output to stdout\n");
+        fprintf(stderr, "Usage: %s [-v] [-c dev] [-e dev] [-t port] [-s port] [-h hostname:port] [-r hostname:port] [-m path] [-u path] [-d path] [-i id] [-p id]\n", argv[0]);
+        fprintf(stderr, "  -v                Print verbose output to stdout\n");
         fprintf(stderr, "  -c dev            CAN device or TTY device\n");
         fprintf(stderr, "  -e dev            Ethernet device\n");
         fprintf(stderr, "  -t port           TCP listen port (0 = use default)\n");
         fprintf(stderr, "  -s port           UDP listen port (0 = use default)\n");
         fprintf(stderr, "  -h hostname:port  Host:port to connect to via UDP/IP\n");
         fprintf(stderr, "  -r hostport:port  Host:port to connect to via TCP/IP\n");
-        fprintf(stderr, "  -u path           Path to UNIX socket\n");
+        fprintf(stderr, "  -m path           Path to mambanet UNIX socket\n");
+        fprintf(stderr, "  -u path           Override default path to hardware parent UNIX socket\n");
         fprintf(stderr, "  -d path           Path to data file (for IP setting)\n");
         fprintf(stderr, "  -p id             Hardware Parent (not specified = from CAN, 'self' = own ID)\n");
         fprintf(stderr, "  -i id             UniqueIDPerProduct for the MambaNet node\n");
@@ -512,6 +531,7 @@ void init(int argc, char **argv, char *upath) {
   obj[OBJ_ETHNODES] = MBN_OBJ("Ethernet Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_TCPNODES] = MBN_OBJ("TCP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_UDPNODES] = MBN_OBJ("UDP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
+  obj[OBJ_UNXNODES] = MBN_OBJ("Unix Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
 
   if(!verbose)
     daemonize();
@@ -544,12 +564,38 @@ void init(int argc, char **argv, char *upath) {
     log_write("CAN interface started (%s)", ican);
   }
 
+  /* unix socket for MambaNet */
+  if (iunix[0])
+  {
+    if((itf = mbnUnixOpen(NULL, iunix, err)) == NULL) {
+      fprintf(stderr, "mbnUnixOpen: %s\n", err);
+      if(can)
+        mbnFree(can);
+      log_close();
+      exit(1);
+    }
+    if((unx = mbnInit(&this_node, obj, itf, err)) == NULL) {
+      fprintf(stderr, "mbnInit(unx): %s\n", err);
+      if(can)
+        mbnFree(can);
+      log_close();
+      exit(1);
+    }
+    setcallbacks(unx);
+
+    //start interface for the mbn-handler
+    mbnStartInterface(itf, err);
+    log_write("Unix interface started (%s)", iunix);
+  }
+
   /* init ethernet */
   if(ieth[0]) {
     if((itf = mbnEthernetOpen(ieth, err)) == NULL) {
       fprintf(stderr, "mbnEthernetOpen: %s\n", err);
       if(can)
         mbnFree(can);
+      if(unx)
+        mbnFree(unx);
       log_close();
       exit(1);
     }
@@ -557,6 +603,8 @@ void init(int argc, char **argv, char *upath) {
       fprintf(stderr, "mbnInit(eth): %s\n", err);
       if(can)
         mbnFree(can);
+      if(unx)
+        mbnFree(unx);
       log_close();
       exit(1);
     }
@@ -573,6 +621,8 @@ void init(int argc, char **argv, char *upath) {
       fprintf(stderr, "mbnTCPOpen: %s\n", err);
       if(can)
         mbnFree(can);
+      if(unx)
+        mbnFree(unx);
       if(eth)
         mbnFree(eth);
       log_close();
@@ -582,6 +632,8 @@ void init(int argc, char **argv, char *upath) {
       fprintf(stderr, "mbnInit(tcp): %s\n", err);
       if(can)
         mbnFree(can);
+      if(unx)
+        mbnFree(unx);
       if(eth)
         mbnFree(eth);
       log_close();
@@ -598,6 +650,8 @@ void init(int argc, char **argv, char *upath) {
       fprintf(stderr, "mbnTCPOpen: %s\n", err);
       if(can)
         mbnFree(can);
+      if(unx)
+        mbnFree(unx);
       if(eth)
         mbnFree(eth);
       log_close();
@@ -607,6 +661,8 @@ void init(int argc, char **argv, char *upath) {
       fprintf(stderr, "mbnInit(tcp): %s\n", err);
       if(can)
         mbnFree(can);
+      if(unx)
+        mbnFree(unx);
       if(eth)
         mbnFree(eth);
       log_close();
@@ -626,6 +682,8 @@ void init(int argc, char **argv, char *upath) {
         mbnFree(tcp);
       if(can)
         mbnFree(can);
+      if(unx)
+        mbnFree(unx);
       if(eth)
         mbnFree(eth);
       log_close();
@@ -637,6 +695,8 @@ void init(int argc, char **argv, char *upath) {
         mbnFree(tcp);
       if(can)
         mbnFree(can);
+      if(unx)
+        mbnFree(unx);
       if(eth)
         mbnFree(eth);
       log_close();
@@ -654,6 +714,8 @@ void init(int argc, char **argv, char *upath) {
         mbnFree(tcp);
       if(can)
         mbnFree(can);
+      if(unx)
+        mbnFree(unx);
       if(eth)
         mbnFree(eth);
       log_close();
@@ -665,6 +727,8 @@ void init(int argc, char **argv, char *upath) {
         mbnFree(tcp);
       if(can)
         mbnFree(can);
+      if(unx)
+        mbnFree(unx);
       if(eth)
         mbnFree(eth);
       log_close();
@@ -694,6 +758,8 @@ int main(int argc, char **argv) {
 
   if(can)
     mbnFree(can);
+  if(unx)
+    mbnFree(unx);
   if(eth)
     mbnFree(eth);
   if(tcp)

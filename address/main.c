@@ -13,10 +13,15 @@
 #include <mbn.h>
 #include <unistd.h>
 
-#define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
-#define DEFAULT_ETH_DEV   "eth0"
-#define DEFAULT_DB_STR    "dbname='axum' user='axum'"
-#define DEFAULT_LOG_FILE  "/var/log/axum-address.log"
+#define DEFAULT_UNIX_HWPARENT_PATH  "/tmp/hwparent.socket"
+#define DEFAULT_UNIX_MAMBANET_PATH  "/tmp/axum-gateway.socket"
+#define DEFAULT_ETH_DEV             "eth0"
+#define DEFAULT_DB_STR              "dbname='axum' user='axum'"
+#define DEFAULT_LOG_FILE            "/var/log/axum-address.log"
+
+#ifndef UNIX_PATH_MAX
+# define UNIX_PATH_MAX 108
+#endif
 
 
 /* node info */
@@ -327,6 +332,11 @@ void mAcknowledgeTimeout(struct mbn_handler *m, struct mbn_message *msg) {
   m++;
 }
 
+void mWriteLogMessage(struct mbn_handler *m, char *msg) {
+  log_write(msg);
+  return;
+  m=NULL;
+}
 
 void init(int argc, char **argv) {
   struct mbn_interface *itf;
@@ -338,13 +348,16 @@ void init(int argc, char **argv) {
   char oem_name[32];
   char cmdline[1024];
   int cnt;
+  char socket_path[UNIX_PATH_MAX];
+  char use_eth = 0;
 
   verbose = 0;
 
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(dbstr, DEFAULT_DB_STR);
   strcpy(log_file, DEFAULT_LOG_FILE);
-  strcpy(hwparent_path, DEFAULT_GTW_PATH);
+  strcpy(hwparent_path, DEFAULT_UNIX_HWPARENT_PATH);
+  strcpy(socket_path, DEFAULT_UNIX_MAMBANET_PATH);
 
   /* parse options */
   while((c = getopt(argc, argv, "e:d:l:g:i:v")) != -1) {
@@ -355,6 +368,7 @@ void init(int argc, char **argv) {
           exit(1);
         }
         strcpy(ethdev, optarg);
+        use_eth = 1;
         break;
       case 'i':
         if(sscanf(optarg, "%hd", &(this_node.UniqueIDPerProduct)) != 1) {
@@ -405,18 +419,32 @@ void init(int argc, char **argv) {
   db_init(dbstr);
 
   /* initialize the MambaNet node */
-  if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
-    fprintf(stderr, "Opening %s: %s\n", ethdev, err);
-    log_close();
-    db_free();
-    exit(1);
+  if (!use_eth)
+  {
+    if((itf = mbnUnixOpen(socket_path, NULL, err)) == NULL) {
+      fprintf(stderr, "mbnUnixOpen: %s\n", err);
+      log_close();
+      db_free();
+      exit(1);
+    }
   }
+  else
+  {
+    if((itf = mbnEthernetOpen(ethdev, err)) == NULL) {
+      fprintf(stderr, "Opening %s: %s\n", ethdev, err);
+      log_close();
+      db_free();
+      exit(1);
+    }
+  }
+
   if((mbn = mbnInit(&this_node, NULL, itf, err)) == NULL) {
     fprintf(stderr, "mbnInit: %s\n", err);
     log_close();
     db_free();
     exit(1);
   }
+
   mbnForceAddress(mbn, 0x0001FFFF);
   mbnSetAddressTableChangeCallback(mbn, mAddressTableChange);
   mbnSetSensorDataResponseCallback(mbn, mSensorDataResponse);
@@ -424,6 +452,7 @@ void init(int argc, char **argv) {
   mbnSetReceiveMessageCallback(mbn, mReceiveMessage);
   mbnSetErrorCallback(mbn, mError);
   mbnSetAcknowledgeTimeoutCallback(mbn, mAcknowledgeTimeout);
+  mbnSetWriteLogMessageCallback(mbn, mWriteLogMessage);
 
   mbnStartInterface(itf, err);
 
