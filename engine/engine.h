@@ -415,6 +415,8 @@ typedef struct
   float LevelReserve;
   bool AutoMomentary;
   bool StartupState;
+
+  unsigned char PercentInitialized;
 } AXUM_DATA_STRUCT;
 
 //**************************************************************/
@@ -511,6 +513,7 @@ struct ONLINE_NODE_INFORMATION_STRUCT
   int FirmwareMajorRevision;
   unsigned char UserLevelFromConsole;
   unsigned char TimerRequestDone;
+  unsigned char InitializationFinished;
 
 //Not sure if should be stored here...
   int SlotNumberObjectNr;

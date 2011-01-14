@@ -121,8 +121,8 @@ int cntDebugNodeObject=0;
 float cntFloatDebug = 0;
 
 unsigned char VUMeter = 0;
-unsigned char LevelMeterFrequency = 5; //20Hz
-unsigned char PhaseMeterFrequency = 10; //10Hz
+long LevelMeterFrequency = 5; //20Hz
+long PhaseMeterFrequency = 10; //10Hz
 
 AXUM_DATA_STRUCT AxumData;
 matrix_sources_struct matrix_sources;
@@ -5922,6 +5922,10 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
         if (OnlineNodeInformationElement->OnlineNumberOfCustomObjects == -1)
         {
           OnlineNodeInformationElement->OnlineNumberOfCustomObjects = data.UInt;
+          if (data.UInt == 0)
+          { //no objects, no init required
+            OnlineNodeInformationElement->InitializationFinished = 1;
+          }
           CheckDBTemplateCount = 1;
         }
       }
@@ -5946,6 +5950,7 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
 
             db_read_node_defaults(OnlineNodeInformationElement, 1024, OnlineNodeInformationElement->UsedNumberOfCustomObjects+1023, 0, 0);
             db_read_node_config(OnlineNodeInformationElement, 1024, OnlineNodeInformationElement->UsedNumberOfCustomObjects+1023);
+            OnlineNodeInformationElement->InitializationFinished = 1;
           }
 
           db_lock(0);
@@ -6391,6 +6396,7 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     NewOnlineNodeInformationElement->FirmwareMajorRevision = -1;
     NewOnlineNodeInformationElement->UserLevelFromConsole = 0;
     NewOnlineNodeInformationElement->TimerRequestDone = 0;
+    NewOnlineNodeInformationElement->InitializationFinished = 0;
     NewOnlineNodeInformationElement->SlotNumberObjectNr = -1;
     NewOnlineNodeInformationElement->InputChannelCountObjectNr = -1;
     NewOnlineNodeInformationElement->OutputChannelCountObjectNr = -1;
@@ -6646,16 +6652,21 @@ void mAcknowledgeReply(struct mbn_handler *m, struct mbn_message *request, struc
 
 int First = 1;
 char CurrentLinkStatus = 0;
+int PreviousInitializedNodes = 0;
+int PreviousNodeCount = 0;
 
 void Timer100HzDone(int Value)
 {
   char LinkStatus;
+  int InitializedNodes;
+  int NodeCount;
 
   if (First)
-  { //First time wait 20 seconds before starting meters
-    PreviousCount_LevelMeter = cntMillisecondTimer+2000;
-    PreviousCount_SignalDetect = cntMillisecondTimer+2000;
-    PreviousCount_PhaseMeter = cntMillisecondTimer+2000;
+  { //First time wait 60 seconds before starting meters
+    cntMillisecondTimer = 6000;
+    PreviousCount_LevelMeter = cntMillisecondTimer+6000;
+    PreviousCount_SignalDetect = cntMillisecondTimer+6000;
+    PreviousCount_PhaseMeter = cntMillisecondTimer+6000;
 
     //dummy read meters to empty level buffers
     dsp_read_buss_levelmeters(dsp_handler, SummingdBLevel);
@@ -6663,9 +6674,9 @@ void Timer100HzDone(int Value)
     dsp_read_buss_phasemeters(dsp_handler, SummingPhase);
     dsp_read_module_phasemeters(dsp_handler, Phase);
     First = 0;
-  }
+ }
 
-  if ((cntMillisecondTimer-PreviousCount_LevelMeter)>LevelMeterFrequency)
+  if (((int)(cntMillisecondTimer-PreviousCount_LevelMeter))>LevelMeterFrequency)
   {
     PreviousCount_LevelMeter = cntMillisecondTimer;
     dsp_read_buss_levelmeters(dsp_handler, SummingdBLevel);
@@ -6685,7 +6696,7 @@ void Timer100HzDone(int Value)
     }
   }
 
-  if ((cntMillisecondTimer-PreviousCount_PhaseMeter)>PhaseMeterFrequency)
+  if (((int)(cntMillisecondTimer-PreviousCount_PhaseMeter))>PhaseMeterFrequency)
   {
     PreviousCount_PhaseMeter = cntMillisecondTimer;
     dsp_read_buss_phasemeters(dsp_handler, SummingPhase);
@@ -6773,7 +6784,8 @@ void Timer100HzDone(int Value)
   }
 
   cntMillisecondTimer++;
-  if ((cntMillisecondTimer-PreviousCount_Second)>50)
+//  if ((cntMillisecondTimer-PreviousCount_Second)>50)
+  if ((cntMillisecondTimer-PreviousCount_Second)>5)
   {
     PreviousCount_Second = cntMillisecondTimer;
 
@@ -6843,6 +6855,7 @@ void Timer100HzDone(int Value)
 
                 db_read_node_defaults(TimerWalkOnlineNodeInformationElement, 1024, TimerWalkOnlineNodeInformationElement->UsedNumberOfCustomObjects+1023, 0, 0);
                 db_read_node_config(TimerWalkOnlineNodeInformationElement, 1024, TimerWalkOnlineNodeInformationElement->UsedNumberOfCustomObjects+1023);
+                TimerWalkOnlineNodeInformationElement->InitializationFinished = 1;
               }
               db_lock(0);
             }
@@ -7057,6 +7070,45 @@ void Timer100HzDone(int Value)
         CheckObjectsToSent(FunctionNrToSent | CONSOLE_FUNCTION_DESTINATION_SELECT_ACTIVE);
       }
     }
+  }
+  axum_data_lock(0);
+
+  //Check if all nodes are initialized
+  node_info_lock(1);
+  //We may only start from the first element because multiple threads
+  InitializedNodes = 0;
+  NodeCount = 0;
+  ONLINE_NODE_INFORMATION_STRUCT *TimerWalkOnlineNodeInformationElement = OnlineNodeInformationList;
+  while (TimerWalkOnlineNodeInformationElement != NULL)
+  {
+    if (TimerWalkOnlineNodeInformationElement->InitializationFinished)
+    {
+      InitializedNodes++;
+    }
+    NodeCount++;
+    TimerWalkOnlineNodeInformationElement = TimerWalkOnlineNodeInformationElement->Next;
+  }
+  node_info_lock(0);
+
+  axum_data_lock(1);
+  if ((PreviousInitializedNodes != InitializedNodes) ||
+      (PreviousNodeCount != NodeCount))
+  {
+    AxumData.PercentInitialized = (100*InitializedNodes)/NodeCount;
+    log_write("%d/%d nodes, %d%% initialized", InitializedNodes, NodeCount, AxumData.PercentInitialized);
+    unsigned int FunctionNrToSent = 0x04000000;
+    CheckObjectsToSent(FunctionNrToSent | GLOBAL_FUNCTION_INITIALIZATION_STATUS);
+
+    if (AxumData.PercentInitialized == 100)
+    {
+      log_write("Initialization ready!");
+      PreviousCount_LevelMeter = cntMillisecondTimer;
+      PreviousCount_SignalDetect = cntMillisecondTimer;
+      PreviousCount_PhaseMeter = cntMillisecondTimer;
+    }
+
+    PreviousInitializedNodes = InitializedNodes;
+    PreviousNodeCount = NodeCount;
   }
   axum_data_lock(0);
 
@@ -11275,6 +11327,39 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             }
           }
           break;
+          case GLOBAL_FUNCTION_INITIALIZATION_STATUS:
+          {
+            switch (DataType)
+            {
+              case MBN_DATATYPE_STATE:
+              {
+                data.State = (AxumData.PercentInitialized == 100) ? 1 : 0;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              }
+              break;
+              case MBN_DATATYPE_UINT:
+              {
+                data.State = AxumData.PercentInitialized;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              }
+              break;
+              case MBN_DATATYPE_OCTETS:
+              {
+                if (AxumData.PercentInitialized < 100)
+                {
+                  sprintf(LCDText, "%d%%", AxumData.PercentInitialized);
+                }
+                else
+                {
+                  sprintf(LCDText, "Ready");
+                }
+                data.Octets = (unsigned char *)LCDText;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, strlen(LCDText), data, 1);
+              }
+              break;
+            }
+          }
+          break;
         }
       }
     }
@@ -12235,6 +12320,7 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
       WalkAxumFunctionInformationStruct = ConsoleFunctions[FunctionNumber][Function];
       ConsoleFunctions[FunctionNumber][Function] = NULL;
     }
+    break;
     case GLOBAL_FUNCTIONS:
     {   //Global
       WalkAxumFunctionInformationStruct = GlobalFunctions[Function];
@@ -16366,6 +16452,8 @@ void initialize_axum_data_struct()
     AxumData.ExternSource[cntMonitor].InterlockSafe[6] = 0;
     AxumData.ExternSource[cntMonitor].InterlockSafe[7] = 0;
   }
+
+  AxumData.PercentInitialized = 0;
 }
 
 ONLINE_NODE_INFORMATION_STRUCT *GetOnlineNodeInformation(unsigned long int addr)

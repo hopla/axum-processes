@@ -728,8 +728,9 @@
 #define GLOBAL_FUNCTION_CONSOLE_PRESET_30             37
 #define GLOBAL_FUNCTION_CONSOLE_PRESET_31             38
 #define GLOBAL_FUNCTION_CONSOLE_PRESET_32             39
+#define GLOBAL_FUNCTION_INITIALIZATION_STATUS         40
 
-#define NUMBER_OF_GLOBAL_FUNCTIONS                    40
+#define NUMBER_OF_GLOBAL_FUNCTIONS                    41
 
 #define MODULE_CONTROL_MODE_NONE                    -1
 #define MODULE_CONTROL_MODE_SOURCE                    0
