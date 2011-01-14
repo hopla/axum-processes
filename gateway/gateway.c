@@ -79,6 +79,36 @@ int verbose;
 char ieth[50], data_path[1000];
 unsigned int net_ip, net_mask, net_gw;
 
+void *timer_thread_loop(void *arg) {
+  struct timeval timeout;
+  int CurrentLinkStatus = 0;
+  int LinkStatus = 0;
+  timeout.tv_sec = 0;
+  timeout.tv_usec = 10000;
+  char err[MBN_ERRSIZE];
+
+  while (!main_quit) {
+    int ReturnValue = select(0, NULL, NULL, NULL, &timeout);
+    if ((ReturnValue == 0) || ((ReturnValue<0) && (errno == EINTR))) {
+      //upon SIGALARM this happens :(
+    } else if (ReturnValue<0) { //error
+      log_write("select() failed: %s\n", strerror(errno));
+    }
+    if ((timeout.tv_sec == 0) && (timeout.tv_usec == 0)) {
+      if (eth != NULL) {
+        if ((LinkStatus = mbnEthernetMIILinkStatus(eth->itf, err)) == -1) {
+        } else if (CurrentLinkStatus != LinkStatus) {
+          log_write("Link %s", LinkStatus ? "up" : "down");
+          CurrentLinkStatus = LinkStatus;
+        }
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 10000;
+      }
+    }
+  }
+  return NULL;
+  arg = NULL;
+}
 
 void net_read() {
   FILE *f;
@@ -752,6 +782,11 @@ int main(int argc, char **argv) {
   char upath[UNIX_PATH_MAX];
 
   init(argc, argv, upath);
+
+  log_write("Start timer thread");
+  pthread_t timer_thread;
+  pthread_create(&timer_thread, NULL, timer_thread_loop, NULL);
+
   process_unix(upath);
 
   log_write("Closing gateway");

@@ -50,9 +50,14 @@
 #define NR_OF_STATIC_OBJECTS    (1094-1023)
 #define NR_OF_OBJECTS            NR_OF_STATIC_OBJECTS
 
-#define DEFAULT_GTW_PATH  "/tmp/axum-gateway"
-#define DEFAULT_ETH_DEV   "eth0"
-#define DEFAULT_LOG_FILE  "/var/log/axum-meters.log"
+#define DEFAULT_UNIX_HWPARENT_PATH "/tmp/hwparent.socket"
+#define DEFAULT_UNIX_MAMBANET_PATH "/tmp/axum-gateway.socket"
+#define DEFAULT_ETH_DEV            "eth0"
+#define DEFAULT_LOG_FILE           "/var/log/axum-meters.log"
+
+#ifndef UNIX_PATH_MAX
+# define UNIX_PATH_MAX 108
+#endif
 
 Browser *browser = NULL;
 QMutex qt_mutex(QMutex::Recursive);
@@ -89,10 +94,13 @@ void init(int argc, char *argv[])
   char obj_desc[32];
   int cntBand;
   char cmdline[1024];
+  char socket_path[UNIX_PATH_MAX];
+  char use_eth = 0;
 
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(log_file, DEFAULT_LOG_FILE);
-  strcpy(hwparent_path, DEFAULT_GTW_PATH);
+  strcpy(hwparent_path, DEFAULT_UNIX_HWPARENT_PATH);
+  strcpy(socket_path, DEFAULT_UNIX_MAMBANET_PATH);
 
   while((c =getopt(argc, argv, "e:g:l:i:")) != -1)
   {
@@ -106,6 +114,7 @@ void init(int argc, char *argv[])
           exit(1);
         }
         strcpy(ethdev, optarg);
+        use_eth = 1;
       }
       break;
       case 'g':
@@ -330,20 +339,32 @@ void init(int argc, char *argv[])
 
   hwparent(&this_node);
 
-  if ((itf=mbnEthernetOpen(ethdev, error)) == NULL)
+  if (!use_eth)
   {
-    fprintf(stderr, "Error opening ethernet device: %s ('%s')", error, ethdev);
-    log_close();
-    exit(1);
+    if ((itf=mbnUnixOpen(socket_path, NULL, error)) == NULL)
+    {
+      fprintf(stderr, "Error opening unix socket: %s ('%s')", error, socket_path);
+      log_close();
+      exit(1);
+    }
   }
+  else
+  {
+    if ((itf=mbnEthernetOpen(ethdev, error)) == NULL)
+    {
+      fprintf(stderr, "Error opening ethernet device: %s ('%s')", error, ethdev);
+      log_close();
+      exit(1);
+    }
 
-  log_write("start link check");
+    log_write("start link check");
 
-  //open ethernet device for link status.
-  if (mbnEthernetMIILinkStatus(itf, error)) {
-    log_write("Link up");
-  } else {
-    log_write("Link down");
+    //open ethernet device for link status.
+    if (mbnEthernetMIILinkStatus(itf, error)) {
+      log_write("Link up");
+    } else {
+      log_write("Link down");
+    }
   }
 
   if ((mbn=mbnInit(&this_node, objects, itf, error)) == NULL)
