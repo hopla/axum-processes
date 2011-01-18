@@ -72,7 +72,7 @@ struct mbn_node_info this_node = {
   "Axum-PPM-Meters",
   MANUFACTURER_ID, PRODUCT_ID, 0x0001,
   0, 0,                   //Hw revision
-  6, 0,                   //Fw revision
+  7, 0,                   //Fw revision
   0, 0,                   //FPGA revision
   NR_OF_OBJECTS,          //Number of objects
   0,                      //Default engine address
@@ -324,6 +324,9 @@ void init(int argc, char *argv[])
   objects[cntObject++] = MBN_OBJ( (char *)"MIC active timer",
                                   MBN_DATATYPE_NODATA,
                                   MBN_DATATYPE_STATE, 1, 0, 1, 1, 1);
+  objects[cntObject++] = MBN_OBJ( (char *)"Init progress",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_UINT, 1, 0, 100, 0, 0);
   this_node.NumberOfObjects = cntObject;
 
   log_open();
@@ -686,6 +689,12 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     case 1094:
     {
       browser->MICActiveTimerEnabled = in.State;
+    }
+    break;
+    case 1095:
+    {
+      log_write("Percent: %d", in.UInt);
+      browser->InitProgress = in.UInt;
     }
     break;
   }

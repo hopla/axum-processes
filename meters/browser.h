@@ -123,6 +123,11 @@ public:
    bool ShowModuleParameters;
    bool CurrentShowModuleParameters;
 
+   unsigned char InitProgress;
+   unsigned char CurrentInitProgress;
+   unsigned char Initializing;
+   unsigned char ProgressReceived;
+
    Browser(QWidget *parent = 0);
    virtual ~Browser();
 

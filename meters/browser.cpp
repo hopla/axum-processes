@@ -45,6 +45,9 @@ Browser::Browser(QWidget *parent)
   NewDNRImageTopOffAir->setVisible(true);
   NewDNRImageBottomOffAir->setVisible(true);
 
+  frame->setVisible(false);
+  frame_init->setVisible(true);
+
 /*	m_NavigationBar = new QToolBar(label_7);
 
 	m_Back = new QAction(label_7);
@@ -72,6 +75,8 @@ Browser::Browser(QWidget *parent)
 	connect(m_StopReload, SIGNAL(triggered()), webView, SLOT(reload()));*/
 
 	cntSecond = 0;
+
+  frame->setVisible(true);
 
 	startTimer(30);
 
@@ -138,6 +143,11 @@ Browser::Browser(QWidget *parent)
 
   CountDownSeconds = 0;
   CurrentCountDownSeconds = 0;
+
+  InitProgress = 0;
+  CurrentInitProgress = 0;
+  Initializing = 1;
+  ProgressReceived = 0;
 
   sprintf(DSPGain, "0 dB");
   sprintf(CurrentDSPGain, "0 dB");
@@ -211,7 +221,37 @@ void Browser::timerEvent(QTimerEvent *Event)
   char timer_str[16] = "";
 
 	cntSecond++;
-	MeterRelease();
+
+  if (CurrentInitProgress != InitProgress)
+  {
+    if (InitProgress < 100)
+    {
+      frame_init->setVisible(true);
+
+      progressBar->setValue(InitProgress);
+
+      Initializing = 1;
+    }
+    else
+    {
+      frame_init->setVisible(false);
+
+      Initializing = 0;
+    }
+    CurrentInitProgress = InitProgress;
+    ProgressReceived = 1;
+  }
+  else if ((Initializing) && (!ProgressReceived))
+  {
+    if ((InitProgress < 99) && (LinkStatus == 1))
+    {
+      if ((cntSecond%33) == 0)
+      {
+        progressBar->setValue(++InitProgress);
+        CurrentInitProgress = InitProgress;
+      }
+    }
+  }
 
   if ((LinkStatus = CheckLinkStatus()) != -1)
   {
@@ -223,54 +263,60 @@ void Browser::timerEvent(QTimerEvent *Event)
       log_write("Link status change: %s", LinkStatus ? ("Up") : ("Down"));
     }
   }
-  if (CurrentMICActiveTimerEnabled != MICActiveTimerEnabled)
+
+  //if (!Initializing)
   {
-    CurrentMICActiveTimerEnabled = MICActiveTimerEnabled;
-    if (MICActiveTimerEnabled)
+    MeterRelease();
+
+    if (CurrentMICActiveTimerEnabled != MICActiveTimerEnabled)
+    {
+      CurrentMICActiveTimerEnabled = MICActiveTimerEnabled;
+      if (MICActiveTimerEnabled)
+      {
+        timespec newTime;
+        clock_gettime(CLOCK_MONOTONIC, &newTime);
+        PreviousNumberOfSeconds = newTime.tv_sec+((double)newTime.tv_nsec/1000000000);
+        CurrentElapsedTime = 0;
+
+        IntToTimerString(timer_str, 0);
+        QString rich_str = tr("<font color='%1'>%2</font>");
+        TimerLabel->setText(rich_str.arg("#FF5555", timer_str));
+        TimerLabel->setVisible(true);
+      }
+    }
+    else if (CurrentMICActiveTimerEnabled)
     {
       timespec newTime;
       clock_gettime(CLOCK_MONOTONIC, &newTime);
-      PreviousNumberOfSeconds = newTime.tv_sec+((double)newTime.tv_nsec/1000000000);
-      CurrentElapsedTime = 0;
+      int ElapsedTime = (newTime.tv_sec+((double)newTime.tv_nsec/1000000000)) - PreviousNumberOfSeconds;
 
-      IntToTimerString(timer_str, 0);
-      QString rich_str = tr("<font color='%1'>%2</font>");
-      TimerLabel->setText(rich_str.arg("#FF5555", timer_str));
-      TimerLabel->setVisible(true);
-    }
-  }
-  else if (CurrentMICActiveTimerEnabled)
-  {
-    timespec newTime;
-    clock_gettime(CLOCK_MONOTONIC, &newTime);
-    int ElapsedTime = (newTime.tv_sec+((double)newTime.tv_nsec/1000000000)) - PreviousNumberOfSeconds;
-
-    if (CurrentElapsedTime != ElapsedTime)
-    {
-      IntToTimerString(timer_str, ElapsedTime);
-      QString rich_str = tr("<font color='%1'>%2</font>");
-      TimerLabel->setText(rich_str.arg("#FF5555", timer_str));
-      CurrentElapsedTime = ElapsedTime;
-    }
-  }
-  else if (TimerLabel->isVisible())
-  {
-    timespec newTime;
-    clock_gettime(CLOCK_MONOTONIC, &newTime);
-    int ElapsedTime = (newTime.tv_sec+((double)newTime.tv_nsec/1000000000)) - PreviousNumberOfSeconds;
-
-    if (CurrentElapsedTime != ElapsedTime)
-    {
-      int Difference = ElapsedTime-CurrentElapsedTime;
-      if (Difference == 60)
+      if (CurrentElapsedTime != ElapsedTime)
       {
-        IntToTimerString(timer_str, CurrentElapsedTime);
+        IntToTimerString(timer_str, ElapsedTime);
         QString rich_str = tr("<font color='%1'>%2</font>");
-        TimerLabel->setText(rich_str.arg("#551B1B", timer_str));
+        TimerLabel->setText(rich_str.arg("#FF5555", timer_str));
+        CurrentElapsedTime = ElapsedTime;
       }
-      else if (Difference > 60*10)
+    }
+    else if (TimerLabel->isVisible())
+    {
+      timespec newTime;
+      clock_gettime(CLOCK_MONOTONIC, &newTime);
+      int ElapsedTime = (newTime.tv_sec+((double)newTime.tv_nsec/1000000000)) - PreviousNumberOfSeconds;
+
+      if (CurrentElapsedTime != ElapsedTime)
       {
-        TimerLabel->setVisible(false);
+        int Difference = ElapsedTime-CurrentElapsedTime;
+        if (Difference == 60)
+        {
+          IntToTimerString(timer_str, CurrentElapsedTime);
+          QString rich_str = tr("<font color='%1'>%2</font>");
+          TimerLabel->setText(rich_str.arg("#551B1B", timer_str));
+        }
+        else if (Difference > 60*10)
+        {
+          TimerLabel->setVisible(false);
+        }
       }
     }
   }
