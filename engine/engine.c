@@ -11339,8 +11339,8 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               break;
               case MBN_DATATYPE_UINT:
               {
-                data.State = AxumData.PercentInitialized;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                data.UInt = AxumData.PercentInitialized;
+                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
               }
               break;
               case MBN_DATATYPE_OCTETS:
