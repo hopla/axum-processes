@@ -222,6 +222,8 @@ void Browser::timerEvent(QTimerEvent *Event)
 
 	cntSecond++;
 
+  qt_mutex.lock();
+
   if (CurrentInitProgress != InitProgress)
   {
     if (InitProgress < 100)
@@ -320,6 +322,7 @@ void Browser::timerEvent(QTimerEvent *Event)
       }
     }
   }
+  qt_mutex.unlock();
 
   return;
   Event = NULL;
@@ -350,7 +353,6 @@ void Browser::MeterRelease()
 //  #define RELEASE_STEP 0.15
   #define RELEASE_STEP 0.45
   #define PHASE_STEPSIZE 0.0075*4
-  qt_mutex.lock();
 
   if (PhaseMeterData[0] > (NewDNRPhaseMeter->FPosition+PHASE_STEPSIZE))
     NewDNRPhaseMeter->setPosition(NewDNRPhaseMeter->FPosition+PHASE_STEPSIZE);
@@ -837,8 +839,6 @@ void Browser::MeterRelease()
       CurrentShowModuleParameters = ShowModuleParameters;
     }
   }
-
-  qt_mutex.unlock();
 }
 
 /* for webbrowsing */
