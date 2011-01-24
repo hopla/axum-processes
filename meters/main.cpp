@@ -65,6 +65,7 @@ QMutex qt_mutex(QMutex::Recursive);
 struct mbn_interface *itf;
 struct mbn_handler *mbn;
 char error[MBN_ERRSIZE];
+char use_eth = 0;
 
 struct mbn_node_info this_node = {
   0, 0,                   //MambaNet address, Services
@@ -136,7 +137,6 @@ void init(int argc, char *argv[])
   int cntBand;
   char cmdline[1024];
   char socket_path[UNIX_PATH_MAX];
-  char use_eth = 0;
 
   strcpy(ethdev, DEFAULT_ETH_DEV);
   strcpy(log_file, DEFAULT_LOG_FILE);
@@ -819,11 +819,14 @@ char CheckLinkStatus()
 {
   char LinkStatus = -1;
 
-  /*if ((LinkStatus = mbnEthernetMIILinkStatus(mbn->itf, error)) == -1)
+  if (use_eth)
   {
-    log_write("mbnEthernetMIILinkStatus error: %d", error);
-    return -1;
-  }*/
+    if ((LinkStatus = mbnEthernetMIILinkStatus(mbn->itf, error)) == -1)
+    {
+      log_write("mbnEthernetMIILinkStatus error: %d", error);
+      return -1;
+    }
+  }
   return LinkStatus;
 
 }
