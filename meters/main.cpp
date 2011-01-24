@@ -84,6 +84,47 @@ void init(int argc, char *argv[]);
 int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_data in);
 int delay_us(double sleep_time);
 
+void AddressTableChange(struct mbn_handler *m, struct mbn_address_node *old_addr, struct mbn_address_node *new_addr) {
+  char EngineStatus = -1;
+  if ((old_addr == NULL) && (new_addr != NULL))
+  {
+    if (new_addr->Services & MBN_ADDR_SERVICES_ENGINE)
+    {
+      if (m->node.DefaultEngineAddr == new_addr->MambaNetAddr)
+      {
+        log_write("Our engine active (0x%08X)", new_addr->MambaNetAddr);
+      }
+      else
+      {
+        log_write("An engine active (0x%08X)", new_addr->MambaNetAddr);
+      }
+      EngineStatus = 1;
+    }
+  }
+  if ((old_addr != NULL) && (new_addr == NULL))
+  {
+    if (old_addr->Services & MBN_ADDR_SERVICES_ENGINE)
+    {
+      if (m->node.DefaultEngineAddr == old_addr->MambaNetAddr)
+      {
+        log_write("Our engine inactive (0x%08X)", old_addr->MambaNetAddr);
+      }
+      else
+      {
+        log_write("An engine inactive (0x%08X)", old_addr->MambaNetAddr);
+      }
+      EngineStatus = 0;
+    }
+  }
+
+  if (EngineStatus != -1)
+  {
+    qt_mutex.lock();
+    browser->EngineStatus = EngineStatus;
+    qt_mutex.unlock();
+  }
+}
+
 void init(int argc, char *argv[])
 {
   char ethdev[50];
@@ -378,6 +419,8 @@ void init(int argc, char *argv[])
   }
 
   mbnSetSetActuatorDataCallback(mbn, SetActuatorData);
+  mbnSetAddressTableChangeCallback(mbn, AddressTableChange);
+
 
   mbnStartInterface(itf, error);
 
@@ -774,13 +817,13 @@ int main(int argc, char *argv[])
 
 char CheckLinkStatus()
 {
-  char LinkStatus;
+  char LinkStatus = -1;
 
-  if ((LinkStatus = mbnEthernetMIILinkStatus(mbn->itf, error)) == -1)
+  /*if ((LinkStatus = mbnEthernetMIILinkStatus(mbn->itf, error)) == -1)
   {
     log_write("mbnEthernetMIILinkStatus error: %d", error);
     return -1;
-  }
+  }*/
   return LinkStatus;
 
 }

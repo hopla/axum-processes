@@ -67,6 +67,8 @@ public:
 	 double previouNumberOfSeconds;
    bool LinkStatus;
    bool CurrentLinkStatus;
+   bool EngineStatus;
+   bool CurrentEngineStatus;
    bool MICActiveTimerEnabled;
    bool CurrentMICActiveTimerEnabled;
    double PreviousNumberOfSeconds;

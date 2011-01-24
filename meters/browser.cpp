@@ -127,6 +127,8 @@ Browser::Browser(QWidget *parent)
 
   LinkStatus = 0;
   CurrentLinkStatus = 0;
+  EngineStatus = 0;
+  CurrentEngineStatus = 0;
 
   MICActiveTimerEnabled = 0;
   CurrentMICActiveTimerEnabled = 0;
@@ -245,7 +247,7 @@ void Browser::timerEvent(QTimerEvent *Event)
   }
   else if ((Initializing) && (!ProgressReceived))
   {
-    if ((InitProgress < 99) && (LinkStatus == 1))
+    if (InitProgress < 99)
     {
       if ((cntSecond%33) == 0)
       {
@@ -261,9 +263,15 @@ void Browser::timerEvent(QTimerEvent *Event)
     {
       NewDNRImageNoLink->setVisible(!LinkStatus);
       CurrentLinkStatus = LinkStatus;
-
       log_write("Link status change: %s", LinkStatus ? ("Up") : ("Down"));
     }
+  }
+
+  if (CurrentEngineStatus != EngineStatus)
+  {
+    log_write("EngineStatus %d", EngineStatus);
+    NewDNRImageNoEngine->setVisible(!EngineStatus);
+    CurrentEngineStatus = EngineStatus;
   }
 
   //if (!Initializing)

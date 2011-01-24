@@ -1792,6 +1792,28 @@ QTabWidget::tab-bar
     <bool>false</bool>
    </property>
   </widget>
+  <widget class="DNRImage" name="NewDNRImageNoEngine">
+   <property name="geometry">
+    <rect>
+     <x>863</x>
+     <y>689</y>
+     <width>64</width>
+     <height>64</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/noengine.png</string>
+   </property>
+   <property name="ScaleImage">
+    <bool>false</bool>
+   </property>
+  </widget>
   <widget class="DNRImage" name="NewDNRImageNoLink">
    <property name="geometry">
     <rect>
