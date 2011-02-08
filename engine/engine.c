@@ -872,9 +872,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                   {
                     if (data.State)
                     {
-                      AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
-                      AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
-                      AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = CurrentRoutingPreset;
+//                      AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
+//                      AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
+//                      AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = CurrentRoutingPreset;
                     }
                   }
                 }
@@ -1000,9 +1000,9 @@ int mSensorDataChanged(struct mbn_handler *mbn, struct mbn_message *message, sho
                       }
                       else
                       {
-                        AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
-                        AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
-                        AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = CurrentRoutingPreset;
+                        //AxumData.ModuleData[ModuleNr].WaitingSource = CurrentSource;
+                        //AxumData.ModuleData[ModuleNr].WaitingProcessingPreset = CurrentPreset;
+                        //AxumData.ModuleData[ModuleNr].WaitingRoutingPreset = CurrentRoutingPreset;
                       }
                     }
                   }
@@ -13301,7 +13301,7 @@ void ModeControllerResetSensorChange(unsigned int SensorReceiveFunctionNr, unsig
           }
           else
           {
-            AxumData.ModuleData[ModuleNr].WaitingSource = AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr];
+            //AxumData.ModuleData[ModuleNr].WaitingSource = AxumData.ModuleData[ModuleNr].TemporySourceControlMode[ControlNr];
           }
         }
         break;
