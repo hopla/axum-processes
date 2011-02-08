@@ -15504,7 +15504,7 @@ void DoAxum_SetBussOnOff(int ModuleNr, int BussNr, unsigned char NewState, int L
 
     if (((ExclusiveBuss) || (MixMinusInUse && CommExclusiveBuss && (!ModuleActive || PreviousExclusiveState))) && (!LoadPreset))
     {
-      if ((!ModuleActive) || (PreviousExclusiveState))
+      if (!ModuleActive)
       {
         if (!AxumData.ModuleData[ModuleNr].Buss[BussNr].On)
         {  //return to normal routing
