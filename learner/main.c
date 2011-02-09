@@ -524,11 +524,13 @@ void init(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
   struct timeval tv;
   fd_set rd;
-  init(argc, argv);
 
   /* init nodes list */
   nodesl = 50;
   nodes = calloc(nodesl, sizeof(struct node_info));
+
+  init(argc, argv);
+
 
   while(!main_quit) {
     /* poll PG socket (we don't need to receive the events asynchronously,
