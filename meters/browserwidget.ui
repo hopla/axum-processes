@@ -206,13 +206,7 @@ QTabWidget::tab-bar
     </rect>
    </property>
    <property name="autoFillBackground">
-    <bool>true</bool>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Raised</enum>
+    <bool>false</bool>
    </property>
    <property name="styleSheet">
     <string notr="true">QFrame
@@ -220,6 +214,12 @@ QTabWidget::tab-bar
 	color: rgba(255, 170, 0, 255);
 	background: rgba(0, 0, 0, 128);
 }</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
    </property>
    <widget class="QProgressBar" name="progressBar">
     <property name="geometry">
@@ -268,7 +268,7 @@ QTabWidget::tab-bar
 }</string>
     </property>
     <property name="text">
-     <string></string>
+     <string/>
     </property>
     <property name="textFormat">
      <enum>Qt::PlainText</enum>
@@ -969,310 +969,6 @@ QTabWidget::tab-bar
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="DNRImage" name="Redlight3OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>936</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight3-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight7OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>992</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight7-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight4OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>950</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight4-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight1OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>908</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight1-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight3OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>936</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight3-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight5OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>964</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight5-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight1OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>908</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight1-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight2OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>922</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight2-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight6OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>978</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight6-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight7OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>992</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight7-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight8OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>1006</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight8-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight5OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>964</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight5-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight4OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>950</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight4-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight6OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>978</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight6-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight2OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>922</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight2-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight8OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>1006</x>
-      <y>5</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight8-off.png</string>
-    </property>
-   </widget>
    <widget class="QWidget" name="widget_2" native="true">
     <property name="geometry">
      <rect>
@@ -1688,14 +1384,6 @@ QTabWidget::tab-bar
     </property>
    </widget>
    <zorder>NewDNRImage</zorder>
-   <zorder>Redlight2OnDNRImage</zorder>
-   <zorder>Redlight4OnDNRImage</zorder>
-   <zorder>Redlight7OnDNRImage</zorder>
-   <zorder>Redlight6OnDNRImage</zorder>
-   <zorder>Redlight3OnDNRImage</zorder>
-   <zorder>Redlight1OnDNRImage</zorder>
-   <zorder>Redlight5OnDNRImage</zorder>
-   <zorder>Redlight8OnDNRImage</zorder>
    <zorder>NewDNRPPMMeter_3</zorder>
    <zorder>NewDNRDigitalClock</zorder>
    <zorder>TimerLabel</zorder>
@@ -1713,20 +1401,9 @@ QTabWidget::tab-bar
    <zorder>NewDNRPPMMeter_7</zorder>
    <zorder>NewDNRPPMMeter_6</zorder>
    <zorder>NewDNRPPMMeter_5</zorder>
-   <zorder>NewDNRPPMMeter_9</zorder>
-   <zorder>NewDNRPPMMeter_10</zorder>
    <zorder>label_7</zorder>
    <zorder>label_8</zorder>
    <zorder>label_9</zorder>
-   <zorder>NewDNREQPanel</zorder>
-   <zorder>Redlight3OffDNRImage</zorder>
-   <zorder>Redlight1OffDNRImage</zorder>
-   <zorder>Redlight6OffDNRImage</zorder>
-   <zorder>Redlight7OffDNRImage</zorder>
-   <zorder>Redlight5OffDNRImage</zorder>
-   <zorder>Redlight4OffDNRImage</zorder>
-   <zorder>Redlight2OffDNRImage</zorder>
-   <zorder>Redlight8OffDNRImage</zorder>
    <zorder>NewDNRImageLogo</zorder>
    <zorder>widget_2</zorder>
   </widget>
@@ -1790,6 +1467,310 @@ QTabWidget::tab-bar
    </property>
    <property name="ScaleImage">
     <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight1OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight1-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight2OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>128</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight2-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight4OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>384</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight4-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight3OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>256</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight3-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight3OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>256</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight3-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight5OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>512</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight5-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight1OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight1-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight7OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>768</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight7-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight6OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>640</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight6-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight7OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>768</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight7-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight8OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>896</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight8-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight5OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>512</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight5-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight4OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>384</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight4-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight6OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>640</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight6-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight2OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>128</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight2-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight8OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>896</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight8-off.png</string>
    </property>
   </widget>
   <widget class="DNRImage" name="NewDNRImageNoEngine">
@@ -1858,6 +1839,28 @@ QTabWidget::tab-bar
     <string>Deletes the current Row</string>
    </property>
   </action>
+  <zorder>NewDNRImageTopOffAir</zorder>
+  <zorder>NewDNRImageBottomOffAir</zorder>
+  <zorder>NewDNRImageBottomOnAir</zorder>
+  <zorder>NewDNRImageTopOnAir</zorder>
+  <zorder>Redlight1OnDNRImage</zorder>
+  <zorder>Redlight2OnDNRImage</zorder>
+  <zorder>Redlight3OnDNRImage</zorder>
+  <zorder>Redlight4OnDNRImage</zorder>
+  <zorder>Redlight5OnDNRImage</zorder>
+  <zorder>Redlight6OnDNRImage</zorder>
+  <zorder>Redlight7OnDNRImage</zorder>
+  <zorder>Redlight8OnDNRImage</zorder>
+  <zorder>Redlight1OffDNRImage</zorder>
+  <zorder>Redlight2OffDNRImage</zorder>
+  <zorder>Redlight3OffDNRImage</zorder>
+  <zorder>Redlight4OffDNRImage</zorder>
+  <zorder>Redlight5OffDNRImage</zorder>
+  <zorder>Redlight6OffDNRImage</zorder>
+  <zorder>Redlight7OffDNRImage</zorder>
+  <zorder>Redlight8OffDNRImage</zorder>
+  <zorder>NewDNRImageNoEngine</zorder>
+  <zorder>NewDNRImageNoLink</zorder>
   <zorder>frame</zorder>
   <zorder>frame_init</zorder>
  </widget>
