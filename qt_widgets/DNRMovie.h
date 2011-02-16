@@ -21,8 +21,8 @@
 **
 ****************************************************************************/
 
-#ifndef DNRIMAGE_H
-#define DNRIMAGE_H
+#ifndef DNRMOVIE_H
+#define DNRMOVIE_H
 
 #include "DNRDefines.h"
 #include <QWidget>

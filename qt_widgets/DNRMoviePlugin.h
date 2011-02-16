@@ -21,8 +21,8 @@
 **
 ****************************************************************************/
 
-#ifndef DNRIMAGEPLUGIN_H
-#define DNRIMAGEPLUGIN_H
+#ifndef DNRMOVIEPLUGIN_H
+#define DNRMOVIEPLUGIN_H
 
 #include <QDesignerCustomWidgetInterface>
 
