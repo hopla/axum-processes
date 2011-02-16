@@ -50,9 +50,11 @@ public:
     void setScaleMovie(bool NewScaleMovie);
     bool getScaleMovie();
 
-protected:
+public slots:
     void paint();
-//    void paintEvent(QPaintEvent *event);
+
+protected:
+    void paintEvent(QPaintEvent *event);
 //    void mouseMoveEvent(QMouseEvent *ev);
 
 };

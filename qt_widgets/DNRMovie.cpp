@@ -40,44 +40,18 @@ DNRMovie::DNRMovie(QWidget *parent)
 
 void DNRMovie::paint()
 {
-  QPainter painter(this);
-  painter.setRenderHint(QPainter::Antialiasing);
-  painter.setPen(Qt::NoPen);
-
-  const QImage & ImageQMovie = MovieQMovie->currentImage(); 
-
-  if (ImageQMovie.isNull())
-  {
-    painter.setBrush(Qt::NoBrush);
-    painter.setPen(QColor(0,0,0));
-
-    painter.drawRect(0,0,width(),height());
-  }
-  else
-  {
-    if (FScaleMovie)
-    {
-      double RatioX = (double)width()/ImageQMovie.width();
-      double RatioY = (double)height()/ImageQMovie.height();
-      double Ratio = RatioX;
-      if (Ratio > RatioY)
-      {
-			  Ratio = RatioY;
-		  }
-
-      painter.scale(Ratio, Ratio);
-    }
-    painter.drawImage(0,0, ImageQMovie);
-  } 
+  update();
 }
 
-/*void DNRMovie::paintEvent(QPaintEvent *)
+void DNRMovie::paintEvent(QPaintEvent *)
 {
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
   painter.setPen(Qt::NoPen);
 
-  if (MovieQMovie->isNull())
+  QImage MovieQImage = MovieQMovie->currentImage();
+
+  if (MovieQImage.isNull())
   {
     painter.setBrush(Qt::NoBrush);
     painter.setPen(QColor(0,0,0));
@@ -88,8 +62,8 @@ void DNRMovie::paint()
   {
     if (FScaleMovie)
     {
-      double RatioX = (double)width()/MovieQMovie->width();
-      double RatioY = (double)height()/MovieQMovie->height();
+      double RatioX = (double)width()/MovieQImage.width();
+      double RatioY = (double)height()/MovieQImage.height();
       double Ratio = RatioX;
       if (Ratio > RatioY)
       {
@@ -98,9 +72,9 @@ void DNRMovie::paint()
 
       painter.scale(Ratio, Ratio);
     }
-    painter.drawImage(0,0, *MovieQMovie);
+    painter.drawImage(0,0, MovieQImage);
   }
-}*/
+}
 
 void DNRMovie::setSkinEnvironmentVariable(const QString &NewSkinEnvironmentVariable)
 {
@@ -127,7 +101,7 @@ void DNRMovie::setMovieFileName(const QString &NewMovieFileName)
 
     QString AxumSkinPath = QString(getenv(FSkinEnvironmentVariable.toAscii()));
     MovieQMovie->setFileName(AxumSkinPath + "/" + FMovieFileName);
-    update();
+    MovieQMovie->start();
   }
 }
 
