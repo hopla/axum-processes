@@ -20,6 +20,8 @@ HEADERS = DNRAnalogClock.h \
   DNRPhaseMeterPlugin.h \
   DNRImage.h \
   DNRImagePlugin.h \
+  DNRMovie.h \
+  DNRMoviePlugin.h \
   DNREQPanel.h \
   DNREQPanelPlugin.h \
   DNRIndication.h \
@@ -49,6 +51,8 @@ SOURCES = DNRAnalogClock.cpp \
   DNRPhaseMeterPlugin.cpp \
   DNRImage.cpp \
   DNRImagePlugin.cpp \
+  DNRMovie.cpp \
+  DNRMoviePlugin.cpp \
   DNREQPanel.cpp \
   DNREQPanelPlugin.cpp \
   DNRIndication.cpp \
