@@ -8015,9 +8015,24 @@ void SetAxum_ModuleMixMinus(unsigned int ModuleNr, int OldSource)
 
       if ((OldSource>=matrix_sources.src_offset.min.source) && (OldSource<=matrix_sources.src_offset.max.source))
       {
-        //MixMinus need to be removed, use default source
-        AxumData.DestinationData[DestinationNr].MixMinusActive = 0;
-        SetAxum_DestinationSource(DestinationNr);
+        char RemoveMixMinus = 1;
+        for (unsigned int cntModule=0; cntModule<128; cntModule++)
+        {
+          if (OldSource == AxumData.ModuleData[cntModule].SelectedSource)
+          {
+            if (ModuleNr != cntModule)
+            {
+              RemoveMixMinus = 0;
+            }
+          }
+        }
+
+        if (RemoveMixMinus)
+        {
+          //MixMinus need to be removed, use default source
+          AxumData.DestinationData[DestinationNr].MixMinusActive = 0;
+          SetAxum_DestinationSource(DestinationNr);
+        }
       }
     }
     if ((AxumData.DestinationData[cntDestination].MixMinusSource == AxumData.ModuleData[ModuleNr].SelectedSource) &&
