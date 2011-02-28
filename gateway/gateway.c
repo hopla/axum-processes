@@ -30,6 +30,7 @@
 #include <sys/un.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -54,24 +55,26 @@
 #define OBJ_TCPNODES 5
 #define OBJ_UDPNODES 6
 #define OBJ_UNXNODES 7
+#define OBJ_EXTCLOCK 8
 
-#define NR_OF_OBJECTS 8
+#define NR_OF_OBJECTS 9
 //Major version 3 = 6 objects
 //Major version 4 = 7 objects, added UDP
 //Major version 5 = 8 objects, added unix sockets
+//Major version 6 = 9 object, added optional extern clock object
 
 struct mbn_node_info this_node = {
   0x00000000, 0x00, /* MambaNet Addr + Services */
   "MambaNet CAN+TCP+UDP+Ethernet Gateway",
   "Axum MambaNet Gateway",
   0x0001, 0x000D, 0x0001,   /* UniqueMediaAccessId */
-  0, 0,           /* Hardware revision */
-  5, 0,           /* Firmware revision */
-  0, 0,           /* FPGAFirmware revision */
-  NR_OF_OBJECTS,  /* NumberOfObjects */
-  0,              /* DefaultEngineAddr */
-  {0,0,0},        /* Hardwareparent */
-  0               /* Service request */
+  0, 0,             /* Hardware revision */
+  6, 0,             /* Firmware revision */
+  0, 0,             /* FPGAFirmware revision */
+  NR_OF_OBJECTS-1,  /* NumberOfObjects, default without enable word clock */
+  0,                /* DefaultEngineAddr */
+  {0,0,0},          /* Hardwareparent */
+  0                 /* Service request */
 };
 
 struct mbn_handler *unx, *eth, *can, *tcp, *udp;
@@ -183,43 +186,68 @@ void SynchroniseDateTime(struct mbn_handler *mbn, time_t time) {
 
 int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_data dat) {
   object -= 1024;
-  if(mbn != unx || object > OBJ_IPGW)
+  if(object > OBJ_EXTCLOCK)
     return 1;
-  net_read();
-  if(object == OBJ_IPADDR) net_ip   = dat.UInt;
-  if(object == OBJ_IPNET)  net_mask = dat.UInt;
-  if(object == OBJ_IPGW)   net_gw   = dat.UInt;
-  net_write();
 
-  dat.UInt = net_ip;
-  if(unx != NULL) mbnUpdateActuatorData(unx, OBJ_IPADDR+1024, dat);
-  if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPADDR+1024, dat);
-  if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPADDR+1024, dat);
-  if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPADDR+1024, dat);
-  if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPADDR+1024, dat);
-  dat.UInt = net_mask;
-  if(unx != NULL) mbnUpdateActuatorData(unx, OBJ_IPNET+1024, dat);
-  if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPNET+1024, dat);
-  if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPNET+1024, dat);
-  if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPNET+1024, dat);
-  if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPNET+1024, dat);
-  dat.UInt = net_gw;
-  if(unx != NULL) mbnUpdateActuatorData(unx, OBJ_IPGW+1024, dat);
-  if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPGW+1024, dat);
-  if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPGW+1024, dat);
-  if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPGW+1024, dat);
-  if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPGW+1024, dat);
+  if (object < OBJ_EXTCLOCK) {
+    net_read();
+    if(object == OBJ_IPADDR) net_ip   = dat.UInt;
+    if(object == OBJ_IPNET)  net_mask = dat.UInt;
+    if(object == OBJ_IPGW)   net_gw   = dat.UInt;
+    net_write();
 
-  /* make the changes active */
-  if(object == OBJ_IPGW) {
-    system("/etc/rc.d/network rtdown gateway");
-    system("/etc/rc.d/network rtup gateway");
-  } else
-    /* NOTE: we do not call ifdown first, because this will also take
-     *   down the ethernet device and all MambaNet communication */
-    system("/etc/rc.d/network ifup eth0");
+    dat.UInt = net_ip;
+    if(unx != NULL) mbnUpdateActuatorData(unx, OBJ_IPADDR+1024, dat);
+    if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPADDR+1024, dat);
+    if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPADDR+1024, dat);
+    if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPADDR+1024, dat);
+    if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPADDR+1024, dat);
+    dat.UInt = net_mask;
+    if(unx != NULL) mbnUpdateActuatorData(unx, OBJ_IPNET+1024, dat);
+    if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPNET+1024, dat);
+    if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPNET+1024, dat);
+    if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPNET+1024, dat);
+    if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPNET+1024, dat);
+    dat.UInt = net_gw;
+    if(unx != NULL) mbnUpdateActuatorData(unx, OBJ_IPGW+1024, dat);
+    if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_IPGW+1024, dat);
+    if(can != NULL) mbnUpdateActuatorData(can, OBJ_IPGW+1024, dat);
+    if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_IPGW+1024, dat);
+    if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_IPGW+1024, dat);
+
+    /* make the changes active */
+    if(object == OBJ_IPGW) {
+      system("/etc/rc.d/network rtdown gateway");
+      system("/etc/rc.d/network rtup gateway");
+    } else
+      /* NOTE: we do not call ifdown first, because this will also take
+       *   down the ethernet device and all MambaNet communication */
+      system("/etc/rc.d/network ifup eth0");
+  } else if (object == OBJ_EXTCLOCK) {
+    if (can != NULL) {
+      struct can_data *cdat = can->itf->data;
+
+      if (cdat->tty_mode) {
+        int mcr = 0;
+        ioctl(cdat->fd, TIOCMGET, &mcr);
+        if (dat.State) {
+          mcr &= ~TIOCM_RTS;
+        } else {
+          mcr |= TIOCM_RTS;
+        }
+        ioctl(cdat->fd, TIOCMSET, &mcr);
+
+        if(unx != NULL) mbnUpdateActuatorData(unx, OBJ_EXTCLOCK+1024, dat);
+        if(eth != NULL) mbnUpdateActuatorData(eth, OBJ_EXTCLOCK+1024, dat);
+        if(can != NULL) mbnUpdateActuatorData(can, OBJ_EXTCLOCK+1024, dat);
+        if(tcp != NULL) mbnUpdateActuatorData(tcp, OBJ_EXTCLOCK+1024, dat);
+        if(udp != NULL) mbnUpdateActuatorData(udp, OBJ_EXTCLOCK+1024, dat);
+      }
+    }
+  }
 
   return 0;
+  mbn = NULL;
 }
 
 
@@ -392,7 +420,7 @@ void init(int argc, char **argv, char *upath) {
   unx = can = eth = tcp = udp = NULL;
   verbose = 0;
 
-  while((c = getopt(argc, argv, "c:e:u:m:t:s:h:r:d:i:p:l:v")) != -1) {
+  while((c = getopt(argc, argv, "c:e:u:m:t:s:h:r:d:i:p:l:vw")) != -1) {
     switch(c) {
       /* can interface */
       case 'c':
@@ -512,6 +540,10 @@ void init(int argc, char **argv, char *upath) {
       case 'v':
         verbose++;
         break;
+      /* add word clock object */
+      case 'w':
+        this_node.NumberOfObjects++;
+        break;
       /* wrong option */
       default:
         fprintf(stderr, "Usage: %s [-v] [-c dev] [-e dev] [-t port] [-s port] [-h hostname:port] [-r hostname:port] [-m path] [-u path] [-d path] [-i id] [-p id]\n", argv[0]);
@@ -528,6 +560,7 @@ void init(int argc, char **argv, char *upath) {
         fprintf(stderr, "  -p id             Hardware Parent (not specified = from CAN, 'self' = own ID)\n");
         fprintf(stderr, "  -i id             UniqueIDPerProduct for the MambaNet node\n");
         fprintf(stderr, "  -l path           Path to log file.\n");
+        fprintf(stderr, "  -w                Add word clock object\n");
         exit(1);
     }
   }
@@ -562,6 +595,7 @@ void init(int argc, char **argv, char *upath) {
   obj[OBJ_TCPNODES] = MBN_OBJ("TCP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_UDPNODES] = MBN_OBJ("UDP Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
   obj[OBJ_UNXNODES] = MBN_OBJ("Unix Online Nodes", MBN_DATATYPE_UINT, 0, 2, 0, 1000, 0, MBN_DATATYPE_NODATA);
+  obj[OBJ_EXTCLOCK] = MBN_OBJ("Enable word clock", MBN_DATATYPE_NODATA, MBN_DATATYPE_STATE, 1, 0, 1, 0, 0);
 
   if(!verbose)
     daemonize();
@@ -579,6 +613,7 @@ void init(int argc, char **argv, char *upath) {
       log_close();
       exit(1);
     }
+
     if(verbose)
       printf("Received hardware parent from CAN: %04X:%04X:%04X\n",
         this_node.HardwareParent[0], this_node.HardwareParent[1], this_node.HardwareParent[2]);

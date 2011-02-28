@@ -27,36 +27,18 @@
 # define PF_CAN AF_CAN
 #endif
 
-#define ADDLSTSIZE    1000 /* assume we don't have more than 1000 nodes on one CAN bus */
-#define TXBUFLEN      5000 /* maxumum number of mambanet messages in the send buffer */
+//#define ADDLSTSIZE    1000 /* assume we don't have more than 1000 nodes on one CAN bus */
+//#define TXBUFLEN      5000 /* maxumum number of mambanet messages in the send buffer */
 #define CAN_TXDELAY   512 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
 #define TTY_TXDELAY   512 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
 #define HWPARTIMEOUT  10   /* timeout for receiving the hardware parent, in seconds */
-#define CIRBUFLENGTH  4096 /* Length of serial decoding buffer */ 
+//#define CIRBUFLENGTH  4096 /* Length of serial decoding buffer */
 
 struct can_ifaddr;
 
 struct can_queue {
   int length, canid;
   unsigned char *buf;
-};
-
-struct can_data {
-  unsigned char tty_mode;
-  int txdly;
-  int fd;
-  int sock;
-  int ifindex;
-  pthread_t rxthread, txthread;
-  pthread_mutex_t *txmutex;
-  int txstart;
-  struct can_ifaddr *addrs[ADDLSTSIZE];
-  struct can_queue *tx[TXBUFLEN];
-  unsigned char msgbuf[13];
-  unsigned char msgbufi;
-  unsigned char cirbuf[CIRBUFLENGTH];
-  unsigned int cirbufb, cirbuft;
-  unsigned short *parent;
 };
 
 struct can_ifaddr {
@@ -166,7 +148,7 @@ int scan_open_tty(char *ifname, struct can_data *dat, char *err) {
   struct termios tio;
 
   /* open serial device */
-  dat->fd = open(ifname, O_RDWR | O_NOCTTY); 
+  dat->fd = open(ifname, O_RDWR | O_NOCTTY);
   if (dat->fd<0) {
     sprintf(err, "Couldn't open port: %s", strerror(errno));
     return 1;
@@ -213,7 +195,7 @@ int scan_init(struct mbn_interface *itf, char *err) {
   int i;
 
   dat->txmutex = malloc(sizeof(pthread_mutex_t));
-  pthread_mutex_init(dat->txmutex, NULL);  
+  pthread_mutex_init(dat->txmutex, NULL);
   if((i = pthread_create(&(dat->rxthread), NULL, scan_receive, (void *)itf)) != 0) {
     sprintf(err, "Can't create rxthread: %s (%d)", strerror(i), i);
     return 1;
