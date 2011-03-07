@@ -5942,6 +5942,18 @@ int mSensorDataResponse(struct mbn_handler *mbn, struct mbn_message *message, sh
           {
             db_read_template_info(OnlineNodeInformationElement, 1);
 
+            if (AxumData.ExternClock == OnlineNodeInformationElement->MambaNetAddress)
+            {
+              if (OnlineNodeInformationElement->EnableWCObjectNr != 0)
+              {
+                mbn_data data;
+
+                data.State = 1;
+                mbnSetActuatorData(mbn, OnlineNodeInformationElement->MambaNetAddress, OnlineNodeInformationElement->EnableWCObjectNr, MBN_DATATYPE_STATE, 1, data , 1);
+                log_write("Enable extern clock 0x%08X (obj %d)", OnlineNodeInformationElement->MambaNetAddress, OnlineNodeInformationElement->EnableWCObjectNr);
+              }
+            }
+
             if (OnlineNodeInformationElement->SlotNumberObjectNr != -1)
             {
               log_write("Get slot from 0x%08X", OnlineNodeInformationElement->MambaNetAddress);
@@ -6400,6 +6412,7 @@ void mAddressTableChange(struct mbn_handler *mbn, struct mbn_address_node *old_i
     NewOnlineNodeInformationElement->SlotNumberObjectNr = -1;
     NewOnlineNodeInformationElement->InputChannelCountObjectNr = -1;
     NewOnlineNodeInformationElement->OutputChannelCountObjectNr = -1;
+    NewOnlineNodeInformationElement->EnableWCObjectNr = -1;
     NewOnlineNodeInformationElement->Parent.ManufacturerID = 0;
     NewOnlineNodeInformationElement->Parent.ProductID = 0;
     NewOnlineNodeInformationElement->Parent.UniqueIDPerProduct = 0;
@@ -6846,6 +6859,17 @@ void Timer100HzDone(int Value)
 
                 db_read_template_info(TimerWalkOnlineNodeInformationElement, 1);
 
+                if (AxumData.ExternClock == TimerWalkOnlineNodeInformationElement->MambaNetAddress)
+                {
+                  if (TimerWalkOnlineNodeInformationElement->EnableWCObjectNr != 0)
+                  {
+                    mbn_data data;
+
+                    data.State = 1;
+                    mbnSetActuatorData(mbn, TimerWalkOnlineNodeInformationElement->MambaNetAddress, TimerWalkOnlineNodeInformationElement->EnableWCObjectNr, MBN_DATATYPE_STATE, 1, data , 1);
+                    log_write("Enable extern clock 0x%08X (obj %d)", TimerWalkOnlineNodeInformationElement->MambaNetAddress, TimerWalkOnlineNodeInformationElement->EnableWCObjectNr);
+                  }
+                }
                 if (TimerWalkOnlineNodeInformationElement->SlotNumberObjectNr != -1)
                 {
                   mbnGetSensorData(mbn, TimerWalkOnlineNodeInformationElement->MambaNetAddress, TimerWalkOnlineNodeInformationElement->SlotNumberObjectNr, 1);

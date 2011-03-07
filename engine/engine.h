@@ -410,7 +410,7 @@ typedef struct
 
   bool Redlight[8];
   unsigned int Samplerate;
-  bool ExternClock;
+  unsigned int ExternClock;
   float Headroom;
   float LevelReserve;
   bool AutoMomentary;
@@ -519,6 +519,7 @@ struct ONLINE_NODE_INFORMATION_STRUCT
   int SlotNumberObjectNr;
   int InputChannelCountObjectNr;
   int OutputChannelCountObjectNr;
+  int EnableWCObjectNr;
 
   struct
   {

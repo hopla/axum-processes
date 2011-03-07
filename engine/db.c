@@ -1557,13 +1557,15 @@ int db_read_global_config(unsigned char startup)
 
   LOG_DEBUG("[%s] enter", __func__);
 
-  PGresult *qres = sql_exec("SELECT samplerate, ext_clock, headroom, level_reserve, auto_momentary, startup_state, date_time FROM global_config", 1, 0, NULL);
+  PGresult *qres = sql_exec("SELECT samplerate, ext_clock_addr, headroom, level_reserve, auto_momentary, startup_state, date_time FROM global_config", 1, 0, NULL);
 
   if (qres == NULL)
   {
     LOG_DEBUG("[%s] leave with error", __func__);
     return 0;
   }
+
+  unsigned int OldExternClock = AxumData.ExternClock;
   for (cntRow=0; cntRow<PQntuples(qres); cntRow++)
   {
     unsigned int cntField;
@@ -1573,7 +1575,10 @@ int db_read_global_config(unsigned char startup)
 
     cntField = 0;
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%d", &AxumData.Samplerate);
-    AxumData.ExternClock = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
+    if (sscanf(PQgetvalue(qres, cntRow, cntField++), "%d" , &AxumData.ExternClock) < 1)
+    {
+      AxumData.ExternClock = 0x00000000;
+    }
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.Headroom);
     sscanf(PQgetvalue(qres, cntRow, cntField++), "%f", &AxumData.LevelReserve);
     AxumData.AutoMomentary = strcmp(PQgetvalue(qres, cntRow, cntField++), "f");
@@ -1670,6 +1675,47 @@ int db_read_global_config(unsigned char startup)
     }
   }
   PQclear(qres);
+
+  ONLINE_NODE_INFORMATION_STRUCT *clk_node_info = NULL;
+  ONLINE_NODE_INFORMATION_STRUCT *old_clk_node_info = NULL;
+  if (AxumData.ExternClock != 0x00000000)
+  {
+    clk_node_info = GetOnlineNodeInformation(AxumData.ExternClock);
+    if (clk_node_info == NULL)
+    {
+      log_write("[%s] No node information for address: %08lX", __func__, AxumData.ExternClock);
+      LOG_DEBUG("[%s] leave with error", __func__);
+      return 0;
+    }
+  }
+  if (OldExternClock != 0x00000000)
+  {
+    old_clk_node_info = GetOnlineNodeInformation(OldExternClock);
+    if (old_clk_node_info == NULL)
+    {
+      log_write("[%s] No node information for address: %08lX", __func__, OldExternClock);
+      LOG_DEBUG("[%s] leave with error", __func__);
+      return 0;
+    }
+  }
+
+  if ((old_clk_node_info != NULL) && (old_clk_node_info->EnableWCObjectNr != -1))
+  {
+    mbn_data data;
+
+    data.State = 0;
+    mbnSetActuatorData(mbn, old_clk_node_info->MambaNetAddress, old_clk_node_info->EnableWCObjectNr, MBN_DATATYPE_STATE, 1, data , 1);
+    log_write("Disable extern clock 0x%08X (obj %d)", old_clk_node_info->MambaNetAddress, old_clk_node_info->EnableWCObjectNr);
+  }
+
+  if ((clk_node_info != NULL) && (clk_node_info->EnableWCObjectNr != -1))
+  {
+    mbn_data data;
+
+    data.State = 1;
+    mbnSetActuatorData(mbn, clk_node_info->MambaNetAddress, clk_node_info->EnableWCObjectNr, MBN_DATATYPE_STATE, 1, data , 1);
+    log_write("Enable extern clock 0x%08X (obj %d)", clk_node_info->MambaNetAddress, clk_node_info->EnableWCObjectNr);
+  }
 
   LOG_DEBUG("[%s] leave", __func__);
 
@@ -1976,6 +2022,10 @@ int db_read_template_info(ONLINE_NODE_INFORMATION_STRUCT *node_info, unsigned ch
       else if (strcmp("Output channel count", &obj_info->Description[0]) == 0)
       {
         node_info->OutputChannelCountObjectNr = ObjectNr;
+      }
+      else if (strcmp("Enable word clock", &obj_info->Description[0]) == 0)
+      {
+        node_info->EnableWCObjectNr = ObjectNr;
       }
     }
     else
