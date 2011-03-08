@@ -786,8 +786,6 @@ int main(int argc, char *argv[])
 
   QApplication app(argc, argv);
 
-
-
   QMainWindow mainWin;
   browser = new Browser(&mainWin);
   mainWin.setCentralWidget(browser);

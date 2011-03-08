@@ -40,14 +40,6 @@
 #include <linux/if_arp.h>   //for ETH_P_ALL/ifreq/sockaddr_ll/ETH_ALEN etc...
 #include <sys/ioctl.h>          //for ioctl
 
-class ConnectionWidget;
-class QTableView;
-class QPushButton;
-class QTextEdit;
-class QSqlError;
-class ChaseWidget;
-class ToolbarSearch;
-
 class Browser: public QWidget, public Ui::Browser
 {
     Q_OBJECT
@@ -58,8 +50,6 @@ public:
    double PhaseMeterData[2];
    char Label[7][33];
    char CurrentLabel[7][33];
-   bool OnAirState;
-   bool CurrentOnAirState;
    bool RedlightState[8];
    bool CurrentRedlightState[8];
    bool CountDown;
@@ -135,16 +125,8 @@ public:
 
 	 void timerEvent(QTimerEvent *Event);
 
-	 QToolBar *m_NavigationBar;
-
-	 QAction *m_Back;
-	 QAction *m_Forward;
-	 QAction *m_StopReload;
-	 ChaseWidget *m_ChaseWidget;
-
 public slots:
 	 void MeterRelease();
-
 
 private:
 };

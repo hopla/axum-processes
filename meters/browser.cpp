@@ -40,8 +40,6 @@ Browser::Browser(QWidget *parent)
 
   setupUi(this);
 
-  NewDNRImageTopOnAir->setVisible(false);
-  NewDNRImageBottomOnAir->setVisible(false);
   NewDNRImageTopOffAir->setVisible(true);
   NewDNRImageBottomOffAir->setVisible(true);
 
@@ -114,8 +112,6 @@ Browser::Browser(QWidget *parent)
   sprintf(AGCRatio, "100%%");
   sprintf(CurrentAGCRatio, "100%%");
 
-  OnAirState = 0;
-  CurrentOnAirState = 0;
   for (cnt=0; cnt<8; cnt++)
   {
     RedlightState[cnt] = 0;
@@ -183,7 +179,6 @@ Browser::Browser(QWidget *parent)
     EQType[cnt] = 3;
     CurrentEQType[cnt] = 3;
   }
-
   TimerLabel->setVisible(false);
 }
 
@@ -564,25 +559,6 @@ void Browser::MeterRelease()
   {
     label_9->setText(QString(Label[6]));
     strcpy(Label[6], CurrentLabel[6]);
-  }
-
-  OnAirState = false;
-  for (cnt=0; cnt<8; cnt++)
-  {
-    if (RedlightState[cnt])
-    {
-      OnAirState = true;
-    }
-  }
-
-  if (OnAirState != CurrentOnAirState)
-  {
-    NewDNRImageTopOnAir->setVisible(OnAirState);
-    NewDNRImageBottomOnAir->setVisible(OnAirState);
-    NewDNRImageTopOffAir->setVisible(!OnAirState);
-    NewDNRImageBottomOffAir->setVisible(!OnAirState);
-
-    CurrentOnAirState = OnAirState;
   }
 
   for (cnt=0; cnt<8; cnt++)

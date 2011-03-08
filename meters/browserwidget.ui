@@ -1407,68 +1407,6 @@ QTabWidget::tab-bar
    <zorder>NewDNRImageLogo</zorder>
    <zorder>widget_2</zorder>
   </widget>
-  <widget class="DNRImage" name="NewDNRImageBottomOnAir">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>674</y>
-     <width>1024</width>
-     <height>95</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="toolTip">
-    <string>The top image</string>
-   </property>
-   <property name="whatsThis">
-    <string>The Image widget displays </string>
-   </property>
-   <property name="SkinEnvironmentVariable">
-    <string/>
-   </property>
-   <property name="ImageFileName">
-    <string>/var/lib/axum/skins/meters/bottom-onair.png</string>
-   </property>
-   <property name="ScaleImage">
-    <bool>false</bool>
-   </property>
-  </widget>
-  <widget class="DNRImage" name="NewDNRImageTopOnAir">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1024</width>
-     <height>94</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="toolTip">
-    <string>The top image</string>
-   </property>
-   <property name="whatsThis">
-    <string>The Image widget displays </string>
-   </property>
-   <property name="SkinEnvironmentVariable">
-    <string/>
-   </property>
-   <property name="ImageFileName">
-    <string>/var/lib/axum/skins/meters/top-onair.png</string>
-   </property>
-   <property name="ScaleImage">
-    <bool>false</bool>
-   </property>
-  </widget>
   <widget class="DNRImage" name="Redlight1OnDNRImage">
    <property name="geometry">
     <rect>
@@ -1841,8 +1779,6 @@ QTabWidget::tab-bar
   </action>
   <zorder>NewDNRImageTopOffAir</zorder>
   <zorder>NewDNRImageBottomOffAir</zorder>
-  <zorder>NewDNRImageBottomOnAir</zorder>
-  <zorder>NewDNRImageTopOnAir</zorder>
   <zorder>Redlight1OnDNRImage</zorder>
   <zorder>Redlight2OnDNRImage</zorder>
   <zorder>Redlight3OnDNRImage</zorder>
