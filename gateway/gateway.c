@@ -104,9 +104,9 @@ void *timer_thread_loop(void *arg) {
           log_write("Link %s", LinkStatus ? "up" : "down");
           CurrentLinkStatus = LinkStatus;
         }
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 10000;
       }
+      timeout.tv_sec = 0;
+      timeout.tv_usec = 10000;
     }
   }
   return NULL;
@@ -504,6 +504,7 @@ void init(int argc, char **argv, char *upath) {
           exit(1);
         }
         strcpy(iunix, optarg);
+        itfcount++;
         break;
       /* data path */
       case 'd':
