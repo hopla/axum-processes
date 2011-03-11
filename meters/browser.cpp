@@ -78,7 +78,7 @@ Browser::Browser(QWidget *parent)
 
 	startTimer(30);
 
-	for (cnt=0; cnt<10; cnt++)
+	for (cnt=0; cnt<75; cnt++)
   {
     MeterData[cnt] = -50;
   }
@@ -331,9 +331,33 @@ void Browser::timerEvent(QTimerEvent *Event)
   Event = NULL;
 }
 
-void Browser::MeterRelease()
+#define RELEASE_STEP 0.45
+void CalculatePPMRelease(DNRPPMMeter *PPMMeter, double *CurrentMeterData)
 {
   float Difference;
+
+  if ((PPMMeter->FdBPosition>-50) || (*CurrentMeterData>-50))
+  {
+    Difference = *CurrentMeterData-PPMMeter->FdBPosition;
+
+    if (Difference < -RELEASE_STEP)
+    {
+      Difference = -RELEASE_STEP;
+		}
+
+    if (Difference != 0)
+    {
+      PPMMeter->FdBPosition += Difference;
+      if (PPMMeter->CalculateMeter())
+      {
+        PPMMeter->update();
+      }
+    }
+	}
+}
+
+void Browser::MeterRelease()
+{
   int cnt;
   char ConsoleString[8];
   char ColorString[8];
@@ -354,7 +378,6 @@ void Browser::MeterRelease()
 //	printf("time:%g - delta: %g\n", newNumberOfSeconds, elapsedTime);
 */
 //  #define RELEASE_STEP 0.15
-  #define RELEASE_STEP 0.45
   #define PHASE_STEPSIZE 0.0075*4
 
   if (PhaseMeterData[0] > (NewDNRPhaseMeter->FPosition+PHASE_STEPSIZE))
@@ -371,159 +394,81 @@ void Browser::MeterRelease()
   else
     NewDNRPhaseMeter_2->setPosition(PhaseMeterData[1]);
 
-  if ((NewDNRPPMMeter->FdBPosition>-50) || (MeterData[0]>-50))
-  {
-    Difference = MeterData[0]-NewDNRPPMMeter->FdBPosition;
+  CalculatePPMRelease(NewDNRPPMMeter, &MeterData[0]);
+  CalculatePPMRelease(NewDNRPPMMeter_2, &MeterData[1]);
+  CalculatePPMRelease(NewDNRPPMMeter_3, &MeterData[2]);
+  CalculatePPMRelease(NewDNRPPMMeter_4, &MeterData[3]);
+  CalculatePPMRelease(NewDNRPPMMeter_5, &MeterData[4]);
+  CalculatePPMRelease(NewDNRPPMMeter_6, &MeterData[5]);
+  CalculatePPMRelease(NewDNRPPMMeter_7, &MeterData[6]);
+  CalculatePPMRelease(NewDNRPPMMeter_8, &MeterData[7]);
+  CalculatePPMRelease(NewDNRPPMMeter_9, &MeterData[8]);
+  CalculatePPMRelease(NewDNRPPMMeter_10, &MeterData[9]);
 
-    if (Difference < -RELEASE_STEP)
-    {
-      Difference = -RELEASE_STEP;
-		}
-
-    if (Difference != 0)
-    {
-      NewDNRPPMMeter->FdBPosition += Difference;
-			NewDNRPPMMeter->update();
-    }
-	}
-  if ((NewDNRPPMMeter_2->FdBPosition>-50) || (MeterData[1]>-50))
-  {
-    Difference = MeterData[1]-NewDNRPPMMeter_2->FdBPosition;
-
-    if (Difference < -RELEASE_STEP)
-    {
-      Difference = -RELEASE_STEP;
-		}
-
-    if (Difference != 0)
-    {
-      NewDNRPPMMeter_2->FdBPosition += Difference;
-			NewDNRPPMMeter_2->update();
-    }
-	}
-
-  if ((NewDNRPPMMeter_3->FdBPosition>-50) || (MeterData[2]>-50))
-  {
-    Difference = MeterData[2]-NewDNRPPMMeter_3->FdBPosition;
-
-    if (Difference < -RELEASE_STEP)
-    {
-      Difference = -RELEASE_STEP;
-		}
-
-    if (Difference != 0)
-    {
-      NewDNRPPMMeter_3->FdBPosition += Difference;
-			NewDNRPPMMeter_3->update();
-    }
-	}
-
-  if ((NewDNRPPMMeter_4->FdBPosition>-50) || (MeterData[3]>-50))
-  {
-    Difference = MeterData[3]-NewDNRPPMMeter_4->FdBPosition;
-
-    if (Difference < -RELEASE_STEP)
-    {
-      Difference = -RELEASE_STEP;
-		}
-
-    if (Difference != 0)
-    {
-      NewDNRPPMMeter_4->FdBPosition += Difference;
-			NewDNRPPMMeter_4->update();
-    }
-	}
-
-  if ((NewDNRPPMMeter_5->FdBPosition>-50) || (MeterData[4]>-50))
-  {
-    Difference = MeterData[4]-NewDNRPPMMeter_5->FdBPosition;
-
-    if (Difference < -RELEASE_STEP)
-    {
-      Difference = -RELEASE_STEP;
-		}
-
-    if (Difference != 0)
-    {
-      NewDNRPPMMeter_5->FdBPosition += Difference;
-			NewDNRPPMMeter_5->update();
-    }
-	}
-  if ((NewDNRPPMMeter_6->FdBPosition>-50) || (MeterData[5]>-50))
-  {
-    Difference = MeterData[5]-NewDNRPPMMeter_6->FdBPosition;
-
-    if (Difference < -RELEASE_STEP)
-    {
-      Difference = -RELEASE_STEP;
-		}
-
-    if (Difference != 0)
-    {
-      NewDNRPPMMeter_6->FdBPosition += Difference;
-			NewDNRPPMMeter_6->update();
-    }
-	}
-  if ((NewDNRPPMMeter_7->FdBPosition>-50) || (MeterData[6]>-50))
-  {
-    Difference = MeterData[6]-NewDNRPPMMeter_7->FdBPosition;
-
-    if (Difference < -RELEASE_STEP)
-    {
-      Difference = -RELEASE_STEP;
-		}
-
-    if (Difference != 0)
-    {
-      NewDNRPPMMeter_7->FdBPosition += Difference;
-			NewDNRPPMMeter_7->update();
-    }
-	}
-  if ((NewDNRPPMMeter_8->FdBPosition>-50) || (MeterData[7]>-50))
-  {
-    Difference = MeterData[7]-NewDNRPPMMeter_8->FdBPosition;
-
-    if (Difference < -RELEASE_STEP)
-    {
-      Difference = -RELEASE_STEP;
-		}
-
-    if (Difference != 0)
-    {
-      NewDNRPPMMeter_8->FdBPosition += Difference;
-			NewDNRPPMMeter_8->update();
-    }
-	}
-  if ((NewDNRPPMMeter_9->FdBPosition>-50) || (MeterData[8]>-50))
-  {
-    Difference = MeterData[8]-NewDNRPPMMeter_9->FdBPosition;
-
-    if (Difference < -RELEASE_STEP)
-    {
-      Difference = -RELEASE_STEP;
-		}
-
-    if (Difference != 0)
-    {
-      NewDNRPPMMeter_9->FdBPosition += Difference;
-			NewDNRPPMMeter_9->update();
-    }
-	}
-  if ((NewDNRPPMMeter_10->FdBPosition>-50) || (MeterData[9]>-50))
-  {
-    Difference = MeterData[9]-NewDNRPPMMeter_10->FdBPosition;
-
-    if (Difference < -RELEASE_STEP)
-    {
-      Difference = -RELEASE_STEP;
-		}
-
-    if (Difference != 0)
-    {
-      NewDNRPPMMeter_10->FdBPosition += Difference;
-			NewDNRPPMMeter_10->update();
-    }
-	}
+  CalculatePPMRelease(NewSmallDNRPPMMeter_1, &MeterData[10]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_2, &MeterData[11]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_3, &MeterData[12]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_4, &MeterData[13]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_5, &MeterData[14]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_6, &MeterData[15]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_7, &MeterData[16]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_8, &MeterData[17]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_9, &MeterData[18]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_10, &MeterData[19]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_11, &MeterData[20]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_12, &MeterData[22]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_13, &MeterData[23]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_14, &MeterData[24]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_15, &MeterData[25]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_16, &MeterData[26]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_17, &MeterData[27]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_18, &MeterData[28]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_19, &MeterData[29]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_20, &MeterData[30]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_21, &MeterData[31]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_22, &MeterData[32]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_23, &MeterData[33]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_24, &MeterData[34]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_25, &MeterData[35]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_26, &MeterData[36]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_27, &MeterData[37]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_28, &MeterData[38]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_29, &MeterData[39]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_30, &MeterData[40]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_31, &MeterData[41]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_32, &MeterData[42]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_33, &MeterData[43]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_34, &MeterData[44]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_35, &MeterData[45]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_36, &MeterData[46]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_37, &MeterData[47]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_38, &MeterData[48]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_39, &MeterData[49]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_40, &MeterData[50]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_41, &MeterData[51]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_42, &MeterData[52]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_43, &MeterData[53]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_44, &MeterData[54]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_45, &MeterData[55]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_46, &MeterData[56]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_47, &MeterData[57]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_48, &MeterData[58]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_49, &MeterData[59]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_50, &MeterData[60]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_51, &MeterData[61]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_52, &MeterData[62]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_53, &MeterData[63]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_54, &MeterData[64]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_55, &MeterData[65]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_56, &MeterData[66]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_57, &MeterData[67]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_58, &MeterData[68]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_59, &MeterData[69]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_60, &MeterData[70]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_61, &MeterData[71]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_62, &MeterData[72]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_63, &MeterData[73]);
+  CalculatePPMRelease(NewSmallDNRPPMMeter_64, &MeterData[74]);
 
   if (strcmp(Label[0], CurrentLabel[0]) != 0)
   {

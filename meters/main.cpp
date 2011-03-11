@@ -47,7 +47,7 @@
 #define MANUFACTURER_ID          0x0001	//D&R
 #define PRODUCT_ID               0x001A	//Axum linux meters
 
-#define NR_OF_STATIC_OBJECTS    (1094-1023)
+#define NR_OF_STATIC_OBJECTS    ((1094+64)-1023)
 #define NR_OF_OBJECTS            NR_OF_STATIC_OBJECTS
 
 #define DEFAULT_UNIX_HWPARENT_PATH "/tmp/hwparent.socket"
@@ -73,7 +73,7 @@ struct mbn_node_info this_node = {
   "Axum-PPM-Meters",
   MANUFACTURER_ID, PRODUCT_ID, 0x0001,
   0, 0,                   //Hw revision
-  7, 0,                   //Fw revision
+  7, 1,                   //Fw revision
   0, 0,                   //FPGA revision
   NR_OF_OBJECTS,          //Number of objects
   0,                      //Default engine address
@@ -368,6 +368,198 @@ void init(int argc, char *argv[])
   objects[cntObject++] = MBN_OBJ( (char *)"Init progress",
                                   MBN_DATATYPE_NODATA,
                                   MBN_DATATYPE_UINT, 1, 0, 100, 0, 0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 1 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 1 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 2 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 2 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 3 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 3 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 4 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 4 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 5 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 5 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 6 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 6 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 7 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 7 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 8 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 8 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 9 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 9 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 10 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 10 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 11 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 11 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 12 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 12 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 13 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 13 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 14 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 14 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 15 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 15 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 16 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 16 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 17 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 17 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 18 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 18 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 19 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 19 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 20 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 20 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 21 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 21 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 22 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 22 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 23 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 23 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 24 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 24 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 25 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 25 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 26 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 26 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 27 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 27 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 28 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 28 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 29 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 29 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 30 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 30 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 31 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 31 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 32 left dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
+  objects[cntObject++] = MBN_OBJ( (char *)"Small meter 32 right dB",
+                                  MBN_DATATYPE_NODATA,
+                                  MBN_DATATYPE_FLOAT, 2, -50.0, 5.0, -50.0, -50.0);
   this_node.NumberOfObjects = cntObject;
 
   log_open();
@@ -641,9 +833,9 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     {
       browser->LCOn = in.State;
     }
-    break;    
+    break;
     case 1062:
-    { 
+    {
       browser->LCFreq = in.UInt;
     }
     break;
@@ -740,6 +932,11 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
       browser->InitProgress = in.UInt;
     }
     break;
+  }
+  if ((object >= 1096) && (object<1160))
+  {
+    float dB = in.Float+20;
+    browser->MeterData[(object-1096)+10] = dB;
   }
   qt_mutex.unlock();
   mbnUpdateActuatorData(mbn, object, in);
