@@ -49,6 +49,9 @@ DNRPPMMeter::DNRPPMMeter(QWidget *parent)
     LiniearMin = pow(10,((double)FMindBPosition+MINCURVE)/DIVCURVE);
     LiniearRange = LiniearMax-LiniearMin;
     dBRange = FMaxdBPosition-FMindBPosition;
+    CurrentMeterHeight = 0;
+    MeterHeight = 0;
+    ZerodBHeight = 0;
 
     FMaxColor = QColor(255,0,0,255);
     FMinColor = QColor(0,255,0,255);
@@ -57,6 +60,8 @@ DNRPPMMeter::DNRPPMMeter(QWidget *parent)
 
     QString AxumSkinPath = QString(getenv(FSkinEnvironmentVariable.toAscii()));
     PPMMeterBackgroundQImage = new QImage(AxumSkinPath + "/" + FPPMMeterBackgroundFileName);
+
+    setAttribute(Qt::WA_OpaquePaintEvent);
 
     setWindowTitle(tr("PPM Meter"));
     resize(16, 200);
@@ -67,13 +72,13 @@ DNRPPMMeter::DNRPPMMeter(QWidget *parent)
 		QueryPerformanceCounter(&newTime);
 		previousNumberOfSeconds = (double)newTime.QuadPart/freq.QuadPart;
 #else
-      timespec newTime;
-      clock_gettime(CLOCK_MONOTONIC, &newTime);
-      previousNumberOfSeconds = newTime.tv_sec+((double)newTime.tv_nsec/1000000000);
+    timespec newTime;
+    clock_gettime(CLOCK_MONOTONIC, &newTime);
+    previousNumberOfSeconds = newTime.tv_sec+((double)newTime.tv_nsec/1000000000);
 #endif
 }
 
-void DNRPPMMeter::paintEvent(QPaintEvent *)
+bool DNRPPMMeter::CalculateMeter()
 {
    if (FdBPosition<FMindBPosition)
    {
@@ -84,8 +89,8 @@ void DNRPPMMeter::paintEvent(QPaintEvent *)
       FdBPosition = FMaxdBPosition;
    }
 
-   int MeterHeight = 0;
-   int ZerodBHeight = 0;
+   MeterHeight = 0;
+   ZerodBHeight = 0;
 
    if (FDINCurve)
    {
@@ -100,78 +105,88 @@ void DNRPPMMeter::paintEvent(QPaintEvent *)
       ZerodBHeight = (int)(-FMindBPosition*height())/dBRange;
    }
 
-	QPainter painter(this);
-	painter.setRenderHint(QPainter::Antialiasing);
-	painter.setPen(Qt::NoPen);
+  if (CurrentMeterHeight != MeterHeight)
+  {
+    CurrentMeterHeight = MeterHeight;
+    return 1;
+  }
+  return 0;
+}
 
-	if (PPMMeterBackgroundQImage->isNull())
-	{
-	}
-	else
-	{
-		painter.drawImage(0,0, *PPMMeterBackgroundQImage);
-	}
-	
-	int HalfHeight = ((float)height()/2)+0.5;
+void DNRPPMMeter::paintEvent(QPaintEvent *)
+{
+  QPainter painter(this);
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setPen(Qt::NoPen);
 
-	QLinearGradient BackgroundGradient(0, HalfHeight, 0, 0);
-	BackgroundGradient.setColorAt(0, FMinBackgroundColor);
-	BackgroundGradient.setColorAt(1, FMaxBackgroundColor);
+  if (PPMMeterBackgroundQImage->isNull())
+  {
+  }
+  else
+  {
+    painter.drawImage(0,0, *PPMMeterBackgroundQImage);
+  }
+  
+  int HalfHeight = ((float)height()/2)+0.5;
 
-	QLinearGradient ForgroundGradient(0, HalfHeight, 0, 0);
-	ForgroundGradient.setColorAt(0, FMinColor);
-	ForgroundGradient.setColorAt(1, FMaxColor);
+  QLinearGradient BackgroundGradient(0, HalfHeight, 0, 0);
+  BackgroundGradient.setColorAt(0, FMinBackgroundColor);
+  BackgroundGradient.setColorAt(1, FMaxBackgroundColor);
 
-	if (FGradientBackground)
-	{
-		painter.setBrush(FMinBackgroundColor);
-		painter.drawRect(0, HalfHeight, width(), HalfHeight);
+  QLinearGradient ForgroundGradient(0, HalfHeight, 0, 0);
+  ForgroundGradient.setColorAt(0, FMinColor);
+  ForgroundGradient.setColorAt(1, FMaxColor);
 
-		painter.setBrush(QBrush(BackgroundGradient));
-		painter.drawRect(0, 0, width(), HalfHeight);
-	}
-	else
-	{
-		painter.setBrush(FMinBackgroundColor);
-		painter.drawRect(0, height()-ZerodBHeight, width(), ZerodBHeight);
+  if (FGradientBackground)
+  {
+    painter.setBrush(FMinBackgroundColor);
+    painter.drawRect(0, HalfHeight, width(), HalfHeight);
 
-		painter.setBrush(FMaxBackgroundColor);
-		painter.drawRect(0, 0, width(), height()-ZerodBHeight);
-	}
+    painter.setBrush(QBrush(BackgroundGradient));
+    painter.drawRect(0, 0, width(), HalfHeight);
+  }
+  else
+  {
+    painter.setBrush(FMinBackgroundColor);
+    painter.drawRect(0, height()-ZerodBHeight, width(), ZerodBHeight);
 
-	if (FGradientForground)
-	{
-		painter.setBrush(FMinColor);
-		int SingleColorHeight = HalfHeight+2;
-		if (MeterHeight<SingleColorHeight)
-		{
-			SingleColorHeight = MeterHeight;
-		}
-		painter.drawRect(0, height()-SingleColorHeight, width(), SingleColorHeight);
+    painter.setBrush(FMaxBackgroundColor);
+    painter.drawRect(0, 0, width(), height()-ZerodBHeight);
+  }
 
-		int GradientHeight = MeterHeight-HalfHeight;
-		if (GradientHeight>0)
-		{
-			painter.setBrush(QBrush(ForgroundGradient));
-			painter.drawRect(0, HalfHeight-GradientHeight, width(), GradientHeight);
-		}
-	}
-	else
-	{
-		if (MeterHeight>ZerodBHeight)
-		{
-			painter.setBrush(FMinColor);
-			painter.drawRect(0, height()-ZerodBHeight, width(), ZerodBHeight);
+  if (FGradientForground)
+  {
+    painter.setBrush(FMinColor);
+    int SingleColorHeight = HalfHeight+2;
+    if (MeterHeight<SingleColorHeight)
+    {
+      SingleColorHeight = MeterHeight;
+    }
+    painter.drawRect(0, height()-SingleColorHeight, width(), SingleColorHeight);
 
-			painter.setBrush(FMaxColor);
-			painter.drawRect(0, height()-MeterHeight, width(), MeterHeight-ZerodBHeight);
-		}
-		else
-		{
-			painter.setBrush(FMinColor);
-			painter.drawRect(0, height()-MeterHeight, width(), MeterHeight);
-		}
-	}
+    int GradientHeight = MeterHeight-HalfHeight;
+    if (GradientHeight>0)
+    {
+      painter.setBrush(QBrush(ForgroundGradient));
+      painter.drawRect(0, HalfHeight-GradientHeight, width(), GradientHeight);
+    }
+  }
+  else
+  {
+    if (MeterHeight>ZerodBHeight)
+    {
+      painter.setBrush(FMinColor);
+      painter.drawRect(0, height()-ZerodBHeight, width(), ZerodBHeight);
+
+      painter.setBrush(FMaxColor);
+      painter.drawRect(0, height()-MeterHeight, width(), MeterHeight-ZerodBHeight);
+    }
+    else
+    {
+      painter.setBrush(FMinColor);
+      painter.drawRect(0, height()-MeterHeight, width(), MeterHeight);
+    }
+  }
 }
 
 /*void DNRPPMMeter::setdBPosition(double_db NewdBPosition)

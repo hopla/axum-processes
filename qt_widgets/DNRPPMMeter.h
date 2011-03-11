@@ -55,9 +55,12 @@ public:
     QImage *PPMMeterBackgroundQImage;
 
     double FdBPosition;
-public slots:
-	void setdBPosition(double_db NewdBPosition);
+    int CurrentMeterHeight;
+    int MeterHeight;
+    int ZerodBHeight;
+
 public:
+    bool CalculateMeter();
     double getdBPosition();
 
     double FMindBPosition;
@@ -107,6 +110,9 @@ public:
     QString FPPMMeterBackgroundFileName;
     void setPPMMeterBackgroundFileName(const QString &NewPPMMeterBackgroundFileName);
     QString getPPMMeterBackgroundFileName() const;
+
+public slots:
+	void setdBPosition(double_db NewdBPosition);
 
 private:
 	double LiniearMin;
