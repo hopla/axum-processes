@@ -69,6 +69,7 @@ struct sql_notify notifies[] = {
   { (char *)"console_config_changed",                 db_event_console_config_changed},
   { (char *)"functions_changed",                      db_event_functions_changed},
   { (char *)"set_module_pre_level",                   db_event_set_module_pre_level},
+  { (char *)"src_config_renumbered",                  db_event_src_config_renumbered},
 };
 
 double read_minmax(char *mambanet_minmax)
@@ -90,7 +91,7 @@ double read_minmax(char *mambanet_minmax)
 void db_open(char *dbstr)
 {
   LOG_DEBUG("[%s] enter", __func__);
-  sql_open(dbstr, 27, notifies);
+  sql_open(dbstr, 28, notifies);
   LOG_DEBUG("[%s] leave", __func__);
 }
 
@@ -3174,6 +3175,17 @@ void db_event_src_config_changed(char myself, char *arg)
   sscanf(arg, "%hd", &number);
   db_read_src_config(number, number);
 
+  myself=0;
+  LOG_DEBUG("[%s] leave", __func__);
+}
+
+void db_event_src_config_renumbered(char myself, char *arg)
+{
+  LOG_DEBUG("[%s] enter", __func__);
+
+  db_get_matrix_sources();
+
+  arg = NULL;
   myself=0;
   LOG_DEBUG("[%s] leave", __func__);
 }

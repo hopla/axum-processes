@@ -53,6 +53,7 @@ void db_event_templates_changed(char myself, char *arg);
 void db_event_address_removed(char myself, char *arg);
 void db_event_slot_config_changed(char myself, char *arg);
 void db_event_src_config_changed(char myself, char *arg);
+void db_event_src_config_renumbered(char myself, char *arg);
 void db_event_module_config_changed(char myself, char *arg);
 void db_event_buss_config_changed(char myself, char *arg);
 void db_event_monitor_buss_config_changed(char myself, char *arg);
