@@ -6747,7 +6747,7 @@ void Timer100HzDone(int Value)
       CheckObjectsToSent((cntModule<<12) | MODULE_FUNCTION_AUDIO_LEVEL_LEFT);
       CheckObjectsToSent((cntModule<<12) | MODULE_FUNCTION_AUDIO_LEVEL_RIGHT);
 
-      if ((dBLevel[FirstChannelNr]>-50) || (dBLevel[FirstChannelNr+1]>-50))
+      if (((dBLevel[FirstChannelNr]+AxumData.Headroom)>-30) || ((dBLevel[FirstChannelNr+1]+AxumData.Headroom)>-30))
       {   //Signal
         if (!AxumData.ModuleData[cntModule].Signal)
         {
@@ -9969,7 +9969,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_FLOAT:
             {
-              data.Float = dBLevel[(ModuleNr*2)+0];
+              data.Float = dBLevel[(ModuleNr*2)+0]+AxumData.Headroom;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
             }
             break;
@@ -9982,7 +9982,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_FLOAT:
             {
-              data.Float = dBLevel[(ModuleNr*2)+1];
+              data.Float = dBLevel[(ModuleNr*2)+1]+AxumData.Headroom;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
             }
             break;
@@ -10142,7 +10142,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_FLOAT:
             {
-              data.Float = SummingdBLevel[(BussNr*2)+0];
+              data.Float = SummingdBLevel[(BussNr*2)+0]+AxumData.Headroom;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
             }
           }
@@ -10154,7 +10154,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             case MBN_DATATYPE_FLOAT:
             {
-              data.Float = SummingdBLevel[(BussNr*2)+1];
+              data.Float = SummingdBLevel[(BussNr*2)+1]+AxumData.Headroom;
               mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
             }
           }
@@ -10570,7 +10570,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             {
               case MBN_DATATYPE_FLOAT:
               {
-                data.Float = SummingdBLevel[32+(MonitorBussNr*2)+0];
+                data.Float = SummingdBLevel[32+(MonitorBussNr*2)+0]+AxumData.Headroom;
                 mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
               }
               break;
@@ -10583,7 +10583,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             {
               case MBN_DATATYPE_FLOAT:
               {
-                data.Float = SummingdBLevel[32+(MonitorBussNr*2)+1];
+                data.Float = SummingdBLevel[32+(MonitorBussNr*2)+1]+AxumData.Headroom;
                 mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
               }
               break;
@@ -16378,7 +16378,7 @@ void initialize_axum_data_struct()
 
   AxumData.Samplerate = 48000;
   AxumData.ExternClock = 0;
-  AxumData.Headroom = -20;
+  AxumData.Headroom = 20;
   AxumData.LevelReserve = 0;
   AxumData.AutoMomentary = false;
   AxumData.StartupState = false;

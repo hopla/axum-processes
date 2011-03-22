@@ -643,14 +643,14 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
   {
     case 1024:
     {
-      float dB = in.Float+20;
+      float dB = in.Float;
 
       browser->MeterData[0] = dB;
     }
     break;
     case 1025:
     {
-      float dB = in.Float+20;
+      float dB = in.Float;
 
       browser->MeterData[1] = dB;
     }
@@ -674,14 +674,14 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
 		break;
     case 1029:
     {
-      float dB = in.Float+20;
+      float dB = in.Float;
 
       browser->MeterData[2] = dB;
     }
     break;
     case 1030:
     {
-      float dB = in.Float+20;
+      float dB = in.Float;
 
       browser->MeterData[3] = dB;
     }
@@ -705,14 +705,14 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     break;
     case 1034:
     {
-      float dB = in.Float+20;
+      float dB = in.Float;
 
       browser->MeterData[4] = dB;
     }
     break;
     case 1035:
     {
-      float dB = in.Float+20;
+      float dB = in.Float;
 
       browser->MeterData[5] = dB;
     }
@@ -725,14 +725,14 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
 		break;
     case 1037:
     {
-      float dB = in.Float+20;
+      float dB = in.Float;
 
       browser->MeterData[6] = dB;
     }
     break;
     case 1038:
     {
-      float dB = in.Float+20;
+      float dB = in.Float;
 
       browser->MeterData[7] = dB;
     }
@@ -811,14 +811,14 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
     break;
     case 1058:
     {
-      float dB = in.Float+20;
+      float dB = in.Float;
 
       browser->MeterData[8] = dB;
     }
     break;
     case 1059:
     {
-      float dB = in.Float+20;
+      float dB = in.Float;
 
       browser->MeterData[9] = dB;
     }
@@ -935,7 +935,7 @@ int SetActuatorData(struct mbn_handler *mbn, unsigned short object, union mbn_da
   }
   if ((object >= 1096) && (object<1160))
   {
-    float dB = in.Float+20;
+    float dB = in.Float;
     browser->MeterData[(object-1096)+10] = dB;
   }
   qt_mutex.unlock();
