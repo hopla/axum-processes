@@ -46,7 +46,7 @@ class Browser: public QWidget, public Ui::Browser
 public:
 	 int cntSecond;
 
-	 double MeterData[75];
+	 double MeterData[74];
    double PhaseMeterData[2];
    char Label[7][33];
    char CurrentLabel[7][33];
