@@ -491,6 +491,7 @@ typedef struct
   float ActuatorDataMinimal;
   float ActuatorDataMaximal;
   float ActuatorDataDefault;
+  float ActuatorData;
   void *Next;
 } AXUM_FUNCTION_INFORMATION_STRUCT;
 
@@ -571,7 +572,7 @@ void debug_mambanet_data(unsigned int addr, unsigned int object, unsigned char t
 //MambaNet object vs Engine function utilities
 void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress=0x00000000);
 void CheckObjectRange(unsigned int SensorReceiveFunctionNumber, float *min, float *max, float *def, unsigned int MambaNetAddress=0x00000000);
-void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal);
+void SentDataToObject(unsigned int SensorReceiveFunctionNumber, AXUM_FUNCTION_INFORMATION_STRUCT *InfoObjectToSend);
 void InitalizeAllObjectListPerFunction();
 void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber);
 void DeleteAllObjectListPerFunction();

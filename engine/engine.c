@@ -8588,7 +8588,7 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
     if ((MambaNetAddress == 0x00000000) || (MambaNetAddress == WalkAxumFunctionInformationStruct->MambaNetAddress))
     {
       unsigned int FunctionNrToSend = (FunctionType<<24) | (FunctionNumber<<12) | Function;
-      SentDataToObject(FunctionNrToSend, WalkAxumFunctionInformationStruct->MambaNetAddress, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ActuatorDataType, WalkAxumFunctionInformationStruct->ActuatorDataSize, WalkAxumFunctionInformationStruct->ActuatorDataMinimal, WalkAxumFunctionInformationStruct->ActuatorDataMaximal);
+      SentDataToObject(FunctionNrToSend, WalkAxumFunctionInformationStruct);
     }
     WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
   }
@@ -8644,14 +8644,14 @@ void CheckObjectsToSent(unsigned int SensorReceiveFunctionNumber, unsigned int M
       if ((MambaNetAddress == 0x00000000) || (MambaNetAddress == WalkAxumFunctionInformationStruct->MambaNetAddress))
       {
         unsigned int FunctionNrToSend = (FunctionType<<24) | (FunctionNumber<<12) | Function;
-        SentDataToObject(FunctionNrToSend, WalkAxumFunctionInformationStruct->MambaNetAddress, WalkAxumFunctionInformationStruct->ObjectNr, WalkAxumFunctionInformationStruct->ActuatorDataType, WalkAxumFunctionInformationStruct->ActuatorDataSize, WalkAxumFunctionInformationStruct->ActuatorDataMinimal, WalkAxumFunctionInformationStruct->ActuatorDataMaximal);
+        SentDataToObject(FunctionNrToSend, WalkAxumFunctionInformationStruct);
       }
       WalkAxumFunctionInformationStruct = (AXUM_FUNCTION_INFORMATION_STRUCT *)WalkAxumFunctionInformationStruct->Next;
     }
   }
 }
 
-void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int MambaNetAddress, unsigned int ObjectNr, unsigned char DataType, unsigned char DataSize, float DataMinimal, float DataMaximal)
+void SentDataToObject(unsigned int SensorReceiveFunctionNumber, AXUM_FUNCTION_INFORMATION_STRUCT *InfoObjectToSend)
 {
   unsigned char SensorReceiveFunctionType = (SensorReceiveFunctionNumber>>24)&0xFF;
   char LCDText[65];
@@ -8674,7 +8674,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         case MODULE_FUNCTION_LABEL:
         { //Label
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
@@ -8692,7 +8692,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -8700,14 +8700,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_SOURCE:
         { //Source
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               GetSourceLabel(AxumData.ModuleData[ModuleNr].TemporySourceLocal, LCDText, 8);
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -8715,14 +8715,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_PRESET:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               GetPresetLabel(AxumData.ModuleData[ModuleNr].TemporyPresetLocal, LCDText, 8);
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -8737,7 +8737,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_PRESET_4A:
         case MODULE_FUNCTION_PRESET_4B:
         { //Not implemented
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -8745,7 +8745,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               if (PresetNr>0)
               {
                 data.State = ModulePresetActive(ModuleNr, PresetNr);
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
             }
             break;
@@ -8756,7 +8756,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_PRESET_B:
         case MODULE_FUNCTION_PRESET_A_B:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -8769,7 +8769,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               if (PresetNr>0)
               {
                 data.State = ModulePresetActive(ModuleNr, PresetNr);
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
             }
             break;
@@ -8778,7 +8778,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_SOURCE_PHANTOM:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -8794,7 +8794,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   {
                     data.State = AxumData.SourceData[SourceNr].Phantom;
                   }
-                  mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                  mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
                 }
               }
             }
@@ -8804,7 +8804,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_SOURCE_PAD:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -8820,7 +8820,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   {
                     data.State = AxumData.SourceData[SourceNr].Pad;
                   }
-                  mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                  mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
                 }
               }
             }
@@ -8835,7 +8835,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             int SourceNr = AxumData.ModuleData[ModuleNr].SelectedSource-matrix_sources.src_offset.min.source;
             unsigned int FunctionNrToSent = 0x05000000 | (SourceNr<<12);
 
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_UINT:
               {
@@ -8844,14 +8844,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   float min, max, def;
                   CheckObjectRange(FunctionNrToSent | SOURCE_FUNCTION_GAIN, &min, &max, &def);
 
-                  int Position = (((AxumData.SourceData[SourceNr].Gain-min)*(DataMaximal-DataMinimal))/(max-min))+DataMinimal;
+                  int Position = (((AxumData.SourceData[SourceNr].Gain-min)*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/(max-min))+InfoObjectToSend->ActuatorDataMinimal;
                   data.UInt = Position;
                 }
                 else
                 {
                   data.UInt = 0;
                 }
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
               }
               break;
               case MBN_DATATYPE_OCTETS:
@@ -8865,26 +8865,26 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   sprintf(LCDText, "Not used");
                 }
                 data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
               }
               break;
             }
           }
           else
           {
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_UINT:
               {
                 data.UInt = 0;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
               }
               break;
               case MBN_DATATYPE_OCTETS:
               {
                 sprintf(LCDText, "- dB");
                 data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
               }
               break;
             }
@@ -8897,12 +8897,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_INSERT_ON_OFF:
         { //Insert on/off
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].InsertOnOff;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -8910,12 +8910,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_PHASE_ON_OFF: //Phase
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].PhaseOnOff;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -8923,14 +8923,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_GAIN_LEVEL: //Gain level
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
-              int Position = (((AxumData.ModuleData[ModuleNr].Gain+20)*(DataMaximal-DataMinimal))/40)+DataMinimal;
+              int Position = (((AxumData.ModuleData[ModuleNr].Gain+20)*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/40)+InfoObjectToSend->ActuatorDataMinimal;
 
               data.UInt = Position;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
@@ -8938,7 +8938,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               sprintf(LCDText,     "%5.1fdB", AxumData.ModuleData[ModuleNr].Gain);
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -8950,7 +8950,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_LOW_CUT_FREQUENCY: //Low cut frequency
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
@@ -8964,13 +8964,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ModuleData[ModuleNr].Filter.Frequency;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
           }
@@ -8978,12 +8978,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_LOW_CUT_ON_OFF:  //Low cut on/off
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].FilterOnOff;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -8997,19 +8997,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_EQ_BAND_6_LEVEL:
         {
           int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_LEVEL)/(MODULE_FUNCTION_EQ_BAND_2_LEVEL-MODULE_FUNCTION_EQ_BAND_1_LEVEL);
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Level;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
             }
             break;
           }
@@ -9024,19 +9024,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         {
           int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY)/(MODULE_FUNCTION_EQ_BAND_2_FREQUENCY-MODULE_FUNCTION_EQ_BAND_1_FREQUENCY);
 
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "%5dHz", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Frequency;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
           }
@@ -9051,19 +9051,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         {
           int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH)/(MODULE_FUNCTION_EQ_BAND_2_BANDWIDTH-MODULE_FUNCTION_EQ_BAND_1_BANDWIDTH);
 
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "%5.1f Q", AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Bandwidth;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
             }
             break;
           }
@@ -9104,7 +9104,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_EQ_BAND_6_TYPE:
         {
           int BandNr = (FunctionNr-MODULE_FUNCTION_EQ_BAND_1_TYPE)/(MODULE_FUNCTION_EQ_BAND_2_TYPE-MODULE_FUNCTION_EQ_BAND_1_TYPE);
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
@@ -9153,13 +9153,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].EQBand[BandNr].Type;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9167,12 +9167,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_EQ_ON_OFF:
         { //EQ on/off
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].EQOnOff;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9185,19 +9185,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
     //        break;
         case MODULE_FUNCTION_AGC_THRESHOLD:
         { //Dynamics threshold
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = (((AxumData.ModuleData[ModuleNr].AGCThreshold+30)*(DataMaximal-DataMinimal))/30)+DataMinimal;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              data.UInt = (((AxumData.ModuleData[ModuleNr].AGCThreshold+30)*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/30)+InfoObjectToSend->ActuatorDataMinimal;
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].AGCThreshold);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -9205,19 +9205,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_AGC_AMOUNT:
         { //Dynamics amount
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = (((AxumData.ModuleData[ModuleNr].AGCRatio-1)*(DataMaximal-DataMinimal))/19)+DataMinimal;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              data.UInt = (((AxumData.ModuleData[ModuleNr].AGCRatio-1)*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/19)+InfoObjectToSend->ActuatorDataMinimal;
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, " 1:%1.1f ", AxumData.ModuleData[ModuleNr].AGCRatio);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -9225,12 +9225,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_DYNAMICS_ON_OFF:
         { //Dynamics on/off
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].DynamicsOnOff;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9238,19 +9238,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_EXPANDER_THRESHOLD:
         { //Downward expander threshold
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = (((AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold+50)*(DataMaximal-DataMinimal))/50)+DataMinimal;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              data.UInt = (((AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold+50)*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/50)+InfoObjectToSend->ActuatorDataMinimal;
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "%5.1fdB", AxumData.ModuleData[ModuleNr].DownwardExpanderThreshold);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -9258,12 +9258,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_MONO_ON_OFF:
         { //Mono
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].MonoOnOff;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9271,12 +9271,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_PAN:
         { //Pan
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = ((AxumData.ModuleData[ModuleNr].Panorama*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              data.UInt = ((AxumData.ModuleData[ModuleNr].Panorama*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/1023)+InfoObjectToSend->ActuatorDataMinimal;
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
@@ -9304,7 +9304,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -9316,7 +9316,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_MODULE_LEVEL:
         { //Module level
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
@@ -9333,31 +9333,31 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 dB = 1499;
               }
               int Position = dB2Position[dB];
-              Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-              if (Position<DataMinimal)
+              Position = ((dB2Position[dB]*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/1023)+InfoObjectToSend->ActuatorDataMinimal;
+              if (Position<InfoObjectToSend->ActuatorDataMinimal)
               {
-                Position = DataMinimal;
+                Position = InfoObjectToSend->ActuatorDataMinimal;
               }
-              else if (Position>DataMaximal)
+              else if (Position>InfoObjectToSend->ActuatorDataMaximal)
               {
-                Position = DataMaximal;
+                Position = InfoObjectToSend->ActuatorDataMaximal;
               }
 
               data.UInt = Position;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 0);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, InfoObjectToSend->ActuatorDataSize, data, 0);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, " %4.0f dB", AxumData.ModuleData[ModuleNr].FaderLevel);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = AxumData.ModuleData[ModuleNr].FaderLevel;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
             }
             break;
           }
@@ -9365,12 +9365,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_MODULE_ON:
         { //Module on
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].On;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9378,12 +9378,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_MODULE_OFF:
         { //Module off
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = !AxumData.ModuleData[ModuleNr].On;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9391,12 +9391,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_MODULE_ON_OFF:
         { //Module on/off
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].On;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9420,7 +9420,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_BUSS_31_32_LEVEL:
         { //Aux Level
           int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_LEVEL)/(MODULE_FUNCTION_BUSS_3_4_LEVEL-MODULE_FUNCTION_BUSS_1_2_LEVEL);
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
@@ -9436,18 +9436,18 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 dB = 1499;
               }
               int Position = dB2Position[dB];
-              Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-              if (Position<DataMinimal)
+              Position = ((dB2Position[dB]*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/1023)+InfoObjectToSend->ActuatorDataMinimal;
+              if (Position<InfoObjectToSend->ActuatorDataMinimal)
               {
-                Position = DataMinimal;
+                Position = InfoObjectToSend->ActuatorDataMinimal;
               }
-              else if (Position>DataMaximal)
+              else if (Position>InfoObjectToSend->ActuatorDataMaximal)
               {
-                Position = DataMaximal;
+                Position = InfoObjectToSend->ActuatorDataMaximal;
               }
 
               data.UInt = Position;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, InfoObjectToSend->ActuatorDataSize, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
@@ -9462,7 +9462,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -9505,12 +9505,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_BUSS_31_32_ON:
         { //Buss on/off
           int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_ON)/(MODULE_FUNCTION_BUSS_3_4_ON-MODULE_FUNCTION_BUSS_1_2_ON);
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9534,12 +9534,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_BUSS_31_32_OFF:
         { //Buss on/off
           int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_OFF)/(MODULE_FUNCTION_BUSS_3_4_OFF-MODULE_FUNCTION_BUSS_1_2_OFF);
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = !AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9563,12 +9563,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_BUSS_31_32_ON_OFF:
         { //Buss on/off
           int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_ON_OFF)/(MODULE_FUNCTION_BUSS_3_4_ON_OFF-MODULE_FUNCTION_BUSS_1_2_ON_OFF);
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].Buss[BussNr].On;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9592,12 +9592,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_BUSS_31_32_PRE:
         { //Buss pre
           int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_PRE)/(MODULE_FUNCTION_BUSS_3_4_PRE-MODULE_FUNCTION_BUSS_1_2_PRE);
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].Buss[BussNr].PreModuleLevel;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9621,12 +9621,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_BUSS_31_32_BALANCE:
         { //Buss balance
           int BussNr = (FunctionNr-MODULE_FUNCTION_BUSS_1_2_BALANCE)/(MODULE_FUNCTION_BUSS_3_4_BALANCE-MODULE_FUNCTION_BUSS_1_2_BALANCE);
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
-              data.UInt = ((AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              data.UInt = ((AxumData.ModuleData[ModuleNr].Buss[BussNr].Balance*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/1023)+InfoObjectToSend->ActuatorDataMinimal;
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
@@ -9654,7 +9654,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -9681,7 +9681,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_PHASE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
@@ -9716,14 +9716,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 sprintf(LCDText, "  Off   ");
               }
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
           }
         }
         break;
         case MODULE_FUNCTION_MONO:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
@@ -9758,7 +9758,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 sprintf(LCDText, "  Off   ");
               }
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
           }
         }
@@ -9769,7 +9769,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_SELECT_4:
         {
           int ConsoleNr = FunctionNr-MODULE_FUNCTION_SELECT_1;
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -9778,7 +9778,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 data.State = 1;
               }
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9786,12 +9786,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_CONSOLE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ModuleData[ModuleNr].Console;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
             }
             break;
           }
@@ -9907,7 +9907,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
         }
         data.State = Active;
-        mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+        mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
       }
       switch (FunctionNr)
       {
@@ -9917,7 +9917,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_CONTROL_3:
         case MODULE_FUNCTION_CONTROL_4:
         { //Control 1-4
-          ModeControllerSetData(SensorReceiveFunctionNumber, MambaNetAddress, ObjectNr, DataType, DataSize, DataMinimal, DataMaximal);
+          ModeControllerSetData(SensorReceiveFunctionNumber, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, InfoObjectToSend->ActuatorDataType, InfoObjectToSend->ActuatorDataSize, InfoObjectToSend->ActuatorDataMinimal, InfoObjectToSend->ActuatorDataMaximal);
         }
         break;
         case MODULE_FUNCTION_CONTROL_LABEL:
@@ -9926,7 +9926,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case MODULE_FUNCTION_CONTROL_3_LABEL:
         case MODULE_FUNCTION_CONTROL_4_LABEL:
         { //Control 1-4 label
-          ModeControllerSetLabel(SensorReceiveFunctionNumber, MambaNetAddress, ObjectNr, DataType, DataSize, DataMinimal, DataMaximal);
+          ModeControllerSetLabel(SensorReceiveFunctionNumber, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, InfoObjectToSend->ActuatorDataType, InfoObjectToSend->ActuatorDataSize, InfoObjectToSend->ActuatorDataMinimal, InfoObjectToSend->ActuatorDataMaximal);
         }
         break;
         case MODULE_FUNCTION_CONTROL_RESET:
@@ -9939,12 +9939,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_PEAK:
         { //Peak
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].Peak;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9952,12 +9952,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_SIGNAL:
         { //Signal
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ModuleData[ModuleNr].Signal;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -9965,12 +9965,26 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_AUDIO_LEVEL_LEFT:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = dBLevel[(ModuleNr*2)+0]+AxumData.Headroom;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+
+              if (data.Float<InfoObjectToSend->ActuatorDataMinimal)
+              {
+                data.Float = InfoObjectToSend->ActuatorDataMinimal;
+              }
+              else if (data.Float>InfoObjectToSend->ActuatorDataMaximal)
+              {
+                data.Float = InfoObjectToSend->ActuatorDataMaximal;
+              }
+
+              if (InfoObjectToSend->ActuatorData != data.Float)
+              {
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, InfoObjectToSend->ActuatorDataSize, data, 0);
+                InfoObjectToSend->ActuatorData = data.Float;
+              }
             }
             break;
           }
@@ -9978,12 +9992,26 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_AUDIO_LEVEL_RIGHT:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = dBLevel[(ModuleNr*2)+1]+AxumData.Headroom;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+
+              if (data.Float<InfoObjectToSend->ActuatorDataMinimal)
+              {
+                data.Float = InfoObjectToSend->ActuatorDataMinimal;
+              }
+              else if (data.Float>InfoObjectToSend->ActuatorDataMaximal)
+              {
+                data.Float = InfoObjectToSend->ActuatorDataMaximal;
+              }
+
+              if (InfoObjectToSend->ActuatorData != data.Float)
+              {
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, InfoObjectToSend->ActuatorDataSize, data, 0);
+                InfoObjectToSend->ActuatorData = data.Float;
+              }
             }
             break;
           }
@@ -9991,12 +10019,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case MODULE_FUNCTION_AUDIO_PHASE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = Phase[ModuleNr];
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
             }
             break;
           }
@@ -10019,7 +10047,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         case BUSS_FUNCTION_MASTER_LEVEL:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
@@ -10035,40 +10063,40 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 dB = 1499;
               }
               int Position = dB2Position[dB];
-              Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-              if (Position<DataMinimal)
+              Position = ((dB2Position[dB]*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/1023)+InfoObjectToSend->ActuatorDataMinimal;
+              if (Position<InfoObjectToSend->ActuatorDataMinimal)
               {
-                Position = DataMinimal;
+                Position = InfoObjectToSend->ActuatorDataMinimal;
               }
-              else if (Position>DataMaximal)
+              else if (Position>InfoObjectToSend->ActuatorDataMaximal)
               {
-                Position = DataMaximal;
+                Position = InfoObjectToSend->ActuatorDataMaximal;
               }
 
               data.UInt = Position;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, InfoObjectToSend->ActuatorDataSize, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, " %4.0f dB", AxumData.BussMasterData[BussNr].Level);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
             case MBN_DATATYPE_FLOAT:
             {
               float Level = AxumData.BussMasterData[BussNr].Level;
-              if (Level<DataMinimal)
+              if (Level<InfoObjectToSend->ActuatorDataMinimal)
               {
-                Level = DataMinimal;
+                Level = InfoObjectToSend->ActuatorDataMinimal;
               }
-              else if (Level>DataMaximal)
+              else if (Level>InfoObjectToSend->ActuatorDataMaximal)
               {
-                Level = DataMaximal;
+                Level = InfoObjectToSend->ActuatorDataMaximal;
               }
               data.Float = Level;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
             }
             break;
           }
@@ -10080,12 +10108,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case BUSS_FUNCTION_MASTER_ON_OFF:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.BussMasterData[BussNr].On;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -10093,7 +10121,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case BUSS_FUNCTION_MASTER_PRE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -10117,7 +10145,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.State = BussPre;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -10125,12 +10153,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case BUSS_FUNCTION_LABEL:
         { //Buss label
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               data.Octets = (unsigned char *)AxumData.BussMasterData[BussNr].Label;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -10138,24 +10166,52 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case BUSS_FUNCTION_AUDIO_LEVEL_LEFT:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = SummingdBLevel[(BussNr*2)+0]+AxumData.Headroom;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+
+              if (data.Float<InfoObjectToSend->ActuatorDataMinimal)
+              {
+                data.Float = InfoObjectToSend->ActuatorDataMinimal;
+              }
+              else if (data.Float>InfoObjectToSend->ActuatorDataMaximal)
+              {
+                data.Float = InfoObjectToSend->ActuatorDataMaximal;
+              }
+
+              if (InfoObjectToSend->ActuatorData != data.Float)
+              {
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, InfoObjectToSend->ActuatorDataSize, data, 0);
+                InfoObjectToSend->ActuatorData = data.Float;
+              }
             }
           }
         }
         break;
         case BUSS_FUNCTION_AUDIO_LEVEL_RIGHT:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = SummingdBLevel[(BussNr*2)+1]+AxumData.Headroom;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+
+              if (data.Float<InfoObjectToSend->ActuatorDataMinimal)
+              {
+                data.Float = InfoObjectToSend->ActuatorDataMinimal;
+              }
+              else if (data.Float>InfoObjectToSend->ActuatorDataMaximal)
+              {
+                data.Float = InfoObjectToSend->ActuatorDataMaximal;
+              }
+
+              if (InfoObjectToSend->ActuatorData != data.Float)
+              {
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, InfoObjectToSend->ActuatorDataSize, data, 0);
+                InfoObjectToSend->ActuatorData = data.Float;
+              }
             }
           }
           break;
@@ -10167,7 +10223,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case BUSS_FUNCTION_SELECT_4:
         {
           int ConsoleNr = FunctionNr-BUSS_FUNCTION_SELECT_1;
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -10176,7 +10232,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 data.State = 1;
               }
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -10184,12 +10240,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case BUSS_FUNCTION_AUDIO_PHASE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = SummingPhase[BussNr];
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
             }
             break;
           }
@@ -10206,7 +10262,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             }
           }
           data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
         break;
         case BUSS_FUNCTION_TALKBACK_1:
@@ -10227,12 +10283,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case BUSS_FUNCTION_TALKBACK_16:
         {
           int TalkbackNr = FunctionNr - BUSS_FUNCTION_TALKBACK_1;
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.BussMasterData[BussNr].Talkback[TalkbackNr];
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -10363,7 +10419,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         }
 
         data.State = Active;
-        mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+        mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
       }
       else
       {
@@ -10371,12 +10427,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         {
           case MONITOR_BUSS_FUNCTION_MUTE:
           { //Mute
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_STATE:
               {
                 data.State = AxumData.Monitor[MonitorBussNr].Mute;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
             }
@@ -10384,12 +10440,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
           case MONITOR_BUSS_FUNCTION_DIM:
           { //Dim
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_STATE:
               {
                 data.State = AxumData.Monitor[MonitorBussNr].Dim;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
             }
@@ -10397,7 +10453,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
           case MONITOR_BUSS_FUNCTION_PHONES_LEVEL:
           { //Phones level
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_UINT:
               {
@@ -10413,40 +10469,40 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   dB = 1499;
                 }
                 int Position = dB2Position[dB];
-                Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-                if (Position<DataMinimal)
+                Position = ((dB2Position[dB]*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/1023)+InfoObjectToSend->ActuatorDataMinimal;
+                if (Position<InfoObjectToSend->ActuatorDataMinimal)
                 {
-                  Position = DataMinimal;
+                  Position = InfoObjectToSend->ActuatorDataMinimal;
                 }
-                else if (Position>DataMaximal)
+                else if (Position>InfoObjectToSend->ActuatorDataMaximal)
                 {
-                  Position = DataMaximal;
+                  Position = InfoObjectToSend->ActuatorDataMaximal;
                 }
 
                 data.UInt = Position;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, InfoObjectToSend->ActuatorDataSize, data, 1);
               }
               break;
               case MBN_DATATYPE_OCTETS:
               {
                 sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].PhonesLevel);
                 data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
               }
               break;
               case MBN_DATATYPE_FLOAT:
               {
                 float Level = AxumData.Monitor[MonitorBussNr].PhonesLevel;
-                if (Level<DataMinimal)
+                if (Level<InfoObjectToSend->ActuatorDataMinimal)
                 {
-                  Level = DataMinimal;
+                  Level = InfoObjectToSend->ActuatorDataMinimal;
                 }
-                else if (Level>DataMaximal)
+                else if (Level>InfoObjectToSend->ActuatorDataMaximal)
                 {
-                  Level = DataMaximal;
+                  Level = InfoObjectToSend->ActuatorDataMaximal;
                 }
                 data.Float = Level;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
               }
               break;
             }
@@ -10454,12 +10510,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
           case MONITOR_BUSS_FUNCTION_MONO:
           { //Mono
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_STATE:
               {
                 data.State = AxumData.Monitor[MonitorBussNr].Mono;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
             }
@@ -10467,12 +10523,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
           case MONITOR_BUSS_FUNCTION_PHASE:
           { //Phase
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_STATE:
               {
                 data.State = AxumData.Monitor[MonitorBussNr].Phase;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
             }
@@ -10480,7 +10536,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
           case MONITOR_BUSS_FUNCTION_SPEAKER_LEVEL:
           { //Speaker level
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_UINT:
               {
@@ -10496,40 +10552,40 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   dB = 1499;
                 }
                 int Position = dB2Position[dB];
-                Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-                if (Position<DataMinimal)
+                Position = ((dB2Position[dB]*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/1023)+InfoObjectToSend->ActuatorDataMinimal;
+                if (Position<InfoObjectToSend->ActuatorDataMinimal)
                 {
-                  Position = DataMinimal;
+                  Position = InfoObjectToSend->ActuatorDataMinimal;
                 }
-                else if (Position>DataMaximal)
+                else if (Position>InfoObjectToSend->ActuatorDataMaximal)
                 {
-                  Position = DataMaximal;
+                  Position = InfoObjectToSend->ActuatorDataMaximal;
                 }
 
                 data.UInt = Position;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, InfoObjectToSend->ActuatorDataSize, data, 1);
               }
               break;
               case MBN_DATATYPE_OCTETS:
               {
                 sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].SpeakerLevel);
                 data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
               }
               break;
               case MBN_DATATYPE_FLOAT:
               {
                 float Level = AxumData.Monitor[MonitorBussNr].SpeakerLevel;
-                if (Level<DataMinimal)
+                if (Level<InfoObjectToSend->ActuatorDataMinimal)
                 {
-                  Level = DataMinimal;
+                  Level = InfoObjectToSend->ActuatorDataMinimal;
                 }
-                else if (Level>DataMaximal)
+                else if (Level>InfoObjectToSend->ActuatorDataMaximal)
                 {
-                  Level = DataMaximal;
+                  Level = InfoObjectToSend->ActuatorDataMaximal;
                 }
                 data.Float = Level;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
               }
               break;
             }
@@ -10553,12 +10609,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           case MONITOR_BUSS_FUNCTION_TALKBACK_16:
           {
             int TalkbackNr = FunctionNr - MONITOR_BUSS_FUNCTION_TALKBACK_1;
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_STATE:
               {
                 data.State = AxumData.Monitor[MonitorBussNr].Talkback[TalkbackNr];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
             }
@@ -10566,12 +10622,26 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
           case MONITOR_BUSS_FUNCTION_AUDIO_LEVEL_LEFT:
           {
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_FLOAT:
               {
                 data.Float = SummingdBLevel[32+(MonitorBussNr*2)+0]+AxumData.Headroom;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+
+                if (data.Float<InfoObjectToSend->ActuatorDataMinimal)
+                {
+                  data.Float = InfoObjectToSend->ActuatorDataMinimal;
+                }
+                else if (data.Float>InfoObjectToSend->ActuatorDataMaximal)
+                {
+                  data.Float = InfoObjectToSend->ActuatorDataMaximal;
+                }
+
+                if (InfoObjectToSend->ActuatorData != data.Float)
+                {
+                  mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, InfoObjectToSend->ActuatorDataSize, data, 0);
+                  InfoObjectToSend->ActuatorData = data.Float;
+                }
               }
               break;
             }
@@ -10579,12 +10649,26 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
           case MONITOR_BUSS_FUNCTION_AUDIO_LEVEL_RIGHT:
           {
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_FLOAT:
               {
                 data.Float = SummingdBLevel[32+(MonitorBussNr*2)+1]+AxumData.Headroom;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+
+                if (data.Float<InfoObjectToSend->ActuatorDataMinimal)
+                {
+                  data.Float = InfoObjectToSend->ActuatorDataMinimal;
+                }
+                else if (data.Float>InfoObjectToSend->ActuatorDataMaximal)
+                {
+                  data.Float = InfoObjectToSend->ActuatorDataMaximal;
+                }
+
+                if (InfoObjectToSend->ActuatorData != data.Float)
+                {
+                  mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, InfoObjectToSend->ActuatorDataSize, data, 0);
+                  InfoObjectToSend->ActuatorData = data.Float;
+                }
               }
               break;
             }
@@ -10592,12 +10676,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
           case MONITOR_BUSS_FUNCTION_LABEL:
           { //Buss label
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_OCTETS:
               {
                 data.Octets = (unsigned char *)AxumData.Monitor[MonitorBussNr].Label;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
               }
               break;
             }
@@ -10609,7 +10693,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           case MONITOR_BUSS_FUNCTION_SELECT_4:
           {
             int ConsoleNr = FunctionNr-MONITOR_BUSS_FUNCTION_SELECT_1;
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_STATE:
               {
@@ -10618,7 +10702,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 {
                   data.State = 1;
                 }
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
             }
@@ -10626,12 +10710,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
           case MONITOR_BUSS_FUNCTION_AUDIO_PHASE:
           {
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_FLOAT:
               {
                 data.Float = SummingPhase[16+MonitorBussNr];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 0);
               }
               break;
             }
@@ -10650,7 +10734,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         case CONSOLE_FUNCTION_CONTROL_MODE_ACTIVE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -10662,7 +10746,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 data.State = 0;
               }
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -10742,7 +10826,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_31_32:
         case CONSOLE_FUNCTION_CONTROL_MODE_BUSS_31_32_BALANCE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -10756,7 +10840,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.State = Active;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -10779,7 +10863,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_29_30:
         case CONSOLE_FUNCTION_MASTER_CONTROL_MODE_BUSS_31_32:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -10791,7 +10875,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.State = Active;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -10799,7 +10883,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_MASTER_CONTROL:
         {
-          MasterModeControllerSetData(ConsoleNr, MambaNetAddress, ObjectNr, DataType, DataSize, DataMinimal, DataMaximal);
+          MasterModeControllerSetData(ConsoleNr, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, InfoObjectToSend->ActuatorDataType, InfoObjectToSend->ActuatorDataSize, InfoObjectToSend->ActuatorDataMinimal, InfoObjectToSend->ActuatorDataMaximal);
         }
         break;
 //        case CONSOLE_FUNCTION_CONSOLE_TO_PROGRAMMED_DEFAULTS:
@@ -10820,7 +10904,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_29_30:
         case CONSOLE_FUNCTION_CONTROL_MODES_BUSS_31_32:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -10833,7 +10917,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                  Active = true;
               }
               data.State = Active;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -10841,14 +10925,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_CONSOLE_PRESET:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               GetConsolePresetLabel(AxumData.ConsoleData[ConsoleNr].SelectedConsolePreset, LCDText, 8);
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -10856,12 +10940,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_MODULE_SELECT:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ConsoleData[ConsoleNr].SelectedModule;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
@@ -10879,7 +10963,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 sprintf(LCDText, "Mod %d ", AxumData.ConsoleData[ConsoleNr].SelectedModule+1);
               }
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -10887,19 +10971,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_BUSS_SELECT:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ConsoleData[ConsoleNr].SelectedBuss;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "Buss %d", AxumData.ConsoleData[ConsoleNr].SelectedBuss+1);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -10907,19 +10991,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_MONITOR_BUSS_SELECT:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ConsoleData[ConsoleNr].SelectedMonitorBuss;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "Mon %d", AxumData.ConsoleData[ConsoleNr].SelectedMonitorBuss+1);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -10927,19 +11011,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_SOURCE_SELECT:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ConsoleData[ConsoleNr].SelectedSource;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "Src %d", AxumData.ConsoleData[ConsoleNr].SelectedSource+1);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -10947,19 +11031,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_DESTINATION_SELECT:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ConsoleData[ConsoleNr].SelectedDestination;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 2, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, "Src %d", AxumData.ConsoleData[ConsoleNr].SelectedDestination+1);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -10969,13 +11053,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_CHIPCARD_USER:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               strncpy(LCDText, AxumData.ConsoleData[ConsoleNr].UsernameToWrite, 32);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
             }
             break;
           }
@@ -10983,13 +11067,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_CHIPCARD_PASS:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               strncpy(LCDText, AxumData.ConsoleData[ConsoleNr].PasswordToWrite, 16);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
             }
             break;
           }
@@ -11001,13 +11085,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_UPDATE_USER:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               strncpy(LCDText, AxumData.ConsoleData[ConsoleNr].Username, 32);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 32, data, 1);
             }
             break;
           }
@@ -11015,13 +11099,13 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_UPDATE_PASS:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               strncpy(LCDText, AxumData.ConsoleData[ConsoleNr].Password, 16);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 16, data, 1);
             }
             break;
           }
@@ -11029,14 +11113,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_UPDATE_USER_PASS:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               memcpy(LCDText, AxumData.ConsoleData[ConsoleNr].Username, 32);
               memcpy(&LCDText[32], AxumData.ConsoleData[ConsoleNr].Password, 16);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 48, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 48, data, 1);
             }
             break;
           }
@@ -11044,19 +11128,19 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_USER_LEVEL:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ConsoleData[ConsoleNr].UserLevel;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               char UserLevelNames[7][21] = {"Idle", "Unknown user", "Operator 1", "Operator 2", "Supervisor 1", "Supervisor 2", "Administrator"};
               data.Octets = (unsigned char *)UserLevelNames[AxumData.ConsoleData[ConsoleNr].UserLevel];
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 13, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 13, data, 1);
             }
             break;
           }
@@ -11064,12 +11148,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_DOT_COUNT_UPDOWN:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ConsoleData[ConsoleNr].DotCountUpDown;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11077,12 +11161,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_PROGRAM_ENDTIME_ENABLE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.ConsoleData[ConsoleNr].ProgramEndTimeEnable;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11090,7 +11174,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_PROGRAM_ENDTIME:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
@@ -11107,7 +11191,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 sprintf(LCDText, "No end time!");
               }
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, strlen(LCDText), data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, strlen(LCDText), data, 1);
             }
             break;
           }
@@ -11115,12 +11199,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_PROGRAM_ENDTIME_HOURS:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ConsoleData[ConsoleNr].ProgramEndTimeHours;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
             }
             break;
           }
@@ -11128,12 +11212,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_PROGRAM_ENDTIME_MINUTES:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ConsoleData[ConsoleNr].ProgramEndTimeMinutes;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
             }
             break;
           }
@@ -11141,12 +11225,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_PROGRAM_ENDTIME_SECONDS:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
               data.UInt = AxumData.ConsoleData[ConsoleNr].ProgramEndTimeSeconds;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
             }
             break;
           }
@@ -11154,12 +11238,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_COUNT_DOWN_TIMER:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_FLOAT:
             {
               data.Float = AxumData.ConsoleData[ConsoleNr].CountDownTimer;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
             }
             break;
           }
@@ -11167,7 +11251,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_MODULE_SELECT_ACTIVE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -11179,7 +11263,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 data.State = 0;
               }
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11187,7 +11271,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_BUSS_SELECT_ACTIVE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -11199,7 +11283,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 data.State = 0;
               }
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11207,7 +11291,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_MONITOR_BUSS_SELECT_ACTIVE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -11219,7 +11303,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 data.State = 0;
               }
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11227,7 +11311,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_SOURCE_SELECT_ACTIVE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -11239,7 +11323,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 data.State = 0;
               }
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11247,7 +11331,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case CONSOLE_FUNCTION_DESTINATION_SELECT_ACTIVE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -11259,7 +11343,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 data.State = 0;
               }
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11286,12 +11370,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           case GLOBAL_FUNCTION_REDLIGHT_7:
           case GLOBAL_FUNCTION_REDLIGHT_8:
           {
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_STATE:
               {
                 data.State = AxumData.Redlight[FunctionNr-GLOBAL_FUNCTION_REDLIGHT_1];
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
             }
@@ -11334,7 +11418,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             unsigned char ConsoleActiveBits = 0;
             unsigned char PresetActiveBits = 0;
 
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_STATE:
               {
@@ -11360,7 +11444,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   data.State = 0;
                 }
 
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
             }
@@ -11368,18 +11452,18 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           break;
           case GLOBAL_FUNCTION_INITIALIZATION_STATUS:
           {
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_STATE:
               {
                 data.State = (AxumData.PercentInitialized == 100) ? 1 : 0;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
               }
               break;
               case MBN_DATATYPE_UINT:
               {
                 data.UInt = AxumData.PercentInitialized;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, 1, data, 1);
               }
               break;
               case MBN_DATATYPE_OCTETS:
@@ -11393,7 +11477,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   sprintf(LCDText, "Ready");
                 }
                 data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, strlen(LCDText), data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, strlen(LCDText), data, 1);
               }
               break;
             }
@@ -11440,7 +11524,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             data.State = Active;
           }
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
         break;
         case SOURCE_FUNCTION_MODULE_FADER_ON:
@@ -11467,7 +11551,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             data.State = Active;
           }
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
         break;
         case SOURCE_FUNCTION_MODULE_FADER_AND_ON_ACTIVE:
@@ -11497,7 +11581,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             data.State = Active;
           }
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
         break;
         case SOURCE_FUNCTION_MODULE_BUSS_1_2_ON:
@@ -11532,7 +11616,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           }
 
           data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
         break;
         case SOURCE_FUNCTION_MODULE_BUSS_1_2_OFF:
@@ -11567,7 +11651,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           }
 
           data.State = !Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
         break;
         case SOURCE_FUNCTION_MODULE_BUSS_1_2_ON_OFF:
@@ -11601,7 +11685,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
             }
           }
           data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
         break;
         case SOURCE_FUNCTION_MODULE_COUGH_ON_OFF:
@@ -11619,7 +11703,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           }
 
           data.State = Active;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
         break;
         case SOURCE_FUNCTION_START:
@@ -11634,23 +11718,23 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             data.State = AxumData.SourceData[SourceNr].Start;
           }
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
         break;
         case SOURCE_FUNCTION_PHANTOM:
         {
           data.State = AxumData.SourceData[SourceNr].Phantom;
-          mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+          mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
         }
         break;
         case SOURCE_FUNCTION_PAD:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.SourceData[SourceNr].Pad;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11658,21 +11742,21 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case SOURCE_FUNCTION_GAIN:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_FLOAT:
             {
               float Level = AxumData.SourceData[SourceNr].Gain;
-              if (Level<DataMinimal)
+              if (Level<InfoObjectToSend->ActuatorDataMinimal)
               {
-                Level = DataMinimal;
+                Level = InfoObjectToSend->ActuatorDataMinimal;
               }
-              else if (Level>DataMaximal)
+              else if (Level>InfoObjectToSend->ActuatorDataMaximal)
               {
-                Level = DataMaximal;
+                Level = InfoObjectToSend->ActuatorDataMaximal;
               }
               data.Float = Level;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
             }
             break;
           }
@@ -11680,12 +11764,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case SOURCE_FUNCTION_ALERT:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.SourceData[SourceNr].Alert;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11697,7 +11781,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case SOURCE_FUNCTION_SELECT_4:
         {
           int ConsoleNr = FunctionNr-SOURCE_FUNCTION_SELECT_1;
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -11706,7 +11790,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 data.State = 1;
               }
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11714,12 +11798,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case SOURCE_FUNCTION_LABEL:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               data.Octets = (unsigned char *)AxumData.SourceData[SourceNr].SourceName;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -11729,12 +11813,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case SOURCE_FUNCTION_COUGH_COMM_2:
         {
           unsigned char CommNr = FunctionNr-SOURCE_FUNCTION_COUGH_COMM_1;
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.SourceData[SourceNr].CoughComm[CommNr];
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
           }
         }
@@ -11757,12 +11841,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
       {
         case DESTINATION_FUNCTION_LABEL:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               data.Octets = (unsigned char *)AxumData.DestinationData[DestinationNr].DestinationName;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -11770,14 +11854,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_SOURCE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
               GetSourceLabel(AxumData.DestinationData[DestinationNr].Source, LCDText, 8);
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -11789,7 +11873,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
 
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_UINT:
               {
@@ -11803,40 +11887,40 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   dB = 1499;
                 }
                 int Position = dB2Position[dB];
-                Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-                if (Position<DataMinimal)
+                Position = ((dB2Position[dB]*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/1023)+InfoObjectToSend->ActuatorDataMinimal;
+                if (Position<InfoObjectToSend->ActuatorDataMinimal)
                 {
-                  Position = DataMinimal;
+                  Position = InfoObjectToSend->ActuatorDataMinimal;
                 }
-                else if (Position>DataMaximal)
+                else if (Position>InfoObjectToSend->ActuatorDataMaximal)
                 {
-                  Position = DataMaximal;
+                  Position = InfoObjectToSend->ActuatorDataMaximal;
                 }
 
                 data.UInt = Position;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, InfoObjectToSend->ActuatorDataSize, data, 1);
               }
               break;
               case MBN_DATATYPE_OCTETS:
               {
                 sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].SpeakerLevel);
                 data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
               }
               break;
               case MBN_DATATYPE_FLOAT:
               {
                 float Level = AxumData.Monitor[MonitorBussNr].SpeakerLevel;
-                if (Level<DataMinimal)
+                if (Level<InfoObjectToSend->ActuatorDataMinimal)
                 {
-                  Level = DataMinimal;
+                  Level = InfoObjectToSend->ActuatorDataMinimal;
                 }
-                else if (Level>DataMaximal)
+                else if (Level>InfoObjectToSend->ActuatorDataMaximal)
                 {
-                  Level = DataMaximal;
+                  Level = InfoObjectToSend->ActuatorDataMaximal;
                 }
                 data.Float = Level;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
               }
               break;
             }
@@ -11849,7 +11933,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
           {
             int MonitorBussNr = AxumData.DestinationData[DestinationNr].Source-matrix_sources.src_offset.min.monitor_buss;
 
-            switch (DataType)
+            switch (InfoObjectToSend->ActuatorDataType)
             {
               case MBN_DATATYPE_UINT:
               {
@@ -11865,40 +11949,40 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                   dB = 1499;
                 }
                 int Position = dB2Position[dB];
-                Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-                if (Position<DataMinimal)
+                Position = ((dB2Position[dB]*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/1023)+InfoObjectToSend->ActuatorDataMinimal;
+                if (Position<InfoObjectToSend->ActuatorDataMinimal)
                 {
-                  Position = DataMinimal;
+                  Position = InfoObjectToSend->ActuatorDataMinimal;
                 }
-                else if (Position>DataMaximal)
+                else if (Position>InfoObjectToSend->ActuatorDataMaximal)
                 {
-                  Position = DataMaximal;
+                  Position = InfoObjectToSend->ActuatorDataMaximal;
                 }
 
                 data.UInt = Position;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, InfoObjectToSend->ActuatorDataSize, data, 1);
               }
               break;
               case MBN_DATATYPE_OCTETS:
               {
                 sprintf(LCDText, " %4.0f dB", AxumData.Monitor[MonitorBussNr].PhonesLevel);
                 data.Octets = (unsigned char *)LCDText;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
               }
               break;
               case MBN_DATATYPE_FLOAT:
               {
                 float Level = AxumData.Monitor[MonitorBussNr].PhonesLevel;
-                if (Level<DataMinimal)
+                if (Level<InfoObjectToSend->ActuatorDataMinimal)
                 {
-                  Level = DataMinimal;
+                  Level = InfoObjectToSend->ActuatorDataMinimal;
                 }
-                else if (Level>DataMaximal)
+                else if (Level>InfoObjectToSend->ActuatorDataMaximal)
                 {
-                  Level = DataMaximal;
+                  Level = InfoObjectToSend->ActuatorDataMaximal;
                 }
                 data.Float = Level;
-                mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+                mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
               }
               break;
             }
@@ -11907,7 +11991,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_LEVEL:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_UINT:
             {
@@ -11923,40 +12007,40 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
                 dB = 1499;
               }
               int Position = dB2Position[dB];
-              Position = ((dB2Position[dB]*(DataMaximal-DataMinimal))/1023)+DataMinimal;
-              if (Position<DataMinimal)
+              Position = ((dB2Position[dB]*(InfoObjectToSend->ActuatorDataMaximal-InfoObjectToSend->ActuatorDataMinimal))/1023)+InfoObjectToSend->ActuatorDataMinimal;
+              if (Position<InfoObjectToSend->ActuatorDataMinimal)
               {
-                Position = DataMinimal;
+                Position = InfoObjectToSend->ActuatorDataMinimal;
               }
-              else if (Position>DataMaximal)
+              else if (Position>InfoObjectToSend->ActuatorDataMaximal)
               {
-                Position = DataMaximal;
+                Position = InfoObjectToSend->ActuatorDataMaximal;
               }
 
               data.UInt = Position;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_UINT, DataSize, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_UINT, InfoObjectToSend->ActuatorDataSize, data, 1);
             }
             break;
             case MBN_DATATYPE_OCTETS:
             {
               sprintf(LCDText, " %4.0f dB", AxumData.DestinationData[DestinationNr].Level);
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
             case MBN_DATATYPE_FLOAT:
             {
               float Level = AxumData.DestinationData[DestinationNr].Level;
-              if (Level<DataMinimal)
+              if (Level<InfoObjectToSend->ActuatorDataMinimal)
               {
-                Level = DataMinimal;
+                Level = InfoObjectToSend->ActuatorDataMinimal;
               }
-              else if (Level>DataMaximal)
+              else if (Level>InfoObjectToSend->ActuatorDataMaximal)
               {
-                Level = DataMaximal;
+                Level = InfoObjectToSend->ActuatorDataMaximal;
               }
               data.Float = Level;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_FLOAT, 2, data, 1);
             }
             break;
           }
@@ -11964,12 +12048,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_MUTE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.DestinationData[DestinationNr].Mute;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -11977,7 +12061,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_MUTE_AND_MONITOR_MUTE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -11993,7 +12077,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.State = Active;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -12001,12 +12085,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_DIM:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.DestinationData[DestinationNr].Dim;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -12014,7 +12098,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_DIM_AND_MONITOR_DIM:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -12038,7 +12122,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.State = Active;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -12046,14 +12130,14 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_MONO:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               Active = AxumData.DestinationData[DestinationNr].Mono;
 
               data.State = Active;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -12061,7 +12145,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_MONO_AND_MONITOR_MONO:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -12077,7 +12161,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.State = Active;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -12085,12 +12169,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_PHASE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.DestinationData[DestinationNr].Phase;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -12098,7 +12182,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_PHASE_AND_MONITOR_PHASE:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -12114,7 +12198,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.State = Active;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -12138,12 +12222,12 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case DESTINATION_FUNCTION_TALKBACK_16:
         {
           int TalkbackNr = (FunctionNr-DESTINATION_FUNCTION_TALKBACK_1)/(DESTINATION_FUNCTION_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1);
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
               data.State = AxumData.DestinationData[DestinationNr].Talkback[TalkbackNr];
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -12168,7 +12252,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         {
           int TalkbackNr = (FunctionNr-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1)/(DESTINATION_FUNCTION_TALKBACK_2_AND_MONITOR_TALKBACK_2-DESTINATION_FUNCTION_TALKBACK_1_AND_MONITOR_TALKBACK_1);
 
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -12192,7 +12276,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.State = Active;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -12200,7 +12284,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         break;
         case DESTINATION_FUNCTION_ROUTING:
         {
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_OCTETS:
             {
@@ -12224,7 +12308,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               }
 
               data.Octets = (unsigned char *)LCDText;
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_OCTETS, 8, data, 1);
             }
             break;
           }
@@ -12236,7 +12320,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
         case DESTINATION_FUNCTION_SELECT_4:
         {
           int ConsoleNr = FunctionNr-DESTINATION_FUNCTION_SELECT_1;
-          switch (DataType)
+          switch (InfoObjectToSend->ActuatorDataType)
           {
             case MBN_DATATYPE_STATE:
             {
@@ -12245,7 +12329,7 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
               {
                 data.State = 1;
               }
-              mbnSetActuatorData(mbn, MambaNetAddress, ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
+              mbnSetActuatorData(mbn, InfoObjectToSend->MambaNetAddress, InfoObjectToSend->ObjectNr, MBN_DATATYPE_STATE, 1, data, 1);
             }
             break;
           }
@@ -12255,9 +12339,6 @@ void SentDataToObject(unsigned int SensorReceiveFunctionNumber, unsigned int Mam
     }
     break;
   }
-  DataSize = 0;
-  DataMinimal = 0;
-  DataMaximal = 0;
 }
 
 
@@ -12408,6 +12489,7 @@ void MakeObjectListPerFunction(unsigned int SensorReceiveFunctionNumber)
               AxumFunctionInformationStructToAdd->ActuatorDataMinimal = OnlineNodeInformationElement->ObjectInformation[cntObject].ActuatorDataMinimal;
               AxumFunctionInformationStructToAdd->ActuatorDataMaximal = OnlineNodeInformationElement->ObjectInformation[cntObject].ActuatorDataMaximal;
               AxumFunctionInformationStructToAdd->ActuatorDataDefault = OnlineNodeInformationElement->ObjectInformation[cntObject].ActuatorDataDefault;
+              AxumFunctionInformationStructToAdd->ActuatorData = OnlineNodeInformationElement->ObjectInformation[cntObject].ActuatorDataDefault;
               AxumFunctionInformationStructToAdd->Next = (void *)WalkAxumFunctionInformationStruct;
 
               switch (FunctionType)
