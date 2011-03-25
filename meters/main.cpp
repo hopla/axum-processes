@@ -41,7 +41,7 @@
 #define PCB_MAJOR_VERSION        1
 #define PCB_MINOR_VERSION        0
 
-#define FIRMWARE_MAJOR_VERSION   6
+#define FIRMWARE_MAJOR_VERSION   8
 #define FIRMWARE_MINOR_VERSION   0
 
 #define MANUFACTURER_ID          0x0001	//D&R
@@ -73,7 +73,7 @@ struct mbn_node_info this_node = {
   "Axum-PPM-Meters",
   MANUFACTURER_ID, PRODUCT_ID, 0x0001,
   0, 0,                   //Hw revision
-  7, 1,                   //Fw revision
+  8, 0,                   //Fw revision
   0, 0,                   //FPGA revision
   NR_OF_OBJECTS,          //Number of objects
   0,                      //Default engine address
