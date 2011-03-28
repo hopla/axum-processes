@@ -216,6 +216,7 @@ void IntToTimerString(char *timer_str, int elapsed_time)
 void Browser::timerEvent(QTimerEvent *Event)
 {
   char timer_str[16] = "";
+  int cnt;
 
 	cntSecond++;
 
@@ -267,6 +268,14 @@ void Browser::timerEvent(QTimerEvent *Event)
     log_write("EngineStatus %d", EngineStatus);
     NewDNRImageNoEngine->setVisible(!EngineStatus);
     CurrentEngineStatus = EngineStatus;
+
+    if (EngineStatus == 0)
+    {
+      for (cnt=0; cnt<74; cnt++)
+      {
+        MeterData[cnt] = -50;
+      }
+    }
   }
 
   //if (!Initializing)
