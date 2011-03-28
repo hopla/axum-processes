@@ -298,7 +298,7 @@ int ReceiveMessage(struct mbn_handler *mbn, struct mbn_message *msg) {
       dest = unx;
 
     /* don't forward if the destination is on the same network, except for unx (unix sockets and tcp?) */
-    if((dest == mbn) && (dest != unx))
+    if((dest == mbn) && ((dest != unx) && (dest != udp)))
       return 0;
   }
 
