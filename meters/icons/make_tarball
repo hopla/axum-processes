@@ -1,0 +1,1 @@
+tar -cvzf AXUM_icons.tar.gz Classic/ doc/icons.pdf
