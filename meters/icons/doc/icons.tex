@@ -1,0 +1,33 @@
+\documentclass[a4paper]{report}
+
+\usepackage[left=3.5cm,top=4cm,right=3cm]{geometry}
+
+\usepackage[pdftex]{graphicx}
+\usepackage[pdftex, colorlinks=true, pagebackref, pdfpagemode=UseOutlines,
+            linkcolor=rltblack]{hyperref}
+\usepackage{color}
+\definecolor{rltblack}{rgb}{0,0,0}
+
+\usepackage{anonchap}
+\simplechapter
+\renewcommand{\simplechapterdelim}{.}
+
+% TODO:
+%  - introduction to interface writing
+
+\begin{document}
+
+\title{AXUM icon library}
+\author{D\&R Electronica Weesp B.V.}
+\maketitle
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+\setcounter{tocdepth}{2}
+
+
+\input{introduction}
+\input{using}
+\input{creating}
+
+\end{document}
