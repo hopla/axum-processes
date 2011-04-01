@@ -1,8 +1,8 @@
 
 -- global_config
 
-INSERT INTO global_config (samplerate, ext_clock, headroom, level_reserve)
-  VALUES (48000, false, 20.0, 10.0);
+INSERT INTO global_config (samplerate, headroom, level_reserve, ext_clock_addr)
+  VALUES (48000, 20.0, 10.0, 0);
 
 
 -- buss_config
@@ -23,6 +23,14 @@ INSERT INTO buss_config (number, label) VALUES (13, 'Aux 9');
 INSERT INTO buss_config (number, label) VALUES (14, 'Aux 10');
 INSERT INTO buss_config (number, label) VALUES (15, 'Aux 11');
 INSERT INTO buss_config (number, label) VALUES (16, 'Aux 12');
+
+
+-- console_config
+
+INSERT INTO console_config (number, name, location, contact) VALUES (1, 'AXUM 1', 'Unkown', 'Unknown');
+INSERT INTO console_config (number, name, location, contact) VALUES (2, 'AXUM 2', 'Unkown', 'Unknown');
+INSERT INTO console_config (number, name, location, contact) VALUES (3, 'AXUM 3', 'Unkown', 'Unknown');
+INSERT INTO console_config (number, name, location, contact) VALUES (4, 'AXUM 4', 'Unkown', 'Unknown');
 
 
 -- monitor_buss_config
