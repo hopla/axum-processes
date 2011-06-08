@@ -1445,22 +1445,13 @@ void dsp_read_buss_levelmeters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdB
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[0];
   if (dspcard->dsp_regs[2].HPIA != NULL)
   {
-    //VU or PPM
-    //float dBLevel[48];
     for (int cntChannel=0; cntChannel<48; cntChannel++)
     {
       unsigned int MeterAddress = SummingDSPBussMeterPPM+cntChannel*4;
-      //if (VUMeter)
-      //{
-      //  MeterAddress = SummingDSPBussMeterVU+cntChannel*4;
-      //}
 
       *dspcard->dsp_regs[2].HPIA = MeterAddress;
       float LinearLevel = *((float *)dspcard->dsp_regs[2].HPID);
-      //if (!VUMeter)
-      //{
       *((float *)dspcard->dsp_regs[2].HPID) = 0;
-      //}
       if (LinearLevel != 0)
       {
         SummingdBLevel[cntChannel] = 20*log10(LinearLevel/2147483647);
