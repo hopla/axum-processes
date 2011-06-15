@@ -1442,16 +1442,19 @@ void dsp_read_buss_levelmeters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdB
   LOG_DEBUG("[%s] enter", __func__);
 
   dsp_lock(1);
+  //PPM Stereo buss 1-16 + Stereo mon buss 1-4
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[0];
   if (dspcard->dsp_regs[2].HPIA != NULL)
   {
-    for (int cntChannel=0; cntChannel<48; cntChannel++)
+    for (int cntChannel=0; cntChannel<40; cntChannel++)
     {
       unsigned int MeterAddress = SummingDSPBussMeterPPM+cntChannel*4;
 
       *dspcard->dsp_regs[2].HPIA = MeterAddress;
       float LinearLevel = *((float *)dspcard->dsp_regs[2].HPID);
+
       *((float *)dspcard->dsp_regs[2].HPID) = 0;
+
       if (LinearLevel != 0)
       {
         SummingdBLevel[cntChannel] = 20*log10(LinearLevel/2147483647);
@@ -1459,6 +1462,75 @@ void dsp_read_buss_levelmeters(DSP_HANDLER_STRUCT *dsp_handler, float *SummingdB
       else
       {
         SummingdBLevel[cntChannel] = -2000;
+      }
+    }
+  }
+  //Stereo mon buss 5-8
+  dspcard = &dsp_handler->dspcard[1];
+  if (dspcard->dsp_regs[2].HPIA != NULL)
+  {
+    for (int cntChannel=32; cntChannel<40; cntChannel++)
+    {
+      unsigned int MeterAddress = SummingDSPBussMeterPPM+cntChannel*4;
+
+      *dspcard->dsp_regs[2].HPIA = MeterAddress;
+      float LinearLevel = *((float *)dspcard->dsp_regs[2].HPID);
+
+      *((float *)dspcard->dsp_regs[2].HPID) = 0;
+
+      if (LinearLevel != 0)
+      {
+        SummingdBLevel[8+cntChannel] = 20*log10(LinearLevel/2147483647);
+      }
+      else
+      {
+        SummingdBLevel[8+cntChannel] = -2000;
+      }
+    }
+  }
+  //Stereo mon buss 9-12
+  dspcard = &dsp_handler->dspcard[2];
+  if (dspcard->dsp_regs[2].HPIA != NULL)
+  {
+    for (int cntChannel=32; cntChannel<40; cntChannel++)
+    {
+      unsigned int MeterAddress = SummingDSPBussMeterPPM+cntChannel*4;
+
+      *dspcard->dsp_regs[2].HPIA = MeterAddress;
+      float LinearLevel = *((float *)dspcard->dsp_regs[2].HPID);
+
+      *((float *)dspcard->dsp_regs[2].HPID) = 0;
+
+      if (LinearLevel != 0)
+      {
+        SummingdBLevel[16+cntChannel] = 20*log10(LinearLevel/2147483647);
+      }
+      else
+      {
+        SummingdBLevel[16+cntChannel] = -2000;
+      }
+    }
+  }
+  //Stereo mon buss 13-16
+  dspcard = &dsp_handler->dspcard[3];
+  if (dspcard->dsp_regs[2].HPIA != NULL)
+  {
+    for (int cntChannel=32; cntChannel<40; cntChannel++)
+    {
+      unsigned int MeterAddress = SummingDSPBussMeterPPM+cntChannel*4;
+
+      *dspcard->dsp_regs[2].HPIA = MeterAddress;
+      float LinearLevel = *((float *)dspcard->dsp_regs[2].HPID);
+
+      *((float *)dspcard->dsp_regs[2].HPID) = 0;
+
+      if (LinearLevel != 0)
+      {
+        SummingdBLevel[24+cntChannel] = 20*log10(LinearLevel/2147483647);
+      }
+      else
+      {
+        SummingdBLevel[24+cntChannel] = -2000;
       }
     }
   }
@@ -1471,6 +1543,7 @@ void dsp_read_buss_phasemeters(DSP_HANDLER_STRUCT *dsp_handler, float *BussPhase
   LOG_DEBUG("[%s] enter", __func__);
 
   dsp_lock(1);
+  //PPM Stereo buss 1-16 + Stereo mon buss 1-4
   DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[0];
   if (dspcard->dsp_regs[2].HPIA != NULL)
   {
@@ -1480,6 +1553,42 @@ void dsp_read_buss_phasemeters(DSP_HANDLER_STRUCT *dsp_handler, float *BussPhase
 
       *dspcard->dsp_regs[2].HPIA = MeterAddress;
       BussPhase[cntChannel] = atan(*((float *)dspcard->dsp_regs[2].HPID))*1.273239545;
+    }
+  }
+  //Stereo mon buss 5-8
+  dspcard = &dsp_handler->dspcard[1];
+  if (dspcard->dsp_regs[2].HPIA != NULL)
+  {
+    for (int cntChannel=16; cntChannel<20; cntChannel++)
+    {
+      unsigned int MeterAddress = SummingDSPPhaseRMS+cntChannel*4;
+
+      *dspcard->dsp_regs[2].HPIA = MeterAddress;
+      BussPhase[4+cntChannel] = atan(*((float *)dspcard->dsp_regs[2].HPID))*1.273239545;
+    }
+  }
+  //Stereo mon buss 9-12
+  dspcard = &dsp_handler->dspcard[2];
+  if (dspcard->dsp_regs[2].HPIA != NULL)
+  {
+    for (int cntChannel=16; cntChannel<20; cntChannel++)
+    {
+      unsigned int MeterAddress = SummingDSPPhaseRMS+cntChannel*4;
+
+      *dspcard->dsp_regs[2].HPIA = MeterAddress;
+      BussPhase[8+cntChannel] = atan(*((float *)dspcard->dsp_regs[2].HPID))*1.273239545;
+    }
+  }
+  //Stereo mon buss 13-16
+  dspcard = &dsp_handler->dspcard[3];
+  if (dspcard->dsp_regs[2].HPIA != NULL)
+  {
+    for (int cntChannel=16; cntChannel<20; cntChannel++)
+    {
+      unsigned int MeterAddress = SummingDSPPhaseRMS+cntChannel*4;
+
+      *dspcard->dsp_regs[2].HPIA = MeterAddress;
+      BussPhase[12+cntChannel] = atan(*((float *)dspcard->dsp_regs[2].HPID))*1.273239545;
     }
   }
   dsp_lock(0);

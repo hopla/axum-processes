@@ -7867,9 +7867,9 @@ void axum_get_mtrx_chs_from_src(int src, unsigned int *l_ch, unsigned int *r_ch)
       DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
       unsigned int FirstDSPChannelNr = 481+(dspcard->slot*5*32);
-
-      *l_ch = FirstDSPChannelNr+(ModuleNr*2)+0;
-      *r_ch = FirstDSPChannelNr+(ModuleNr*2)+1;
+      //Make sure channel nummers for a new DSP card start a 0 (e.g. Insert out 32 is the second DSP card, ch 0)
+      *l_ch = FirstDSPChannelNr+((ModuleNr-(32*DSPCardNr))*2)+0;
+      *r_ch = FirstDSPChannelNr+((ModuleNr-(32*DSPCardNr))*2)+1;
     }
     else
     {
@@ -7887,9 +7887,9 @@ void axum_get_mtrx_chs_from_src(int src, unsigned int *l_ch, unsigned int *r_ch)
       DSPCARD_STRUCT *dspcard = &dsp_handler->dspcard[DSPCardNr];
 
       unsigned int FirstDSPChannelNr = 577+(dspcard->slot*5*32);
-
-      *l_ch = FirstDSPChannelNr+(BussNr*2)+0;
-      *r_ch = FirstDSPChannelNr+(BussNr*2)+1;
+      //Make sure channel nummers for a new DSP card start a 0 (e.g. Monitor buss 4 is the second DSP card, ch 0)
+      *l_ch = FirstDSPChannelNr+((BussNr-(DSPCardNr*4))*2)+0;
+      *r_ch = FirstDSPChannelNr+((BussNr-(DSPCardNr*4))*2)+1;
     }
     else
     {
@@ -7907,9 +7907,10 @@ void axum_get_mtrx_chs_from_src(int src, unsigned int *l_ch, unsigned int *r_ch)
 
       unsigned int FirstDSPChannelNr = 545+(dspcard->slot*5*32);
 
-      //N-1 are mono's
-      *l_ch = FirstDSPChannelNr+ModuleNr;
-      *r_ch = FirstDSPChannelNr+ModuleNr;
+      //N-1 are mono's.
+      //Make sure channel nummers for a new DSP card start a 0 (e.g. Mix minus 32 is the second DSP card, ch 0)
+      *l_ch = FirstDSPChannelNr+(ModuleNr-(DSPCardNr*32));
+      *r_ch = FirstDSPChannelNr+(ModuleNr-(DSPCardNr*32));
     }
     else
     {
