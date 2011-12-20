@@ -112,7 +112,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>/var/lib/axum/skins/meters/Axum.png</normaloff>/var/lib/axum/skins/meters/Axum.png</iconset>
+    <normaloff>../var/lib/axum/skins/meters/Axum.png</normaloff>../var/lib/axum/skins/meters/Axum.png</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
@@ -196,6 +196,88 @@ QTabWidget::tab-bar
     <bool>false</bool>
    </property>
   </widget>
+  <widget class="QFrame" name="frame_init">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>94</y>
+     <width>1024</width>
+     <height>580</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QFrame
+{
+	color: rgba(255, 170, 0, 255);
+	background: rgba(0, 0, 0, 128);
+}</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <widget class="QProgressBar" name="progressBar">
+    <property name="geometry">
+     <rect>
+      <x>353</x>
+      <y>278</y>
+      <width>400</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+    <property name="invertedAppearance">
+     <bool>false</bool>
+    </property>
+    <property name="textDirection">
+     <enum>QProgressBar::TopToBottom</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="progress_label">
+    <property name="geometry">
+     <rect>
+      <x>960</x>
+      <y>550</y>
+      <width>64</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>14</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="acceptDrops">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(255, 170, 0, 255);
+	background: rgba(0, 0, 0, 0);
+}</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::PlainText</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+  </widget>
   <widget class="QFrame" name="frame">
    <property name="geometry">
     <rect>
@@ -214,10 +296,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_3">
     <property name="geometry">
      <rect>
-      <x>210</x>
-      <y>74</y>
+      <x>207</x>
+      <y>75</y>
       <width>13</width>
-      <height>416</height>
+      <height>415</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -237,7 +319,7 @@ QTabWidget::tab-bar
     <property name="geometry">
      <rect>
       <x>350</x>
-      <y>255</y>
+      <y>260</y>
       <width>410</width>
       <height>111</height>
      </rect>
@@ -261,7 +343,7 @@ QTabWidget::tab-bar
     <property name="TimeDisplayFont">
      <font>
       <family>DejaVu Sans</family>
-      <pointsize>50</pointsize>
+      <pointsize>56</pointsize>
      </font>
     </property>
     <property name="TimeDisplayFontColor">
@@ -322,10 +404,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>74</y>
+      <x>51</x>
+      <y>75</y>
       <width>13</width>
-      <height>416</height>
+      <height>415</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -344,10 +426,10 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>200</x>
-      <y>508</y>
-      <width>123</width>
-      <height>23</height>
+      <x>203</x>
+      <y>503</y>
+      <width>114</width>
+      <height>30</height>
      </rect>
     </property>
     <property name="font">
@@ -381,10 +463,10 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>200</x>
-      <y>531</y>
-      <width>123</width>
-      <height>23</height>
+      <x>199</x>
+      <y>533</y>
+      <width>118</width>
+      <height>30</height>
      </rect>
     </property>
     <property name="font">
@@ -418,10 +500,10 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>41</x>
-      <y>508</y>
-      <width>123</width>
-      <height>23</height>
+      <x>47</x>
+      <y>503</y>
+      <width>114</width>
+      <height>30</height>
      </rect>
     </property>
     <property name="font">
@@ -455,10 +537,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_4">
     <property name="geometry">
      <rect>
-      <x>303</x>
-      <y>74</y>
+      <x>301</x>
+      <y>75</y>
       <width>13</width>
-      <height>416</height>
+      <height>415</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -477,10 +559,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_2">
     <property name="geometry">
      <rect>
-      <x>144</x>
-      <y>74</y>
+      <x>145</x>
+      <y>75</y>
       <width>13</width>
-      <height>416</height>
+      <height>415</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -499,9 +581,9 @@ QTabWidget::tab-bar
    <widget class="DNRAnalogClock" name="NewDNRAnalogClock">
     <property name="geometry">
      <rect>
-      <x>363</x>
+      <x>348</x>
       <y>85</y>
-      <width>380</width>
+      <width>410</width>
       <height>410</height>
      </rect>
     </property>
@@ -554,14 +636,14 @@ QTabWidget::tab-bar
      <bool>true</bool>
     </property>
     <property name="HourHandColor">
-     <color>
+     <color alpha="200">
       <red>255</red>
       <green>0</green>
       <blue>0</blue>
      </color>
     </property>
     <property name="HourHandBorder">
-     <number>16</number>
+     <number>24</number>
     </property>
     <property name="HourHandLength">
      <number>12</number>
@@ -570,14 +652,14 @@ QTabWidget::tab-bar
      <number>12</number>
     </property>
     <property name="MinuteHandColor">
-     <color>
+     <color alpha="200">
       <red>0</red>
       <green>0</green>
       <blue>0</blue>
      </color>
     </property>
     <property name="MinuteHandBorder">
-     <number>4</number>
+     <number>8</number>
     </property>
     <property name="MinuteHandLength">
      <number>28</number>
@@ -589,10 +671,10 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_5">
     <property name="geometry">
      <rect>
-      <x>41</x>
-      <y>531</y>
-      <width>123</width>
-      <height>23</height>
+      <x>47</x>
+      <y>533</y>
+      <width>114</width>
+      <height>30</height>
      </rect>
     </property>
     <property name="font">
@@ -626,8 +708,8 @@ QTabWidget::tab-bar
    <widget class="DNRPhaseMeter" name="NewDNRPhaseMeter">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>36</y>
+      <x>51</x>
+      <y>37</y>
       <width>107</width>
       <height>17</height>
      </rect>
@@ -657,8 +739,8 @@ QTabWidget::tab-bar
    <widget class="DNRPhaseMeter" name="NewDNRPhaseMeter_2">
     <property name="geometry">
      <rect>
-      <x>209</x>
-      <y>36</y>
+      <x>207</x>
+      <y>37</y>
       <width>107</width>
       <height>17</height>
      </rect>
@@ -688,10 +770,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_8">
     <property name="geometry">
      <rect>
-      <x>968</x>
-      <y>214</y>
-      <width>10</width>
-      <height>291</height>
+      <x>966</x>
+      <y>200</y>
+      <width>9</width>
+      <height>290</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -710,10 +792,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_7">
     <property name="geometry">
      <rect>
-      <x>902</x>
-      <y>214</y>
-      <width>10</width>
-      <height>291</height>
+      <x>900</x>
+      <y>200</y>
+      <width>9</width>
+      <height>290</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -732,10 +814,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_6">
     <property name="geometry">
      <rect>
-      <x>856</x>
-      <y>214</y>
-      <width>10</width>
-      <height>291</height>
+      <x>858</x>
+      <y>200</y>
+      <width>9</width>
+      <height>290</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -754,10 +836,10 @@ QTabWidget::tab-bar
    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_5">
     <property name="geometry">
      <rect>
-      <x>789</x>
-      <y>214</y>
-      <width>10</width>
-      <height>291</height>
+      <x>792</x>
+      <y>200</y>
+      <width>9</width>
+      <height>290</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -772,21 +854,14 @@ QTabWidget::tab-bar
     <property name="GradientForground">
      <bool>true</bool>
     </property>
-    <property name="MaxBackgroundColor">
-     <color>
-      <red>64</red>
-      <green>0</green>
-      <blue>0</blue>
-     </color>
-    </property>
    </widget>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>785</x>
-      <y>519</y>
-      <width>85</width>
-      <height>32</height>
+      <x>784</x>
+      <y>503</y>
+      <width>91</width>
+      <height>30</height>
      </rect>
     </property>
     <property name="font">
@@ -820,10 +895,10 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>897</x>
-      <y>519</y>
-      <width>85</width>
-      <height>32</height>
+      <x>893</x>
+      <y>503</y>
+      <width>91</width>
+      <height>30</height>
      </rect>
     </property>
     <property name="font">
@@ -860,10 +935,10 @@ QTabWidget::tab-bar
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
-      <x>490</x>
-      <y>508</y>
-      <width>123</width>
-      <height>46</height>
+      <x>453</x>
+      <y>503</y>
+      <width>200</width>
+      <height>30</height>
      </rect>
     </property>
     <property name="font">
@@ -894,349 +969,424 @@ QTabWidget::tab-bar
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="DNREQPanel" name="NewDNREQPanel">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
+   <widget class="QWidget" name="widget_2" native="true">
     <property name="geometry">
      <rect>
-      <x>792</x>
-      <y>41</y>
-      <width>183</width>
-      <height>125</height>
+      <x>756</x>
+      <y>34</y>
+      <width>256</width>
+      <height>150</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string>QWidget
+{
+	background: rgba(35, 80, 163, 255);
+}</string>
+    </property>
+    <widget class="DNREQPanel" name="NewDNREQPanel">
+     <property name="geometry">
+      <rect>
+       <x>73</x>
+       <y>19</y>
+       <width>182</width>
+       <height>123</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
+     <property name="toolTip">
+      <string>The EQ Panel</string>
+     </property>
+     <property name="whatsThis">
+      <string>The EQ Panel widget displays </string>
+     </property>
+     <property name="GainBand1">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="NrOfPoints">
+      <number>256</number>
+     </property>
+     <property name="AxisBorderWidth">
+      <number>16</number>
+     </property>
+     <property name="AxisLeftMargin">
+      <number>0</number>
+     </property>
+     <property name="ShowGainText">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="AGCThLabel">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>80</y>
+       <width>64</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string>AGC Th&lt;BR&gt;-10dB</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="AGCRatioLabel">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>111</y>
+       <width>64</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="text">
+      <string>AGC Ratio&lt;BR&gt;100%</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="DExpThLabel">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>49</y>
+       <width>64</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="text">
+      <string>D-Exp Th&lt;BR&gt;-20 dB</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="SelectedModuleLabel">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>256</width>
+       <height>18</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel
+{
+	color: rgba(22,51,105);
+	background: rgba(135, 168, 228);
+}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="text">
+      <string>Mod 1</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_9">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>18</y>
+       <width>4</width>
+       <height>132</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The PPM Meter</string>
+     </property>
+     <property name="whatsThis">
+      <string>The PPM Meter widget displays </string>
+     </property>
+     <property name="dBPosition" stdset="0">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="GradientForground">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="DNRPPMMeter" name="NewDNRPPMMeter_10">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>18</y>
+       <width>4</width>
+       <height>132</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The PPM Meter</string>
+     </property>
+     <property name="whatsThis">
+      <string>The PPM Meter widget displays </string>
+     </property>
+     <property name="dBPosition" stdset="0">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="GradientForground">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="DSPGainLabel">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>18</y>
+       <width>64</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel
+{
+	color: rgba(192, 192, 192, 255);
+	background: rgba(22, 51, 105, 255);
+	border-color: rgba(35,80,163, 255);
+	border-width: 1px;
+	border-style: solid;
+}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="text">
+      <string>DSP Gain&lt;BR&gt;0 dB</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="DNRPhaseMeter" name="NewDNRPanorama">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>143</y>
+       <width>246</width>
+       <height>7</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>The Phase Meter</string>
+     </property>
+     <property name="whatsThis">
+      <string>The Phase Meter widget displays </string>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="Position">
+      <double>512.000000000000000</double>
+     </property>
+     <property name="MinPosition">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="MaxPosition">
+      <double>1023.000000000000000</double>
+     </property>
+     <property name="PointerWidth">
+      <number>5</number>
+     </property>
+     <property name="PointerMinColor">
+      <color>
+       <red>0</red>
+       <green>0</green>
+       <blue>0</blue>
+      </color>
+     </property>
+     <property name="PointerMaxColor">
+      <color>
+       <red>0</red>
+       <green>0</green>
+       <blue>0</blue>
+      </color>
+     </property>
+     <property name="BackgroundMonoColor">
+      <color>
+       <red>135</red>
+       <green>168</green>
+       <blue>228</blue>
+      </color>
+     </property>
+     <property name="BackgroundOutOfPhaseColor">
+      <color>
+       <red>135</red>
+       <green>168</green>
+       <blue>228</blue>
+      </color>
+     </property>
+     <property name="Horizontal">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </widget>
+   <widget class="DNRImage" name="NewDNRImageLogo">
+    <property name="geometry">
+     <rect>
+      <x>756</x>
+      <y>34</y>
+      <width>256</width>
+      <height>150</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="toolTip">
+     <string>The top image</string>
+    </property>
+    <property name="whatsThis">
+     <string>The Image widget displays </string>
+    </property>
+    <property name="SkinEnvironmentVariable">
+     <string/>
+    </property>
+    <property name="ImageFileName">
+     <string>/var/lib/axum/skins/meters/logo.png</string>
+    </property>
+    <property name="ScaleImage">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="TimerLabel">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>371</y>
+      <width>410</width>
+      <height>64</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>8</pointsize>
+      <pointsize>20</pointsize>
      </font>
     </property>
-    <property name="toolTip">
-     <string>The EQ Panel</string>
-    </property>
-    <property name="whatsThis">
-     <string>The EQ Panel widget displays </string>
-    </property>
-    <property name="NrOfPoints">
-     <number>256</number>
-    </property>
-    <property name="AxisBorderWidth">
-     <number>16</number>
-    </property>
-    <property name="AxisLeftMargin">
-     <number>0</number>
-    </property>
-    <property name="ShowGainText">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight1OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>869</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight1-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight2OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>883</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight2-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight3OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>897</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight3-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight4OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>911</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight4-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight5OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>925</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight5-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight6OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>939</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight6-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight7OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>953</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight7-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight8OffDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>967</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight8-off.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight1OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>869</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight1-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight2OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>883</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight2-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight3OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>897</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight3-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight4OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>911</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight4-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight5OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>925</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight5-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight6OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>939</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight6-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight7OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>953</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight7-on.png</string>
-    </property>
-   </widget>
-   <widget class="DNRImage" name="Redlight8OnDNRImage">
-    <property name="geometry">
-     <rect>
-      <x>967</x>
-      <y>21</y>
-      <width>15</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>The Image</string>
-    </property>
-    <property name="whatsThis">
-     <string>The Image widget displays </string>
-    </property>
-    <property name="ImageFileName">
-     <string>/var/lib/axum/skins/meters/redlight8-on.png</string>
+    <property name="styleSheet">
+     <string>QLabel
+{
+	color: rgba(255, 85, 85, 255);
+	color: rgb(255, 85, 85);
+	background: rgba(0, 0, 0, 0);
+}</string>
+    </property>
+    <property name="text">
+     <string>00:00</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <zorder>NewDNRImage</zorder>
    <zorder>NewDNRPPMMeter_3</zorder>
    <zorder>NewDNRDigitalClock</zorder>
+   <zorder>TimerLabel</zorder>
    <zorder>NewDNRPPMMeter</zorder>
    <zorder>label_4</zorder>
    <zorder>label_6</zorder>
@@ -1254,81 +1404,330 @@ QTabWidget::tab-bar
    <zorder>label_7</zorder>
    <zorder>label_8</zorder>
    <zorder>label_9</zorder>
-   <zorder>NewDNREQPanel</zorder>
-   <zorder>Redlight1OffDNRImage</zorder>
-   <zorder>Redlight2OffDNRImage</zorder>
-   <zorder>Redlight3OffDNRImage</zorder>
-   <zorder>Redlight4OffDNRImage</zorder>
-   <zorder>Redlight5OffDNRImage</zorder>
-   <zorder>Redlight6OffDNRImage</zorder>
-   <zorder>Redlight7OffDNRImage</zorder>
-   <zorder>Redlight8OffDNRImage</zorder>
-   <zorder>Redlight1OnDNRImage</zorder>
-   <zorder>Redlight2OnDNRImage</zorder>
-   <zorder>Redlight3OnDNRImage</zorder>
-   <zorder>Redlight4OnDNRImage</zorder>
-   <zorder>Redlight5OnDNRImage</zorder>
-   <zorder>Redlight6OnDNRImage</zorder>
-   <zorder>Redlight7OnDNRImage</zorder>
-   <zorder>Redlight8OnDNRImage</zorder>
+   <zorder>NewDNRImageLogo</zorder>
+   <zorder>widget_2</zorder>
   </widget>
-  <widget class="DNRImage" name="NewDNRImageBottomOnAir">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>674</y>
-     <width>1024</width>
-     <height>95</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="toolTip">
-    <string>The top image</string>
-   </property>
-   <property name="whatsThis">
-    <string>The Image widget displays </string>
-   </property>
-   <property name="SkinEnvironmentVariable">
-    <string/>
-   </property>
-   <property name="ImageFileName">
-    <string>/var/lib/axum/skins/meters/bottom-onair.png</string>
-   </property>
-   <property name="ScaleImage">
-    <bool>false</bool>
-   </property>
-  </widget>
-  <widget class="DNRImage" name="NewDNRImageTopOnAir">
+  <widget class="DNRImage" name="Redlight1OnDNRImage">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1024</width>
+     <width>128</width>
      <height>94</height>
     </rect>
    </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
    <property name="toolTip">
-    <string>The top image</string>
+    <string>The Image</string>
    </property>
    <property name="whatsThis">
     <string>The Image widget displays </string>
    </property>
-   <property name="SkinEnvironmentVariable">
-    <string/>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight1-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight2OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>128</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
    </property>
    <property name="ImageFileName">
-    <string>/var/lib/axum/skins/meters/top-onair.png</string>
+    <string>/var/lib/axum/skins/meters/redlight2-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight4OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>384</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight4-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight3OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>256</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight3-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight3OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>256</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight3-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight5OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>512</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight5-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight1OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight1-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight7OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>768</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight7-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight6OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>640</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight6-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight7OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>768</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight7-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight8OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>896</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight8-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight5OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>512</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight5-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight4OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>384</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight4-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight6OnDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>640</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight6-on.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight2OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>128</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight2-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="Redlight8OffDNRImage">
+   <property name="geometry">
+    <rect>
+     <x>896</x>
+     <y>0</y>
+     <width>128</width>
+     <height>94</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/redlight8-off.png</string>
+   </property>
+  </widget>
+  <widget class="DNRImage" name="NewDNRImageNoEngine">
+   <property name="geometry">
+    <rect>
+     <x>863</x>
+     <y>689</y>
+     <width>64</width>
+     <height>64</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The Image</string>
+   </property>
+   <property name="whatsThis">
+    <string>The Image widget displays </string>
+   </property>
+   <property name="ImageFileName">
+    <string>/var/lib/axum/skins/meters/noengine.png</string>
    </property>
    <property name="ScaleImage">
     <bool>false</bool>
@@ -1356,6 +1755,2471 @@ QTabWidget::tab-bar
     <bool>false</bool>
    </property>
   </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_1">
+   <property name="geometry">
+    <rect>
+     <x>45</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_2">
+   <property name="geometry">
+    <rect>
+     <x>49</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_3">
+   <property name="geometry">
+    <rect>
+     <x>75</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_4">
+   <property name="geometry">
+    <rect>
+     <x>79</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_5">
+   <property name="geometry">
+    <rect>
+     <x>105</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_6">
+   <property name="geometry">
+    <rect>
+     <x>109</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_7">
+   <property name="geometry">
+    <rect>
+     <x>135</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_8">
+   <property name="geometry">
+    <rect>
+     <x>139</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_9">
+   <property name="geometry">
+    <rect>
+     <x>165</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_10">
+   <property name="geometry">
+    <rect>
+     <x>169</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_11">
+   <property name="geometry">
+    <rect>
+     <x>195</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_12">
+   <property name="geometry">
+    <rect>
+     <x>199</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_13">
+   <property name="geometry">
+    <rect>
+     <x>225</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_14">
+   <property name="geometry">
+    <rect>
+     <x>229</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_15">
+   <property name="geometry">
+    <rect>
+     <x>255</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_16">
+   <property name="geometry">
+    <rect>
+     <x>259</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_17">
+   <property name="geometry">
+    <rect>
+     <x>285</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_18">
+   <property name="geometry">
+    <rect>
+     <x>289</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_19">
+   <property name="geometry">
+    <rect>
+     <x>315</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_20">
+   <property name="geometry">
+    <rect>
+     <x>319</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_21">
+   <property name="geometry">
+    <rect>
+     <x>345</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_22">
+   <property name="geometry">
+    <rect>
+     <x>349</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_23">
+   <property name="geometry">
+    <rect>
+     <x>375</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_24">
+   <property name="geometry">
+    <rect>
+     <x>379</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_25">
+   <property name="geometry">
+    <rect>
+     <x>405</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_26">
+   <property name="geometry">
+    <rect>
+      <x>409</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_27">
+   <property name="geometry">
+    <rect>
+     <x>435</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_28">
+   <property name="geometry">
+    <rect>
+     <x>439</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_29">
+   <property name="geometry">
+    <rect>
+     <x>465</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_30">
+   <property name="geometry">
+    <rect>
+     <x>469</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_31">
+   <property name="geometry">
+    <rect>
+     <x>495</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_32">
+   <property name="geometry">
+    <rect>
+     <x>499</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  ---
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_33">
+   <property name="geometry">
+    <rect>
+     <x>525</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_34">
+   <property name="geometry">
+    <rect>
+     <x>529</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_35">
+   <property name="geometry">
+    <rect>
+     <x>555</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_36">
+   <property name="geometry">
+    <rect>
+     <x>559</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_37">
+   <property name="geometry">
+    <rect>
+     <x>585</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_38">
+   <property name="geometry">
+    <rect>
+     <x>589</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_39">
+   <property name="geometry">
+    <rect>
+     <x>615</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_40">
+   <property name="geometry">
+    <rect>
+     <x>619</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_41">
+   <property name="geometry">
+    <rect>
+     <x>645</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_42">
+   <property name="geometry">
+    <rect>
+     <x>649</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_43">
+   <property name="geometry">
+    <rect>
+     <x>675</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_44">
+   <property name="geometry">
+    <rect>
+     <x>679</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_45">
+   <property name="geometry">
+    <rect>
+     <x>705</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_46">
+   <property name="geometry">
+    <rect>
+     <x>709</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_47">
+   <property name="geometry">
+    <rect>
+     <x>735</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_48">
+   <property name="geometry">
+    <rect>
+     <x>739</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_49">
+   <property name="geometry">
+    <rect>
+     <x>765</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_50">
+   <property name="geometry">
+    <rect>
+     <x>769</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_51">
+   <property name="geometry">
+    <rect>
+     <x>795</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_52">
+   <property name="geometry">
+    <rect>
+     <x>799</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_53">
+   <property name="geometry">
+    <rect>
+     <x>825</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_54">
+   <property name="geometry">
+    <rect>
+     <x>829</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_55">
+   <property name="geometry">
+    <rect>
+     <x>855</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_56">
+   <property name="geometry">
+    <rect>
+     <x>859</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_57">
+   <property name="geometry">
+    <rect>
+     <x>885</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_58">
+   <property name="geometry">
+    <rect>
+     <x>889</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_59">
+   <property name="geometry">
+    <rect>
+     <x>915</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_60">
+   <property name="geometry">
+    <rect>
+     <x>919</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_61">
+   <property name="geometry">
+    <rect>
+     <x>945</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_62">
+   <property name="geometry">
+    <rect>
+     <x>949</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_63">
+   <property name="geometry">
+    <rect>
+     <x>975</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="DNRPPMMeter" name="NewSmallDNRPPMMeter_64">
+   <property name="geometry">
+    <rect>
+     <x>979</x>
+     <y>680</y>
+     <width>3</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>The PPM Meter</string>
+   </property>
+   <property name="whatsThis">
+    <string>The PPM Meter widget displays </string>
+   </property>
+   <property name="dBPosition" stdset="0">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="GradientForground">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_1">
+   <property name="geometry">
+    <rect>
+     <x>39</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>1</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_2">
+   <property name="geometry">
+    <rect>
+     <x>69</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>2</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_3">
+   <property name="geometry">
+    <rect>
+     <x>99</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>3</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_4">
+   <property name="geometry">
+    <rect>
+     <x>129</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>4</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_5">
+   <property name="geometry">
+    <rect>
+     <x>159</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>5</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_6">
+   <property name="geometry">
+    <rect>
+     <x>189</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>6</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_7">
+   <property name="geometry">
+    <rect>
+     <x>219</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>7</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_8">
+   <property name="geometry">
+    <rect>
+     <x>249</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>8</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_9">
+   <property name="geometry">
+    <rect>
+     <x>279</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>9</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_10">
+   <property name="geometry">
+    <rect>
+     <x>309</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>10</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_11">
+   <property name="geometry">
+    <rect>
+     <x>339</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>11</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_12">
+   <property name="geometry">
+    <rect>
+     <x>369</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>12</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_13">
+   <property name="geometry">
+    <rect>
+     <x>399</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>13</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_14">
+   <property name="geometry">
+    <rect>
+     <x>429</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>14</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_15">
+   <property name="geometry">
+    <rect>
+     <x>459</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>15</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_16">
+   <property name="geometry">
+    <rect>
+     <x>489</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>16</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_17">
+   <property name="geometry">
+    <rect>
+     <x>519</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>17</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_18">
+   <property name="geometry">
+    <rect>
+     <x>549</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>18</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_19">
+   <property name="geometry">
+    <rect>
+     <x>579</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>19</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_20">
+   <property name="geometry">
+    <rect>
+     <x>609</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>20</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_21">
+   <property name="geometry">
+    <rect>
+     <x>639</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>21</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_22">
+   <property name="geometry">
+    <rect>
+     <x>669</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>22</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_23">
+   <property name="geometry">
+    <rect>
+     <x>699</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>23</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_24">
+   <property name="geometry">
+    <rect>
+     <x>729</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>24</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_25">
+   <property name="geometry">
+    <rect>
+     <x>759</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>25</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_26">
+   <property name="geometry">
+    <rect>
+     <x>789</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>26</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_27">
+   <property name="geometry">
+    <rect>
+     <x>819</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>27</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_28">
+   <property name="geometry">
+    <rect>
+     <x>849</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>28</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_29">
+   <property name="geometry">
+    <rect>
+     <x>879</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>29</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_30">
+   <property name="geometry">
+    <rect>
+     <x>909</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>30</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_31">
+   <property name="geometry">
+    <rect>
+     <x>939</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>31</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MeterLabel_32">
+   <property name="geometry">
+    <rect>
+     <x>969</x>
+     <y>755</y>
+     <width>20</width>
+     <height>8</height>
+    </rect>
+   </property>
+    <property name="font">
+     <font>
+      <family>Arial Unicode MS</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgba(192, 192, 192, 255);
+}</string>
+    </property>
+   <property name="text">
+     <string>32</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
   <action name="insertRowAction">
    <property name="enabled">
     <bool>false</bool>
@@ -1378,6 +4242,124 @@ QTabWidget::tab-bar
     <string>Deletes the current Row</string>
    </property>
   </action>
+  <zorder>NewDNRImageTopOffAir</zorder>
+  <zorder>NewDNRImageBottomOffAir</zorder>
+  <zorder>Redlight1OnDNRImage</zorder>
+  <zorder>Redlight2OnDNRImage</zorder>
+  <zorder>Redlight3OnDNRImage</zorder>
+  <zorder>Redlight4OnDNRImage</zorder>
+  <zorder>Redlight5OnDNRImage</zorder>
+  <zorder>Redlight6OnDNRImage</zorder>
+  <zorder>Redlight7OnDNRImage</zorder>
+  <zorder>Redlight8OnDNRImage</zorder>
+  <zorder>Redlight1OffDNRImage</zorder>
+  <zorder>Redlight2OffDNRImage</zorder>
+  <zorder>Redlight3OffDNRImage</zorder>
+  <zorder>Redlight4OffDNRImage</zorder>
+  <zorder>Redlight5OffDNRImage</zorder>
+  <zorder>Redlight6OffDNRImage</zorder>
+  <zorder>Redlight7OffDNRImage</zorder>
+  <zorder>Redlight8OffDNRImage</zorder>
+  <zorder>NewSmallDNRPPMMeter_1</zorder>
+  <zorder>NewSmallDNRPPMMeter_2</zorder>
+  <zorder>NewSmallDNRPPMMeter_3</zorder>
+  <zorder>NewSmallDNRPPMMeter_4</zorder>
+  <zorder>NewSmallDNRPPMMeter_5</zorder>
+  <zorder>NewSmallDNRPPMMeter_6</zorder>
+  <zorder>NewSmallDNRPPMMeter_7</zorder>
+  <zorder>NewSmallDNRPPMMeter_8</zorder>
+  <zorder>NewSmallDNRPPMMeter_9</zorder>
+  <zorder>NewSmallDNRPPMMeter_10</zorder>
+  <zorder>NewSmallDNRPPMMeter_11</zorder>
+  <zorder>NewSmallDNRPPMMeter_12</zorder>
+  <zorder>NewSmallDNRPPMMeter_13</zorder>
+  <zorder>NewSmallDNRPPMMeter_14</zorder>
+  <zorder>NewSmallDNRPPMMeter_15</zorder>
+  <zorder>NewSmallDNRPPMMeter_16</zorder>
+  <zorder>NewSmallDNRPPMMeter_17</zorder>
+  <zorder>NewSmallDNRPPMMeter_18</zorder>
+  <zorder>NewSmallDNRPPMMeter_19</zorder>
+  <zorder>NewSmallDNRPPMMeter_20</zorder>
+  <zorder>NewSmallDNRPPMMeter_21</zorder>
+  <zorder>NewSmallDNRPPMMeter_22</zorder>
+  <zorder>NewSmallDNRPPMMeter_23</zorder>
+  <zorder>NewSmallDNRPPMMeter_24</zorder>
+  <zorder>NewSmallDNRPPMMeter_25</zorder>
+  <zorder>NewSmallDNRPPMMeter_26</zorder>
+  <zorder>NewSmallDNRPPMMeter_27</zorder>
+  <zorder>NewSmallDNRPPMMeter_28</zorder>
+  <zorder>NewSmallDNRPPMMeter_29</zorder>
+  <zorder>NewSmallDNRPPMMeter_30</zorder>
+  <zorder>NewSmallDNRPPMMeter_31</zorder>
+  <zorder>NewSmallDNRPPMMeter_32</zorder>
+  <zorder>NewSmallDNRPPMMeter_33</zorder>
+  <zorder>NewSmallDNRPPMMeter_34</zorder>
+  <zorder>NewSmallDNRPPMMeter_35</zorder>
+  <zorder>NewSmallDNRPPMMeter_36</zorder>
+  <zorder>NewSmallDNRPPMMeter_37</zorder>
+  <zorder>NewSmallDNRPPMMeter_38</zorder>
+  <zorder>NewSmallDNRPPMMeter_39</zorder>
+  <zorder>NewSmallDNRPPMMeter_40</zorder>
+  <zorder>NewSmallDNRPPMMeter_41</zorder>
+  <zorder>NewSmallDNRPPMMeter_42</zorder>
+  <zorder>NewSmallDNRPPMMeter_43</zorder>
+  <zorder>NewSmallDNRPPMMeter_44</zorder>
+  <zorder>NewSmallDNRPPMMeter_45</zorder>
+  <zorder>NewSmallDNRPPMMeter_46</zorder>
+  <zorder>NewSmallDNRPPMMeter_47</zorder>
+  <zorder>NewSmallDNRPPMMeter_48</zorder>
+  <zorder>NewSmallDNRPPMMeter_49</zorder>
+  <zorder>NewSmallDNRPPMMeter_50</zorder>
+  <zorder>NewSmallDNRPPMMeter_51</zorder>
+  <zorder>NewSmallDNRPPMMeter_52</zorder>
+  <zorder>NewSmallDNRPPMMeter_53</zorder>
+  <zorder>NewSmallDNRPPMMeter_54</zorder>
+  <zorder>NewSmallDNRPPMMeter_55</zorder>
+  <zorder>NewSmallDNRPPMMeter_56</zorder>
+  <zorder>NewSmallDNRPPMMeter_57</zorder>
+  <zorder>NewSmallDNRPPMMeter_58</zorder>
+  <zorder>NewSmallDNRPPMMeter_59</zorder>
+  <zorder>NewSmallDNRPPMMeter_60</zorder>
+  <zorder>NewSmallDNRPPMMeter_61</zorder>
+  <zorder>NewSmallDNRPPMMeter_62</zorder>
+  <zorder>NewSmallDNRPPMMeter_63</zorder>
+  <zorder>NewSmallDNRPPMMeter_64</zorder>
+  <zorder>MeterLabel_1</zorder>
+  <zorder>MeterLabel_2</zorder>
+  <zorder>MeterLabel_3</zorder>
+  <zorder>MeterLabel_4</zorder>
+  <zorder>MeterLabel_5</zorder>
+  <zorder>MeterLabel_6</zorder>
+  <zorder>MeterLabel_7</zorder>
+  <zorder>MeterLabel_8</zorder>
+  <zorder>MeterLabel_9</zorder>
+  <zorder>MeterLabel_10</zorder>
+  <zorder>MeterLabel_11</zorder>
+  <zorder>MeterLabel_12</zorder>
+  <zorder>MeterLabel_13</zorder>
+  <zorder>MeterLabel_14</zorder>
+  <zorder>MeterLabel_15</zorder>
+  <zorder>MeterLabel_16</zorder>
+  <zorder>MeterLabel_17</zorder>
+  <zorder>MeterLabel_18</zorder>
+  <zorder>MeterLabel_19</zorder>
+  <zorder>MeterLabel_20</zorder>
+  <zorder>MeterLabel_21</zorder>
+  <zorder>MeterLabel_22</zorder>
+  <zorder>MeterLabel_23</zorder>
+  <zorder>MeterLabel_24</zorder>
+  <zorder>MeterLabel_25</zorder>
+  <zorder>MeterLabel_26</zorder>
+  <zorder>MeterLabel_27</zorder>
+  <zorder>MeterLabel_28</zorder>
+  <zorder>MeterLabel_29</zorder>
+  <zorder>MeterLabel_30</zorder>
+  <zorder>MeterLabel_31</zorder>
+  <zorder>MeterLabel_32</zorder>
+  <zorder>NewDNRImageNoEngine</zorder>
+  <zorder>NewDNRImageNoLink</zorder>
+  <zorder>frame</zorder>
+  <zorder>frame_init</zorder>
  </widget>
  <customwidgets>
   <customwidget>
