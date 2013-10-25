@@ -26,8 +26,11 @@
 FILE *logfd = NULL;
 char log_file[500];
 char hwparent_path[500];
+char last_error[500];
 pid_t parent_pid;
 volatile int main_quit = 0;
+int linecount=0;
+int duplicate_error_cnt=0;
 
 struct sql_notify *sql_events;
 int sql_notifylen = 0;
@@ -36,6 +39,21 @@ char sql_lastnotify_changed_in_callback = 0;
 pthread_mutex_t sql_mutex = PTHREAD_MUTEX_INITIALIZER;
 PGconn *sql_conn;
 
+void log_linecount() {
+  char str[500];
+  linecount=0;
+
+  /* re-open the stream in read-mode to count the number of lines of log file */
+  log_close();
+  logfd = fopen(log_file, "r");
+  while( fgets(str, 500, logfd) != NULL ) {
+    linecount++;
+  }
+  /* re-open the file again in appending mode, ready for logging */
+  log_close();
+  logfd = fopen(log_file, "a");
+}
+
 void log_open() {
   if(logfd != NULL)
     fclose(logfd);
@@ -43,8 +61,8 @@ void log_open() {
     fprintf(stderr, "Couldn't open log file: %s\n", strerror(errno));
     exit(1);
   }
+  log_linecount();
 }
-
 
 void log_close() {
   if(logfd != NULL)
@@ -61,7 +79,6 @@ void log_reopen() {
   log_open();
 }
 
-
 void log_write(const char *fmt, ...) {
   va_list ap;
   char buf[500], tm[20];
@@ -72,10 +89,31 @@ void log_write(const char *fmt, ...) {
   va_end(ap);
 //  strftime(tm, 20, "%Y-%m-%d %H:%M:%S", gmtime(&t));
   strftime(tm, 20, "%Y-%m-%d %H:%M:%S", localtime(&t));
-  fprintf(fd, "[%s] %s\n", tm, buf);
-  fflush(fd);
-}
+  
+  if( strncmp(last_error, buf, 500) != 0 )
+  {
+    if( duplicate_error_cnt )
+    {
+      fprintf(fd, "[%s] DUPLICATE LOG MESSAGE: #%d times the last message\n", tm, duplicate_error_cnt+1 );
+      duplicate_error_cnt=0;
+    }  
+    fprintf(fd, "[%s] %s\n", tm, buf);
+    fflush(fd);
+    sprintf(last_error, "%s", buf);
+  }
+  else{
+    duplicate_error_cnt++;
+  }
 
+  if(++linecount > MAX_LINECOUNT_LOGFILE)
+  {
+    linecount=0;
+    log_close();
+    /* re-open to clear the log file */
+    logfd = fopen(log_file, "w+");
+    log_open();
+  }  
+}
 
 void log_backtrace()
 {

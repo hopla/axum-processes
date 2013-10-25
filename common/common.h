@@ -5,6 +5,8 @@
 #include <mbn.h>
 #include <libpq-fe.h>
 
+#define MAX_LINECOUNT_LOGFILE 10000
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -14,6 +16,7 @@ extern char log_file[500];
 void log_write(const char *, ...);
 void log_close();
 void log_open();
+void log_linecount();
 
 
 /* Handles daemonizing and sets signal handling.
