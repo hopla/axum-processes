@@ -29,8 +29,8 @@
 
 //#define ADDLSTSIZE    1000 /* assume we don't have more than 1000 nodes on one CAN bus */
 //#define TXBUFLEN      5000 /* maxumum number of mambanet messages in the send buffer */
-#define CAN_TXDELAY   512 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
-#define TTY_TXDELAY   512 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
+#define CAN_TXDELAY   1024 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
+#define TTY_TXDELAY   1024 /* delay between each CAN frame transmit in us (with bursts for MambaNet messages) */
 #define HWPARTIMEOUT  10   /* timeout for receiving the hardware parent, in seconds */
 //#define CIRBUFLENGTH  4096 /* Length of serial decoding buffer */
 

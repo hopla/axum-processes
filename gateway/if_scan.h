@@ -7,8 +7,8 @@ struct mbn_interface * MBN_EXPORT mbnCANOpen(char *, unsigned short *, char *);
 #include <pthread.h>
 
 #define ADDLSTSIZE    1000 /* assume we don't have more than 1000 nodes on one CAN bus */
-#define TXBUFLEN      5000 /* maxumum number of mambanet messages in the send buffer */
-#define CIRBUFLENGTH  4096 /* Length of serial decoding buffer */
+#define TXBUFLEN      8000 /* maxumum number of mambanet messages in the send buffer */
+#define CIRBUFLENGTH  8192 /* Length of serial decoding buffer */
 
 struct can_data {
   unsigned char tty_mode;
