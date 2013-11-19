@@ -94,7 +94,7 @@ void log_write(const char *fmt, ...) {
   {
     if( duplicate_error_cnt )
     {
-      fprintf(fd, "[%s] DUPLICATE LOG MESSAGE: #%d times the last message\n", tm, duplicate_error_cnt+1 );
+      fprintf(fd, "[%s] DUPLICATE LOG MESSAGE #%d: %s\n", tm, duplicate_error_cnt+1, last_error );
       duplicate_error_cnt=0;
     }  
     fprintf(fd, "[%s] %s\n", tm, buf);
